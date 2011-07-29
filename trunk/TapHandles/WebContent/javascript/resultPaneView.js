@@ -50,7 +50,7 @@ jQuery
 						id_schema = jsdata.nodekey + "X" + jsdata.schemas[i].name;
 						for( var j=0 ; j<jsdata.schemas[i].tables.length ; j++ ) {
 							id_table = jsdata.nodekey + ";" + jsdata.schemas[i].name + ";" + jsdata.schemas[i].tables[j];
-							console.log("add " + jsdata.schemas[i].tables[j]);
+							logMsg("add " + jsdata.schemas[i].tables[j]);
 							$("div#treedisp").jstree("create"
 									, $("#" + id_schema)
 									, false
@@ -308,7 +308,7 @@ jQuery
 		}
 
 		this.showMeta = function(jsdata, limit) {
-			console.log("@@@@ showMeta");
+			logMsg("@@@@ showMeta");
 			if (jsdata.errormsg != null) {
 				logged_alert("FATAL ERROR: Cannot show object detail: "
 						+ jsdata.errormsg);

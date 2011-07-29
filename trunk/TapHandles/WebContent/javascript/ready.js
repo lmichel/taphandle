@@ -57,6 +57,13 @@ function formatValue(value) {
 	}
 }
 
+var DEBUG = true;
+function logMsg(message) {
+	if( DEBUG && (typeof console != 'undefined') ) {
+		console.log(message);
+	}
+}
+
 function setTitlePath(treepath) {
 	$("#resultpane").html('');
 	$('#titlepath').html('<i>');
@@ -67,7 +74,7 @@ function setTitlePath(treepath) {
 }
 
 function logged_alert(message) {
-	console.log("ALERT " + message);
+	logMsg("ALERT " + message);
 	alert(message);
 }
 
@@ -76,7 +83,7 @@ var stillToBeOpen = false;
 var simbadToBeOpen = false;
 
 function showProcessingDialog(message) {
-	console.log("PROCESSSING " + message);
+	logMsg("PROCESSSING " + message);
 	stillToBeOpen = true;
 	if( $('#saadaworking').length == 0){		
 		$('#resultpane').append('<div id="saadaworking" class="dataTables_processing" style="visibility: hidden; "></div>');

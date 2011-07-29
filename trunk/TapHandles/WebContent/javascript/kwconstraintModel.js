@@ -20,7 +20,7 @@ jQuery.extend({
 		var operand ;
 		var andor ;
 
-		console.log(ah.dataType);
+		logMsg(ah.dataType);
 		if( ah.dataType == 'Select' ) {
 			operators = [];
 			andors = [];

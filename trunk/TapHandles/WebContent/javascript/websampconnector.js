@@ -49,7 +49,7 @@ var WebSampConnector = {
     */
    log: function(message) {
       if (window.console) {
-         console.log(message);
+         logMsg(message);
       } else if (window.opera && opera.postError) {
          opera.postError(message);
       } else {
