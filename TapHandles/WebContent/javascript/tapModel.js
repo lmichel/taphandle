@@ -233,7 +233,7 @@ jQuery.extend({
 							return;
 						}
 						jv  = new $.JobView();
-						console.log("submitQuery " + storedTreepath[0] + " " +  jsondata);
+						logMsg("submitQuery " + storedTreepath[0] + " " +  jsondata);
 						jm = new $.JobModel(storedTreepath[0], jsondata.job);
 						new $.JobControler(jm, jv);
 						that.notifyNewJobs(jv);
@@ -253,7 +253,7 @@ jQuery.extend({
 						return;
 					}
 
-					console.log("checkJobCompleted " + jid + " " + jsondata.job.phase);
+					logMsg("checkJobCompleted " + jid + " " + jsondata.job.phase);
 					if( jsondata.job.phase == 'COMPLETED') {
 						hideProcessingDialog();
 						that.displayResult(nodeKey, jid);
@@ -274,7 +274,7 @@ jQuery.extend({
 		}
 
 		this.refreshJobList= function() {
-			console.log('refreshJobList');
+			logMsg('refreshJobList');
 			showProcessingDialog("Refresh job list");
 			$.getJSON("joblist", {FORMAT: "json"}, function(jsondata) {
 				hideProcessingDialog();
@@ -283,7 +283,7 @@ jQuery.extend({
 				}
 				for( var i=0 ; i<jsondata.length ; i++) {
 					var job = jsondata[i];
-					console.log("refreshJobList "+ job.nodekey + " " + job.jobid);
+					logMsg("refreshJobList "+ job.nodekey + " " + job.jobid);
 					jv  = new $.JobView();
 					jm = new $.JobModel(job.nodekey, job.status.job);
 					new $.JobControler(jm, jv);
@@ -294,7 +294,7 @@ jQuery.extend({
 
 		this.processJobAction= function(nodekey,jid) {
 			var val = $('#' + jid + "_actions").val(); 
-			console.log("processJobAction" + val);
+			logMsg("processJobAction" + val);
 			$('#' + jid + "_actions").val('Actions'); 
 			if( val == 'Show Query') {	
 				that.showQuery(nodekey,jid);				
@@ -326,7 +326,7 @@ jQuery.extend({
 			});					
 		}
 		this.showSummary = function(nodekey, jid) {
-			console.log(storedTreepath);
+			logMsg(storedTreepath);
 			$.getJSON("jobsummary" , {NODE: nodekey, JOBID: jid}, function(jsondata) {
 				if( processJsonError(jsondata, "Cannot get summary of job " + jid) ) {
 					return;

@@ -65,14 +65,14 @@ jQuery.extend({
 			});
 		}
 		this.fireRefreshJobList = function(){
-			console.log('fireRefreshJobList');
+			logMsg('fireRefreshJobList');
 			$('#tapjobs').html('');
 			$.each(listeners, function(i){
 				listeners[i].controlRefreshJobList();
 			});
 		}
 		this.fireJobAction = function(nodekey, jid){
-			console.log("fireJobAction");
+			logMsg("fireJobAction");
 			$.each(listeners, function(i){
 				listeners[i].controlJobAction(nodekey, jid);
 			});
@@ -83,7 +83,7 @@ jQuery.extend({
 			});
 		}
 		this.fireCheckJobCompleted= function(nodekey, jid, counter){
-			console.log("fireCheckJobCompleted" + counter);
+			logMsg("fireCheckJobCompleted" + counter);
 			$.each(listeners, function(i){
 				listeners[i].controlCheckJobCompleted(nodekey, jid, counter);
 			});

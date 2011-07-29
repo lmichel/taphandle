@@ -11,7 +11,7 @@ jQuery.extend({
 		var id = description.jobId;
 		var href = description.href;
 		var phase = description.phase;
-		console.log("JobModel " + node + " " + id + " " + phase + " " + description);
+		logMsg("JobModel " + node + " " + id + " " + phase + " " + description);
 		var operator = ["Refresh", "get JSon result", "Show Query", "Summary"];			
 		var actions = new Array();
 		actions['COMPLETED'] = ["Actions", "Display Result", "Edit Query", "Summary"];
@@ -25,11 +25,11 @@ jQuery.extend({
 		}
 		
 		this.initForm = function() {
-			console.log("init job model " + node + " " + id + " " + phase);
+			logMsg("init job model " + node + " " + id + " " + phase);
 			that.notifyIsInit();
 		}
 		this.notifyIsInit = function() {
-			console.log("is init job model " + node + " " + id + " " + phase);
+			logMsg("is init job model " + node + " " + id + " " + phase);
 			$.each(listeners, function(i){
 				listeners[i].isInit(node, id, phase, actions[phase]);
 			});
