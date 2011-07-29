@@ -1,0 +1,231 @@
+<html>
+<head>
+<title>TapBrowser alpha</title>
+<LINK REL="icon" HREF="image/saada.ico" TYPE="images/ico" />
+<LINK REL="SHORTCUT ICON" HREF="images/saada.ico" />
+
+<link rel="stylesheet" type="text/css" href="styles/global.css" />
+<link rel="stylesheet" type="text/css" href="styles/form.css" />
+<link rel="stylesheet" type="text/css" href="styleimport/datatable.css" />
+<link rel="stylesheet" type="text/css" href="styles/simplemodal.css" />
+<link rel="stylesheet" type="text/css" href="styleimport/jquery-ui.css" />
+
+<script type="text/javascript" language="javascript" src="jsimport/jquery.js"></script>
+<script type="text/javascript" language="javascript" src="jsimport/jquery.ui.core.js"></script>
+<script type="text/javascript" language="javascript" src="jsimport/jquery.ui.widget.js"></script>
+<script type="text/javascript" language="javascript" src="jsimport/jquery.ui.mouse.js"></script>
+<script type="text/javascript" language="javascript" src="jsimport/jquery.ui.draggable.js"></script>
+<script type="text/javascript" language="javascript" src="jsimport/jquery.ui.droppable.js"></script>
+<script type="text/javascript" language="javascript" src="jsimport/jquery.ui.sortable.js"></script>
+<script type="text/javascript" language="javascript" src="jsimport/jquery.ui.tabs.js"></script>
+<script type="text/javascript" language="javascript" src="jsimport/jquery.ui.dialog.js"></script>
+<script type="text/javascript" language="javascript" src="jsimport/jquery.jstree.js"></script>
+<script type="text/javascript" language="javascript" src="jsimport/jquery.dataTables.js"></script>
+<script type="text/javascript" language="javascript" src="jsimport/splitter.js"></script>
+<script type="text/javascript" language="javascript" src="jsimport/jquery.simplemodal.js"></script> 
+<script type="text/javascript" language="javascript" src="jsimport/jquery.jsonSuggest-2.js"></script> 
+
+<script type="text/javascript" language="javascript" src="javascript/websampconnector.js"></script>
+
+<script type="text/javascript" language="javascript" src="javascript/resultPaneModel.js"></script>
+<script type="text/javascript" language="javascript" src="javascript/resultPaneView.js"></script>
+<script type="text/javascript" language="javascript" src="javascript/resultPaneControler.js"></script>
+<script type="text/javascript" language="javascript" src="javascript/kwconstraintModel.js"></script>
+<script type="text/javascript" language="javascript" src="javascript/kwconstraintView.js"></script>
+<script type="text/javascript" language="javascript" src="javascript/kwconstraintControler.js"></script>
+<script type="text/javascript" language="javascript" src="javascript/tapModel.js"></script>
+<script type="text/javascript" language="javascript" src="javascript/tapView.js"></script>
+<script type="text/javascript" language="javascript" src="javascript/tapControler.js"></script>
+<script type="text/javascript" language="javascript" src="javascript/sampModel.js"></script>
+<script type="text/javascript" language="javascript" src="javascript/sampView.js"></script>
+<script type="text/javascript" language="javascript" src="javascript/sampControler.js"></script>
+<script type="text/javascript" language="javascript" src="javascript/jobModel.js"></script>
+<script type="text/javascript" language="javascript" src="javascript/jobView.js"></script>
+<script type="text/javascript" language="javascript" src="javascript/jobControler.js"></script>
+<script type="text/javascript" language="javascript" src="javascript/jobDictionnary.js"></script>
+<script type="text/javascript" src="javascript/ready.js"></script>
+<script type="text/javascript" src="javascript/resize.js"></script>
+
+</head>
+<body>
+<div id=superwrapper>
+	<div id=banner class="levelonediv">
+		&nbsp;<a href="http://saada.u-strasbg.fr" title="Saada home page" target="_blank" class=logo></a> &nbsp;&nbsp;
+		<div id=pagetitle style='width: 100%'><span class=pagetitle>TITLE</span>
+		<span class=pagetitlepath id=titlepath></span></div>
+		<div id=externaltools> 
+			<a href="javascript:void(0);" class="formexpender" title="Expend query form" 
+			onclick='resultPaneView.fireExpendForm();' id='formexpender'></a>
+		
+			<a href="javascript:void(0);" id=showquerymeta title='Show Metadata' class=question></a>
+	<!-- 		<a href="javascript:void(0);"  title='Download the current selection in a FITS file' -->
+	<!-- 		class=fits onclick='resultPaneView.fireDownloadFITS();'></a>  -->
+			<a href="javascript:void(0);" title='Download the current selection in a VOTable'
+			class=votable onclick='resultPaneView.fireDownloadVOTable();'></a> 		
+			<a href="javascript:void(0);" title='Download the current selection in a ZIP ball'
+			class=zip onclick='resultPaneView.fireDownloadZip();'></a> 		
+	<!--		<a href="javascript:void(0);" class=topcat></a> -->
+	<!--		<a href="javascript:void(0);" class=aladin></a> -->
+	<!--		<a href="javascript:void(0);" class=ivoa></a> -->
+			<a href="javascript:void(0);" title='Connect or Disconnect to a SAMP hub' 
+			class=samp id=sampconnector ></a> 
+			<a href="javascript:void(0);" title='Send the data selection to SAMP clients' 
+			class=ivoa  onclick='resultPaneView.fireSampBroadcast();' style='visibility: hidden;'></a> 
+		</div>
+	</div>
+	
+	<div id="accesspane" class="levelonediv">
+		<div id="datapane">
+			<div id="treepane" style="border-style: hidden;">
+				<div style="border-style: hidden; text-align: center; vertical-align: middle;">
+	<!--				&nbsp;<a href="javascript:void(0);" class=refresh id=refreshtree title='Refresh the data tree'></a>				-->
+					<span class=strong><strong>Node Selector</strong></span>
+					<input type=text id=node_selector class=inputvalue style="font-size: small;font-family: courier; width: 100" >
+					<hr>
+				</div>
+				<div id="treedisp"></div>
+			</div>
+			<div id="resultpane">
+				<h2 class=help>&nbsp;You can access data by dropping any data node on some active area</h2>
+				<ul>
+					<li class=help style="font-size: large;"><b>Here</b> to display the content of the data collection</li>
+					<li class=help style="font-size: large;"><b>On the query area below</b> to setup a query on that data collection</li>
+					<li class=help style="font-size: large;"><a href="javascript:void(0);" title='Download the current selection in a VOTable' class=votable ></a>
+					<b>VOTable download icon</b> to download the data selection in a VOTable</li>
+					<li class=help style="font-size: large;"><a href="javascript:void(0);" title='Download the current selection in a ZIP ball' class=zip></a>
+					<b>ZIP download icon</b> to display the data selection in a ZIP ball</li>
+					<li class=help style="font-size: large;"><a href="javascript:void(0);" id=showquerymeta title='Show Metadata' class=question></a>
+					<b>Meta icon</b> to know more about the data selection</li>
+					<li class=help style="font-size: large;"><a href="javascript:void(0);" id=displayfilter title="Edit display filter" class='displayfilter' ></a>
+					<b>Filter icon</b> to set up columns to be displayed</li>
+				</ul>
+			</div>
+		</div>
+		<div id=formframe>
+			<div id=formpanemenu style="float: left; text-align: center ;width: 91; border-style: hidden;">
+				<div style="text-align: center ;padding: 5px; border-style: hidden;">
+					<a href="javascript:void(0);" class=accept id=submitquery title='Execute the query in the current mode'></a><hr>
+				</div> 
+				<div style="text-align: left ;padding: 5px; text-align: center; border-style: hidden; ">
+					<span class=help>Result Limit</span><br>
+					<input type=text id='qlimit' class=numinputvalue 
+	        		style="font-size: small;font-family: Arial, Helvetica, sans-serif;" value='100'><hr>  
+				</div>
+				<div style="text-align: left ;padding: 5px;text-align: center; border-style: hidden; ">
+					<span id=qhistocount class=help>-/-</span><br> 
+					<span id=histoarrows><img src="images/histoleft-grey.png"><img src="images/historight-grey.png"></span>
+				</div>
+			</div>
+			<div id="formpane">
+	
+				<div id="taptab" class=querytab>
+				  	<ul>
+	        			<li><a href="#tapselect"><span>Select What</span></a></li>
+	        			<li><a href="#tapwhere"><span>Where</span></a></li>
+	        			<li><a href="#taptext"><span>Plain Text Query</span></a></li>
+	        			<li><a href="#tapjob"><span>Job Control</span></a></li>
+	    			</ul>
+					<div id="tapselect" class=queryformtab >
+	 					<div style="background-color: white ; width: 380px; height: 220px; vertical-align: middle; float:left;">
+	 						<div style="background: white;">
+	 							<span class=help>Available Keywords</span>
+	 						</div>
+	        				<div id="tapselectmeta" ></div>      
+	        				<div style="background-color: white;">
+	        					<span class=help>Drag and Drop keywords to the list of selected fields</span>
+	        				</div>
+	        					
+	        			</div>
+	 					<div style="background-color: white ; width: 480px; height: 220px; float:left;">
+	  						<div style="background: white;">
+	  							<span class=help>Selected Fields</span>
+	  						</div>
+	        				<div id="tapselectlist" ></div>
+	    				</div>
+	  				</div>
+					<div id="tapwhere" class=queryformtab >
+						<div style="background-color: white ; width: 340px; vertical-align: middle; float:left;">
+	 						<div style="background: white;">
+	 							<span class=help>Available Keywords</span>
+	 						</div>
+	        				<div id="tapmeta" ></div>      
+	        				<div style="background-color: white;">
+	       						<span class=help>Drag and Drop keywords to the list of constraints</span>
+	        				</div>
+	        					
+	        			</div>
+	 					<div style="background-color: white ; width: 520px; float:left; margin-left: 15px;">
+	  						<div style="background: white;">
+	  							<div style="background: white;float:left;">
+	  								
+	   								<table border=0 style="border-spacing: 0px 0px;"">
+										<tr>
+	  										<td></td>  
+	  										<td><span class=help>Drop Coord. Keywords</span></td>	  															
+	  									</tr>
+										<tr>
+	  										<td><span>alpha</span></td>  
+	  										<td><div id="tapalpha" style="float:left;"></div> </td>	  															
+	  									</tr>
+										<tr>
+	  										<td><span>delta</span></td>  
+	  										<td><div id="tapdelta" style="float:left;"></div> </td>	  															
+	  									</tr>
+	    							</table>
+	  							</div>
+	  							<div style="background: white;float:left;">  							
+	    							
+	  								<table border=0  style="border-spacing: 0px 0px;"">
+	  									<tr>
+	  										<td></td>	
+	  										<td align=right colspan=2><span class=help>Type return or click to valid</span>
+	  										
+	  										</td>							
+	  									</tr>
+	  									<tr>
+	    									<td align=right><span>Coord</span></td>								
+	   										<td><input id=tapcoordval type=text class=coordinputvalue
+	   										style="font-size: small;font-family: Arial, Helvetica, sans-serif;"></td>								
+	    									<td><a class=sesame></a>
+	    									<a title='Add the current positon to the query' id=acceptpattern class=add href="javascript:void(0);" 
+	  										onclick='tapView.fireInputCoordEvent();' 
+	  										title="click to add the position to the query"></a></td>							
+	  									</tr>
+	  									<tr>
+	    									<td><span>Size/Radius</span> </td>								
+	    									<td colspan=2>
+	    									<input  id=tapradiusval value=0.1 type=text class=numinputvalue style="font-family: Arial, Helvetica, sans-serif;font-size: small;">
+	    									<span class=help>deg</span>
+	    									<input type=radio name=tapboxcircle value=Circle checked><span> Circle </span >  								
+	    									<input type=radio name=tapboxcircle value=Box><span>Box</span>    
+	    									</td>								
+	  									</tr>
+	  								</table>
+	   							</div>
+	   							<div style="background: white; float:left; width: 480px;">  							
+	  								<span class=help>Constraints</span>
+	        						<div id="tapconstraintlist" ></div>
+	        						<span class=typomsg></span>
+	        						
+	        					</div>
+	        				</div>
+	    				</div>
+					</div>
+					<div id="taptext" class=queryformtab >	
+						<textarea id=adqltext class="querytext"></textarea>
+					</div>				
+					<div id="tapjob">        
+					 	<div style="background: white;">
+	 						<span class=help>List of UWS jobs</span>
+	 						<a href="javascript:void(0);" class=refresh id=refreshjoblist title='Refresh the job list' onclick="tapView.fireRefreshJobList();"></a>	
+	 					</div>
+	        			<div id="tapjobs" ></div>      							    	
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="footer"></div>	
+</div>			
+</body>
+</Html>
