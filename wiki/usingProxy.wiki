@@ -1,4 +1,5 @@
 #summary Some good reason to deploy a tap proxy
+#labels Featured
 
 =Using a Proxy Server=
 
