@@ -1,0 +1,28 @@
+#summary Where this project comes from
+
+=Context=
+This project is dedicated to astronomers using [http://www.ivoa.net/ Virtual Observatory services].
+The most flexible data discovery protocol, namely [http://www.ivoa.net/Documents/TAP/ Table Access Protocol], can return any kind of data selected with a query language (ADQL at least).
+Taking the best of this flexibility requires specific end-point clients enable to connect selected data with relevant tools or viewers.
+The present project aims at proposing a solution based on both a RIA and  a proxy server.
+
+=HE Use Case=
+
+The present use case is at the origin of this project. Itcomes out from a discussion we had with HE astrophysicists in [http://astro.u-strasbg.fr/Obs/ENERGIE/ENERGIE.html Strasbourg] (April 2011).
+
+For this people, the first interest of the VO is to help to select relevant data set to be downloaded and to be processed by proprietary software (not VO tools). This process is 3 folds:
+
+   # Select a region
+   # Collect as much data as possible about this region thanks to the VO  (e.g. using Aladin)
+          * Collected data can be structured data as FITS image or spectra. This kind of data requires specific tool (Aladin, VOSPec, Topcat..) to be read.
+          * That can also be flat data as previews or text files
+   # Once the interest of the region is validated, use download links to get archives with all files the analysis tool needs. That usually include data files but also calibration files.
+
+
+We won’t speak her about the inner format of downloaded archives. It should obviously rely on Datalinks once this schema will be approved and implemented. Awaiting this, let’s consider such archives as black boxes.
+
+2 key points stand out from this use case:
+
+  # *Flat data can be very helpful* to estimate the interest of some object or region. Very relevant information can be picked out from read-me files or plots.  Let’s take the example of X-ray spectra. X-ray spectra are usually delivered uncalibrated because calibration always refers to a model. Users are however  interested in source hardness or power law (e.g.) which is given by the spectral shape and evaluated with naked eye. Though raw spectra shape makes no sense while no response matrix is applied at least. So the better way to provide this information remain to build plots based on a basic calibration which has no other scope than to restore true spectral shapes.
+
+   # Data selection could take a great advantage of using protocols returning a large variety of data (just call it TAP) 
