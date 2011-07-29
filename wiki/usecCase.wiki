@@ -1,4 +1,5 @@
 #summary Where this project comes from
+#labels Featured
 
 =Context=
 This project is dedicated to astronomers using [http://www.ivoa.net/ Virtual Observatory services].
