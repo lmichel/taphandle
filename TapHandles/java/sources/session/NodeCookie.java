@@ -7,7 +7,7 @@ import java.net.HttpCookie;
 
 /**
  * @author laurent
- * $Id$
+ * @version $Id$
  */
 public class NodeCookie {
 	private HttpCookie cookie;
