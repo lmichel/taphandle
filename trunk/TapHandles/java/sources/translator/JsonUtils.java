@@ -13,7 +13,7 @@ import org.json.simple.JSONValue;
 /**
  * A few JSON utilities taken from {@link http://saada.u-strasbg.fr Saada} 
  * @author laurentmichel
- * @version $Id: JsonUtils.java 46 2011-07-26 12:55:13Z laurent.mistahl $
+ * @version $Id$
  *
  */
 public abstract class JsonUtils {
@@ -100,5 +100,11 @@ public abstract class JsonUtils {
 		in.close();
 		return JsonKeyFinder.findKeys(sb.toString(), Field);
 	}
+		public static String getParam(String param, Object value, String indentation) {
+			return indentation + "\"" + param + "\": \"" + value + "\"";
+		}
+		public static String getParam(String param, Object value) {
+			return getParam(param, value, "");
+		}
 
 }

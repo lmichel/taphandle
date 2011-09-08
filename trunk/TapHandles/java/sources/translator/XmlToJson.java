@@ -32,7 +32,7 @@ import uk.ac.starlink.table.Tables;
  * comprehensible by the AJAX client.
  * This utility has no connection with the application resources
  * @author laurent
- * @version $Id: XmlToJson.java 46 2011-07-26 12:55:13Z laurent.mistahl $
+ * @version $Id$
  */
 public class XmlToJson  extends RootClass {
 
@@ -198,6 +198,10 @@ public class XmlToJson  extends RootClass {
 
 		JSONArray aaData = new JSONArray();
 		for( int r=0 ; r<nSrc ; r++ ) {
+			if( r >= 200 ) {
+				logger.warn("JSON result truncated to 200");
+				break;
+			}
 			Object[] o =table.getRow(r);
 			JSONArray rowData = new JSONArray();
 			for (int i = 0; i < nCol; i++) {
