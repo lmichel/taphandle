@@ -6,32 +6,46 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.net.CookieHandler;
+import java.net.CookieManager;
+import java.net.CookiePolicy;
+import java.net.CookieStore;
+import java.net.HttpCookie;
 import java.net.HttpURLConnection;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 
 import resources.RootClass;
+import session.NodeCookie;
 import translator.JsonUtils;
 import translator.NameSpaceDefinition;
 import translator.XmlToJson;
 
+
 /**
  * @author laurent
- * @version $Id: TapAccess.java 46 2011-07-26 12:55:13Z laurent.mistahl $
- *
+ * @version $Id
  */
 public class TapAccess  extends RootClass {
 	private final static String  RUNID = "test-client-lm&";
 
-	private static void sendPostRequest(String endpoint, String data, String outputfile) throws Exception {
-		logger.debug("send request " + endpoint + "(" + data + ")");
+
+	public static void sendPostRequest(String endpoint, String data, String outputfile, NodeCookie cookie) throws Exception {
+		System.out.println("@@@@@@@@@@@@  sendPostRequest " + cookie.getCookie());
+
+        logger.debug("send request " + endpoint + "(" + data + ")");
 		// Send the request
-		URL url = new URL(endpoint);
+		URL url = new URL(endpoint);  
+		cookie.addCookieToUrl(url);   
+
 		URLConnection conn = url.openConnection();
 		conn.setDoOutput(true);
-
 		if( data != null ) {
 			OutputStreamWriter writer = new OutputStreamWriter(conn.getOutputStream());
 			//write parameters
@@ -51,14 +65,20 @@ public class TapAccess  extends RootClass {
 		}
 		bw.close();
 		reader.close();
+
+		cookie.storeCookie();	        
+	        
 		XmlToJson.applyStyle(outputfile, outputfile.replaceAll("xml", "json")
 				, StyleDir + "asyncjob.xsl");
 
 	}
-	private static void sendPostDownloadRequest(String endpoint, String outputdir, String outputfile) throws Exception {
-		logger.debug("send request " + endpoint );
+
+	private static void sendPostDownloadRequest(String endpoint, String outputdir, String outputfile, NodeCookie cookie) throws Exception {
+		logger.debug("send download request " + endpoint );
+		System.out.println("@@@@@@@@@@@@  sendPostDownloadRequest " + cookie.getCookie());
 		// Send the request
 		URL url = new URL(endpoint);
+		cookie.addCookieToUrl(url);   
 		URLConnection conn = url.openConnection();
 		conn.setDoOutput(true);
 
@@ -82,51 +102,59 @@ public class TapAccess  extends RootClass {
 		}
 		bw.close();
 		reader.close();
-		System.out.println("NS " + ns);
+		cookie.storeCookie();
 		XmlToJson.translateResultTable(outputdir + File.separator + outputfile, outputdir + File.separator + "result.json");
 		//XmlToJson.translateVOTable(outputdir, "result", "result", ns);
 	}
 
-	private static void sendDeleteRequest(String endpoint) throws Exception {
+	private static void sendDeleteRequest(String endpoint, NodeCookie cookie) throws Exception {
 		URL url = new URL(endpoint);
+		cookie.addCookieToUrl(url);   
 		HttpURLConnection httpCon = (HttpURLConnection) url.openConnection();
 		httpCon.setDoOutput(true);
 		httpCon.setRequestProperty(
 				"Content-Type", "application/x-www-form-urlencoded" );
 		httpCon.setRequestMethod("DELETE");
 		httpCon.connect();
+		cookie.storeCookie();
 	}
 
-	public static String createAsyncJob(String endpoint, String query, String outputfile) throws Exception {
+
+
+	
+	public static String createAsyncJob(String endpoint, String query, String outputfile, NodeCookie cookie) throws Exception {
 		sendPostRequest(endpoint + "async"
 				,  "RUNID=" + RUNID + "&REQUEST=doQuery&LANG=ADQL&QUERY=" + URLEncoder.encode(query, "ISO-8859-1")
-				, outputfile);
+				, outputfile
+				, cookie);
 
 		return  JsonUtils.getValue (outputfile.replaceAll("xml", "json"), "job.jobId");
 	}
 
-	public static String runAsyncJob(String endpoint, String jobId, String outputfile) throws Exception {
+	public static String runAsyncJob(String endpoint, String jobId, String outputfile, NodeCookie cookie) throws Exception {
 		sendPostRequest(endpoint + "async/" + jobId + "/phase"
 				, "PHASE=RUN"
-				, outputfile);
+				, outputfile
+				, cookie);
 
 		return  JsonUtils.getValue (outputfile.replaceAll("xml", "json"), "job.phase");
 	}
 
-	public static void deleteAsyncJob(String endpoint, String jobId) throws Exception {
-		sendDeleteRequest(endpoint + "async/" + jobId );
+	public static void deleteAsyncJob(String endpoint, String jobId, NodeCookie cookie) throws Exception {
+		sendDeleteRequest(endpoint + "async/" + jobId, cookie );
 		return  ;
 	}
 
-	public static String getAsyncJobPhase(String endpoint, String jobId, String outputfile) throws Exception {
+	public static String getAsyncJobPhase(String endpoint, String jobId, String outputfile, NodeCookie cookie) throws Exception {
 		sendPostRequest(endpoint + "async/" + jobId
 				, null
-				, outputfile);
+				, outputfile
+				, cookie);
 		return  JsonUtils.getValue (outputfile.replaceAll("xml", "json"), "job.phase");
 	}
 
-	public static String[] getAsyncJobResults(String endpoint, String jobId, String outputfile) throws Exception {
-		if( getAsyncJobPhase(endpoint,  jobId,  outputfile).equalsIgnoreCase("COMPLETED") ) {
+	public static String[] getAsyncJobResults(String endpoint, String jobId, String outputfile, NodeCookie cookie) throws Exception {
+		if( getAsyncJobPhase(endpoint,  jobId,  outputfile, cookie).equalsIgnoreCase("COMPLETED") ) {
 			return  JsonUtils.getValues (outputfile.replaceAll("xml", "json"), "href");
 		}
 		else {
@@ -135,8 +163,8 @@ public class TapAccess  extends RootClass {
 		}
 	}
 
-	public static void getAsyncJobResultFile(String url, String outputdir, String outputfile)throws Exception {
-		sendPostDownloadRequest(url, outputdir, outputfile);
+	public static void getAsyncJobResultFile(String url, String outputdir, String outputfile, NodeCookie cookie)throws Exception {
+		sendPostDownloadRequest(url, outputdir, outputfile, cookie);
 
 	}
 

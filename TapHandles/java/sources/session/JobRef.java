@@ -3,21 +3,26 @@
  */
 package session;
 
+import java.net.HttpCookie;
+
 import resources.RootClass;
 
 /**
  * @author laurent
- * @version $Id: JobRef.java 46 2011-07-26 12:55:13Z laurent.mistahl $
+ * @version $Id$
  *
  */
 public class JobRef extends RootClass {
 
 	private String nodeKey;
 	private String jobId;
-	public JobRef(String nodeKey, String jobId) {
+	private HttpCookie cookie;
+	
+	public JobRef(String nodeKey, String jobId, NodeCookie cookie) {
 		super();
 		this.nodeKey = nodeKey;
 		this.jobId = jobId;
+		this.cookie = cookie.getCookie();
 	}
 	public String getNodeKey() {
 		return nodeKey;
@@ -25,7 +30,9 @@ public class JobRef extends RootClass {
 	public String getJobId() {
 		return jobId;
 	}
-	
+	public HttpCookie getCookie() {
+		return cookie;
+	}
 	public boolean match(String nodeKey, String id){
 		if( this.nodeKey.equals(nodeKey) && this.jobId.equals(id)) {
 			return true;
