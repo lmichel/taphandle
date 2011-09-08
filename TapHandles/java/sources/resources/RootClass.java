@@ -4,6 +4,11 @@
 package resources;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
@@ -12,7 +17,7 @@ import org.apache.log4j.Logger;
  * Super class of he project
  * Contains constants and regexp used by the project and some methods managing working directories
  * @author laurent
- * @version $Id: RootClass.java 46 2011-07-26 12:55:13Z laurent.mistahl $
+ * @version $Id$
  */
 public class RootClass {
 	/**
@@ -64,6 +69,10 @@ public class RootClass {
     + FITS_FLOAT_DN     + "|" 
     + FITS_FLOAT_ND     + "|"
     + "[0-9]+)";
+	
+	public static final String ONE_COORDINATE = "[+-]?(?:(?:\\.[0-9]+)|(?:[0-9]+\\.?[0-9]*))(?:[eE][+-]?[0-9]+)?";
+	public static final String POSITION_COORDINATE = "^(" + ONE_COORDINATE + ")((?:[+-]|(?:[,:;\\s]+[+-]?))" +  ONE_COORDINATE + ")$";
+
 	/*
 	 * Working directories pathes used in standalone mode (in dev e.g.). In production mode these directories
 	 * are replaced with Tomcat subdirs.
@@ -81,10 +90,15 @@ public class RootClass {
 	/*
 	 * Max time period (ms) between service availability checking
 	 */
+
+	static private boolean formatInit = false;
+
 	public static final long AVAILABILITY_CHECK_FREQUENCY=	10*60*1000;
+
 
 	/**
 	 * Use working directories contained in contextPath
+	 * MetaBaseDir and SessionBaseDir are set in system properties.
 	 * @param contextPath   Low level function, no param validation
 	 */
 	public static void switchToContext(String contextPath){
@@ -92,6 +106,8 @@ public class RootClass {
 		StyleDir       = contextPath + File.separator + WEB_XSL_DIR      + File.separator;
 		MetaBaseDir    = contextPath + File.separator + WEB_NODEBASE_DIR + File.separator;
 		SessionBaseDir = contextPath + File.separator + WEB_USERBASE_DIR + File.separator;
+		System.setProperty("metabase.dir", MetaBaseDir);
+		System.setProperty("sessions.dir", SessionBaseDir);
 	}
 	/**
 	 * Check that baseDirectory is a writable directory. 
@@ -137,5 +153,20 @@ public class RootClass {
 			return false;
 		}
 	}
+	
+	/**
+	 * Delete recursively the content of the file f
+	 * @param f file (or directory) to delete
+	 * @throws IOException
+	 */
+	public static void delete(File f) throws IOException {
+		if (f.isDirectory()) {
+			for (File c : f.listFiles())
+				delete(c);
+		}
+		if (!f.delete())
+			throw new FileNotFoundException("Failed to delete file: " + f);
+	}
+
 
 }
