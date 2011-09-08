@@ -12,7 +12,7 @@ import resources.RootClass;
  * Each node is referenced by a key (a String) either computed by @see computeKey or
  * given by the caller.
  * @author laurent
- * @version $Id: NodeMap.java 46 2011-07-26 12:55:13Z laurent.mistahl $
+ * @version $Id$
  */
 class NodeMap  extends RootClass {
 	/**
@@ -27,9 +27,14 @@ class NodeMap  extends RootClass {
 	 * @return Returns the key
 	 * @throws MalformedURLException
 	 */
-	private String computeKey(String url) throws MalformedURLException {
-		URL hurle = new URL(url);
-		return hurle.getHost().replaceAll("www.", "").replaceAll("[_\\.]", "") + "_" + hurle.getPath().split("\\/")[1].replaceAll("[_\\.]", "");
+	protected String computeKey(String url) throws MalformedURLException {
+		if( !url.startsWith("http://") ) {
+			return url;
+		}
+		else {
+			URL hurle = new URL(url);
+			return hurle.getHost().replaceAll("www.", "").replaceAll("[_\\.]", "") + "_" + hurle.getPath().split("\\/")[1].replaceAll("[_\\.]", "");
+		}
 	}
 	
 	/**
@@ -61,6 +66,21 @@ class NodeMap  extends RootClass {
 			nm = new TapNode(url, MetaBaseDir + key, key );
 			nodeMap.put(key, nm);
 			return key;
+		}
+	}
+	
+	/**
+	 * Returns true if the a node exist with key as key.
+	 * @param key
+	 * @return
+	 * @throws Exception
+	 */
+	public boolean hasNode(String key) throws Exception {
+		if( this.getNode(key) != null ) {
+			return true;
+		}
+		else {
+			return false;
 		}
 	}
 	
