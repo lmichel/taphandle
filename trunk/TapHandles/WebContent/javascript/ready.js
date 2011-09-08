@@ -73,9 +73,16 @@ function setTitlePath(treepath) {
 	}
 }
 
-function logged_alert(message) {
+function getQLimit() {
+	var limit = 10;
+	if( $("#qlimit").val().match(/^[0-9]*$/) ) {
+		limit = $("#qlimit").val();
+	}
+	return limit;
+}
+function logged_alert(message, title) {
 	logMsg("ALERT " + message);
-	alert(message);
+	jAlert(message, title);
 }
 
 
@@ -144,7 +151,7 @@ function openSimbadDialog(pos) {
 	$('#diagdiv').html(table);
 
 	$.getJSON("simbadtooltip", {pos: pos}, function(jsdata) {
-		hideProcessingDialog();
+		hideProcessingDialog();job
 		if( processJsonError(jsdata, "Simbad Tooltip Failure") ) {
 			return;
 		}
@@ -187,11 +194,11 @@ function switchArrow(id) {
 
 function processJsonError(jsondata, msg) {
 	if( jsondata == undefined || jsondata == null ) {
-		logged_alert("JSON ERROR: " + msg + ": no data returned" );
+		logged_alert("JSON ERROR: " + msg + ": no data returned", 'Server Error');
 		return true;
 	}
 	else if( jsondata.errormsg != null) {
-		logged_alert("JSON ERROR: " + msg + ": "  + jsondata.errormsg);
+		logged_alert("JSON ERROR: " + msg + ": "  + jsondata.errormsg, 'Server Error');
 		return true;
 	}	
 	return false;
@@ -199,12 +206,16 @@ function processJsonError(jsondata, msg) {
 }
 
 var nodeList  =  [
-      {id: 'cadc', text: "cadc"}
-     ,{id: 'xidresult', text: "xidresult"}
-     ,{id: 'gavot', text: "gavot"}];
+                  {id: 'cadc', text: "cadc"}
+                  ,{id: 'xidresult', text: "xidresult"}
+                  ,{id: 'gavot', text: "gavot"}
+                  ,{id: 'http://localhost:8888/saadasvn/tap', text: "http://localhost:8888/saadasvn/tap"}
+                  ];
+
 var resultPaneView;
 var sampView ;
 var tapView ;
+var cartView ;
 
 /*
  * To be set from a JSP 
@@ -224,6 +235,10 @@ $().ready(function() {
 	var tapModel       = new $.TapModel();
 	tapView            = new $.TapView();
 	var tapController  = new $.TapController(tapModel, tapView);
+	
+	var cartModel       = new $.CartModel();
+	cartView            = new $.CartView();
+	var cartControler   = new $.CartControler(cartModel, cartView);
 
 	/*
 	 * Splitter functions of accesspane, the container of the db tree, 
@@ -254,60 +269,51 @@ $().ready(function() {
 				, minCharacters: 0
 				, onSelect: function(data){						
 					resultPaneView.fireNewNodeEvent($('#node_selector').val());
-					}
+				}
 			});
 
 	$("div#treedisp").jstree({
 		"json_data"   : {"data" : [ {  "attr"     : { "id"   : "rootid" },
-			                           "data"     : { "title"   : "Tap Nodes" }}]}  , 
-	    "plugins"     : [ "themes", "json_data", "dnd", "crrm"],
-		"dnd"         : {"drop_target" : "#resultpane,#taptab,#showquerymeta",
-		                 "drop_finish" : function (data) {
-			            		  var parent = data.r;
-			            		  var treepath = data.o.attr("id").split(';');
-			            		  if( treepath.length < 3 ) {
-			            			  logged_alert("Query can only be applied on one data category or one data class: ("  +  treepath + ")");
-			            		  }
-			            		  else {
-			            			  while(parent.length != 0  ) {
-			            				  resultPaneView.fireSetTreePath(treepath);	
-			            				  if(parent.attr('id') == "resultpane" ) {
-			            					  setTitlePath(treepath);
-			            					  resultPaneView.fireTreeNodeEvent(treepath);	
-			            					  return;
-			            				  }
-			            				  else if(parent.attr('id') == "showquerymeta" ) {
-			            					  setTitlePath(treepath);
-			            					  resultPaneView.fireShowMetaNode(treepath);	
-			            					  return;
-			            				  }
+			"data"     : { "title"   : "Tap Nodes" }}]}  , 
+			"plugins"     : [ "themes", "json_data", "dnd", "crrm"],
+			"dnd"         : {"drop_target" : "#resultpane,#taptab,#showquerymeta",
+				"drop_finish" : function (data) {
+					var parent = data.r;
+					var treepath = data.o.attr("id").split(';');
+					if( treepath.length < 3 ) {
+						logged_alert("Query can only be applied on one data category or one data class: ("  +  treepath + ")", 'User Input Error');
+					}
+					else {
+						while(parent.length != 0  ) {
+							resultPaneView.fireSetTreePath(treepath);	
+							if(parent.attr('id') == "resultpane" ) {
+								setTitlePath(treepath);
+								resultPaneView.fireTreeNodeEvent(treepath);	
+								return;
+							}
+							else if(parent.attr('id') == "showquerymeta" ) {
+								setTitlePath(treepath);
+								resultPaneView.fireShowMetaNode(treepath);	
+								return;
+							}
 
-			            				  else if(  parent.attr('id') == "taptab") {
-			            					  tapView.fireTreeNodeEvent(treepath);	
-			            					  return;
-			            				  }
-			            				  parent = parent.parent();
-			            			  }
-			            		  }
-			            	  }
-			              },
-			              // Node sorting by DnD blocked
-			              "crrm" : {"move" : {"check_move" : function (m) {return false; }}
-			              }
+							else if(  parent.attr('id') == "taptab") {
+								tapView.fireTreeNodeEvent(treepath);	
+								return;
+							}
+							parent = parent.parent();
+						}
+					}
+				}
+			},
+			// Node sorting by DnD blocked
+			"crrm" : {"move" : {"check_move" : function (m) {return false; }}
+			}
 	}); // end of jstree
 
 	$("input#node_selector").keypress(function(event) {
 		if (event.which == '13') {
-			showProcessingDialog("Waiting on TAP node list");
-			$.getJSON("getnode", {node: $('#node_selector').val() }, function(dts) {
-				hideProcessingDialog();
-				if( processJsonError(dts, "Cannot make data tree") ) {
-					return;
-				}
-				else {
-					resultPaneView.fireNewNodeEvent($('#node_selector').val());
-				}
-			});
+			resultPaneView.fireNewNodeEvent($('#node_selector').val());
 		}
 	});
 
@@ -323,7 +329,7 @@ $().ready(function() {
 			tapView.fireUpdateQueryEvent();			
 		}
 		else {
-			logged_alert('The result limit must be a positive integer value' );
+			logged_alert('The result limit must be a positive integer value' , "User Input Error");
 			$("#qlimit").val(100);
 			return false;
 		}
@@ -391,12 +397,10 @@ $().ready(function() {
 	 * This callback can be changed changed at everytime: do not use the "onclick" HTML  
 	 * attribute which is not overriden by JQuery "click" callback
 	 */
-	$('#showquerymeta').click(function(){logged_alert("No meta data available yet")});
+	$('#showquerymeta').click(function(){logged_alert("No meta data available yet", 'Application not Ready')});
 
 	sampView.fireSampInit();
 	tapView.fireRefreshJobList();
-	
+
 	resultPaneView.fireNewNodeEvent("cadc");
-
-
 });

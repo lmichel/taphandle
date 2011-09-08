@@ -28,7 +28,7 @@ jQuery.extend({
 				WebSampConnector.sendMsg('image.load.fits',oid,'Img' + oid,base_url + 'download?oid=' + oid,'');
 			}
 			else {
-				logged_alert('No active SAMP connnection');
+				logged_alert('No active SAMP connnection', 'Error');
 			}
 		}
 		this.fireSendSpectra= function(oid){
@@ -37,7 +37,7 @@ jQuery.extend({
 				WebSampConnector.sendMsg('table.load.fits',oid,'Spec' + oid,base_url + 'download?oid=' + oid,'');
 			}
 			else {
-				logged_alert('No active SAMP connnection');
+				logged_alert('No active SAMP connnection', 'Error');
 			}
 		}
 		this.fireSendSIAQuery= function(query){
@@ -49,7 +49,7 @@ jQuery.extend({
 				WebSampConnector.sendMsg('table.load.votable','From Query Result' ,'Images', url,'');
 			}
 			else {
-				logged_alert('No active SAMP connnection');
+				logged_alert('No active SAMP connnection', 'Error');
 			}
 		}
 		this.fireSendSSAQuery= function(query){
@@ -61,7 +61,7 @@ jQuery.extend({
 				WebSampConnector.sendMsg('table.load.votable','From Query Result' ,'Spectra', url,'');
 			}
 			else {
-				logged_alert('No active SAMP connnection');
+				logged_alert('No active SAMP connnection', 'Error');
 			}
 		}
 		this.fireSendTapDownload= function(url){
@@ -70,7 +70,7 @@ jQuery.extend({
 					WebSampConnector.sendMsg('table.load.votable','From TAP Result' ,'VOTable', url,'');
 			}
 			else {
-				logged_alert('No active SAMP connnection');
+				logged_alert('No active SAMP connnection', 'Error');
 			}
 		}
 		this.fireSendCSQuery= function(query){
@@ -82,7 +82,7 @@ jQuery.extend({
 				WebSampConnector.sendMsg('table.load.votable','From Query Result' ,'Table entries', url,'');
 			}
 			else {
-				logged_alert('No active SAMP connnection');
+				logged_alert('No active SAMP connnection', 'Error');
 			}
 		}		
 		this.firePointatSky= function(pos){
