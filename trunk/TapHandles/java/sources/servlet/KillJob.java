@@ -11,7 +11,7 @@ import session.UserTrap;
 
 /**
  * Servlet implementation class KillJob
- * @version $Id: KillJob.java 46 2011-07-26 12:55:13Z laurent.mistahl $
+ * @version $Id$
  */
 public class KillJob extends RootServlet implements Servlet {
 	private static final long serialVersionUID = 1L;

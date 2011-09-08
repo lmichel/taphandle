@@ -8,7 +8,7 @@ import javax.servlet.http.HttpServletResponse;
 
 /**
  * Servlet implementation class ConnectNode
- * @version $Id: ConnectNode.java 46 2011-07-26 12:55:13Z laurent.mistahl $
+ * @version $Id$
  */
 public class ConnectNode extends HttpServlet {
 	private static final long serialVersionUID = 1L;

@@ -1,5 +1,6 @@
 package servlet;
 
+import java.io.File;
 import java.io.IOException;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
@@ -11,12 +12,12 @@ import session.UserTrap;
 
 /**
  * Servlet implementation class JobResult
- * @version $Id: JobResult.java 46 2011-07-26 12:55:13Z laurent.mistahl $
+ * @version $Id$
  */
 public class JobResult extends RootServlet implements Servlet {
 	private static final long serialVersionUID = 1L;
 
-    /**
+	/**
  	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
@@ -25,6 +26,7 @@ public class JobResult extends RootServlet implements Servlet {
 		try {
 			String nodeKey = this.getParameter(request, "node");
 			String jobId = this.getParameter(request, "jobid");
+			String format = this.getParameter(request, "format");
 			if( nodeKey == null || nodeKey.length() ==  0 ) {
 				reportJsonError(request, response, "jobstatus: no node specified");
 				return;
@@ -34,8 +36,19 @@ public class JobResult extends RootServlet implements Servlet {
 				return;
 			}
 			UserSession session = UserTrap.getUserAccount(request);
-			session.downloadResult(nodeKey, jobId);
-			dumpJsonFile(session.getJobResultUrlPath(nodeKey, jobId), response);
+			if( "json".equals(format)) {
+				String resultfile = session.getJobResultUrlPath(nodeKey, jobId);
+				if( getServletContext().getResource(resultfile) == null ) {
+					session.downloadResult(nodeKey, jobId);
+				}
+				dumpJsonFile(resultfile, response);
+			} else {
+				String resultfile = session.getJobDownloadUrlPath(nodeKey, jobId);
+				if( getServletContext().getResource(resultfile) == null ) {
+					session.downloadResult(nodeKey, jobId);
+				}
+				downloadProduct(request, response, getServletContext().getRealPath(resultfile), jobId + ".xml");
+			}
 		} catch (Exception e) {
 			this.reportJsonError(request, response, e);
 		}

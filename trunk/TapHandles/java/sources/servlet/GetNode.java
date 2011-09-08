@@ -14,17 +14,11 @@ import resources.RootClass;
 
 /**
  * Servlet implementation class GetNode
- * @version $Id: GetNode.java 46 2011-07-26 12:55:13Z laurent.mistahl $
-*/
+ * @version $Id$
+ */
 public class GetNode extends RootServlet implements Servlet {
 	private static final long serialVersionUID = 1L;
 
-	/**
-	 * Default constructor. 
-	 */
-	public GetNode() {
-		// TODO Auto-generated constructor stub
-	}
 
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
@@ -34,21 +28,19 @@ public class GetNode extends RootServlet implements Servlet {
 		printAccess(request, true);
 
 		String node = this.getParameter(request, "node");
-		String key=null;;
 		if( node == null || node.length() ==  0 ) {
 			reportJsonError(request, response, "getnode: no node specified");
 			return;
 		}
-		else if( node .startsWith("http://")) {
-			try {
+		String key= NodeBase.computeKey(node);
+		try {
+			if( !NodeBase.hasNode(key) ) {
 				key = NodeBase.addNode(node);
-			} catch (Exception e) {
-				reportJsonError(request, response, e);
-				return;
 			}
-		} else {
-			key = node;
+		} catch (Exception e) {
+			reportJsonError(request, response, e);
 		}
+
 		try {
 			if(  NodeBase.getNode(key) == null ) {				
 				reportJsonError(request, response, "Node " + key + " does not exist");

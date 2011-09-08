@@ -5,8 +5,12 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -26,7 +30,7 @@ import translator.JsonUtils;
 /**
  * Make sure to SaadaDB connection to be open
  * @author michel
- * @version $Id: RootServlet.java 46 2011-07-26 12:55:13Z laurent.mistahl $
+ * @version $Id$
  *
  */
 public abstract class RootServlet extends HttpServlet {
@@ -36,11 +40,20 @@ public abstract class RootServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	public static final Logger logger = Logger.getLogger("TapBrowser"); 
 	private static boolean INIT = false;
+	static private DecimalFormat exp =  new DecimalFormat("0.00E00");
+	static private DecimalFormat deux = new DecimalFormat("0.000");
+	static private DecimalFormat six = new DecimalFormat("0.000000");
+	
+	
 	@Override
 	public void init(ServletConfig conf) throws ServletException {
 		super.init(conf);
 		if( ! INIT) {
 			NodeBase.switchToContext(getServletContext().getRealPath("/"));
+			deux.setDecimalFormatSymbols(new DecimalFormatSymbols(Locale.ENGLISH));
+			six.setDecimalFormatSymbols(new DecimalFormatSymbols(Locale.ENGLISH));
+			exp.setDecimalFormatSymbols(new DecimalFormatSymbols(Locale.ENGLISH));	
+
 			INIT = true;
 		}
 	}
@@ -102,7 +115,7 @@ public abstract class RootServlet extends HttpServlet {
 	 * @param product_path
 	 * @throws Exception
 	 */
-	protected void downloadProduct(HttpServletRequest req, HttpServletResponse res, String product_path ) throws Exception{
+	protected void downloadProduct(HttpServletRequest req, HttpServletResponse res, String product_path, String proposedFilename ) throws Exception{
 		String contentType = getServletContext().getMimeType(product_path);
 		logger.debug( "Download file " + product_path);
 		File f = new File(product_path);
@@ -134,7 +147,11 @@ public abstract class RootServlet extends HttpServlet {
 		} else  {
 			res.setContentType("application/octet-stream");
 		}
-		res.setHeader("Content-Disposition", "attachment; filename=\"" + f.getName() + "\"");
+		if( proposedFilename != null ) {
+			res.setHeader("Content-Disposition", "attachment; filename=\"" + proposedFilename + "\"");
+		} else {
+			res.setHeader("Content-Disposition", "attachment; filename=\"" + f.getName() + "\"");
+		}
 
 		logger.debug("GetProduct file " + product_path + " (type: " + res.getContentType() + ")" + contentType);
 
@@ -149,16 +166,15 @@ public abstract class RootServlet extends HttpServlet {
 		bos.close();		
 	}
 
-	protected void dumpJsonFile(String urlPath, HttpServletResponse response) throws IOException {
+	protected void dumpJsonFile(String urlPath, HttpServletResponse response) throws Exception {
 		response.setContentType("text/json");
 		logger.debug("dump resource " + urlPath);
-		Scanner s = new Scanner(getServletContext().getResourceAsStream(urlPath));
+		InputStream is = new FileInputStream(getServletContext().getRealPath(urlPath));
+		Scanner s = new Scanner(is);
 		PrintWriter out = response.getWriter();
 		try {
 			while (s.hasNextLine()){
 				String l = s.nextLine();
-				
-				System.out.println(l);
 				out.println(l);
 			}
 		}
@@ -189,6 +205,20 @@ public abstract class RootServlet extends HttpServlet {
  		else {
  			return retour;
  		}
+	}
+	
+	/**
+	 * returns a decimal representation of val with a 1e-6 precision
+	 * @param val
+	 * @return
+	 */
+	public static final String getDecimalCoordString(double val) {
+		if( Double.isInfinite(val) || Double.isNaN(val) ) {
+			return "Not Set";
+		}
+		else {
+			return six.format(val);
+		}
 	}
 
 }

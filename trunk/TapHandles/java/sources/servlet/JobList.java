@@ -1,18 +1,19 @@
 package servlet;
 
 import java.io.IOException;
+
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import metabase.NodeBase;
 import session.UserSession;
 import session.UserTrap;
 
 /**
  * Servlet implementation class JobList
- * @version $Id: JobList.java 46 2011-07-26 12:55:13Z laurent.mistahl $
+ * @version $Id$
  */
 public class JobList extends RootServlet implements Servlet {
 	private static final long serialVersionUID = 1L;
