@@ -25,7 +25,7 @@ import translator.XmlToJson;
  * All data related to that node are stored in baseDirectory.
  * 
  * @author laurentmichel
- * @version $Id: TapNode.java 43 2011-07-26 12:33:54Z laurent.mistahl $
+ * @version $Id$
  */
 public class TapNode  extends RootClass {
 

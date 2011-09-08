@@ -1,5 +1,6 @@
 package metabase;
 
+import java.net.MalformedURLException;
 import java.util.Set;
 
 import resources.RootClass;
@@ -13,7 +14,7 @@ import resources.RootClass;
  * @TODO connect to the registry to get all published nodes
  * 
  * @author laurentmichel
- * @version $Id: NodeBase.java 46 2011-07-26 12:55:13Z laurent.mistahl $
+ * @version $Id$
  */
 public class NodeBase extends RootClass{
 	/**
@@ -76,6 +77,19 @@ public class NodeBase extends RootClass{
 		}
 		return NodeBase.instance.nodeMap.addNode(nodeURL, key);
 	}
+	
+	/**
+	 * Returns true if a node with key as key exists
+	 * @param key
+	 * @return
+	 * @throws Exception
+	 */
+	public static boolean  hasNode(String key) throws Exception{
+		if( NodeBase.instance == null ) {
+			NodeBase.instance = new NodeBase();
+		}
+		return NodeBase.instance.nodeMap.hasNode( key);
+	}
 
 	/**
 	 * Remove the node referenced by key.
@@ -99,6 +113,21 @@ public class NodeBase extends RootClass{
 		}
 		return NodeBase.instance.nodeMap.keySet();
 	}
+	
+	/**
+	 * Extract a key from a node URL. 
+	 * The key is built from the host name and from application name 
+	 * @param url
+	 * @return
+	 * @throws MalformedURLException
+	 */
+	public static String computeKey(String url) throws MalformedURLException {
+		if( NodeBase.instance == null ) {
+			NodeBase.instance = new NodeBase();
+		}
+		return NodeBase.instance.nodeMap.computeKey(url);
+	}
+
 	/**
 	 * Very basic test method: check that the default init is fine.
 	 * @param args
