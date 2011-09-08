@@ -15,7 +15,7 @@ import resources.RootClass;
 /**
  * courtesy of {@link http://code.google.com/p/json-simple/wiki/DecodingExamples JSONSimple}
  * @author laurent
- * @version $Id: JsonKeyFinder.java 46 2011-07-26 12:55:13Z laurent.mistahl $
+ * @version $Id$
  */
 public class JsonKeyFinder extends RootClass implements ContentHandler{
 	private Object value;

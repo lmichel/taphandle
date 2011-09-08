@@ -12,7 +12,7 @@ import resources.RootClass;
  * The namespace declaration looks like xmlns:nsName=http://....
  * The declaration is stored with nsName extracted with a capturing group
  * @author laurent
- * @version $Id: NameSpaceDefinition.java 46 2011-07-26 12:55:13Z laurent.mistahl $
+ * @version $Id$
  */
 public class NameSpaceDefinition extends RootClass{
 	
