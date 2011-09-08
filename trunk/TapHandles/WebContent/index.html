@@ -9,6 +9,7 @@
 <link rel="stylesheet" type="text/css" href="styleimport/datatable.css" />
 <link rel="stylesheet" type="text/css" href="styles/simplemodal.css" />
 <link rel="stylesheet" type="text/css" href="styleimport/jquery-ui.css" />
+<link rel="stylesheet" type="text/css" href="styleimport/jquery.alerts.css" />
 
 <script type="text/javascript" language="javascript" src="jsimport/jquery.js"></script>
 <script type="text/javascript" language="javascript" src="jsimport/jquery.ui.core.js"></script>
@@ -23,7 +24,9 @@
 <script type="text/javascript" language="javascript" src="jsimport/jquery.dataTables.js"></script>
 <script type="text/javascript" language="javascript" src="jsimport/splitter.js"></script>
 <script type="text/javascript" language="javascript" src="jsimport/jquery.simplemodal.js"></script> 
+<script type="text/javascript" language="javascript" src="jsimport/jquery.alerts.js"></script> 
 <script type="text/javascript" language="javascript" src="jsimport/jquery.jsonSuggest-2.js"></script> 
+<script type="text/javascript" language="javascript" src="jsimport/json2.js"></script>
 
 <script type="text/javascript" language="javascript" src="javascript/websampconnector.js"></script>
 
@@ -43,6 +46,9 @@
 <script type="text/javascript" language="javascript" src="javascript/jobView.js"></script>
 <script type="text/javascript" language="javascript" src="javascript/jobControler.js"></script>
 <script type="text/javascript" language="javascript" src="javascript/jobDictionnary.js"></script>
+<script type="text/javascript" language="javascript" src="javascript/cartView.js"></script>
+<script type="text/javascript" language="javascript" src="javascript/cartControler.js"></script>
+<script type="text/javascript" language="javascript" src="javascript/cartModel.js"></script>
 <script type="text/javascript" src="javascript/ready.js"></script>
 <script type="text/javascript" src="javascript/resize.js"></script>
 
@@ -63,7 +69,7 @@
 			<a href="javascript:void(0);" title='Download the current selection in a VOTable'
 			class=votable onclick='resultPaneView.fireDownloadVOTable();'></a> 		
 			<a href="javascript:void(0);" title='Download the current selection in a ZIP ball'
-			class=zip onclick='resultPaneView.fireDownloadZip();'></a> 		
+			class=zip onclick='cartView.fireDownloadCart();'></a> 		
 	<!--		<a href="javascript:void(0);" class=topcat></a> -->
 	<!--		<a href="javascript:void(0);" class=aladin></a> -->
 	<!--		<a href="javascript:void(0);" class=ivoa></a> -->
@@ -109,7 +115,7 @@
 				<div style="text-align: left ;padding: 5px; text-align: center; border-style: hidden; ">
 					<span class=help>Result Limit</span><br>
 					<input type=text id='qlimit' class=numinputvalue 
-	        		style="font-size: small;font-family: Arial, Helvetica, sans-serif;" value='100'><hr>  
+	        		style="font-size: small;font-family: Arial, Helvetica, sans-serif;" value='10'><hr>  
 				</div>
 				<div style="text-align: left ;padding: 5px;text-align: center; border-style: hidden; ">
 					<span id=qhistocount class=help>-/-</span><br> 
