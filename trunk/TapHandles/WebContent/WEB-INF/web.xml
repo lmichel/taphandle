@@ -89,4 +89,34 @@
     <servlet-name>JobResult</servlet-name>
     <url-pattern>/jobresult</url-pattern>
   </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>jobTreepath</display-name>
+    <servlet-name>jobTreepath</servlet-name>
+    <servlet-class>servlet.JobTreepath</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>jobTreepath</servlet-name>
+    <url-pattern>/jobtreepath</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>Sesame</display-name>
+    <servlet-name>Sesame</servlet-name>
+    <servlet-class>servlet.Sesame</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>Sesame</servlet-name>
+    <url-pattern>/sesame</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>ZipBuilder</display-name>
+    <servlet-name>ZipBuilder</servlet-name>
+    <servlet-class>servlet.ZipBuilder</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>ZipBuilder</servlet-name>
+    <url-pattern>/datapack/*</url-pattern>
+  </servlet-mapping>
 </web-app>
