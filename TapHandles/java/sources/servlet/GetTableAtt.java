@@ -12,7 +12,7 @@ import resources.RootClass;
 
 /**
  * Servlet implementation class GetTableAtt
- * @version $Id: GetTableAtt.java 46 2011-07-26 12:55:13Z laurent.mistahl $
+ * @version $Id$
  */
 public class GetTableAtt extends RootServlet implements Servlet {
 	private static final long serialVersionUID = 1L;

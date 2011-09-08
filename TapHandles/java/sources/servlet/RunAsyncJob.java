@@ -1,6 +1,8 @@
 package servlet;
 
 import java.io.IOException;
+
+import javax.servlet.RequestDispatcher;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -13,12 +15,12 @@ import session.UserTrap;
 
 /**
  * Servlet implementation class RunAsynJob
- * @version $Id: RunAsyncJob.java 46 2011-07-26 12:55:13Z laurent.mistahl $
+ * @version $Id$
  */
 public class RunAsyncJob extends RootServlet implements Servlet {
 	private static final long serialVersionUID = 1L;
 
-  
+
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
@@ -32,6 +34,11 @@ public class RunAsyncJob extends RootServlet implements Servlet {
 				reportJsonError(request, response, "runasyncjob: no node specified");
 				return;
 			}
+			else if( "zipball".equals(node)) {
+				RequestDispatcher dispatcher =  getServletContext().getRequestDispatcher("/zipbuilder");
+				dispatcher.forward( request, response );
+				return;
+			}
 			else if( node .startsWith("http://")) {
 				try {
 					nodeKey = NodeBase.addNode(node);
@@ -42,19 +49,19 @@ public class RunAsyncJob extends RootServlet implements Servlet {
 			} else {
 				nodeKey = node;
 			}
-			
+
 			String query = this.getParameter(request, "QUERY");
 			if( query == null || query.length() ==  0 ) {
 				reportJsonError(request, response, "runasyncjob: no query specified");
 				return;
 			}
-			
+
 			String treenode = this.getParameter(request, "TREEPATH");
 			if( treenode == null || treenode.length() ==  0 ) {
 				reportJsonError(request, response, "runasyncjob: no treepath specified");
 				return;
 			}
-			
+
 			session.connectNode(nodeKey);
 			String jobID = session.createJob(nodeKey, query, treenode);
 			session.startJob(nodeKey, jobID);
@@ -64,7 +71,7 @@ public class RunAsyncJob extends RootServlet implements Servlet {
 			this.reportJsonError(request, response, e);
 		}
 	}
-;
+	;
 	/**
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
 	 */

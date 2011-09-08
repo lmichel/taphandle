@@ -8,7 +8,7 @@ import javax.servlet.http.HttpServletResponse;
 
 /**
  * Servlet implementation class Table
- * @version $Id: Table.java 46 2011-07-26 12:55:13Z laurent.mistahl $
+ * @version $Id$
  */
 public class Table extends HttpServlet {
 	private static final long serialVersionUID = 1L;

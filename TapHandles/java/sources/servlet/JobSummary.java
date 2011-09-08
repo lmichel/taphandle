@@ -1,18 +1,19 @@
 package servlet;
 
 import java.io.IOException;
+
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import resources.RootClass;
 import session.UserSession;
 import session.UserTrap;
 
 /**
  * Servlet implementation class JobStatus
- * @version $Id: JobSummary.java 46 2011-07-26 12:55:13Z laurent.mistahl $
+ * @version $Id$
  */
 public class JobSummary extends RootServlet implements Servlet {
 	private static final long serialVersionUID = 1L;
@@ -27,11 +28,11 @@ public class JobSummary extends RootServlet implements Servlet {
 			String nodeKey = this.getParameter(request, "node");
 			String jobId = this.getParameter(request, "jobid");
 			if( nodeKey == null || nodeKey.length() ==  0 ) {
-				reportJsonError(request, response, "jobstatus: no node specified");
+				reportJsonError(request, response, "jobsummary: no node specified");
 				return;
 			}
 			if( jobId == null || jobId.length() ==  0 ) {
-				reportJsonError(request, response, "jobstatus: no job specified");
+				reportJsonError(request, response, "jobsummary: no job specified");
 				return;
 			}
 			UserSession session = UserTrap.getUserAccount(request);
