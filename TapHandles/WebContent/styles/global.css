@@ -958,6 +958,40 @@ a:hover#sessionreport {
 	border: 1px solid #AAA;
 }
 
+
 .detaildata {
 	background: white;
 }
+
+/************************
+ * Job status
+ */
+.pending {
+	color: gray;
+}
+.queued {
+	color: gray;
+}
+.executing {
+	color: orange;
+}
+.completed {
+	color: green;
+}
+.error {
+	color: red;
+}
+.aborted{
+	color: gray;
+}
+.unkwnown {
+	color: red;
+}
+.held {
+	color: gray;
+}
+.suspended {
+	color: red;
+}
+		
+
