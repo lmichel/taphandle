@@ -83,7 +83,7 @@ jQuery.extend({
 			var jsdata ="";
 			showProcessingDialog("Get table description");
 			if( treepath.length != 3 ) {
-				logged_alert("Bad node tree path " + treepath);
+				logged_alert("Bad node tree path " + treepath, 'Internal Error');
 				return;
 			}
 			var tp = treePath[0] + "." + treePath[1] + "." + treePath[1];
@@ -130,7 +130,7 @@ jQuery.extend({
 		this.processPreviousRecord= function(){
 			var jsdata ="";
 			if( histo_ptr <= 0 ) {
-				logged_alert("end of the historic reached");
+				logged_alert("end of the historic reached", 'Info');
 				return;
 			}
 			histo_ptr --;
@@ -168,7 +168,7 @@ jQuery.extend({
 		this.processNextRecord= function(){
 			var jsdata ="";
 			if( histo_ptr >= (histo.length - 1) ) {
-				logged_alert("end of the historic reached");
+				logged_alert("end of the historic reached", 'Info');
 				return;
 			}
 			histo_ptr ++;
@@ -219,17 +219,17 @@ jQuery.extend({
 				}
 			});
 		}
+		
 		this.downloadVOTable = function() {
 			/*
-			 * The mode (TAP/SaadaQL is detected by analysing the title
+			 * Job ids is detected by analysing the title
 			 */
-			var titlepath = $('#titlepath').html().split('&gt;');
-			if( titlepath.length == 3 && titlepath[1] == 'Job' ) {
-				tapView.fireDownloadVotable(titlepath[2]);
+			var titlepath = $('#titlepath').text().split('>');
+			if( titlepath.length == 3  ) {
+				tapView.fireDownloadVotable(titlepath[0], titlepath[2].replace('job ', ''));
 			}
 			else {
-				var url = "getqueryreport?query=" + escape(current_query) + "&protocol=auto&format=votable";
-				window.open(url, 'DL VOTable');
+				logged_alert("Cannot identify the current JOB", 'Error');	
 			}
 		}
 		this.downloadFITS = function() {
@@ -242,7 +242,7 @@ jQuery.extend({
 			 */
 			var titlepath = $('#titlepath').html().split('&gt;');
 			if( titlepath.length == 3 && titlepath[1] == 'Job' ) {
-				logged_alert("Not implemented for TAP queries");
+				logged_alert("Not implemented for TAP queries", 'Info');
 			}
 			else {
 				var url = "getqueryreport?query=" + escape(current_query) + "&protocol=noprotocol&format=zipball";
@@ -269,7 +269,7 @@ jQuery.extend({
 					sampView.fireSendCSQuery(current_query);
 				}
 				else {
-					logged_alert("Samp messages are not  implemented for this data category.")
+					logged_alert("Samp messages are not  implemented for this data category.", 'Info')
 				}
 			}
 

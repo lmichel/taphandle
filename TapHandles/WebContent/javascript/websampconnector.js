@@ -53,7 +53,7 @@ var WebSampConnector = {
       } else if (window.opera && opera.postError) {
          opera.postError(message);
       } else {
-         logged_alert(message);
+         logged_alert(message, 'Error');
       }
    },
 

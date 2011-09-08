@@ -35,7 +35,7 @@ jQuery.extend({
 		}
 		this.fireInputCoordEvent = function(){
 			if( $("#tapcoordval").val() == '' || $("#tapradiusval").val() == '' ) {
-				logged_alert("Both position and radius must be given");
+				logged_alert("Both position and radius must be given", 'Info');
 				return;
 			}
 
@@ -88,23 +88,38 @@ jQuery.extend({
 				listeners[i].controlCheckJobCompleted(nodekey, jid, counter);
 			});
 		}
+		
+		this.fireUpdateRunningJobList= function() {			
+			$.each(listeners, function(i){
+				listeners[i].controlUpdateRunningJobList();
+			});
+		}
+		this.fireRemoveJob = function(id) {
+			$.each(listeners, function(i){
+				listeners[i].controlRemoveJob(id);
+			});		
+		}
 		this.fireSampBroadcast= function(nodekey, jid){
 			$.each(listeners, function(i){
 				listeners[i].controlSampBroadcast(nodekey, jid);
 			});
 		}
+		this.fireDisplayResult= function(nodekey, jid){
+			$.each(listeners, function(i){
+				listeners[i].controlDisplayResult(nodekey, jid);
+			});
+		}
+
 		/*
 		 * Local processing
 		 */
 
 		this.showProgressStatus = function(){
-			logged_alert("Job in progress");
+			logged_alert("Job in progress", 'Info');
 		}
 		this.showFailure = function(textStatus){
-			logged_alert("view: " + textStatus);
+			logged_alert("view: " + textStatus, 'Info');
 		}		
-		this.displayResult= function(dataJSONObject){
-		}
 		this.initForm= function(attributesHandlers, selectAttributesHandlers){
 			/*
 			 * Reset form
@@ -184,8 +199,8 @@ jQuery.extend({
 			$('#adqltext').val(query);
 		}
 
-		this.jobView= function(jobview){
-			jobview.fireInitForm('tapjobs');
+		this.jobView= function(jobcontroler){
+			jobcontroler.fireInitForm('tapjobs');
 		}
 
 		this.fireDisplayHisto = function(){

@@ -49,7 +49,7 @@ jQuery.extend({
 				if( WebSampConnector.isConnected() == false ) {				
 					$("#sampconnector").css("background", "url(images/disconnected.png)center left no-repeat");
 					$(".ivoa").css('visibility', 'hidden');
-					logged_alert('Connection failed: Make sure you have a SAMP hub running');
+					logged_alert('Connection failed: Make sure you have a SAMP hub running', 'Warning');
 				}
 				else {
 					$("#sampconnector").css("background", "url(images/connected.png)center left no-repeat");	
@@ -58,7 +58,7 @@ jQuery.extend({
 			} catch(err) {
 				$("#sampconnector").css("background", "url(images/disconnected.png)center left no-repeat");
 				$(".ivoa").css('visibility', 'hidden');
-				logged_alert('Connection failed: Make sure the applet WebSampConnector is authorized to run');				
+				logged_alert('Connection failed: Make sure the applet WebSampConnector is authorized to run', 'Warning');				
 			}
 
 		}

@@ -19,6 +19,8 @@ jQuery
 		}
 
 		this.fireNewNodeEvent = function(nodekey) {
+			showProcessingDialog("Waiting on " + nodekey + " node description");
+
 			$.getJSON("getnode", {node: nodekey }, function(jsdata) {
 				hideProcessingDialog();
 				if( processJsonError(jsdata, "Cannot make data tree") ) {
@@ -95,9 +97,9 @@ jQuery
 				listeners[i].controlDownloadFITS();
 			});
 		}
-		this.fireDownloadZip = function(query) {
+		this.fireDownloadCart = function(query) {
 			$.each(listeners, function(i) {
-				listeners[i].controlDownloadZip();
+				listeners[i].controlDownloadCart();
 			});
 		}
 		this.fireSampBroadcast = function(query) {
@@ -194,15 +196,15 @@ jQuery
 			$("div#accesspane").trigger("resize",[ height]);		
 		}
 		this.showProgressStatus = function() {
-			logged_alert("Job in progress");
+			logged_alert("Job in progress", 'Info');
 		}
 		this.showFailure = function(textStatus) {
-			logged_alert("view: " + textStatus);
+			logged_alert("view: " + textStatus, 'Failutr');
 		}
 		this.showDetail = function(oid, jsdata, limit) {
 			if (jsdata.errormsg != null) {
 				logged_alert("FATAL ERROR: Cannot show object detail: "
-						+ jsdata.errormsg);
+						+ jsdata.errormsg, 'Server Error');
 				return;
 			}
 
@@ -308,10 +310,9 @@ jQuery
 		}
 
 		this.showMeta = function(jsdata, limit) {
-			logMsg("@@@@ showMeta");
 			if (jsdata.errormsg != null) {
 				logged_alert("FATAL ERROR: Cannot show object detail: "
-						+ jsdata.errormsg);
+						+ jsdata.errormsg, 'Server Error');
 				return;
 			}
 
@@ -368,7 +369,6 @@ jQuery
 
 		}
 		this.showTapResult = function(treepath, jid, jsdata) {
-			setTitlePath([treepath[0], treepath[2], ('job ' + jid) ]);
 			var table = "<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\"  id=\"datatable\" class=\"display\"></table>"
 				$("#resultpane").html(table);
 			var nb_cols = jsdata.aoColumns.length;

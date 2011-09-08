@@ -36,13 +36,22 @@ jQuery.extend({
 					model.processJobAction(nodekey, jid);
 				},
 				controlDownloadVotable: function(nodekey, jid){
-					model.downloadVotable(jid);
+					model.downloadVotable(nodekey, jid);
 				},
 				controlCheckJobCompleted: function(nodekey, jid, counter){
 					model.checkJobCompleted(nodekey, jid, counter);
 				},
+				controlUpdateRunningJobList: function() {
+					model.updateRunningJobList();
+				},
+				controlRemoveJob: function(id) {
+					model.removeJob(id);
+				},
 				controlSampBroadcast: function(nodekey, jid){
 					model.sampBroadcast(nodekey, jid);
+				},
+				controlDisplayResult: function(nodekey, jid){
+					model.displayResult(nodekey, jid);
 				}
 		}
 		view.addListener(vlist);
@@ -57,8 +66,8 @@ jQuery.extend({
 				queryUpdated : function(query){
 					view.queryUpdated(query);
 				},
-				newJob: function(jobview){
-					view.jobView(jobview);
+				newJob: function(jobcontroleur){
+					view.jobView(jobcontroler);
 				}
 		}
 

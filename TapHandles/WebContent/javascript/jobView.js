@@ -1,12 +1,12 @@
 jQuery.extend({
 
-	JobView: function(){
+	JobView: function(jid){
 		/**
 		 * keep a reference to ourselves
 		 */
 		var that = this;
 		var containerID ;
-
+		var id = jid;
 		/**
 		 * who is listening to us?
 		 */
@@ -23,17 +23,39 @@ jQuery.extend({
 				listeners[i].controlInitForm();
 			});
 		}
+
+		this.fireUpdateStatus = function() {
+			$.each(listeners, function(i){
+				listeners[i].controlUpdateStatus();
+			});
+		}
+
+		this.getId = function() {
+			return id;
+		}
+		this.checkJobCompleted = function() {
+			var retour = false
+			$.each(listeners, function(i){
+				retour = listeners[i].controlJobCompleted();
+				console.log("View  " +retour);
+			});		
+			return retour;
+		}
+
 		this.initForm = function(nodekey, id, phase, actions){
 			$('#' + that.containerID).prepend("<div id=" + id + " style='float: none;'></div>");
 			$('#' + id).html('');
+			$('#' + id).data('treenode', {node: nodekey, jobid: id});
+
 			$('#' + id).append('<span id=' + id + '_id>Job "' + nodekey + ' ' + id + '"</span>');
-			$('#' + id).append('&nbsp;<span id=' + id + '_phase>' + phase + '</span>');
+			$('#' + id).append('&nbsp;<span id=' + id + '_phase class="' + phase.toLowerCase() + '">' + phase + '</span>');
 			$('#' + id).append('<select id=' + id + '_actions style="font-size: small;" onChange="tapView.fireJobAction(\'' + nodekey + '\', \'' + id + '\');"></select>');
 			for( var i=0 ; i<actions.length ; i++ ) {
 				$('#' + id + '_actions').append('<option value="' + actions[i] + '">' +  actions[i] + '</option>');
-				}
+			}
 			$('#' + id).append('<a id=' + id + '_close href="javascript:void(0);" class=closekw></a>');
 			$('#' + id + "_close").click(function() {
+				tapView.fireRemoveJob( id);
 				$.post("killjob"
 						, {NODE: nodekey, JOBID: id}
 						, function(jsondata, status) {
@@ -41,22 +63,25 @@ jQuery.extend({
 								return;
 							}
 							else {
-								$('#' +  id).remove();								
+								$('#' +  id).remove();		
 							}
 						});
 			});
 			$("#taptab").tabs({
 				selected: 3
 			});
-
-//			$('#' +  id_root + "_op").change(function() {
-//			that.fireEnterEvent($('#' +  id_root + "_andor option:selected").text()
-//			, this.value
-//			, $('#' +  id_root + "_val").val());				
-//			});
-
 		}
 
-
+		this.updateForm = function(nodekey, id, phase, actions){
+			console.log("update forn " + id)
+			var status = $('#' + id + '_phase');
+			status.attr("class", phase.toLowerCase());
+			status.text(phase);
+			var actionMenu = $('#' + id + '_actions');
+			actionMenu.html('');
+			for( var i=0 ; i<actions.length ; i++ ) {
+				actionMenu.append('<option value="' + actions[i] + '">' +  actions[i] + '</option>');
+			}
+		}
 	}
 });
