@@ -9,7 +9,7 @@ import javax.servlet.http.HttpSession;
 
 /**
  * @author michel
- * @version $Id: UserTrap.java 46 2011-07-26 12:55:13Z laurent.mistahl $
+ * @version $Id$
  *
  */
 public class UserTrap {

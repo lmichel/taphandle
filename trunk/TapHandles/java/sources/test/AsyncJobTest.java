@@ -1,12 +1,17 @@
 package test;
 
 
+import java.net.HttpCookie;
+
+import metabase.NodeBase;
+
 import resources.RootClass;
+import session.NodeCookie;
 import tapaccess.TapAccess;
 
 /**
  * @author laurent
- * @version $Id: AsyncJobTest.java 46 2011-07-26 12:55:13Z laurent.mistahl $
+ * @version $Id$
  *
  */
 public class AsyncJobTest  extends RootClass {
@@ -24,7 +29,31 @@ public class AsyncJobTest  extends RootClass {
 		if( args.length != 2 ) {
 			usage();
 		}
-		TapAccess.createAsyncJob(args[0], args[1], "/home/michel/Desktop/tapbase/job.xml");
+		NodeCookie cookie=new NodeCookie();
+		String jobID = TapAccess.createAsyncJob(args[0], args[1], "/home/michel/Desktop/tapbase/job.xml", cookie);
+		System.out.println("Create: " + jobID + " " + cookie);
+		System.out.println("Run: " + TapAccess.runAsyncJob(args[0], jobID,  "/home/michel/Desktop/tapbase/status.xml", cookie)+ " " + cookie);
+		String phase = "";
+		do {
+			phase = TapAccess.getAsyncJobPhase(args[0], jobID,  "/home/michel/Desktop/tapbase/phase.xml", cookie);
+			Thread.sleep(1000);
+			
+		} while( phase.equals("EXECUTING"));
+		System.out.println("Pahse: " + phase+ " " + cookie);
+		String[] resultURLs = TapAccess.getAsyncJobResults(args[0]
+				, jobID
+				, "/home/michel/Desktop/status.xml"
+				, cookie);
+		for( String r: resultURLs) {
+			if( r.matches(".*\\.xml.*") ) {
+				logger.debug("Download " + r);
+				TapAccess.getAsyncJobResultFile(r
+						, "/home/michel/Desktop/"
+						, "result.xml"
+						, cookie);
+			}
+		}
+
 	}
 
 
