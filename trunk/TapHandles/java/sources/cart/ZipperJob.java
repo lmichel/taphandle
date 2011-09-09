@@ -55,7 +55,6 @@ public class ZipperJob extends AbstractJob {
 		try {
 			RootClass.isWorkingDirectoryValid(baseDir);
 			RootClass.validWorkingDirectory(this.reportDir);
-			System.out.println(reportDir + File.separator + "zipballs");
 			CartDecoder decoder = new CartDecoder();
 			decoder.decode(lstParam.get("cart"));
 			zipMap = decoder.getZipMap();
@@ -70,7 +69,7 @@ public class ZipperJob extends AbstractJob {
 	protected void jobWork() throws UWSException, InterruptedException {
 		System.out.println("@@@ jobwork");
 		try{
-			zipMap.prepareDataFiles(this.baseDir);
+			zipMap.prepareDataFiles(this.baseDir, this.reportDir);
 			ZIPUtil.buildZipBall(zipMap, this.reportDir + File.separator + "cart.zip");
 		}catch(Exception ex){
 			ex.printStackTrace();
