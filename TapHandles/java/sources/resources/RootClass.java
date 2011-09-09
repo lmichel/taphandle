@@ -168,5 +168,17 @@ public class RootClass {
 			throw new FileNotFoundException("Failed to delete file: " + f);
 	}
 
+	/**
+	 * Remove recursively the content of the directory f
+	 * @param f
+	 * @throws IOException
+	 */
+	public static void emptyDirectory(File f) throws IOException {
+		logger.debug("empty directory " + f.getAbsolutePath());
+		if (f.isDirectory()) {
+			for (File c : f.listFiles())
+				delete(c);
+		}		
+	}
 
 }
