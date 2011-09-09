@@ -119,7 +119,7 @@ jQuery.extend({
 				url: "datapack/zipper",
 				data: {PHASE: 'RUN', FORMAT: 'json',CART: JSON.stringify(cartData) },
 				success: function(xmljob, status) {
-					alert("SUCC");
+					alert("SUCC" + status);
 					},
 				dataType: "xml",
 				error: function(xmljob, textStatus, errorThrown) {
