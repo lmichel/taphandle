@@ -25,6 +25,9 @@ jQuery.extend({
 			},
 			controlStartArchiveBuilding: function() {
 				model.startArchiveBuilding();
+			},
+			controlGetJobPhase: function() {
+				return model.getJobPhase();
 			}
 		}
 		view.addListener(vlist);

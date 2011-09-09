@@ -51,14 +51,20 @@ jQuery.extend({
 				listeners[i].controlStartArchiveBuilding();
 			});
 		}
-
+		this.fireGetJobPhase = function() {
+			var retour;
+			$.each(listeners, function(i){
+				retour = listeners[i].controlGetJobPhase();
+			});
+			return retour;
+		}
 		this.initForm = function(cartData) {
 			var table = '';
 			var histo = '';
-
+			var phase = that.fireGetJobPhase();
+			
 			histo += '<a id="qhistoleft"><img src="images/histoleft-grey.png"></a>';
 			histo += '<a id="qhistoright"><img src="images/historight-grey.png"></a>';
-
 
 			var title = "Shopping Cart";
 			table += '<h2> ' + histo + ' DETAIL <span>' + title
@@ -83,8 +89,13 @@ jQuery.extend({
 				logged_alert("Empty Shopping Cart");
 				return;
 			}
-			table += "<input type=button id=detaildiv_clean value=Clean>";			
-			table += "<input type=button id=detaildiv_submit value=Submit>";			
+			table += "<h4 id=\"cartjob\" class='detailhead'> <img src=\"images/tdown.png\">Processing status</h4>";
+			table += 'Current Job Status <span id=cartjob_phase class="' + phase.toLowerCase() + '">' + phase + '</span><BR>'
+			table += "<input type=button id=detaildiv_clean value='Remove Unselected Items'>";			
+			table += "<input type=button id=detaildiv_cleanall value='Remove All Items'>";			
+			table += "<input type=button id=detaildiv_submit value='Start Processing'>";			
+			table += "<input type=button id=detaildiv_doanload value='Download Cart'>";			
+			table += "<input type=button id=detaildiv_abort value='Abort'>";			
 			$('#detaildiv').html(table);
 			var oTable;
 			for( var nodekey in cartData) {
@@ -110,9 +121,15 @@ jQuery.extend({
 							"bAutoWidth" : true
 						});
 			}
+			var modalbox = $('#detaildiv').modal();
 			$('#detaildiv_clean').click( function() {
 				var sData = $('input', oTable.fnGetNodes()).serialize();
 				that.fireCleanCart(sData);
+				return false;
+			} );
+			$('#detaildiv_cleanall').click( function() {
+				that.fireCleanCart("");
+				modalbox.close();
 				return false;
 			} );
 			$('#detaildiv_submit').click( function() {
@@ -120,7 +137,6 @@ jQuery.extend({
 				return false;
 			} );
 
-			$('#detaildiv').modal();
 		}
 	}
 });
