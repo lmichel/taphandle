@@ -6,7 +6,7 @@ jQuery.extend({
 		var that = this;
 
 		var cartData = {};
-
+		var zipJob;
 		/**
 		 * add a listener to this view
 		 */
@@ -119,13 +119,25 @@ jQuery.extend({
 				url: "datapack/zipper",
 				data: {PHASE: 'RUN', FORMAT: 'json',CART: JSON.stringify(cartData) },
 				success: function(xmljob, status) {
-					alert("SUCC" + status);
-					},
+					$(".zip").css("background-image", "url(http://jacds.u-strasbg.fr/saadasvn/images/connecting.gif)");					
+					//setTimeout("resultPaneView.fireCheckZipCompleted(\"cocu\");", 1000);
+					that.zipJob = new $.ZipjobModel(xmljob);
+					alert(that.zipJob.phase);
+				},
 				dataType: "xml",
 				error: function(xmljob, textStatus, errorThrown) {
-					alert("Error: " + xmljob + textStatus + errorThrown);
+					alert("Error: " + textStatus);
 				}
 			});
+		}
+
+		this.getJobPhase= function() {
+			if( zipJob == null ) {
+				return "nojob";
+			}
+			else {
+				return zipJob.phase;
+			}
 		}
 	}
 });
