@@ -992,6 +992,8 @@ a:hover#sessionreport {
 }
 .suspended {
 	color: red;
+}	
+.nojob {
+	color: gray;
 }
-		
 
