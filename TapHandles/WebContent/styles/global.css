@@ -541,8 +541,44 @@ a.zip {
 	display: inline-block;
 	width: 0px;
 	overflow: visible;
-	padding: 16px 0px 16px 44px;
+	padding: 16px 0px 16px 38px;
 	background: transparent url(../images/zip_32.png) center left no-repeat;
+}
+
+a.zip_failed {
+	display: inline-block;
+	width: 0px;
+	overflow: visible;
+	padding: 16px 0px 16px 38px;
+	background: transparent url(../images/zip_32.png) center left no-repeat;
+	border: 2px solid red;
+}
+
+a.zip_failed {
+	display: inline-block;
+	width: 0px;
+	overflow: visible;
+	padding: 16px 0px 16px 38px;
+	background: transparent url(../images/zip_32.png) center left no-repeat;
+	border: 2px solid red;
+}
+
+a.zip_completed {
+	display: inline-block;
+	width: 0px;
+	overflow: visible;
+	padding: 16px 0px 16px 38px;
+	background: transparent url(../images/zip_32.png) center left no-repeat;
+	border: 2px solid green;
+}
+
+a.zip_executing {
+	display: inline-block;
+	width: 0px;
+	overflow: visible;
+	padding: 16px 0px 16px 38px;
+	background: transparent url(../images/zip_32.png) center left no-repeat;
+	border: 2px solid orange;
 }
 
 a:hover.zip {
@@ -956,6 +992,7 @@ a:hover#sessionreport {
 		url(http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/images/ui-bg_highlight-soft_75_cccccc_1x100.png)
 		repeat-x 50% 50%;
 	border: 1px solid #AAA;
+	margin: 0;
 }
 
 
