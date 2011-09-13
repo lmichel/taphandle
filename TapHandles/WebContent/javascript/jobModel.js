@@ -40,14 +40,9 @@ jQuery.extend({
 			});		
 
 		}
-		this.isCompleted = function() {
-			console.log('isCompleted ' + phase);
-			if( phase == 'COMPLETED') {
-				return true;
-			}
-			else {
-				return false;
-			}
+		this.getPhase = function() {
+			console.log('getPhase ' + phase);
+			return  phase;
 		}
 		this.notifyIsInit = function() {
 			logMsg("is init job model " + node + " " + id + " " + phase);
