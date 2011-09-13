@@ -33,10 +33,10 @@ jQuery.extend({
 		this.getId = function() {
 			return id;
 		}
-		this.checkJobCompleted = function() {
+		this.fireGetPhase = function() {
 			var retour = false
 			$.each(listeners, function(i){
-				retour = listeners[i].controlJobCompleted();
+				retour = listeners[i].controlGetPhase();
 				console.log("View  " +retour);
 			});		
 			return retour;

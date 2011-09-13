@@ -44,7 +44,11 @@ var bibcodeRegexp  = new RegExp(/^\d{4}[\w\.]{10}\d{4}\w$/);
 
 function formatValue(value) {
 	if( value.startsWith("http://") ||  value.startsWith("https://") ) {
-		return "<a title=\"data access\" href=\"" + value + "\" target=blank>Data Access</a>";
+		var titlepath = $('#titlepath').text().split('>');
+
+		return "<a title=\"Download\" href='#' onclick='document.location = \"" + value + "\"; return false;'>[DL]</a>"
+		+ "<a title=\"Broadcast to SAMP\" href='#' onclick='sampView.fireSendTapDownload(\"" + value + "\"); return false;'>[SAMP]</a>"
+		+ "<a title=\"Add to Cart\" href='#' onclick='cartView.fireAddUrl(\"" + titlepath[0] + "\", \"" + value + "\"); return false;'>[Cart]</a>";
 	}
 	else if( decimaleRegexp.test(value)){
 		return (new Number(value)).toPrecision(8);
@@ -197,7 +201,7 @@ function processJsonError(jsondata, msg) {
 		logged_alert("JSON ERROR: " + msg + ": no data returned", 'Server Error');
 		return true;
 	}
-	else if( jsondata.errormsg != null) {
+	else if( jsondata.errormsg != undefined  ){
 		logged_alert("JSON ERROR: " + msg + ": "  + jsondata.errormsg, 'Server Error');
 		return true;
 	}	

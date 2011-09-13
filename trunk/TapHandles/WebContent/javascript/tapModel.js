@@ -232,26 +232,24 @@ jQuery.extend({
 						if( processJsonError(jsondata, "tap/async Cannot get jobs list") ) {
 							return;
 						}
-						jv  = new $.JobView(jsondata.job.jobId);
-						logMsg("submitQuery " + storedTreepath[0] + " " +  jsondata);
-						jm = new $.JobModel(storedTreepath[0], jsondata.job);
-						new $.JobControler(jm, jv);
-						lastJob = jv;
-						lastJob.fireInitForm('tapjobs');
-						lastTimer = setTimeout("tapView.fireCheckJobCompleted(\"" + storedTreepath[0] + "\", \"" + jsondata.job.jobId + "\", \"9\");", 1000);
+						else {
+							jv  = new $.JobView(jsondata.job.jobId);
+							logMsg("submitQuery " + storedTreepath[0] + " " +  jsondata);
+							jm = new $.JobModel(storedTreepath[0], jsondata.job);
+							new $.JobControler(jm, jv);
+							lastJob = jv;
+							lastJob.fireInitForm('tapjobs');
+							lastTimer = setTimeout("tapView.fireCheckJobCompleted(\"" + storedTreepath[0] + "\", \"" + jsondata.job.jobId + "\", \"9\");", 1000);
+						}
 					});
 		}
 
 		this.checkJobCompleted = function(nodeKey, jid, counter) {
-			console.log('-----------');
-			var x =  lastJob.checkJobCompleted();
-			console.log('checkJobCompleted  ' + x);
-			console.log('++++++++++');
 			if( lastJob == null ) {
 				lastTimer = null;
 				return;
 			}
-			else if( lastJob.checkJobCompleted() ) {
+			else if( lastJob.fireGetPhase() == 'COMPLETED' ) {
 				that.displayResult(nodeKey, jid);	
 			}
 			else if( counter < 0 ) {
@@ -275,8 +273,9 @@ jQuery.extend({
 				pendingJobs[k].fireUpdateStatus();
 			} 
 			for( var k in  pendingJobs ) {
-				if( pendingJobs[k].checkJobCompleted() ) {
-					delete pendingJobs[k];
+				var phase = pendingJobs[k].fireGetPhase();
+				if( phase != 'EXECUTING' ) {
+					delete pendingJobs[k];					
 				}
 			}
 			if( Object.keys(pendingJobs).length > 0  ) {
@@ -308,6 +307,7 @@ jQuery.extend({
 				if( processJsonError(jsondata, "Cannot get jobs list") ) {
 					return;
 				}
+				showProcessingDialog("Update Job Status");
 				for( var i=0 ; i<jsondata.length ; i++) {
 					var job = jsondata[i];
 					logMsg("refreshJobList "+ job.nodekey + " " + job.jobid);
@@ -315,11 +315,12 @@ jQuery.extend({
 					jm = new $.JobModel(job.nodekey, job.status.job);
 					new $.JobControler(jm, jv);						
 					jv.fireInitForm('tapjobs');
-					if( !jv.checkJobCompleted() ) {
+					if( jv.fireGetPhase() == 'EXECUTING' ) {
 						pendingJobs[job.jobid] = jv;
 					}
 					listTimer = setTimeout("tapView.fireUpdateRunningJobList();", 5000);	
 				}
+				hideProcessingDialog();
 			});		
 		}
 
@@ -346,7 +347,7 @@ jQuery.extend({
 				that.editQuery(nodekey,jid);
 			}
 		}
-		
+
 		this.showQuery = function(nodekey,jid) {
 			$.getJSON("jobsummary" , {NODE: nodekey, JOBID: jid}, function(jsondata) {
 				if( processJsonError(jsondata, "Cannot get summary of job") ) {

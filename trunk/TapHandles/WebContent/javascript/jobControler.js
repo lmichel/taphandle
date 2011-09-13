@@ -11,8 +11,8 @@ jQuery.extend({
 				controlUpdateStatus : function(){
 					model.updateStatus();
 				},
-				controlJobCompleted: function(){
-					return model.isCompleted();
+				controlGetPhase: function(){
+					return model.getPhase();
 				}
 		}
 		view.addListener(vlist);

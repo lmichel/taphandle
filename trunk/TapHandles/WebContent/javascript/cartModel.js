@@ -16,18 +16,19 @@ jQuery.extend({
 		this.addJobResult = function(nodekey, jobid) {
 			var entry;
 			if( (entry = cartData[nodekey]) == undefined ) {
-				cartData[nodekey] = {jobs: new Array(), urls: new Array};
+				cartData[nodekey] = {jobs: new Array(), urls: new Array()};
 				cartData[nodekey].jobs[0] = {name: jobid, uri: jobid};
-				console.log(cartData[nodekey]);
+				console.log("add " + nodekey + " 0000 " + jobid);
 			}
 			else {
 				var jobs = entry.jobs;
 				for( var i=0 ; i<jobs.length ; i++ ) {
-					if( jobs[i] == jobid ) {
+					if( jobs[i].uri == jobid ) {
 						logged_alert("Result of job " + nodekey + "." + jobid + " already in the cart", "input Error");
 						return;
 					}
 				}
+				console.log("add " + nodekey + " " + i + " " + jobid);
 				cartData[nodekey].jobs[i] = {name: jobid, uri: jobid};			
 			}
 		}
@@ -52,21 +53,24 @@ jQuery.extend({
 				logged_alert("Job " + nodekey + "." + jobid+ " not found in from the cart", "input Error");
 			}			
 		}
-		this.addJobUrl = function(nodekey, url) {
+		this.addUrl = function(nodekey, url) {
 			var entry;
+			var ch  = url.split("/");
+			var name = ch[ch.length - 1].replace(/[^\w]/, "_");
+			console.log(ch);
 			if( (entry = cartData[nodekey]) == undefined ) {
 				cartData[nodekey] = {jobs: new Array(), urls: new Array};
-				cartData[nodekey].urls[0] = {name: url, uri: url};
+				cartData[nodekey].urls[0] = {name: name, uri: url};
 			}
 			else {
 				var urls = entry.urls;
-				for( var i=0 ; i<jobs.length ; i++ ) {
+				for( var i=0 ; i<urls.length ; i++ ) {
 					if( urls[i].uri == url ) {
 						logged_alert("This url of node " + nodekey  + " is already in the cart", "input Error");
 						return;
 					}
 				}
-				cartData[nodekey].urls[i] = {name: url, uri: url};			
+				cartData[nodekey].urls[i] = {name: name, uri: url};			
 			}			
 		}
 		this.removeUrl = function(nodekey, url) {
@@ -83,31 +87,53 @@ jQuery.extend({
 						if( urls.length == 0 && entry.jobs.length == 0 ) {
 							console.log("Remove folder " + nodekey + " from the cart")
 							delete cartData[nodekey];
-						}
+						}		logger.debug("download " + zer.getUri() + " in " + fcopyName);
+
 						return;
 					}
 				}
 				logged_alert("URL not found in from the cart", "input Error");
 			}						
 		}
-		this.cleanCart = function(tokens) {
-			console.log(tokens);
-			var tkList = tokens.split("&");
+		this.cleanCart = function(tokenArray) {
+			console.log(tokenArray.length);
+			console.log(tokenArray);
 			var old_cartData = cartData;
 			cartData = {};
-			for( var i=0 ; i<tkList.length ; i++ ){
-				var row  = tkList[i].split('=');
-				var num  = row[1];
-				var key  = row[0].split('+');
-				var node = key[0];
-				if( key[1] == 'job' ) {
-					that.addJobResult(node, (old_cartData[node]).jobs[num].uri);
+			for( var t=0 ; t<tokenArray.length ; t++ ) {
+				var tokens = tokenArray[t];
+
+				console.log(tokens);
+				var tkList = tokens.split("&");
+				for( var i=0 ; i<tkList.length ; i++ ){
+					var row  = tkList[i].split('=');
+					var num  = row[1];
+					var key  = row[0].split('+');
+					var node = key[0];
+					if( key[1] == 'job' ) {
+						that.addJobResult(node, (old_cartData[node]).jobs[num].uri);
+					}
 				}
 			}
-			that.downloadCart();
+			that.notifyCartCleaned();
 		}
 
-		this.downloadCart = function() {
+		this.changeName= function(nodekey, dataType, rowNum, newName) {
+			if( dataType.toLowerCase() == "job" ) {
+				cartData[nodekey].jobs[rowNum].name = newName;
+			}
+			else {
+				cartData[nodekey].urls[rowNum].name = newName;
+			}
+			that.notifyCartCleaned();			
+		}
+		
+		this.notifyCartCleaned = function() {
+			$.each(listeners, function(i){
+				listeners[i].isCartCleaned(cartData);
+			});			
+		}
+		this.notifyCartOpen = function() {
 			$.each(listeners, function(i){
 				listeners[i].isInit(cartData);
 			});			
@@ -119,10 +145,8 @@ jQuery.extend({
 				url: "datapack/zipper",
 				data: {PHASE: 'RUN', FORMAT: 'json',CART: JSON.stringify(cartData) },
 				success: function(xmljob, status) {
-					$(".zip").css("background-image", "url(http://jacds.u-strasbg.fr/saadasvn/images/connecting.gif)");					
-					//setTimeout("resultPaneView.fireCheckZipCompleted(\"cocu\");", 1000);
-					that.zipJob = new $.ZipjobModel(xmljob);
-					alert(that.zipJob.phase);
+					zipJob = new $.ZipjobModel(xmljob);
+					setTimeout("cartView.fireCheckArchiveCompleted();", 1000);
 				},
 				dataType: "xml",
 				error: function(xmljob, textStatus, errorThrown) {
@@ -131,12 +155,32 @@ jQuery.extend({
 			});
 		}
 
+		this.killArchiveBuilding = function() {
+			if( zipJob == null ) {
+				return "nojob";
+			}
+			else {
+				zipJob.kill();
+				return zipJob.phase;
+			}
+		}
+		
 		this.getJobPhase= function() {
 			if( zipJob == null ) {
 				return "nojob";
 			}
 			else {
+				zipJob.refresh();
 				return zipJob.phase;
+			}
+		}
+
+		this.archiveDownload = function() {
+			if( zipJob == null ) {
+				logged_alert("There is no active ZIP builder");
+			}
+			else {
+				zipJob.download();
 			}
 		}
 	}
