@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import cart.ZipperJob;
 
+import session.UserTrap;
 import uws.UWSException;
 import uws.job.JobList;
 import uws.service.BasicUWS;
@@ -48,10 +49,18 @@ public class ZipBuilder extends RootServlet implements Servlet {
 	@Override
 	public void service(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
 		try{
-			System.setProperty("application.realpath", this.getServletContext().getRealPath("/"));
-			printAccess(req, false);
-			zipUWS.executeRequest(req, res);
-			logger.info(req.getSession().getId() + ": " + zipUWS.getJobList("zipper").getNbJobs()+" jobs");
+			if( req.getRequestURI().endsWith("/download")) {
+				downloadProduct(req
+						, res
+						, getServletContext().getRealPath(UserTrap.getUserAccount(req).getZipDownloadPath())
+						, "TaphandleCartContent.zip");
+			}
+			else {
+				System.setProperty("application.realpath", this.getServletContext().getRealPath("/"));
+				printAccess(req, false);
+				zipUWS.executeRequest(req, res);
+				logger.info(req.getSession().getId() + ": " + zipUWS.getJobList("zipper").getNbJobs()+" jobs");
+			}
 		}catch(Exception ex){
 			System.out.println("ERRR");
 			this.reportJsonError(req, res, ex);
