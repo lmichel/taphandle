@@ -289,6 +289,10 @@ public class UserSession  extends RootClass {
 	public String getJobDownloadUrlPath(String nodeKey, String jobID) {
 		return this.getJobUrlPath(nodeKey, jobID) + "result.xml";	
 	}
+	
+	public String getZipDownloadPath(){
+		return "/" + RootClass.WEB_USERBASE_DIR + "/" + sessionID + "/zipballs/cart.zip";
+	}
 
 	/**
 	 * @throws Exception
