@@ -23,9 +23,11 @@
 <script type="text/javascript" language="javascript" src="jsimport/jquery.jstree.js"></script>
 <script type="text/javascript" language="javascript" src="jsimport/jquery.dataTables.js"></script>
 <script type="text/javascript" language="javascript" src="jsimport/splitter.js"></script>
+<script type="text/javascript" language="javascript" src="jsimport/jquery.jsonSuggest-2.js"></script> 
 <script type="text/javascript" language="javascript" src="jsimport/jquery.simplemodal.js"></script> 
 <script type="text/javascript" language="javascript" src="jsimport/jquery.alerts.js"></script> 
 <script type="text/javascript" language="javascript" src="jsimport/jquery.jsonSuggest-2.js"></script> 
+<script type="text/javascript" language="javascript" src="jsimport/jquery.jeditable.js"></script> 
 <script type="text/javascript" language="javascript" src="jsimport/json2.js"></script>
 
 <script type="text/javascript" language="javascript" src="javascript/websampconnector.js"></script>
@@ -70,7 +72,7 @@
 			<a href="javascript:void(0);" title='Download the current selection in a VOTable'
 			class=votable onclick='resultPaneView.fireDownloadVOTable();'></a> 		
 			<a href="javascript:void(0);" title='Download the current selection in a ZIP ball'
-			class=zip onclick='cartView.fireDownloadCart();'></a> 		
+			class=zip onclick='cartView.fireOpenCart();' id=zipbutton></a> 		
 	<!--		<a href="javascript:void(0);" class=topcat></a> -->
 	<!--		<a href="javascript:void(0);" class=aladin></a> -->
 	<!--		<a href="javascript:void(0);" class=ivoa></a> -->
