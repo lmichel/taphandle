@@ -8,8 +8,12 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -52,14 +56,37 @@ public class ZipMap extends RootClass {
 			LinkedHashSet<ZipEntryRef> statusZers = new LinkedHashSet<ZipEntryRef>();
 			for( ZipEntryRef zer: zers) {
 				if( zer.getType() == ZipEntryRef.JOB ) {
-					this.prepareJobFiles(zer, nodeDir, reportDir, statusZers);
+					this.prepareJobFile(zer, nodeDir, reportDir, statusZers);
 				}
 				else {
-					throw new Exception("URLs not implemented");
+					this.prepareUrlFile(zer, nodeDir, reportDir);
 				}
 			}
 			zers.addAll(statusZers);
 		}
+	}
+	private void prepareUrlFile(ZipEntryRef zer, String nodeDir, String reportDir) throws Exception {
+//		URL url = new URL( "http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/getPlane/-7998075010220172211?RUNID=efx7xacfz0uvmsl4" );
+//		URLConnection conn = url.openConnection(); 
+//		conn.getHeaderFields()
+		
+		// Send the request
+		URL url = new URL(zer.getUri());
+		URLConnection conn = url.openConnection();
+		String fcopyName = reportDir + File.separator + zer.getFilenameFromHttpHeader(conn.getHeaderFields());
+		logger.debug("download " + zer.getUri() + " in " + fcopyName);
+
+		// Get the response
+		BufferedOutputStream bw ;
+		bw = new BufferedOutputStream(new FileOutputStream(fcopyName));
+
+		BufferedInputStream reader = new BufferedInputStream(conn.getInputStream());
+		byte[] inputLine = new byte[100000];;
+		while (reader.read(inputLine) > 0 ) {
+			bw.write(inputLine);
+		}
+		bw.close();
+		reader.close();
 	}
 
 	/**
@@ -69,7 +96,7 @@ public class ZipMap extends RootClass {
 	 * @param statusZers Set of ZIP entries associated with status files added to the ZIP ball
 	 * @throws Exception
 	 */
-	private void prepareJobFiles(ZipEntryRef zer, String nodeDir, String reportDir, Set<ZipEntryRef> statusZers) throws Exception {
+	private void prepareJobFile(ZipEntryRef zer, String nodeDir, String reportDir, Set<ZipEntryRef> statusZers) throws Exception {
 		String jobDir = nodeDir + File.separator + "job_" + zer.getUri();
 		if( ! isWorkingDirectoryValid(jobDir) ) {
 			throw new Exception("Cannot acces to " + jobDir);
@@ -103,5 +130,18 @@ public class ZipMap extends RootClass {
 		bis.close();
 		bos.close();
 		statusZers.add(new ZipEntryRef(ZipEntryRef.JOB, zer.getName(), fcopyName));
+	}
+	
+	public static void main(String[] args) throws Exception {
+		URL url = new URL( "http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/getPlane/-7998075010220172211?RUNID=efx7xacfz0uvmsl4" );
+		URLConnection conn = url.openConnection(); 
+		Map<String, List<String>>  map = conn.getHeaderFields();
+		for( Entry<String, List<String>> s: map.entrySet()) {
+			System.out.println(s.getKey());
+			for( String v: s.getValue() ) {
+				System.out.println("   " + v);
+			}
+		}
+
 	}
 }
