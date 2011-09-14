@@ -62,7 +62,7 @@
 		&nbsp;<a href="http://saada.u-strasbg.fr" title="Saada home page" target="_blank" class=logo></a> &nbsp;&nbsp;
 		<div id=pagetitle style='width: 100%'><span class=pagetitle>TITLE</span>
 		<span class=pagetitlepath id=titlepath></span></div>
-		<div id=externaltools> 
+		<div id=externaltools style='position: relative;'> 
 			<a href="javascript:void(0);" class="formexpender" title="Expend query form" 
 			onclick='resultPaneView.fireExpendForm();' id='formexpender'></a>
 		
@@ -79,18 +79,17 @@
 			<a href="javascript:void(0);" title='Connect or Disconnect to a SAMP hub' 
 			class=samp id=sampconnector ></a> 
 			<a href="javascript:void(0);" title='Send the data selection to SAMP clients' 
-			class=ivoa  onclick='resultPaneView.fireSampBroadcast();' style='visibility: hidden;'></a> 
+			class=ivoa  onclick='resultPaneView.fireSampBroadcast();' style='visibility: hidden;'></a>
+			<span class=help>Node Selector</span>
+			<input type=text id=node_selector class=inputvalue style="font-size: small;font-family: courier; width: 200; position: absolute; bottom: 0; left:340" >
 		</div>
 	</div>
 	
 	<div id="accesspane" class="levelonediv">
 		<div id="datapane">
 			<div id="treepane" style="border-style: hidden;">
-				<div style="border-style: hidden; text-align: center; vertical-align: middle;">
-	<!--				&nbsp;<a href="javascript:void(0);" class=refresh id=refreshtree title='Refresh the data tree'></a>				-->
-					<span class=strong><strong>Node Selector</strong></span>
-					<input type=text id=node_selector class=inputvalue style="font-size: small;font-family: courier; width: 100" >
-					<hr>
+				<div style="border-style: hidden; vertical-align: middle;">
+					<span class=help>Tap Nodes</span>
 				</div>
 				<div id="treedisp"></div>
 			</div>
@@ -105,8 +104,6 @@
 					<b>ZIP download icon</b> to display the data selection in a ZIP ball</li>
 					<li class=help style="font-size: large;"><a href="javascript:void(0);" id=showquerymeta title='Show Metadata' class=question></a>
 					<b>Meta icon</b> to know more about the data selection</li>
-					<li class=help style="font-size: large;"><a href="javascript:void(0);" id=displayfilter title="Edit display filter" class='displayfilter' ></a>
-					<b>Filter icon</b> to set up columns to be displayed</li>
 				</ul>
 			</div>
 		</div>
