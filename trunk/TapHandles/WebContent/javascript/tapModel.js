@@ -430,7 +430,7 @@ jQuery.extend({
 
 		this.downloadVotable= function(nodekey,jid) {
 			var url = 'jobresult?NODE=' + nodekey.trim() + '&JOBID=' + jid.trim();
-			window.open(url, 'DL VOTable');
+			window.location = url;
 		}
 
 		this.sampBroadcast= function(nodekey,jid) {

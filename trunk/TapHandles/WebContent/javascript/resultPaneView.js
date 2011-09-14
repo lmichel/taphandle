@@ -39,10 +39,14 @@ jQuery
 					var id_schema, id_table;
 					for( var i=0 ; i<jsdata.schemas.length ; i++ ) {
 						id_schema = jsdata.nodekey + "X" + jsdata.schemas[i].name;
+						var description = jsdata.schemas[i].description;
+						if( description == "") {
+							description = "No Description Available";
+						}
 						$("div#treedisp").jstree("create"
 								, $("#" + jsdata.nodekey)
 								, false
-								, {"data" : {"attr":{"id": id_schema}, "title" : jsdata.schemas[i].name},
+								, {"data" : {"attr":{"id": id_schema, "title": description}, "title" : jsdata.schemas[i].name},
 								   "state": "closed",
 								   "attr" :{"id": id_schema}}
 								,false
@@ -51,14 +55,19 @@ jQuery
 					for( var i=0 ; i<jsdata.schemas.length ; i++ ) {
 						id_schema = jsdata.nodekey + "X" + jsdata.schemas[i].name;
 						for( var j=0 ; j<jsdata.schemas[i].tables.length ; j++ ) {
-							id_table = jsdata.nodekey + ";" + jsdata.schemas[i].name + ";" + jsdata.schemas[i].tables[j];
-							logMsg("add " + jsdata.schemas[i].tables[j]);
+							id_table = jsdata.nodekey + ";" + jsdata.schemas[i].name + ";" + jsdata.schemas[i].tables[j].name;
+							logMsg("add " + jsdata.schemas[i].tables[j].name);
+							var description = jsdata.schemas[i].tables[j].description;
+							if( description == "") {
+								description = "No Description Available";
+							}
 							$("div#treedisp").jstree("create"
 									, $("#" + id_schema)
 									, false
-									, {"data"  : {"attr":{"id": id_table}, "title" : jsdata.schemas[i].tables[j]},
+									, {"data"  : {"attr":{"id": id_table, "title": description}, "title" : jsdata.schemas[i].tables[j].name},
 										"state": "closed",
-										"attr" :{"id": id_table}}
+										"attr" :{"id": id_table}
+									}
 									,false
 									,true);	
 						}

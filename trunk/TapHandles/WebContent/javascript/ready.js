@@ -214,6 +214,7 @@ var nodeList  =  [
                   ,{id: 'xidresult', text: "xidresult"}
                   ,{id: 'gavot', text: "gavot"}
                   ,{id: 'http://localhost:8888/saadasvn/tap', text: "http://localhost:8888/saadasvn/tap"}
+                  ,{id: 'http://cds-dev-gm:8080/simbad/sim-tap', text: "http://cds-dev-gm:8080/simbad/sim-tap"}
                   ];
 
 var resultPaneView;
