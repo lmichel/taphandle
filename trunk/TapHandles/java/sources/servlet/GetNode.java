@@ -39,6 +39,7 @@ public class GetNode extends RootServlet implements Servlet {
 			}
 		} catch (Exception e) {
 			reportJsonError(request, response, e);
+			return;
 		}
 
 		try {
