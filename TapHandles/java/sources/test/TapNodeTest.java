@@ -22,7 +22,8 @@ public class TapNodeTest  extends RootClass {
 		if( args.length != 2 ) {
 			usage();
 		}
-		TapNode tn = new TapNode(args[0], MetaBaseDir + "cadc-ccdahia-ihanrc-cnrcgcca_caom", "cadc-ccdahia-ihanrc-cnrcgcca_caom");
+		TapNode tn = new TapNode(args[0], MetaBaseDir + "dczahuni-heidelbergde_system/", "dczahuni-heidelbergde_system/");
+		
 		tn.buildJsonTableAttributes("ivoa.ObsCore");
 		logger.info("Test passed");
 	}
