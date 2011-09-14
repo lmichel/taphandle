@@ -151,7 +151,7 @@ public class TapNode  extends RootClass {
 	 * @throws Exception If something goes wrong
 	 */
 	private void checkTables() throws Exception {
-		File f = new File(this.baseDirectory + "tables" + ".xml");
+		File f = new File(this.baseDirectory + "tables.xml");
 		if( f.exists() && f.isFile() &&f.canRead()) {
 			logger.debug("tables already checked");
 			if( tablesNS.getNsDeclaration()  == null  )
