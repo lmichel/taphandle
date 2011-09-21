@@ -15,6 +15,7 @@ import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +34,7 @@ import translator.XmlToJson;
  * @version $Id
  */
 public class TapAccess  extends RootClass {
-	private final static String  RUNID = "test-client-lm&";
+	private final static String  RUNID = "test-client-lm";
 
 
 	public static void sendPostRequest(String endpoint, String data, String outputfile, NodeCookie cookie) throws Exception {
@@ -76,8 +77,10 @@ public class TapAccess  extends RootClass {
 	private static void sendPostDownloadRequest(String endpoint, String outputdir, String outputfile, NodeCookie cookie) throws Exception {
 		logger.debug("send download request " + endpoint );
 		System.out.println("@@@@@@@@@@@@  sendPostDownloadRequest " + cookie.getCookie());
-		// Send the request
-		URL url = new URL(endpoint);
+		//		LM: Est ce normal que l'URL dans uws:result soit encodée?
+		//		GM: Ouaip, c'est une demande Thomas pour UWS...sinon le document XML est déclaré invalide ! Mais en fait, cela est surtout valable
+		//		s'il y a des & dans l'URL....et dans ce cas, ça ne plaît pas du tout au navigateur Web (quelqu'il soit) ! 
+		URL url = new URL(URLDecoder.decode(endpoint, "ISO-8859-1"));
 		cookie.addCookieToUrl(url);   
 		URLConnection conn = url.openConnection();
 		conn.setDoOutput(true);

@@ -32,20 +32,20 @@ public class GetNode extends RootServlet implements Servlet {
 			reportJsonError(request, response, "getnode: no node specified");
 			return;
 		}
-		String key= NodeBase.computeKey(node);
 		try {
-			if( !NodeBase.hasNode(key) ) {
-				key = NodeBase.addNode(node);
+			String key;
+			if( NodeBase.getNode(node) != null ) {
+				key = node;
 			}
-		} catch (Exception e) {
-			reportJsonError(request, response, e);
-			return;
-		}
+			else if( (key = NodeBase.getKeyNodeByUrl(node) ) != null) {
 
-		try {
-			if(  NodeBase.getNode(key) == null ) {				
-				reportJsonError(request, response, "Node " + key + " does not exist");
-				return;
+			}
+			else if( node.startsWith("http://") || node.startsWith("https://") ){
+				key = NodeBase.addNode(node);			
+			}
+			else {
+				reportJsonError(request, response, "Node " + node + " not referenced, enter its URL please");
+				return ;
 			}
 			dumpJsonFile("/" + RootClass.WEB_NODEBASE_DIR + "/" + key + "/tables.json", response);
 		} catch (Exception e) {

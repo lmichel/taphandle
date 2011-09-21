@@ -18,6 +18,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
+import org.json.simple.JSONObject;
 
 import resources.RootClass;
 
@@ -87,6 +88,7 @@ public class ZipMap extends RootClass {
 		}
 		bw.close();
 		reader.close();
+		zer.setUri(fcopyName);
 	}
 
 	/**
@@ -133,15 +135,19 @@ public class ZipMap extends RootClass {
 	}
 	
 	public static void main(String[] args) throws Exception {
-		URL url = new URL( "http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/getPlane/-7998075010220172211?RUNID=efx7xacfz0uvmsl4" );
+		URL url = new URL( "http://obs-he-lm:8888/XCATDR3/getproduct?obsid=0113060201&dtype=flatfiles&prd=P0113060201M2S003STSPLT8004.PDF" );
 		URLConnection conn = url.openConnection(); 
 		Map<String, List<String>>  map = conn.getHeaderFields();
+		JSONObject jso = new JSONObject();
 		for( Entry<String, List<String>> s: map.entrySet()) {
 			System.out.println(s.getKey());
 			for( String v: s.getValue() ) {
 				System.out.println("   " + v);
 			}
+			jso.put(s.getKey(), s.getValue().get(0));
 		}
+		conn.getInputStream().close();
+		System.out.println(jso.toJSONString());
 
 	}
 }

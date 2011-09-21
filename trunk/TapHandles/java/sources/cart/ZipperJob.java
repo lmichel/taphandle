@@ -71,7 +71,6 @@ public class ZipperJob extends AbstractJob {
 		try{
 			zipMap.prepareDataFiles(this.baseDir, this.reportDir);
 			ZIPUtil.buildZipBall(zipMap, this.reportDir + File.separator + "cart.zip");
-			System.out.println("datapack/download");
 			addResult(new Result("Result", "datapack/download" ));
 		}catch(Exception ex){
 			ex.printStackTrace();

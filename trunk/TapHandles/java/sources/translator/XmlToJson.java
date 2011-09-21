@@ -20,6 +20,13 @@ import javax.xml.transform.stream.StreamSource;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import cds.savot.model.InfoSet;
+import cds.savot.model.SavotInfo;
+import cds.savot.model.SavotResource;
+import cds.savot.model.SavotVOTable;
+import cds.savot.pull.SavotPullEngine;
+import cds.savot.pull.SavotPullParser;
+
 import resources.RootClass;
 import uk.ac.starlink.table.ColumnInfo;
 import uk.ac.starlink.table.StarTable;
@@ -56,14 +63,16 @@ public class XmlToJson  extends RootClass {
 		String str;
 		boolean found = false;
 		String nsName = nsDefinition.getNsName();
-		if( nsName.length() == 0 ){
+		String nsDeclaration = nsDefinition.getNsDeclaration();
+		if( nsName != null && nsName.length() == 0 ){
 			nsName = null;
 		}
 		while ((str = in.readLine()) != null) {
-			if( !found && nsDefinition != null ) {
+			if( !found && nsDefinition != null && nsDeclaration != null) {
 				Matcher m = NSDefPattern.matcher(str);
 				if (m.matches()) {
-					str = str.replace( m.group(1), nsDefinition.getNsDeclaration()) ;
+					System.out.println("@@@@ repalce " + m.group(1) + " with " +nsDeclaration);
+					str = str.replace( m.group(1), nsDeclaration) ;
 					found = true;
 				}
 			}
@@ -112,6 +121,8 @@ public class XmlToJson  extends RootClass {
 	 * @throws Exception   If something goes wrong
 	 */
 	public static void translate(String baseDir , String service, NameSpaceDefinition nsDefinition) throws Exception {
+		System.out.println("@@@ " + nsDefinition);
+		logger.debug("Translate " +  service + ".xml with "  + service + ".xsl in " + baseDir);
 		setVosiNS(baseDir, service, nsDefinition);
 		applyStyle(baseDir + service + ".xml", baseDir + service + ".json", baseDir + service + ".xsl");
 	}
@@ -125,8 +136,10 @@ public class XmlToJson  extends RootClass {
 	 * @throws Exception   If something goes wrong
 	 */
 	public static void translate(String baseDir , String service, String style, NameSpaceDefinition nsDefinition) throws Exception {
+		System.out.println(nsDefinition);
+		logger.debug("Translate " +  service + ".xml with "  + style + ".xsl");
 		setVosiNS(baseDir, style, nsDefinition);
-		applyStyle(baseDir + service + ".xml", baseDir + style + ".json", baseDir + style + ".xsl");
+		applyStyle(baseDir + service + ".xml", baseDir + style + ".json", baseDir + style + ".xsl in " + baseDir);
 	}
 
 	/**
@@ -170,6 +183,10 @@ public class XmlToJson  extends RootClass {
 		fw.close();
 		applyStyle(baseDir  + "tables.xml", baseDir + tableName + "_att.json", baseDir + tableName + "_att.xsl");
 	}
+	public static void main(String[] args) throws Exception {
+		translateResultTable("/home/michel/workspace/.metadata/.plugins/org.eclipse.wst.server.core/tmp0/wtpwebapps/TapHandles/userbase/107DC78858F78E44E4CB51138BA4D209/localhost_saadasvn/job_1_AIP_WFIImage/result.xml"
+				, "/home/michel/Desktop/resul.json");
+	}
 
 	/**
 	 * Translate a TAP query response in a JSON file with a format 
@@ -181,44 +198,71 @@ public class XmlToJson  extends RootClass {
 	@SuppressWarnings("unchecked")
 	public static void translateResultTable(String inputFile, String outputFile  ) throws Exception {
 		StarTableFactory stf = new StarTableFactory();
-		StarTable table = stf.makeStarTable(inputFile); 
+		System.out.println("@@@@@@@@@@@@@@@@ COUCO");
+		try {
+			StarTable table = stf.makeStarTable(inputFile); 
+			JSONObject retour = new JSONObject();
+			int nSrc = (int) table.getRowCount();
+			int nCol = table.getColumnCount();
 
-		JSONObject retour = new JSONObject();
-		int nSrc = (int) table.getRowCount();
-		int nCol = table.getColumnCount();
-
-		ColumnInfo[] ci = Tables.getColumnInfos(table);
-		JSONArray aoColumns = new JSONArray();
-		for (int i = 0; i < nCol; i++) {
-			JSONObject aoColumn = new JSONObject();
-			aoColumn.put("sTitle", ci[i].getName());
-			aoColumns.add(aoColumn);
-		}
-		retour.put("aoColumns", aoColumns);
-
-		JSONArray aaData = new JSONArray();
-		for( int r=0 ; r<nSrc ; r++ ) {
-			if( r >= 200 ) {
-				logger.warn("JSON result truncated to 200");
-				break;
-			}
-			Object[] o =table.getRow(r);
-			JSONArray rowData = new JSONArray();
+			ColumnInfo[] ci = Tables.getColumnInfos(table);
+			JSONArray aoColumns = new JSONArray();
 			for (int i = 0; i < nCol; i++) {
-				if(o[i] == null ) {
-					rowData.add("null");
-				}
-				else {
-					rowData.add(o[i].toString());				
-				}
+				JSONObject aoColumn = new JSONObject();
+				aoColumn.put("sTitle", ci[i].getName());
+				aoColumns.add(aoColumn);
 			}
-			aaData.add(rowData);
-		}
-		retour.put("aaData", aaData);
+			retour.put("aoColumns", aoColumns);
 
-		FileWriter fw = new FileWriter(outputFile);
-		fw.write(retour.toJSONString());
-		fw.close();
+			JSONArray aaData = new JSONArray();
+			for( int r=0 ; r<nSrc ; r++ ) {
+				if( r >= 200 ) {
+					logger.warn("JSON result truncated to 200");
+					break;
+				}
+				Object[] o =table.getRow(r);
+				JSONArray rowData = new JSONArray();
+				for (int i = 0; i < nCol; i++) {
+					Object obj = o[i];
+					if(obj == null ) {
+						rowData.add("null");
+					}
+					else if(obj instanceof Object[]) {
+						Object[] ot = (Object[])obj;
+						String v = "";
+						for( Object cell: ot) {
+							v += cell + " ";
+						}
+						rowData.add(v);				
+					}
+					else {
+						rowData.add(obj.toString());				
+					}
+				}
+				aaData.add(rowData);
+			}
+			retour.put("aaData", aaData);
+
+			FileWriter fw = new FileWriter(outputFile);
+			fw.write(retour.toJSONString());
+			fw.close();
+			/*
+			 * If an error occurs while StartTable building, we suppose that the VO table contains 
+			 * some info about the issue
+			 */
+		} catch (Exception e) {
+			SavotPullParser  sp = new SavotPullParser(inputFile, SavotPullEngine.FULL);
+			SavotVOTable sv = sp.getVOTable(); 
+			for (int l = 0; l<sp.getResourceCount(); l++) {		    	 
+				SavotResource currentResource = (SavotResource)(sv.getResources().getItemAt(l));
+				InfoSet is = currentResource.getInfos();
+				String msg = "";;
+				for( int i=0 ; i<is.getItemCount() ; i++ ) {
+					msg += ((SavotInfo)is.getItemAt(i)).getContent() + "\n";
+				}
+				throw new Exception(msg);
+			}         
+		}
 	}
 
 	/**

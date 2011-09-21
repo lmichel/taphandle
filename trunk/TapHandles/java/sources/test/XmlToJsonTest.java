@@ -20,7 +20,7 @@ public class XmlToJsonTest extends RootClass {
 	 * @throws Exception 
 	 */
 	public static void main(String[] args) throws Exception {
-		String inputfile = "/home/michel/Desktop/tapbase/meta/dczahuni-heidelbergde_system/tables.xml";
+		String inputfile = "/home/michel/Desktop/tables.xml";
 		String outputfile =  inputfile.replaceAll("xml", "json");
 		XmlToJson.applyStyle(inputfile
 				, outputfile

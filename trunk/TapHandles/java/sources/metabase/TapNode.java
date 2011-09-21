@@ -71,6 +71,7 @@ public class TapNode  extends RootClass {
 		if( !this.baseDirectory.endsWith(File.separator) ) {
 			this.baseDirectory += File.separator;
 		}
+		emptyDirectory(new File(baseDirectory));
 		validWorkingDirectory(baseDirectory);
 		this.checkServices();
 	}
@@ -173,7 +174,8 @@ public class TapNode  extends RootClass {
 	 * @throws Exception If something goes wrong
 	 */
 	private void getServiceReponse(String service, NameSpaceDefinition nsDefinition) throws Exception {
-		Pattern pattern  = Pattern.compile("(?i)(?:.*(xmlns(?:\\:\\w+)?=\"http\\:\\/\\/www.ivoa.net\\/.*" + service + "[^\"]*\").*)");
+		Pattern pattern  = Pattern.compile("(?i)(?:.*(xmlns(?:\\:\\w+)?=\\\"http\\:\\/\\/www\\.ivoa\\.net\\/.*" + service + "[^\\\"]*\\\").*)");
+		pattern  = Pattern.compile(".*xmlns(?::\\w+)?=(\"[^\"]*(?i)(?:" + service + ")[^\"]*\").*");
 		logger.debug("read " + this.url + service);
 		BufferedReader in = new BufferedReader(
 				new InputStreamReader(
@@ -186,7 +188,9 @@ public class TapNode  extends RootClass {
 			if( !found ) {
 				Matcher m = pattern.matcher(inputLine);
 				if (m.matches()) {				
-					nsDefinition.init(m.group(1)) ;
+					System.out.println("@@@@ getServiceReponse NSDECLAR " +inputLine );
+					nsDefinition.init("xmlns:vosi=" + m.group(1)) ;
+					System.out.println("@@@@ getServiceReponse NSDECLAR " +m.group(1) );
 					found = true;
 				}
 			}
@@ -206,9 +210,11 @@ public class TapNode  extends RootClass {
 		logger.debug("get VOSI ns for " + service);
 		Scanner s = new Scanner(new File(this.baseDirectory + service + ".xml"));
 		Pattern pattern  = Pattern.compile("(?i)(?:.*(xmlns(?:\\:\\w+)?=\"http\\:\\/\\/www.ivoa.net\\/.*" + service + "[^\"]*\").*)");
+		pattern  = Pattern.compile(".*(xmlns:\\w+=\"[^\"]*(?i)(?:" + service + ")[^\"]*\").*");
 		while ( s.hasNextLine()) {
 			Matcher m = pattern.matcher(s.nextLine());
 			if (m.matches()) {
+				System.out.println("@@@@ getNamspaceDefinition NSDECLAR " +m.group(1) );
 				nsDefinition.init(m.group(1)) ;
 				break;
 			}
