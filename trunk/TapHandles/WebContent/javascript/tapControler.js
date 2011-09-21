@@ -14,6 +14,9 @@ jQuery.extend({
 				controlSelectEvent: function(uidraggable){
 					model.processSelectEvent(uidraggable);
 				},
+				controlOrderByEventEvent: function(uidraggable){
+					model.processOrderByEvent(uidraggable);
+				},
 				controlInputCoord: function(coord, radius, mode){
 					model.processInputCoord(coord, radius, mode);
 				},

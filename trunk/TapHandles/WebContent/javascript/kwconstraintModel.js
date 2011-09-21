@@ -19,33 +19,37 @@ jQuery.extend({
 		var operator ;
 		var operand ;
 		var andor ;
-
+		var dataTypeLower = ah.dataType.toLowerCase();
 		logMsg(ah.dataType);
-		if( ah.dataType == 'Select' ) {
+		if( dataTypeLower == 'select' ) {
 			operators = [];
 			andors = [];
 		}
-		else if( ah.dataType == 'ADQLPos' ) {
+		else if( dataTypeLower == 'adqlpos' ) {
 			operators = ["inCircle", "inBox"];
 			andors = ["OR", "AND"];
 
 		}
-		else if( ah.dataType != 'VARCHAR' && ah.dataType != 'CLOBS' && ah.dataType != 'REGION') {
-			operators = ["=", "!=", ">", "<", "between", 'IS NULL'];
+		else if( dataTypeLower != 'varchar' && dataTypeLower != 'clobs' 
+			&& dataTypeLower != 'region' && dataTypeLower != 'char') {
+			operators = ["=", "!=", ">", "<", "between", 'IS NULL', 'IS NOT NULL'];
 			andors = ['AND', 'OR'];
 		}
 		else {
-			operators = ["=", "!=", "LIKE", "NOT LIKE", 'IS NULL'];
+			operators = ["=", "!=", "LIKE", "NOT LIKE", 'IS NULL', 'IS NOT NULL'];
 			andors = ['AND', 'OR'];
 		}
 	
 		if( first == true ) {
 			andors = [];
 		}
+		logMsg(ah.dataType);
 
 		this.processEnterEvent = function(ao, op, opd) {
 			andor = ao;
-			if( attributehandler.dataType == 'VARCHAR' || attributehandler.dataType == 'CLOBS'|| attributehandler.dataType == 'REGION') {
+			var dataTypeLower = ah.dataType.toLowerCase();
+			if( dataTypeLower == 'varchar' || dataTypeLower == 'clobs'  ||
+				dataTypeLower == 'region'  || dataTypeLower == 'char') {
 				if( !that.checkAndFormatString(op, opd) ) {
 					return;
 				}
@@ -168,7 +172,11 @@ jQuery.extend({
 			andor = "";
 		}
 
-		this.getADQL = function(attQuoted) {		
+		this.getADQL = function(attrQuoted) {	
+			var quote = "";
+			if( ah.name.startsWith('_') ) {
+				quote = '"';
+			}
 			if(  ah.name.startsWith('Qualifier ')) {
 				return 'Qualifier{ ' + ah.name.split(' ')[1] + operator + ' ' + operand + '}';
 			}
@@ -176,15 +184,16 @@ jQuery.extend({
 				//				CONTAINS(POINT('ICRS GEOCENTER', "_s_ra", "_s_dec"), BOX('ICRS GEOCENTER', 'dsa', 'dsad', 'dsa', 'dsad')) = 'true';
 				var coordkw = attributehandler.name.split(' ');
 				var bcomp = ( booleansupported )? "'true'" :  "1";
-				return andor + " CONTAINS(POINT('ICRS GEOCENTER', \"" + coordkw[0] + "\", \"" +  coordkw[1] + "\"), "
+				var c1 = coordkw[0];
+				if( c1.startsWith('_') ) c1 = '"' + c1 + '"';
+				var c2 = coordkw[1];
+				if( c2.startsWith('_') ) c2 = '"' + c2 + '"';
+				return andor + " CONTAINS(POINT('ICRS GEOCENTER', " + c1 + ", " +  c2 + "), "
 				+ operator + ") = " + bcomp;
 			}
-			else if( attQuoted ){
-				return andor + ' "' + attributehandler.name + '" ' + operator + ' ' + operand;
-			}
 			else {
-				return andor + ' ' + attributehandler.name + ' ' + operator + ' ' + operand;
-			}
+				return andor + ' ' + quote + attributehandler.name + quote + ' ' + operator + ' ' + operand;
+				}
 		}
 		this.notifyInitDone = function(){
 			$.each(listeners, function(i){

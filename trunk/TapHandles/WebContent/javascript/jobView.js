@@ -29,6 +29,11 @@ jQuery.extend({
 				listeners[i].controlUpdateStatus();
 			});
 		}
+		this.fireSetOnError = function() {
+			$.each(listeners, function(i){
+				listeners[i].controlSetOnError();
+			});
+		}
 
 		this.getId = function() {
 			return id;
@@ -37,7 +42,7 @@ jQuery.extend({
 			var retour = false
 			$.each(listeners, function(i){
 				retour = listeners[i].controlGetPhase();
-				console.log("View  " +retour);
+				logMsg("View  " +retour);
 			});		
 			return retour;
 		}
@@ -73,7 +78,7 @@ jQuery.extend({
 		}
 
 		this.updateForm = function(nodekey, id, phase, actions){
-			console.log("update forn " + id)
+			logMsg("update fonm " + id)
 			var status = $('#' + id + '_phase');
 			status.attr("class", phase.toLowerCase());
 			status.text(phase);

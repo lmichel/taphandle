@@ -119,5 +119,14 @@
     <servlet-name>ZipBuilder</servlet-name>
     <url-pattern>/datapack/*</url-pattern>
   </servlet-mapping>
-  
+  <servlet>
+    <description></description>
+    <display-name>getProductInfo</display-name>
+    <servlet-name>getProductInfo</servlet-name>
+    <servlet-class>servlet.getProductInfo</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>getProductInfo</servlet-name>
+    <url-pattern>/getproductinfo</url-pattern>
+  </servlet-mapping>
 </web-app>

@@ -18,7 +18,7 @@ jQuery.extend({
 			if( (entry = cartData[nodekey]) == undefined ) {
 				cartData[nodekey] = {jobs: new Array(), urls: new Array()};
 				cartData[nodekey].jobs[0] = {name: jobid, uri: jobid};
-				console.log("add " + nodekey + " 0000 " + jobid);
+				logMsg("add " + nodekey + " 0000 " + jobid);
 			}
 			else {
 				var jobs = entry.jobs;
@@ -28,23 +28,23 @@ jQuery.extend({
 						return;
 					}
 				}
-				console.log("add " + nodekey + " " + i + " " + jobid);
+				logMsg("add " + nodekey + " " + i + " " + jobid);
 				cartData[nodekey].jobs[i] = {name: jobid, uri: jobid};			
 			}
 		}
 		this.removeJobResult = function(nodekey, jobid) {
 			var entry;
 			if( (entry = cartData[nodekey]) == undefined ) {
-				logged_alert("Ther is no data associated with node " + nodekey + " in the cart", "input Error")
+				logged_alert("Ther is no data associated with node " + nodekey + " in the cart", "input Error");
 			}
 			else {
 				var jobs = entry.jobs;
 				for( var i=0 ; i<jobs.length ; i++ ) {
 					if( jobs[i].uri == jobid ) {
-						console.log("remove job " + nodekey + "." + jobid+ " from the cart");
+						logMsg("remove job " + nodekey + "." + jobid+ " from the cart");
 						jobs.splice(i,1);
 						if( jobs.length == 0 && entry.urls.length == 0 ) {
-							console.log("Remove folder " + nodekey + " from the cart")
+							logMsg("Remove folder " + nodekey + " from the cart")
 							delete cartData[nodekey];
 						}
 						return;
@@ -55,9 +55,9 @@ jQuery.extend({
 		}
 		this.addUrl = function(nodekey, url) {
 			var entry;
-			var ch  = url.split("/");
-			var name = ch[ch.length - 1].replace(/[^\w]/, "_");
-			console.log(ch);
+//			var ch  = url.split("/");
+//			var name = ch[ch.length - 1].replace(/[^\w]/, "_");
+			var name = "preserve";
 			if( (entry = cartData[nodekey]) == undefined ) {
 				cartData[nodekey] = {jobs: new Array(), urls: new Array};
 				cartData[nodekey].urls[0] = {name: name, uri: url};
@@ -76,16 +76,16 @@ jQuery.extend({
 		this.removeUrl = function(nodekey, url) {
 			var entry;
 			if( (entry = cartData[nodekey]) == undefined ) {
-				logged_alert("Ther is no data associated with node " + nodekey + " in the cart", "input Error")
+				logged_alert("There is no data associated with node " + nodekey + " in the cart", "input Error")
 			}
 			else {
 				var urls = entry.urls;
 				for( var i=0 ; i<urls.length ; i++ ) {
 					if( urls[i].uri == url ) {
-						console.log("remove url from the cart");
+						logMsg("remove url from the cart");
 						urls.splice(i,1);
 						if( urls.length == 0 && entry.jobs.length == 0 ) {
-							console.log("Remove folder " + nodekey + " from the cart")
+							logMsg("Remove folder " + nodekey + " from the cart")
 							delete cartData[nodekey];
 						}		logger.debug("download " + zer.getUri() + " in " + fcopyName);
 
@@ -96,14 +96,14 @@ jQuery.extend({
 			}						
 		}
 		this.cleanCart = function(tokenArray) {
-			console.log(tokenArray.length);
-			console.log(tokenArray);
+			logMsg(tokenArray.length);
+			logMsg(tokenArray);
 			var old_cartData = cartData;
 			cartData = {};
 			for( var t=0 ; t<tokenArray.length ; t++ ) {
 				var tokens = tokenArray[t];
 
-				console.log(tokens);
+				logMsg(tokens);
 				var tkList = tokens.split("&");
 				for( var i=0 ; i<tkList.length ; i++ ){
 					var row  = tkList[i].split('=');
@@ -112,6 +112,9 @@ jQuery.extend({
 					var node = key[0];
 					if( key[1] == 'job' ) {
 						that.addJobResult(node, (old_cartData[node]).jobs[num].uri);
+					}
+					else if( key[1] == 'url' ) {
+						that.addUrl(node, (old_cartData[node]).urls[num].uri);
 					}
 				}
 			}

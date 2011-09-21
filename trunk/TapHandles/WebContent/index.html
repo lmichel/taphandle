@@ -1,7 +1,7 @@
 <html>
 <head>
 <title>TapBrowser alpha</title>
-<LINK REL="icon" HREF="image/saada.ico" TYPE="images/ico" />
+<LINK REL="icon" HREF="images/tap16.png" TYPE="images/png" />
 <LINK REL="SHORTCUT ICON" HREF="images/saada.ico" />
 
 <link rel="stylesheet" type="text/css" href="styles/global.css" />
@@ -32,6 +32,7 @@
 
 <script type="text/javascript" language="javascript" src="javascript/websampconnector.js"></script>
 
+<script type="text/javascript" language="javascript" src="javascript/formator.js"></script>
 <script type="text/javascript" language="javascript" src="javascript/resultPaneModel.js"></script>
 <script type="text/javascript" language="javascript" src="javascript/resultPaneView.js"></script>
 <script type="text/javascript" language="javascript" src="javascript/resultPaneControler.js"></script>
@@ -59,29 +60,32 @@
 <body>
 <div id=superwrapper>
 	<div id=banner class="levelonediv">
-		&nbsp;<a href="http://saada.u-strasbg.fr" title="Saada home page" target="_blank" class=logo></a> &nbsp;&nbsp;
-		<div id=pagetitle style='width: 100%'><span class=pagetitle>TITLE</span>
-		<span class=pagetitlepath id=titlepath></span></div>
-		<div id=externaltools style='position: relative;'> 
-			<a href="javascript:void(0);" class="formexpender" title="Expend query form" 
-			onclick='resultPaneView.fireExpendForm();' id='formexpender'></a>
+		&nbsp;<a href="http://code.google.com/p/tap-handles/" title="Saada home page" target="_blank" class=logo></a> &nbsp;&nbsp;
+		<div id=pagetitle style='width: 100%'><span class=pagetitle>TAPHandle</span>
+			<input type=text id=node_selector class=inputvalue style="font-size: small;font-family: courier; width: 300; position: relative; bottom: 5;" >
+			<span class=help>Node Selector</span>
 		
-			<a href="javascript:void(0);" id=showquerymeta title='Show Metadata' class=question></a>
+			<div id=externaltools style='position: relative;'> 
+				<a href="javascript:void(0);" class="formexpender" title="Expend query form" 
+				onclick='resultPaneView.fireExpendForm();' id='formexpender'></a>
+		
+				<a href="javascript:void(0);" id=showquerymeta title='Show Metadata' class=question></a>
 	<!-- 		<a href="javascript:void(0);"  title='Download the current selection in a FITS file' -->
 	<!-- 		class=fits onclick='resultPaneView.fireDownloadFITS();'></a>  -->
-			<a href="javascript:void(0);" title='Download the current selection in a VOTable'
-			class=votable onclick='resultPaneView.fireDownloadVOTable();'></a> 		
-			<a href="javascript:void(0);" title='Download the current selection in a ZIP ball'
-			class=zip onclick='cartView.fireOpenCart();' id=zipbutton></a> 		
+				<a href="javascript:void(0);" title='Download the current selection in a VOTable'
+				class=votable onclick='resultPaneView.fireDownloadVOTable();'></a> 		
+				<a href="javascript:void(0);" title='Download the current selection in a ZIP ball'
+				class=zip onclick='cartView.fireOpenCart();' id=zipbutton></a> 		
 	<!--		<a href="javascript:void(0);" class=topcat></a> -->
 	<!--		<a href="javascript:void(0);" class=aladin></a> -->
 	<!--		<a href="javascript:void(0);" class=ivoa></a> -->
-			<a href="javascript:void(0);" title='Connect or Disconnect to a SAMP hub' 
-			class=samp id=sampconnector ></a> 
-			<a href="javascript:void(0);" title='Send the data selection to SAMP clients' 
-			class=ivoa  onclick='resultPaneView.fireSampBroadcast();' style='visibility: hidden;'></a>
-			<span class=help>Node Selector</span>
-			<input type=text id=node_selector class=inputvalue style="font-size: small;font-family: courier; width: 200; position: absolute; bottom: 0; left:340" >
+				<a href="javascript:void(0);" title='Connect or Disconnect to a SAMP hub' 
+				class=samp id=sampconnector ></a> 
+				<a href="javascript:void(0);" title='Send the data selection to SAMP clients' 
+				class=ivoa  onclick='resultPaneView.fireSampBroadcast();' style='visibility: hidden;'></a>
+				<span class=pagetitlepath id=titlepath></span>
+			</div>
+			
 		</div>
 	</div>
 	
@@ -117,10 +121,6 @@
 					<input type=text id='qlimit' class=numinputvalue 
 	        		style="font-size: small;font-family: Arial, Helvetica, sans-serif;" value='10'><hr>  
 				</div>
-				<div style="text-align: left ;padding: 5px;text-align: center; border-style: hidden; ">
-					<span id=qhistocount class=help>-/-</span><br> 
-					<span id=histoarrows><img src="images/histoleft-grey.png"><img src="images/historight-grey.png"></span>
-				</div>
 			</div>
 			<div id="formpane">
 	
@@ -134,27 +134,37 @@
 					<div id="tapselect" class=queryformtab >
 	 					<div style="background-color: white ; width: 380px; height: 220px; vertical-align: middle; float:left;">
 	 						<div style="background: white;">
-	 							<span class=help>Available Keywords</span>
+	 							<span class=help>Available Keywords. Filter:</span>
+	 							<input type=text  class=kw_filter style="width: 100; position: relative; bottom: 5;font-size: small; 
+	 							font-family: Arial, Helvetica, sans-serif;" >	 							
 	 						</div>
-	        				<div id="tapselectmeta" ></div>      
+	        				<div id="tapselectmeta" class=kw_list></div>      
 	        				<div style="background-color: white;">
 	        					<span class=help>Drag and Drop keywords to the list of selected fields</span>
 	        				</div>
 	        					
 	        			</div>
-	 					<div style="background-color: white ; width: 480px; height: 220px; float:left;">
+	 					<div style="background-color: white ; width: 480px; height: 125px; float:left;">
 	  						<div style="background: white;">
 	  							<span class=help>Selected Fields</span>
 	  						</div>
-	        				<div id="tapselectlist" ></div>
+	        				<div id="tapselectlist"  ></div>
+	    				</div>
+	 					<div style="background-color: white ; width: 480px; height: 60px; float:left;">
+	  						<div style="background: white;">
+	  							<span class=help>Order By Field</span>
+	  						</div>
+	        				<div id="taporderby"  ></div>
 	    				</div>
 	  				</div>
 					<div id="tapwhere" class=queryformtab >
 						<div style="background-color: white ; width: 340px; vertical-align: middle; float:left;">
 	 						<div style="background: white;">
-	 							<span class=help>Available Keywords</span>
+	 							<span class=help>Available Keywords. Filter:</span>
+	 							<input type=text  class=kw_filter style="width: 100; position: relative; bottom: 5;font-size: small; 
+	 							font-family: Arial, Helvetica, sans-serif;" >	 							
 	 						</div>
-	        				<div id="tapmeta" ></div>      
+	        				<div id="tapmeta" class=kw_list ></div>      
 	        				<div style="background-color: white;">
 	       						<span class=help>Drag and Drop keywords to the list of constraints</span>
 	        				</div>
@@ -223,7 +233,6 @@
 					<div id="tapjob">        
 					 	<div style="background: white;">
 	 						<span class=help>List of UWS jobs</span>
-	 						<a href="javascript:void(0);" class=refresh id=refreshjoblist title='Refresh the job list' onclick="tapView.fireRefreshJobList();"></a>	
 	 					</div>
 	        			<div id="tapjobs" ></div>      							    	
 					</div>

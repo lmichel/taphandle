@@ -33,6 +33,12 @@ jQuery.extend({
 				listeners[i].controlSelectEvent(uidraggable);
 			});
 		}
+		this.fireOrderByEventEvent= function(uidraggable){
+			$("#taporderby").html('');
+			$.each(listeners, function(i){
+				listeners[i].controlOrderByEventEvent(uidraggable);
+			});
+		}
 		this.fireInputCoordEvent = function(){
 			if( $("#tapcoordval").val() == '' || $("#tapradiusval").val() == '' ) {
 				logged_alert("Both position and radius must be given", 'Info');
@@ -109,7 +115,22 @@ jQuery.extend({
 				listeners[i].controlDisplayResult(nodekey, jid);
 			});
 		}
+		this.fireFilterColumns = function(val) {
+			$('.kw_list').find('span').each(
+					function(){
 
+						var attr = ($(this).text().split("("))[0];
+						logMsg(val + ' ' + attr)
+						if( val == '' || attr.indexOf(val) != -1 ) {
+							logMsg('show ' + $(this).parent().html());
+							$(this).parent().show();
+						}
+						else {
+							logMsg('hide ' + $(this).parent().html());
+							$(this).parent().hide();							
+						}
+					});
+		}
 		/*
 		 * Local processing
 		 */
@@ -130,7 +151,9 @@ jQuery.extend({
 			$('#kwdelta').html('');
 			$('#attlist').html('');
 			$('#tapselectlist').html('');
+			$('#taporderby').html('');
 			$('#tapselectmeta').html('');
+			$('.kw_filter').val('');
 			/*
 			 * Get table columns for where clause
 			 */
