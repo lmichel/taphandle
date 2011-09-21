@@ -22,6 +22,7 @@ jQuery.extend({
 		}
 
 		this.fireAddJobResult = function(nodekey, jobid) {
+			logged_alert("Result of job " + nodekey + "." + jobid + " added to the cart")
 			$.each(listeners, function(i){
 				listeners[i].controlAddJobResult(nodekey, jobid);
 			});
@@ -32,6 +33,7 @@ jQuery.extend({
 			});
 		}
 		this.fireAddUrl = function(nodekey, url) {
+			logged_alert("Data returned by " + url + " added to the cart");
 			$.each(listeners, function(i){
 				listeners[i].controlAddUrl(nodekey, url);
 			});
@@ -82,7 +84,7 @@ jQuery.extend({
 		this.fireCheckArchiveCompleted = function() {
 			var phase = that.fireGetJobPhase();
 			var jobspan = $('#cartjob_phase');
-			console.log(jobspan.attr('class'));
+			logMsg(jobspan.attr('class'));
 			jobspan.attr('class', phase.toLowerCase());
 			jobspan.text(phase);
 			if( phase == 'nojob') {

@@ -13,7 +13,11 @@ jQuery.extend({
 				},
 				controlGetPhase: function(){
 					return model.getPhase();
+				},
+				controlSetOnError: function(){
+					return model.setOnError();
 				}
+				
 		}
 		view.addListener(vlist);
 

@@ -1,5 +1,4 @@
-jQuery
-.extend({
+jQuery.extend({
 
 	ResultPaneView : function() {
 		/**
@@ -17,7 +16,58 @@ jQuery
 		this.addListener = function(list) {
 			listeners.push(list);
 		}
+		
+		this.fireGetProductInfo = function(url) {
+			showProcessingDialog("Waiting on product info");
 
+			$.getJSON("getproductinfo", {url: url}, function(jsdata) {
+				hideProcessingDialog();
+				if( processJsonError(jsdata, "Cannot get product info") ) {
+					return;
+				}
+				else {
+					retour = "url: " + url + "\n";
+					$.each(jsdata, function(k, v) {
+						retour += k + ": " + v  + "\n";
+				});
+				logged_alert(retour, "Product Info");
+				}
+			});
+		}		
+		this.fireDownloadProduct = function(url) {
+			showProcessingDialog("Waiting on product info");
+
+			$.getJSON("getproductinfo", {url: url}, function(jsdata) {
+				hideProcessingDialog();
+				if( jsondata == undefined || jsondata == null ) {
+					window.open(url);
+					return;
+				}
+				else {
+					retour = "url: " + url + "\n";
+					$.each(jsdata, function(k, v) {
+						retour += k + ": " + v  + "\n";
+						var fn, ct, ce;
+						if( k == 'ContentDisposition')    fn = v;
+						else if( k == 'ContentType' )     ct = v;
+						else if( k == 'ContentEncoding' ) ce = v;
+						/*
+						 * Will be downloaded by the browser: no need to open a new tab
+						 */
+						if( ce == 'gzip' || ce == 'zip' ||
+							cd.match(/\.fit/i) || ct.match(/fits/) ){
+							document.location = url;
+						}
+						else {
+							window.open(url);
+						}
+				});
+				}
+			});
+		
+		}
+
+		
 		this.fireNewNodeEvent = function(nodekey) {
 			showProcessingDialog("Waiting on " + nodekey + " node description");
 

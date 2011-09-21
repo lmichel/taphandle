@@ -453,7 +453,9 @@ a:active.sesame {
 	font-style: italic;
 	font-size: 150%
 }
-
+/*******************************************************
+ * large icons opening global functionnalities
+ */
 a.topcat {
 	display: inline-block;
 	width: 0px;
@@ -462,13 +464,11 @@ a.topcat {
 	background: transparent url(../images/topcat_3232.gif) center left
 		no-repeat;
 }
-
 a:hover.topcat {
 	filter: alpha(opacity = 50);
 	-moz-opacity: 0.5;
 	opacity: 0.5;
 }
-
 a:active.topcat {
 	filter: alpha(opacity = 50);
 	-moz-opacity: 0.8;
@@ -483,19 +483,16 @@ a.aladin {
 	background: transparent url(../images/aladin_icon_3254.gif) center left
 		no-repeat;
 }
-
 a:hover.aladin {
 	filter: alpha(opacity = 50);
 	-moz-opacity: 0.5;
 	opacity: 0.5;
 }
-
 a:active.aladin {
 	filter: alpha(opacity = 50);
 	-moz-opacity: 0.8;
 	opacity: 0.8;
 }
-
 a.fits {
 	display: inline-block;
 	width: 0px;
@@ -509,13 +506,11 @@ a:hover.fits {
 	-moz-opacity: 0.5;
 	opacity: 0.5;
 }
-
 a:active.fits {
 	filter: alpha(opacity = 50);
 	-moz-opacity: 0.8;
 	opacity: 0.8;
 }
-
 a.votable {
 	display: inline-block;
 	width: 0px;
@@ -524,13 +519,11 @@ a.votable {
 	background: transparent url(../images/votable_32.png) center left
 		no-repeat;
 }
-
 a:hover.votable {
 	filter: alpha(opacity = 50);
 	-moz-opacity: 0.5;
 	opacity: 0.5;
 }
-
 a:active.votable {
 	filter: alpha(opacity = 50);
 	-moz-opacity: 0.8;
@@ -542,9 +535,8 @@ a.zip {
 	width: 0px;
 	overflow: visible;
 	padding: 16px 0px 16px 38px;
-	background: transparent url(../images/zip_32.png) center left no-repeat;
+	background: transparent url(../images/groscaddy.png) center left no-repeat;
 }
-
 a.zip_failed {
 	display: inline-block;
 	width: 0px;
@@ -553,7 +545,6 @@ a.zip_failed {
 	background: transparent url(../images/zip_32.png) center left no-repeat;
 	border: 2px solid red;
 }
-
 a.zip_failed {
 	display: inline-block;
 	width: 0px;
@@ -562,7 +553,6 @@ a.zip_failed {
 	background: transparent url(../images/zip_32.png) center left no-repeat;
 	border: 2px solid red;
 }
-
 a.zip_completed {
 	display: inline-block;
 	width: 0px;
@@ -571,7 +561,6 @@ a.zip_completed {
 	background: transparent url(../images/zip_32.png) center left no-repeat;
 	border: 2px solid green;
 }
-
 a.zip_executing {
 	display: inline-block;
 	width: 0px;
@@ -580,13 +569,11 @@ a.zip_executing {
 	background: transparent url(../images/zip_32.png) center left no-repeat;
 	border: 2px solid orange;
 }
-
 a:hover.zip {
 	filter: alpha(opacity = 50);
 	-moz-opacity: 0.5;
 	opacity: 0.5;
 }
-
 a:active.zip {
 	filter: alpha(opacity = 50);
 	-moz-opacity: 0.8;
@@ -601,13 +588,11 @@ a.samp {
 	background: transparent url(../images/disconnected.png) center left
 		no-repeat;
 }
-
 a:hover.samp {
 	filter: alpha(opacity = 50);
 	-moz-opacity: 0.5;
 	opacity: 0.5;
 }
-
 a:active.samp {
 	filter: alpha(opacity = 50);
 	-moz-opacity: 0.8;
@@ -622,39 +607,18 @@ a.formexpender {
 	background: transparent url(../images/screen_down.png) center left
 		no-repeat;
 }
-
 a:hover.formexpender {
 	filter: alpha(opacity = 50);
 	-moz-opacity: 0.5;
 	opacity: 0.5;
 }
-
 a:active.formexpender {
 	filter: alpha(opacity = 50);
 	-moz-opacity: 0.8;
 	opacity: 0.8;auto
 }
 
-a.displayfilter {
-	display: inline-block;
-	width: 0px;
-	overflow: visible;
-	padding: 10px 0px 16px 40px;
-	background: transparent url(../images/filter.png) center left
-		no-repeat;
-}
 
-a:hover.displayfilter {
-	filter: alpha(opacity = 50);
-	-moz-opacity: 0.5;
-	opacity: 0.5;
-}
-
-a:active.displayfilter {
-	filter: alpha(opacity = 50);
-	-moz-opacity: 0.8;
-	opacity: 0.8;auto
-}
 
 
 a.question {
@@ -665,13 +629,11 @@ a.question {
 	background: transparent url(../images/question.png) center left
 		no-repeat;
 }
-
 a:hover.question {
 	filter: alpha(opacity = 50);
 	-moz-opacity: 0.5;
 	opacity: 0.5;
 }
-
 a:active.question {
 	filter: alpha(opacity = 50);
 	-moz-opacity: 0.8;
@@ -687,29 +649,15 @@ a.sources {
 	background: transparent url(../images/sources_base.gif) center left
 		no-repeat;
 }
-
 a:hover.sources {
 	background: url(../images/sources_hl.gif) no-repeat center right;
 }
-
 a:visited.sources {
 	background: url(../images/sources_se.gif) no-repeat center right;
 }
-
-a.sources {
-	display: inline-block;
-	height: 12px;
-	width: 0px;
-	overflow: visible;
-	padding: 2px 0 2px 20px;
-	background: transparent url(../images/sources_base.gif) center left
-		no-repeat;
-}
-
 a:hover.sources {
 	background: url(../images/sources_hl.gif) no-repeat center right;
 }
-
 a:visited.sources {
 	background: url(../images/sources_se.gif) no-repeat center right;
 }
@@ -727,11 +675,9 @@ a.download {
 a:hover.download {
 	background: url(../images/download_hl.gif) no-repeat center right;
 }
-
 a:visited.download {
 	background: url(../images/download_se.gif) no-repeat center right;
 }
-
 a.HDU {
 	display: inline-block;
 	height: 12px;
@@ -741,11 +687,9 @@ a.HDU {
 	background: transparent url(../images/HDU_base.gif) center left
 		no-repeat;
 }
-
 a:hover.HDU {
 	background: url(../images/HDU_hl.gif) no-repeat center right;
 }
-
 a:visited.HDU {
 	background: url(../images/HDU_se.gif) no-repeat center right;
 }
@@ -759,14 +703,91 @@ a.detail {
 	background: transparent url(../images/detail_base.gif) center left
 		no-repeat;
 }
-
 a:hover.detail {
 	background: transparent url(../images/detail_hl.gif) no-repeat center
 		right;
 }
-
 a:visited.detail {
 	background: url(../images/detail_se.gif) no-repeat center right;
+}
+
+/**************************
+ * Small icons attached to data links
+ */
+a.dl_samp {
+	display: inline-block;
+	width: 0px;
+	overflow: visible;
+	padding: 9px 0px 9px 23px;
+	background: transparent url(../images/dl_ivoa.png) center left
+		no-repeat;
+}
+a:hover.dl_samp {
+	filter: alpha(opacity = 50);
+	-moz-opacity: 0.5;
+	opacity: 0.5;
+}
+a:active.dl_samp {
+	filter: alpha(opacity = 50);
+	-moz-opacity: 0.8;
+	opacity: 0.8;
+}
+
+a.dl_download {
+	display: inline-block;
+	width: 0px;
+	overflow: visible;
+	padding: 9px 0px 9px 23px;
+	background: transparent url(../images/dl_download.png) center left
+		no-repeat;
+}
+a:hover.dl_download {
+	filter: alpha(opacity = 50);
+	-moz-opacity: 0.5;
+	opacity: 0.5;
+}
+a:active.dl_download {
+	filter: alpha(opacity = 50);
+	-moz-opacity: 0.8;
+	opacity: 0.8;
+}
+
+a.dl_cart {
+	display: inline-block;
+	width: 0px;
+	overflow: visible;
+	padding: 9px 0px 9px 23px;
+	background: transparent url(../images/dl_cart.png) center left
+		no-repeat;
+}
+a:hover.dl_cart {
+	filter: alpha(opacity = 50);
+	-moz-opacity: 0.5;
+	opacity: 0.5;
+}
+a:active.dl_cart {
+	filter: alpha(opacity = 50);
+	-moz-opacity: 0.8;
+	opacity: 0.8;
+}
+
+a.dl_info {
+	display: inline-block;
+	width: 0px;
+	overflow: visible;
+	padding: 9px 0px 9px 23px;
+	background: transparent url(../images/dl_info.png) center left
+		no-repeat;
+}
+a:hover.dl_info {
+	filter: alpha(opacity = 50);
+	-moz-opacity: 0.5;
+	opacity: 0.5;
+}
+a:active.dl_info {
+	filter: alpha(opacity = 50);
+	-moz-opacity: 0.8;
+	opacity: 0.8;
 }
 
 /*********************************************************************
@@ -786,10 +807,9 @@ div#pagetitle {
 }
 
 div#externaltools {
-	width: 700;
-	height: 38;
-	margin-left: 300px;
-	margin-left: 150px;
+	width: 100%;
+	height: 38px;
+	margin-left: 0px;
 	margin-top: 0px;
 	border-width: 0;
 }

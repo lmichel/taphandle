@@ -1,65 +1,4 @@
-/*
- * Some utilities
- */
-if(!String.prototype.startsWith){
-	String.prototype.startsWith = function (str) {
-		return !this.indexOf(str);
-	}
-};
-if(!String.prototype.endsWith){
-	String.prototype.endsWith = function(suffix) {
-		return this.indexOf(suffix, this.length - suffix.length) !== -1;
-	}
-};
 
-if(!String.prototype.hashCode){
-	String.prototype.hashCode = function(){
-		var hash = 0;
-		if (this.length == 0) return code;
-		for (i = 0; i < this.length; i++) {
-			char = this.charCodeAt(i);
-			hash = 31*hash+char;
-			hash = hash & hash; 
-		}
-		return hash;
-	}
-};
-if(!String.prototype.trim){
-	String.prototype.trim = function(chaine){
-		return chaine.replace(/^\s+|\s+$/g,"");
-	} 
-};
-
-function trim(chaine) {
-	return chaine.replace(/^\s+|\s+$/g,"");
-}
-
-function isNumber(val) {
-	var exp = new RegExp("^[+-]?[0-9]*[.]?[0-9]*([eE][+-]?[0-9]+)?$","m"); 
-	return exp.test(val);
-}
-
-var decimaleRegexp = new RegExp("^[+-]?[0-9]*[.][0-9]*([eE][+-]?[0-9]+)?$","m"); 
-var bibcodeRegexp  = new RegExp(/^\d{4}[\w\.]{10}\d{4}\w$/);		
-
-function formatValue(value) {
-	if( value.startsWith("http://") ||  value.startsWith("https://") ) {
-		var titlepath = $('#titlepath').text().split('>');
-
-		return "<a title=\"Download\" href='#' onclick='document.location = \"" + value + "\"; return false;'>[DL]</a>"
-		+ "<a title=\"Broadcast to SAMP\" href='#' onclick='sampView.fireSendTapDownload(\"" + value + "\"); return false;'>[SAMP]</a>"
-		+ "<a title=\"Add to Cart\" href='#' onclick='cartView.fireAddUrl(\"" + titlepath[0] + "\", \"" + value + "\"); return false;'>[Cart]</a>";
-	}
-	else if( decimaleRegexp.test(value)){
-		return (new Number(value)).toPrecision(8);
-	}
-	else if( bibcodeRegexp.test(value)){
-		return "<a title=\"bibcode\" HREF=\"http://cdsads.u-strasbg.fr/abs/" + value + "\" target=blank>" + value + "</A>";
-	}
-	else {
-		return value;
-	}
-}
 
 var DEBUG = true;
 function logMsg(message) {
@@ -213,8 +152,8 @@ var nodeList  =  [
                   {id: 'cadc', text: "cadc"}
                   ,{id: 'xidresult', text: "xidresult"}
                   ,{id: 'gavot', text: "gavot"}
-                  ,{id: 'http://localhost:8888/saadasvn/tap', text: "http://localhost:8888/saadasvn/tap"}
                   ,{id: 'http://cds-dev-gm:8080/simbad/sim-tap', text: "http://cds-dev-gm:8080/simbad/sim-tap"}
+                  ,{id: 'http://localhost:8888/XCATDR3/tap', text: "http://localhost:8888/XCATDR3/tap"}
                   ];
 
 var resultPaneView;
@@ -336,6 +275,7 @@ $().ready(function() {
 		else {
 			logged_alert('The result limit must be a positive integer value' , "User Input Error");
 			$("#qlimit").val(100);
+			tapView.fireUpdateQueryEvent();			
 			return false;
 		}
 
@@ -357,6 +297,11 @@ $().ready(function() {
 	$("#tapselectlist").droppable({
 		drop: function(event, ui){
 			tapView.fireSelectEvent(ui.draggable);		
+		}
+	});
+	$("#taporderby").droppable({
+		drop: function(event, ui){
+			tapView.fireOrderByEventEvent(ui.draggable);		
 		}
 	});
 	$("#tapalpha").droppable({
@@ -396,6 +341,16 @@ $().ready(function() {
 			}
 		});
 	});
+	
+	/*
+	 * Name resolver buton activation
+	 */
+	$(".kw_filter").keyup(function(event) {
+		var val = $(this).val()
+		tapView.fireFilterColumns(val);
+		$('.kw_filter').val(val);
+
+	});
 
 
 	/*
@@ -407,5 +362,5 @@ $().ready(function() {
 	sampView.fireSampInit();
 	tapView.fireRefreshJobList();
 
-	resultPaneView.fireNewNodeEvent("cadc");
+	//resultPaneView.fireNewNodeEvent("cadc");
 });

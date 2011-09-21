@@ -21,6 +21,8 @@ jQuery.extend({
 		var selectAttributesHandlers = new Array();
 		var editors = new Array();
 		var selects = new Array();
+		var orderby = null;
+
 		var alphakw ;
 		var deltakw ;
 		var const_key = 1;
@@ -95,6 +97,24 @@ jQuery.extend({
 			selects[div_key] =  new $.KWConstraintControler(m, v);
 			m.notifyInitDone();
 			const_key++;
+		}
+		this.processOrderByEvent = function(uidraggable) {
+			var kwname = uidraggable.find(".item").text().split(' ')[0];
+			logMsg('processOrderByEvent ' + kwname)
+			var ah = selectAttributesHandlers[kwname];
+			var m = new $.KWConstraintModel(true, { "name" : ah.name
+				    , "dataType" : "Select"
+					, "ucd" : ah.ucd
+					, "utype" : ah.utype
+					, "unit" : ah.unit
+					, "description" : ah.description}
+			, this);
+			var div_key = "kw" +  const_key;
+			var v = new $.KWConstraintView(div_key, 'taporderby');
+			orderby =  new $.KWConstraintControler(m, v);
+			m.notifyInitDone();
+			const_key++;
+		
 		}
 
 		this.processAttributeEvent= function(uidraggable){
@@ -194,7 +214,14 @@ jQuery.extend({
 
 
 		this.updateQuery = function() {
-			var query = "SELECT ";
+			var limit = getQLimit();
+			if( limit != '' ) {
+				limit = ' TOP ' + limit + ' ' ;
+			}
+			else {
+				limit = '';
+			}
+			var query = "SELECT " + limit;
 			var cq = "";
 
 			cq = "";
@@ -220,6 +247,10 @@ jQuery.extend({
 				query += "\nWHERE \n" + cq + "";
 			}
 
+			if( orderby != null ) {
+				query += "\nORDER BY " + orderby.getADQL(true);
+				
+			}
 			that.notifyQueryUpdated(query);
 		}
 
@@ -256,28 +287,36 @@ jQuery.extend({
 				hideProcessingDialog();
 				logged_alert("Job " + jid + " not completed: processed asynchronously", 'Info');
 				pendingJobs[jid] = lastJob;
-				console.log(Object.keys(pendingJobs).length);
+				logMsg(Object.keys(pendingJobs).length);
 				if( Object.keys(pendingJobs).length == 1 ) {
 					listTimer = setTimeout("tapView.fireUpdateRunningJobList();", 5000);	
 				}
 			}
-			else {
+			else  if( lastJob.fireGetPhase() == 'EXECUTING' || lastJob.fireGetPhase() == 'QUEUED'
+				|| lastJob.fireGetPhase() == 'PENDED'){
 				showProcessingDialog("Run job " + counter );
 				lastJob.fireUpdateStatus();
 				lastTimer = setTimeout("tapView.fireCheckJobCompleted(\"" + nodeKey + "\", \"" + jid + "\", \"" + (counter-1) + "\");", 1000);
+			}				
+			else {
+				hideProcessingDialog();
 			}
+
 		}
 
 		this.updateRunningJobList = function() {    
 			for( var k in  pendingJobs ) {
 				pendingJobs[k].fireUpdateStatus();
 			} 
+			logMsg('Pending1 ' + Object.keys(pendingJobs).length );
 			for( var k in  pendingJobs ) {
 				var phase = pendingJobs[k].fireGetPhase();
-				if( phase != 'EXECUTING' ) {
+				if( phase != 'EXECUTING' && phase != 'QUEUED' && phase != 'PENDED') {
+					logMsg('PendingR ' + k );
 					delete pendingJobs[k];					
 				}
 			}
+			logMsg('Pending2 ' + Object.keys(pendingJobs).length );
 			if( Object.keys(pendingJobs).length > 0  ) {
 				listTimer = setTimeout("tapView.fireUpdateRunningJobList();", 5000);	
 			}
@@ -287,10 +326,10 @@ jQuery.extend({
 		}
 
 		this.removeJob = function(id) {
-			console.log("remove job " + id);
+			logMsg("remove job " + id);
 			if( lastTimer != null && id == lastJob.getId()) {
 				clearTimeout(lastTimer);
-				console.log("Remove last job");
+				logMsg("Remove last job");
 				lastJob = null;
 			}
 			var timerOn = false;
@@ -393,16 +432,17 @@ jQuery.extend({
 			});					
 		}
 		this.displayResult = function(nodekey, jid) {
-			showProcessingDialog("Get Job result");			
+			showProcessingDialog("Get result of job " + jid);			
 			$.getJSON("jobresult" , {NODE: nodekey, JOBID: jid, FORMAT: 'json'}, function(jsondata) {
 				hideProcessingDialog();
-				if( processJsonError(jsondata, "Cannot get result of job " + jid) ) {
+				if( processJsonError(jsondata, "Cannot get result of job " + jid) ) {				
+					$('#resultpane').html();
+					lastJob.fireSetOnError();
 					return;
 				}
 				else {
 					var treenode = $('#' + jid).data().treenode;
 					setTitlePath([ treenode.node, '--', ' job ' + treenode.jobid ]);
-
 					resultPaneView.showTapResult(storedTreepath, jid, jsondata);
 				}
 			});					

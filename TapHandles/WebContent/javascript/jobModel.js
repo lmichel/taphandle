@@ -40,8 +40,12 @@ jQuery.extend({
 			});		
 
 		}
+		this.setOnError = function() {
+			phase = 'ERROR';
+			that.notifyUpdated();		
+		}
 		this.getPhase = function() {
-			console.log('getPhase ' + phase);
+			logMsg('getPhase ' + phase);
 			return  phase;
 		}
 		this.notifyIsInit = function() {

@@ -6,7 +6,7 @@
 	<xsl:output method="text" media-type="text/json" encoding="UTF-8" />
 	<xsl:template match="/">
 		{
-		&quot;available": &quot;<xsl:value-of select="vosi:availability/vosi:available" />&quot;
+		&quot;available": &quot;<xsl:value-of select="available/availability/vosi:availability/vosi:available" />&quot;
 		<xsl:for-each select="vosi:availability/vosi:note">&quot;note&quot;: &quot;<xsl:value-of select="." />&quot;</xsl:for-each>
 		}
 	</xsl:template>

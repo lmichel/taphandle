@@ -15,7 +15,7 @@ jQuery.extend({
 		var results;
 
 		this.init = function(xmlSummary) {
-			console.log("init  " +   $('.zip').attr("class"));
+			logMsg("init  " +   $('.zip').attr("class"));
 			var xmlRoot = $(xmlSummary).find("[nodeName=uws:job]");
 			that.jobId = xmlRoot.find("[nodeName=uws:jobId]").text();
 			that.phase = xmlRoot.find("[nodeName=uws:phase]").text();
