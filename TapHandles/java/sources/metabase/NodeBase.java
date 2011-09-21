@@ -49,6 +49,19 @@ public class NodeBase extends RootClass{
 		}
 		return NodeBase.instance.nodeMap.getNode(key);
 	}
+	
+	/**
+	 * Return key of the node with url as url
+	 * @param key
+	 * @return the requested @link TapNode
+	 * @throws Exception if the node cannot be found
+	 */
+	public static String getKeyNodeByUrl(String url) throws Exception {
+		if( NodeBase.instance == null ) {
+			NodeBase.instance = new NodeBase();
+		}
+		return NodeBase.instance.nodeMap.getKeyNodeByUrl(url);		
+	}
 
 	/**
 	 * Add a new node pointed by nodeURL.

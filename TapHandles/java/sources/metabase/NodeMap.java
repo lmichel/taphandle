@@ -3,6 +3,7 @@ package metabase;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.LinkedHashMap;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import resources.RootClass;
@@ -92,6 +93,24 @@ class NodeMap  extends RootClass {
 	 */
 	protected TapNode getNode(String key)  throws Exception{
 		return  nodeMap.get(key);
+	}
+	
+	/**
+	 * Return then key of the node having url as url
+	 * '/' chars are discarded from the comparison to avoid trail chars issues
+	 * @param url
+	 * @return
+	 * @throws Exception
+	 */
+	protected String getKeyNodeByUrl(String url) throws Exception {
+		String rurl = url.replaceAll("/", "");
+		for( Entry<String, TapNode> e : nodeMap.entrySet()) {
+			System.out.println("@@@@ " + e.getValue().getUrl().replaceAll("/", "")  + " <> " + rurl);
+			if( e.getValue().getUrl().replaceAll("/", "").equals(rurl) ) {
+				return e.getKey();
+			}
+		}
+		return null;
 	}
 	
 	/**

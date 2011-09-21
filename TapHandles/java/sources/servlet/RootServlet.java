@@ -4,11 +4,11 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -120,38 +120,54 @@ public abstract class RootServlet extends HttpServlet {
 		logger.debug( "Download file " + product_path);
 		File f = new File(product_path);
 		if( !f.exists() || !f.isFile() ) {
-			logger.error( "File " + f.getName() + " does not exist or cannot be read");
+			reportJsonError(req, res, "File " + f.getAbsolutePath() + " does not exist or cannot be read");
 			return;
 		}
-		if( product_path.toLowerCase().endsWith(".htm") || product_path.toLowerCase().endsWith(".html") ) {
+		String s_product = product_path;
+		if( product_path.toLowerCase().endsWith(".gz") ) {
+			res.setHeader("Content-Encoding", "gzip");
+			s_product = product_path.replaceAll("(?i)(\\.gz$)", "");
+		}
+		else if( product_path.toLowerCase().endsWith(".gzip") ) {
+			res.setHeader("Content-Encoding", "gzip");
+			s_product = product_path.replaceAll("(?i)(\\.gzip$)", "");
+		}
+		else if( product_path.toLowerCase().endsWith(".zip") ) {
+			res.setHeader("Content-Encoding", "zip");
+			s_product = product_path.replaceAll("(?i)(\\.zip$)", "");
+		}
+		
+		if( s_product.toLowerCase().endsWith(".htm") || s_product.toLowerCase().endsWith(".html") ) {
 			res.setContentType("text/html;charset=ISO-8859-1");
-		} else if( product_path.toLowerCase().endsWith(".pdf")  ) {
+		} else if( s_product.toLowerCase().endsWith(".pdf")  ) {
 			res.setContentType("application/pdf");
-		} else if( product_path.toLowerCase().endsWith(".png")  ) {
+		} else if( s_product.toLowerCase().endsWith(".png")  ) {
 			res.setContentType("image/png");
-		} else if( product_path.toLowerCase().endsWith(".jpeg") || product_path.toLowerCase().endsWith(".jpg")) {
+		} else if( s_product.toLowerCase().endsWith(".jpeg") || s_product.toLowerCase().endsWith(".jpg")) {
 			res.setContentType("image/jpeg");
-		} else if( product_path.toLowerCase().endsWith(".gif") ) {
+		} else if( s_product.toLowerCase().endsWith(".gif") ) {
 			res.setContentType("image/gif");
-		} else if( product_path.toLowerCase().endsWith(".txt")  ) {
+		} else if( s_product.toLowerCase().endsWith(".txt")  ) {
 			res.setContentType("text/plain");
-		} else if( product_path.matches(RootClass.FITS_FILE)) {
-			res.setContentType( "application/fits");						
-		} else if( product_path.matches(RootClass.VOTABLE_FILE)) {
-			res.setContentType("application/x-votable+xml");						
-			//res.setContentType("text/xml");
-		} else if( product_path.toLowerCase().endsWith(".xml")  ) {
+		} else if( s_product.matches(RootClass.FITS_FILE)) {
+			res.setContentType( "application/fits");                                                
+		} else if( s_product.matches(RootClass.VOTABLE_FILE)) {
+			res.setContentType("application/x-votable+xml");                                                
+		} else if( s_product.toLowerCase().endsWith(".xml")  ) {
 			res.setContentType("text/xml");
 		} else if (contentType != null) {
 			res.setContentType(contentType);
 		} else  {
 			res.setContentType("application/octet-stream");
 		}
-		if( proposedFilename != null ) {
-			res.setHeader("Content-Disposition", "attachment; filename=\"" + proposedFilename + "\"");
-		} else {
-			res.setHeader("Content-Disposition", "attachment; filename=\"" + f.getName() + "\"");
+		if( proposedFilename != null && proposedFilename.length() > 0 ) {
+			res.setHeader("Content-Disposition", "attachment; filename=\""+ proposedFilename + "\"");
 		}
+		else {
+			res.setHeader("Content-Disposition", "attachment; filename=\""+ f.getName() + "\"");
+		}
+		res.setHeader("Content-Length"     , Long.toString(f.length()));
+		res.setHeader("Last-Modified"      , (new Date(f.lastModified())).toString());
 
 		logger.debug("GetProduct file " + product_path + " (type: " + res.getContentType() + ")" + contentType);
 

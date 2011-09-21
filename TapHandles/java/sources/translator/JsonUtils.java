@@ -24,8 +24,11 @@ public abstract class JsonUtils {
 	 * @param msg Error message
 	 * @return    Returns the JSON string
 	 */
+	@SuppressWarnings("unchecked")
 	public static String getErrorMsg(String msg) {
-		return "{ \"errormsg\": \"" + msg.replaceAll("\"", "'") + "\"}";
+		JSONObject jso = new JSONObject();
+		jso.put("errormsg", msg);
+		return jso.toJSONString();
 	}
 	
 	/**
