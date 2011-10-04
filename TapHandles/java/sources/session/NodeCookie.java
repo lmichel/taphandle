@@ -47,7 +47,6 @@ public class NodeCookie extends RootClass {
 	public void storeCookie() {
 		List<HttpCookie>  cookies = manager.getCookieStore().getCookies();
 		for (HttpCookie c: cookies) {
-			System.out.println("@@@@@@@@@@@@ READ COOKIE " + c);
 			this.setCookie(c);
 		}
 	}
@@ -57,8 +56,6 @@ public class NodeCookie extends RootClass {
 			logger.debug("No cookie set");
 		}
 		else {
-			System.out.println("@@@@@@@@@@@@@@ SAVE " + this.cookie);
-
 			logger.debug("cookie stored");
 			File f = new File(dir, "cookie.txt");
 			FileWriter fw = new FileWriter(f);
@@ -73,7 +70,6 @@ public class NodeCookie extends RootClass {
 			BufferedReader br = new BufferedReader(new FileReader(f));
 			String[] ckv = br.readLine().trim().split("=");
 			this.cookie = new HttpCookie(ckv[0], ckv[1]);
-			System.out.println("@@@@@@@@@@@@@@ RESTORE " + this.cookie);
 			br.close();
 		}
 	}

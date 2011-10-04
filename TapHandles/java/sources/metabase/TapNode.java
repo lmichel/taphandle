@@ -188,9 +188,7 @@ public class TapNode  extends RootClass {
 			if( !found ) {
 				Matcher m = pattern.matcher(inputLine);
 				if (m.matches()) {				
-					System.out.println("@@@@ getServiceReponse NSDECLAR " +inputLine );
 					nsDefinition.init("xmlns:vosi=" + m.group(1)) ;
-					System.out.println("@@@@ getServiceReponse NSDECLAR " +m.group(1) );
 					found = true;
 				}
 			}
@@ -214,7 +212,6 @@ public class TapNode  extends RootClass {
 		while ( s.hasNextLine()) {
 			Matcher m = pattern.matcher(s.nextLine());
 			if (m.matches()) {
-				System.out.println("@@@@ getNamspaceDefinition NSDECLAR " +m.group(1) );
 				nsDefinition.init(m.group(1)) ;
 				break;
 			}

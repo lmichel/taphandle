@@ -1,5 +1,6 @@
 package metabase;
 
+import java.io.File;
 import java.net.MalformedURLException;
 import java.util.Set;
 
@@ -29,7 +30,8 @@ public class NodeBase extends RootClass{
 	private NodeBase()  {
 		try {
 			validWorkingDirectory(MetaBaseDir);
-			nodeMap.addNode("http://xcatdb.u-strasbg.fr/xidresult/tap", "xidresult");
+			emptyDirectory(new File(MetaBaseDir));
+			nodeMap.addNode("http://xcatdb.u-strasbg.fr/2xmmidr3/tap", "xcatdb");
 			nodeMap.addNode("http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/caom/", "cadc");
 			nodeMap.addNode("http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap", "gavot");
 		} catch (Exception e) {

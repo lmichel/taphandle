@@ -71,7 +71,6 @@ public class XmlToJson  extends RootClass {
 			if( !found && nsDefinition != null && nsDeclaration != null) {
 				Matcher m = NSDefPattern.matcher(str);
 				if (m.matches()) {
-					System.out.println("@@@@ repalce " + m.group(1) + " with " +nsDeclaration);
 					str = str.replace( m.group(1), nsDeclaration) ;
 					found = true;
 				}
@@ -121,7 +120,6 @@ public class XmlToJson  extends RootClass {
 	 * @throws Exception   If something goes wrong
 	 */
 	public static void translate(String baseDir , String service, NameSpaceDefinition nsDefinition) throws Exception {
-		System.out.println("@@@ " + nsDefinition);
 		logger.debug("Translate " +  service + ".xml with "  + service + ".xsl in " + baseDir);
 		setVosiNS(baseDir, service, nsDefinition);
 		applyStyle(baseDir + service + ".xml", baseDir + service + ".json", baseDir + service + ".xsl");
@@ -184,8 +182,9 @@ public class XmlToJson  extends RootClass {
 		applyStyle(baseDir  + "tables.xml", baseDir + tableName + "_att.json", baseDir + tableName + "_att.xsl");
 	}
 	public static void main(String[] args) throws Exception {
-		translateResultTable("/home/michel/workspace/.metadata/.plugins/org.eclipse.wst.server.core/tmp0/wtpwebapps/TapHandles/userbase/107DC78858F78E44E4CB51138BA4D209/localhost_saadasvn/job_1_AIP_WFIImage/result.xml"
-				, "/home/michel/Desktop/resul.json");
+		translateResultTable(
+		"/home/michel/workspace/.metadata/.plugins/org.eclipse.wst.server.core/tmp0/wtpwebapps/TapHandles/userbase/./0F42FA965A1C1FBD3EA46C1D2F113F66/localhost_2xmmidr3/job_2_ObsCore/result.xml"
+		, "/home/michel/Desktop/resul.json");
 	}
 
 	/**
@@ -198,7 +197,7 @@ public class XmlToJson  extends RootClass {
 	@SuppressWarnings("unchecked")
 	public static void translateResultTable(String inputFile, String outputFile  ) throws Exception {
 		StarTableFactory stf = new StarTableFactory();
-		System.out.println("@@@@@@@@@@@@@@@@ COUCO");
+		logger.info("Translate " +inputFile);
 		try {
 			StarTable table = stf.makeStarTable(inputFile); 
 			JSONObject retour = new JSONObject();
@@ -255,6 +254,7 @@ public class XmlToJson  extends RootClass {
 			SavotVOTable sv = sp.getVOTable(); 
 			for (int l = 0; l<sp.getResourceCount(); l++) {		    	 
 				SavotResource currentResource = (SavotResource)(sv.getResources().getItemAt(l));
+				System.err.println(l + " " + currentResource);
 				InfoSet is = currentResource.getInfos();
 				String msg = "";;
 				for( int i=0 ; i<is.getItemCount() ; i++ ) {

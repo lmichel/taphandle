@@ -38,7 +38,6 @@ public class TapAccess  extends RootClass {
 
 
 	public static void sendPostRequest(String endpoint, String data, String outputfile, NodeCookie cookie) throws Exception {
-		System.out.println("@@@@@@@@@@@@  sendPostRequest " + cookie.getCookie());
 
         logger.debug("send request " + endpoint + "(" + data + ")");
 		// Send the request
@@ -76,7 +75,6 @@ public class TapAccess  extends RootClass {
 
 	private static void sendPostDownloadRequest(String endpoint, String outputdir, String outputfile, NodeCookie cookie) throws Exception {
 		logger.debug("send download request " + endpoint );
-		System.out.println("@@@@@@@@@@@@  sendPostDownloadRequest " + cookie.getCookie());
 		//		LM: Est ce normal que l'URL dans uws:result soit encodée?
 		//		GM: Ouaip, c'est une demande Thomas pour UWS...sinon le document XML est déclaré invalide ! Mais en fait, cela est surtout valable
 		//		s'il y a des & dans l'URL....et dans ce cas, ça ne plaît pas du tout au navigateur Web (quelqu'il soit) ! 

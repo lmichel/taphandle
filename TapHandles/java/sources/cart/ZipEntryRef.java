@@ -3,9 +3,9 @@
  */
 package cart;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import resources.RootClass;
 
@@ -53,14 +53,32 @@ public class ZipEntryRef extends RootClass {
 	 */
 	public String getFilenameFromHttpHeader(Map<String, List<String>>  headerFields) {
 		if( this.name == null || this.name.length() == 0 || this.name.toLowerCase().equals("preserve")) {
+			/*
+			 * Try first to get the filename from the Content-Disposition header fields
+			 */
 			List<String> cds = null;
 			if( ( cds = headerFields.get("Content-Disposition")) != null ) {
 				String[] cd = cds.get(0).split("=");
 				logger.debug("take " + cd[cd.length-1] + " as filename");
-				return cd[cd.length-1];
+				return cd[cd.length-1].replaceAll("\"", "");
 			}
-			this.name = "DefaultName";
+			/*
+			 * Otherwise, try to infer the filename from tehe URI and the ContentType
+			 */
+			int pos = -1;
+			if( (pos = this.uri.lastIndexOf("=")) != -1 ){
+				String fn = this.uri.substring(pos + 1);
+				logger.debug("take " +fn + " as filename");
+				return fn;
+			}
+			/*
+			 * Other take some dummy name
+			 */
+			this.name = "DefaultName" + (new Date()).getTime();
 		}
+		/*
+		 * Then add a suffix
+		 */
 		List<String> cts = null;
 		String suffix = ".nosuffix";
 		if( ( cts = headerFields.get("Content-Type")) != null ) {

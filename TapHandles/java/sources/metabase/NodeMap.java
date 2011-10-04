@@ -105,7 +105,6 @@ class NodeMap  extends RootClass {
 	protected String getKeyNodeByUrl(String url) throws Exception {
 		String rurl = url.replaceAll("/", "");
 		for( Entry<String, TapNode> e : nodeMap.entrySet()) {
-			System.out.println("@@@@ " + e.getValue().getUrl().replaceAll("/", "")  + " <> " + rurl);
 			if( e.getValue().getUrl().replaceAll("/", "").equals(rurl) ) {
 				return e.getKey();
 			}
