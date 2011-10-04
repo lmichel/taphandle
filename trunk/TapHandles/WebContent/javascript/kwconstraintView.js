@@ -72,8 +72,15 @@ jQuery.extend({
 			});
 
 			$('#' +  id_root + "_op").change(function() {
+				var regex = /=\s('.+')$/;
+			    var op = this.value;
+			    var results = regex.exec(op); 
+			    if(results) {
+			    	op = '=';
+			    	$('#' +  id_root + "_val").val(results[1])
+			    }
 				that.fireEnterEvent($('#' +  id_root + "_andor option:selected").text()
-						, this.value
+						, op
 						, $('#' +  id_root + "_val").val());				
 			});
 			$('#' +  id_root + "_andor").change(function() {

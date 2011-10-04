@@ -149,11 +149,9 @@ function processJsonError(jsondata, msg) {
 }
 
 var nodeList  =  [
-                  {id: 'cadc', text: "cadc"}
-                  ,{id: 'xidresult', text: "xidresult"}
-                  ,{id: 'gavot', text: "gavot"}
-                  ,{id: 'http://cds-dev-gm:8080/simbad/sim-tap', text: "http://cds-dev-gm:8080/simbad/sim-tap"}
-                  ,{id: 'http://localhost:8888/XCATDR3/tap', text: "http://localhost:8888/XCATDR3/tap"}
+                   {id: 'gavot', text: "gavot"},
+                   {id: 'cadc', text: "cadc"},
+                  {id: 'xcatdb', text: "xcatdb"}
                   ];
 
 var resultPaneView;

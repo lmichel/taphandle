@@ -200,7 +200,7 @@ jQuery.extend({
 				}
 				for( var i=0 ; i<folder.urls.length ; i++) {
 					aaData[aaData.length] = ["<INPUT TYPE=CHECKBOX checked name=\"" + nodekey + " url " + i + "\" value=" + i +">"
-					                         ,  "URL", folder.urls[i].name, folder.urls[i].uri];
+					                         ,  "URL", "<span>" + folder.urls[i].name + "</span>", folder.urls[i].uri];
 				}
 				folderTables[folderTables.length] = $('#folder_' + nodekey).dataTable(
 						{
