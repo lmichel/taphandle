@@ -14,24 +14,39 @@ jQuery.extend({
 		}
 
 		var attributehandler = ah;
+		attributehandler.dataType = attributehandler.dataType.replace('adql:', '').toLowerCase();
 		var qlmodel = model;
 		var default_value = def_value;
 		var operator ;
 		var operand ;
 		var andor ;
-		var dataTypeLower = ah.dataType.toLowerCase();
-		logMsg(ah.dataType);
-		if( dataTypeLower == 'select' ) {
+
+		var presetValues = new Array();
+		presetValues["dataproduct_type"] = ["'image'", "'spectrum'", "'cube'",
+		                                    "'timeseries'", "'visibility'", "'eventlist'"]
+		presetValues["calibration_level"] = [0, 1, 2, 3];
+		presetValues["access_format"] = ["'text/html'", "'text/xml'","'text/plain'"
+		                                 , "'application/fits'","'application/x-votable+xml'", "'application/pdf'"
+		                                 , "'image/png'", "'image/jpeg'", "'image/gif'", "'image/bmp'"];
+
+		this.isTextType = function() {
+			if( attributehandler.dataType == 'varchar' || attributehandler.dataType == 'clobs'  ||
+					attributehandler.dataType == 'region'  || attributehandler.dataType == 'char') {
+				return true;
+			}
+			return false;
+		}
+
+		if( attributehandler.dataType == 'select' ) {
 			operators = [];
 			andors = [];
 		}
-		else if( dataTypeLower == 'adqlpos' ) {
+		else if( attributehandler.dataType == 'adqlpos' ) {
 			operators = ["inCircle", "inBox"];
 			andors = ["OR", "AND"];
 
 		}
-		else if( dataTypeLower != 'varchar' && dataTypeLower != 'clobs' 
-			&& dataTypeLower != 'region' && dataTypeLower != 'char') {
+		else if( !that.isTextType()) {
 			operators = ["=", "!=", ">", "<", "between", 'IS NULL', 'IS NOT NULL'];
 			andors = ['AND', 'OR'];
 		}
@@ -39,17 +54,24 @@ jQuery.extend({
 			operators = ["=", "!=", "LIKE", "NOT LIKE", 'IS NULL', 'IS NOT NULL'];
 			andors = ['AND', 'OR'];
 		}
-	
+
+		if(  attributehandler.dataType != 'select' ) {
+			var addConst = presetValues[attributehandler.name .toLowerCase()];
+			if( addConst != null ) {
+				for( var c=0 ; c<addConst.length ; c++ ) {
+					operators[operators.length] = "= " + addConst[c];
+				}
+			}
+		}
 		if( first == true ) {
 			andors = [];
 		}
-		logMsg(ah.dataType);
+		logMsg(attributehandler.dataType);
+
 
 		this.processEnterEvent = function(ao, op, opd) {
 			andor = ao;
-			var dataTypeLower = ah.dataType.toLowerCase();
-			if( dataTypeLower == 'varchar' || dataTypeLower == 'clobs'  ||
-				dataTypeLower == 'region'  || dataTypeLower == 'char') {
+			if( that.isTextType() ) {
 				if( !that.checkAndFormatString(op, opd) ) {
 					return;
 				}
@@ -116,11 +138,11 @@ jQuery.extend({
 					return 0 ;
 				}
 				if( op == 'inCircle') {
-					operator = "CIRCLE('ICRS GEOCENTER', '" + area[0]+ "', '" +area[1] + "', " + area[2]+ ")";
+					operator = "CIRCLE('ICRS', " + area[0]+ ", " +area[1] + ", " + area[2]+ ")";
 					operand = "";
 				}
 				else {
-					operator = "BOX('ICRS GEOCENTER', '" + area[0]+ "', '" +area[1] + "', " + area[2]+  ", " + area[2]  +")";
+					operator = "BOX('ICRS', " + area[0]+ ", " +area[1] + ", " + area[2]+  ", " + area[2]  +")";
 					operand = "";					
 				}
 				return 1 ;
@@ -163,11 +185,11 @@ jQuery.extend({
 		this.processRemoveConstRef = function(ahname) {
 			qlmodel.processRemoveConstRef(ahname);
 		}
-		
+
 		this.processRemoveFirstAndOr = function(key) {
 			qlmodel.processRemoveFirstAndOr(key);
 		}
-		
+
 		this.removeAndOr = function() {
 			andor = "";
 		}
@@ -188,12 +210,12 @@ jQuery.extend({
 				if( c1.startsWith('_') ) c1 = '"' + c1 + '"';
 				var c2 = coordkw[1];
 				if( c2.startsWith('_') ) c2 = '"' + c2 + '"';
-				return andor + " CONTAINS(POINT('ICRS GEOCENTER', " + c1 + ", " +  c2 + "), "
+				return andor + " CONTAINS(POINT('ICRS', " + c1 + ", " +  c2 + "), "
 				+ operator + ") = " + bcomp;
 			}
 			else {
 				return andor + ' ' + quote + attributehandler.name + quote + ' ' + operator + ' ' + operand;
-				}
+			}
 		}
 		this.notifyInitDone = function(){
 			$.each(listeners, function(i){

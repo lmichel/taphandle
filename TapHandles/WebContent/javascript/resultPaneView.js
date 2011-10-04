@@ -16,7 +16,7 @@ jQuery.extend({
 		this.addListener = function(list) {
 			listeners.push(list);
 		}
-		
+
 		this.fireGetProductInfo = function(url) {
 			showProcessingDialog("Waiting on product info");
 
@@ -29,8 +29,8 @@ jQuery.extend({
 					retour = "url: " + url + "\n";
 					$.each(jsdata, function(k, v) {
 						retour += k + ": " + v  + "\n";
-				});
-				logged_alert(retour, "Product Info");
+					});
+					logged_alert(retour, "Product Info");
 				}
 			});
 		}		
@@ -39,35 +39,37 @@ jQuery.extend({
 
 			$.getJSON("getproductinfo", {url: url}, function(jsdata) {
 				hideProcessingDialog();
-				if( jsondata == undefined || jsondata == null ) {
+				if( jsdata == undefined || jsdata == null ) {
 					window.open(url);
 					return;
 				}
 				else {
-					retour = "url: " + url + "\n";
+					var fn, ct, ce;
 					$.each(jsdata, function(k, v) {
-						retour += k + ": " + v  + "\n";
-						var fn, ct, ce;
+						logMsg(k + ": " + v );
 						if( k == 'ContentDisposition')    fn = v;
 						else if( k == 'ContentType' )     ct = v;
 						else if( k == 'ContentEncoding' ) ce = v;
-						/*
-						 * Will be downloaded by the browser: no need to open a new tab
-						 */
-						if( ce == 'gzip' || ce == 'zip' ||
-							cd.match(/\.fit/i) || ct.match(/fits/) ){
-							document.location = url;
-						}
-						else {
-							window.open(url);
-						}
-				});
+					});
+					/*
+					 * Will be downloaded by the browser: no need to open a new tab
+					 */
+					if( (ce != null && (ce == 'gzip' || ce == 'zip')) ||
+							(ct != null && (ct.match(/\.fit/i) || ct.match(/fits/))) ){
+						logMsg("location  " + url );
+						document.location = url;
+					}
+					else {
+						logMsg("window  " + url );
+						window.open(url);
+					}
+
 				}
 			});
-		
+
 		}
 
-		
+
 		this.fireNewNodeEvent = function(nodekey) {
 			showProcessingDialog("Waiting on " + nodekey + " node description");
 
@@ -97,8 +99,8 @@ jQuery.extend({
 								, $("#" + jsdata.nodekey)
 								, false
 								, {"data" : {"attr":{"id": id_schema, "title": description}, "title" : jsdata.schemas[i].name},
-								   "state": "closed",
-								   "attr" :{"id": id_schema}}
+									"state": "closed",
+									"attr" :{"id": id_schema}}
 								,false
 								,true);		
 					}
@@ -315,7 +317,7 @@ jQuery.extend({
 			if ($('#detaildiv').length == 0) {
 				$(document.documentElement)
 				.append(
-						"<div id=detaildiv style='width: 99%; display: none;'></div>");
+				"<div id=detaildiv style='width: 99%; display: none;'></div>");
 			}
 			$('#detaildiv').html(table);
 
@@ -395,10 +397,10 @@ jQuery.extend({
 			}
 
 			var title = "Columns of table <i>"
-					+ jsdata.table
-					+ "</i> of node <i>"
-					+ jsdata.nodekey 
-					+ "</i>";
+				+ jsdata.table
+				+ "</i> of node <i>"
+				+ jsdata.nodekey 
+				+ "</i>";
 			table += '<h2> ' + histo + ' DETAIL <span>' + title
 			+ '</span></h2>';
 			table += "<h4 id=\"mappedmeta\" class='detailhead'> <img src=\"images/tdown.png\"> Table Columns </h4>";
@@ -409,7 +411,7 @@ jQuery.extend({
 
 			if ($('#detaildiv').length == 0) {
 				$(document.documentElement).append(
-						"<div id=detaildiv style='width: 99%; display: none;'></div>");
+				"<div id=detaildiv style='width: 99%; display: none;'></div>");
 			}
 			$('#detaildiv').html(table);
 			$('#detailtable').dataTable(
@@ -435,108 +437,117 @@ jQuery.extend({
 				var line = jsdata.aaData[r];
 				for( var l=0 ; l<nb_cols ; l++) {
 					var num = line[l];
-					line[l] = formatValue(num);
+					//line[l] = formatValue(jsdata.aoColumns[l].sTitle, num);
 				}
-				
+
 			}
-			$('#datatable').dataTable({
+			logMsg("sadasdasd");
+			var t = $('#datatable').dataTable({
 				"aoColumns" : jsdata.aoColumns,
 				"aaData" : jsdata.aaData,
-				"sDom" : '<"top">lrt<"bottom">ip',
+				"sDom" : '<"top">lrt<"bottom">pi',
 				"bPaginate" : true,
 				"aaSorting" : [],
 				"bSort" : false,
-				"bFilter" : true
-			});
+				"bFilter" : true,
+				"fnRowCallback": function( nRow, aData, iDisplayIndex ) {
+					for( var c=0 ; c<aData.length ; c++ ) {
+						formatValue(this.fnSettings().aoColumns[c].sTitle, aData[c], $('td:eq(' + c + ')', nRow));
+					}
 
-		}
-		this.displayResult = function(dataJSONObject) {
-		}
-		this.initTable = function(dataJSONObject, query) {
-			if( processJsonError(dataJSONObject, "") ) {
-				return;
-			}
-			else {
-				/*
-				 * Get table columns
-				 */
-				var ahs = dataJSONObject["attributes"];
-				var table = "<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\"  id=\"datatable\" class=\"display\">"
-					+ "<thead>" + "<tr>";
-				for (i = 0; i < ahs.length; i++) {
-					table += "<th>" + ahs[i].name + "</th>";
+					return nRow;
 				}
-				/*
-				 * Build empty table
-				 */
-				table += "</tr>"
-					+ "</thead>"
-					+ "<tbody>"
-					+ "<tr><td colspan="
-					+ i
-					+ " class=\"dataTables_empty\">Loading data from server</td></tr>"
-					+ "</tbody>" + "</table>";
-				$("#resultpane").html(table);
-				/*
-				 * Connect the table with the DB
-				 */
-				$('#datatable').dataTable({
-					"bServerSide" : true,
-					"bProcessing" : true,
-					"aaSorting" : [],
-					"bSort" : false,
-					"bFilter" : false,
-					"sAjaxSource" : "nextpage"
-				});
-			}
-			that.fireStoreHisto(query);
+			} );
+	}
 
+this.displayResult = function(dataJSONObject) {
+}
+
+this.initTable = function(dataJSONObject, query) {
+	if( processJsonError(dataJSONObject, "") ) {
+		return;
+	}
+	else {
+		/*
+		 * Get table columns
+		 */
+		var ahs = dataJSONObject["attributes"];
+		var table = "<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\"  id=\"datatable\" class=\"display\">"
+			+ "<thead>" + "<tr>";
+		for (i = 0; i < ahs.length; i++) {
+			table += "<th>" + ahs[i].name + "</th>";
 		}
 		/*
-		 * Returns the arrow commanding the historic on the modal box
+		 * Build empty table
 		 */
-		this.histoCommands = function(limit) {
-			var histo = '';
+		table += "</tr>"
+			+ "</thead>"
+			+ "<tbody>"
+			+ "<tr><td colspan="
+			+ i
+			+ " class=\"dataTables_empty\">Loading data from server</td></tr>"
+			+ "</tbody>" + "</table>";
+		$("#resultpane").html(table);
+		/*
+		 * Connect the table with the DB
+		 */
+		$('#datatable').dataTable({
+			"bServerSide" : true,
+			"bProcessing" : true,
+			"aaSorting" : [],
+			"bSort" : false,
+			"bFilter" : false,
+			"sAjaxSource" : "nextpage"
+		});
+	}
+	that.fireStoreHisto(query);
 
-			if (limit != 'NoHisto') {
-				if (limit != 'MaxLeft') {
-					histo += '<a href="javascript:void(0);" onclick="resultPaneView.fireShowPreviousRecord();" class=histoleft></a>';
-				}
-				if (limit != 'MaxRight') {
-					histo += '<a href="javascript:void(0);" onclick="resultPaneView.fireShowNextRecord();" class=historight></a>';
-				}
-			}
-			return histo;
-		}
+}
+/*
+ * Returns the arrow commanding the historic on the modal box
+ */
+this.histoCommands = function(limit) {
+	var histo = '';
 
-		this.updateQueryHistoCommands = function(length, ptr) {
-			var result = '';
-			$("#qhistocount").html((ptr + 1) + "/" + length);
-			if (length <= 1) {
-				result += '<img src="images/histoleft-grey.png">';
-				result += '<img src="images/historight-grey.png">';
-			} else {
-				if (ptr > 0) {
-					result += '<a id="qhistoleft" title="Previous query" class=histoleft onclick="resultPaneView.fireHisto(\'previous\');"></a>';
-				} else {
-					result += '<a id="qhistoleft"><img src="images/histoleft-grey.png"></a>';
-				}
-				if (ptr < (length - 1)) {
-					result += '<a id="qhistoright" title="Next query" class=historight onclick="resultPaneView.fireHisto(\'next\');"></a>';
-				} else {
-					result += '<img src="images/historight-grey.png">';
-				}
-			}
-			$('#histoarrows').html('');
-			$('#histoarrows').html(result);
+	if (limit != 'NoHisto') {
+		if (limit != 'MaxLeft') {
+			histo += '<a href="javascript:void(0);" onclick="resultPaneView.fireShowPreviousRecord();" class=histoleft></a>';
 		}
-
-		this.overPosition = function(pos) {
-			simbadToBeOpen = true;
-			setTimeout("if( simbadToBeOpen == true ) openSimbadDialog(\"" + pos + "\");", 1000);
-		}
-		this.outPosition = function() {
-			simbadToBeOpen = false;
+		if (limit != 'MaxRight') {
+			histo += '<a href="javascript:void(0);" onclick="resultPaneView.fireShowNextRecord();" class=historight></a>';
 		}
 	}
+	return histo;
+}
+
+this.updateQueryHistoCommands = function(length, ptr) {
+	var result = '';
+	$("#qhistocount").html((ptr + 1) + "/" + length);
+	if (length <= 1) {
+		result += '<img src="images/histoleft-grey.png">';
+		result += '<img src="images/historight-grey.png">';
+	} else {
+		if (ptr > 0) {
+			result += '<a id="qhistoleft" title="Previous query" class=histoleft onclick="resultPaneView.fireHisto(\'previous\');"></a>';
+		} else {
+			result += '<a id="qhistoleft"><img src="images/histoleft-grey.png"></a>';
+		}
+		if (ptr < (length - 1)) {
+			result += '<a id="qhistoright" title="Next query" class=historight onclick="resultPaneView.fireHisto(\'next\');"></a>';
+		} else {
+			result += '<img src="images/historight-grey.png">';
+		}
+	}
+	$('#histoarrows').html('');
+	$('#histoarrows').html(result);
+}
+
+this.overPosition = function(pos) {
+	simbadToBeOpen = true;
+	setTimeout("if( simbadToBeOpen == true ) openSimbadDialog(\"" + pos + "\");", 1000);
+}
+this.outPosition = function() {
+	simbadToBeOpen = false;
+}
+}
 });

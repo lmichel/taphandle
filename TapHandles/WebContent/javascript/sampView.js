@@ -73,6 +73,25 @@ jQuery.extend({
 				logged_alert('No active SAMP connnection', 'Error');
 			}
 		}
+		this.fireSendFitsDownload= function(url){
+			if( that.isSampConnect() ) {
+				showSampMessageSent();
+				logMsg("Send FITS  " + url);
+					WebSampConnector.sendMsg('image.load.fits','From TAP Result' ,'VOTable', url,'');
+			}
+			else {
+				logged_alert('No active SAMP connnection', 'Error');
+			}
+		}
+		this.fireSendVOTableDownload= function(url){
+			if( that.isSampConnect() ) {
+				showSampMessageSent();
+				WebSampConnector.sendMsg('table.load.votable','From TAP Result' ,'VOTable', url,'');
+			}
+			else {
+				logged_alert('No active SAMP connnection', 'Error');
+			}
+		}
 		this.fireSendCSQuery= function(query){
 			if( that.isSampConnect() ) {
 				showSampMessageSent();
