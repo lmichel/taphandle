@@ -30,17 +30,14 @@ public class ZipBuilder extends RootServlet implements Servlet {
 	public void init(ServletConfig conf) throws ServletException {
 		super.init(conf);
 		try {
-			System.out.println("@@@ INIT");
 			zipUWS = new QueuedBasicUWS<ZipperJob>(ZipperJob.class, 2, "/datapack");
 			zipUWS.setUserIdentifier(new UserIdentifier() {
 				private static final long serialVersionUID = 1L;
 			public String extractUserId(UWSUrl urlInterpreter, HttpServletRequest request) throws UWSException {
-				System.out.println("@@@ extractUserId");
 					return request.getSession().getId();
 				}
 			});
 			zipUWS.addJobList(new JobList<ZipperJob>("zipper")); 
-			System.out.println("@@@ INIT FINI");
 		}catch(UWSException ex){
 			throw new ServletException(ex);
 		}

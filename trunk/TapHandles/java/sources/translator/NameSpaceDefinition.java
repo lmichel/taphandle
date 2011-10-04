@@ -31,12 +31,10 @@ public class NameSpaceDefinition extends RootClass{
 	 * @param declaration
 	 */
 	public void init(String declaration) {
-		System.out.println("@@@@@ DECLARATION : " + declaration);
 		nsDeclaration = declaration;
 		Matcher m = NSNamePattern.matcher(nsDeclaration);
 		if (m.matches()) {
 			nsName =  m.group(1) ;
-			System.out.println("@@@@@ NAME : " + nsName);
 			logger.debug("Found NS " + nsName);
 		}
 	}
