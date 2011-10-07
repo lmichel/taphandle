@@ -84,7 +84,6 @@ jQuery.extend({
 		this.fireCheckArchiveCompleted = function() {
 			var phase = that.fireGetJobPhase();
 			var jobspan = $('#cartjob_phase');
-			logMsg(jobspan.attr('class'));
 			jobspan.attr('class', phase.toLowerCase());
 			jobspan.text(phase);
 			if( phase == 'nojob') {
@@ -119,13 +118,9 @@ jQuery.extend({
 			}
 
 			var table = '';
-			var histo = '';
 			var phase = that.fireGetJobPhase();
 
-			histo += '<a id="qhistoleft"><img src="images/histoleft-grey.png"></a>';
-			histo += '<a id="qhistoright"><img src="images/historight-grey.png"></a>';
-
-			table += '<h2> ' + histo + ' Shopping Cart</h2>';
+			table += '<h2><img src="images/groscaddy.png"> Shopping Cart</h2>';
 			table += '<div id=table_div></div>';
 			table += "<h4 id=\"cartjob\" class='detailhead'> <img src=\"images/tdown.png\">Processing status</h4>";
 			table += '<br><span>Current Job Status</span> <span id=cartjob_phase class="' + phase.toLowerCase() + '">' + phase + '</span><BR>'

@@ -66,8 +66,6 @@ jQuery.extend({
 		if( first == true ) {
 			andors = [];
 		}
-		logMsg(attributehandler.dataType);
-
 
 		this.processEnterEvent = function(ao, op, opd) {
 			andor = ao;

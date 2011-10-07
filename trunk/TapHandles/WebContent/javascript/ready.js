@@ -8,12 +8,9 @@ function logMsg(message) {
 }
 
 function setTitlePath(treepath) {
-	$("#resultpane").html('');
-	$('#titlepath').html('<i>');
-	for( i=0 ; i<treepath.length  ; i++ ) {
-		if( i > 0 )$('#titlepath').append('&gt;');
-		$('#titlepath').append(treepath[i]);
-	}
+	logMsg("title " + treepath);
+	var job = (treepath.jobid == null)? "": '&gt;'+ treepath.jobid;
+	$('#titlepath').html('<i>' + treepath.nodekey + '&gt;' + treepath.schema + '&gt;'+ treepath.table+ job);
 }
 
 function getQLimit() {
@@ -151,7 +148,8 @@ function processJsonError(jsondata, msg) {
 var nodeList  =  [
                    {id: 'gavot', text: "gavot"},
                    {id: 'cadc', text: "cadc"},
-                  {id: 'xcatdb', text: "xcatdb"}
+                  {id: 'xcatdb', text: "xcatdb"},
+                  {id: 'http://simbad49:8080/simbad/sim-tap', text: "http://simbad49:8080/simbad/sim-tap"}
                   ];
 
 var resultPaneView;
@@ -162,7 +160,7 @@ var cartView ;
 /*
  * To be set from a JSP 
  */
-var base_url = '';
+var defaultUrl = '';
 var booleansupported = false;
 
 $().ready(function() {
@@ -182,6 +180,7 @@ $().ready(function() {
 	cartView            = new $.CartView();
 	var cartControler   = new $.CartControler(cartModel, cartView);
 
+		   
 	/*
 	 * Splitter functions of accesspane, the container of the db tree, 
 	 * the data panel and the query form.
@@ -215,32 +214,32 @@ $().ready(function() {
 			});
 
 	$("div#treedisp").jstree({
-		"json_data"   : {"data" : [ {  "attr"     : { "id"   : "rootid" },
+		"json_data"   : {"data" : [ {  "attr"     : { "id"   : "rootid", "title": "Dummy node: Select one first with the node selector on the page top." },
 			"data"     : { "title"   : "Tap Nodes" }}]}  , 
 			"plugins"     : [ "themes", "json_data", "dnd", "crrm"],
 			"dnd"         : {"drop_target" : "#resultpane,#taptab,#showquerymeta",
 				"drop_finish" : function (data) {
 					var parent = data.r;
-					var treepath = data.o.attr("id").split(';');
-					if( treepath.length < 3 ) {
-						logged_alert("Query can only be applied on one data category or one data class: ("  +  treepath + ")", 'User Input Error');
+					var streepath = data.o.attr("id").split(';');
+					if( streepath.length < 3 ) {
+						logged_alert("Query can only be applied on one data category or one data class: ("  +  streepath + ")", 'User Input Error');
 					}
 					else {
+						var treePath = {nodekey: streepath[0], schema: streepath[1], table: streepath[2]};
 						while(parent.length != 0  ) {
-							resultPaneView.fireSetTreePath(treepath);	
-							if(parent.attr('id') == "resultpane" ) {
-								setTitlePath(treepath);
-								resultPaneView.fireTreeNodeEvent(treepath);	
+							resultPaneView.fireSetTreePath(treePath);	
+							if(parent.is('#resultpane') ) {
+								setTitlePath(treePath);
+								resultPaneView.fireTreeNodeEvent(treePath);	
 								return;
 							}
 							else if(parent.attr('id') == "showquerymeta" ) {
-								setTitlePath(treepath);
-								resultPaneView.fireShowMetaNode(treepath);	
+								resultPaneView.fireShowMetaNode(treePath);	
 								return;
 							}
 
 							else if(  parent.attr('id') == "taptab") {
-								tapView.fireTreeNodeEvent(treepath);	
+								tapView.fireTreeNodeEvent(treePath);	
 								return;
 							}
 							parent = parent.parent();
@@ -360,5 +359,9 @@ $().ready(function() {
 	sampView.fireSampInit();
 	tapView.fireRefreshJobList();
 
-	//resultPaneView.fireNewNodeEvent("cadc");
+	defaultUrl  =  (RegExp('url=' + '(.+?)(&|$)').exec(location.search)||[,null])[1];
+	if( defaultUrl != null ) {
+		resultPaneView.fireNewNodeEvent(unescape(defaultUrl));
+	}
+	// ex http://saada.u-strasbg.fr/taphandle?url=http%3A//simbad49%3A8080/simbad/sim-tap
 });

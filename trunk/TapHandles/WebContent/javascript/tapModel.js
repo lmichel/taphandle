@@ -45,12 +45,8 @@ jQuery.extend({
 			var jsondata;
 			var params;
 			showProcessingDialog("Waiting on table description");
-			if( treepath.length != 3 ) {
-				logged_alert("Bad tree path " + treepath, 'Server Error');
-				return;
-			}
 			storedTreepath = treepath;
-			$.getJSON("gettableatt", {node: treepath[0], table:treepath[2] }, function(jsondata) {
+			$.getJSON("gettableatt", {node: treepath.nodekey, table:treepath.table }, function(jsondata) {
 				hideProcessingDialog();
 				if( processJsonError(jsondata, "Cannot get meta data") ) {
 					return;
@@ -61,7 +57,7 @@ jQuery.extend({
 				attributesHandlers = new Array();
 				alphakw = "";
 				deltakw = "";
-				table = treepath[2];
+				table = treepath.table;
 				for( i=0 ; i<jsondata.attributes.length ; i++ ) {
 					attributesHandlers[jsondata.attributes[i].name] = jsondata.attributes[i];
 				}
@@ -103,7 +99,7 @@ jQuery.extend({
 			logMsg('processOrderByEvent ' + kwname)
 			var ah = selectAttributesHandlers[kwname];
 			var m = new $.KWConstraintModel(true, { "name" : ah.name
-				    , "dataType" : "Select"
+				, "dataType" : "Select"
 					, "ucd" : ah.ucd
 					, "utype" : ah.utype
 					, "unit" : ah.unit
@@ -114,7 +110,7 @@ jQuery.extend({
 			orderby =  new $.KWConstraintControler(m, v);
 			m.notifyInitDone();
 			const_key++;
-		
+
 		}
 
 		this.processAttributeEvent= function(uidraggable){
@@ -249,7 +245,7 @@ jQuery.extend({
 
 			if( orderby != null ) {
 				query += "\nORDER BY " + orderby.getADQL(true);
-				
+
 			}
 			that.notifyQueryUpdated(query);
 		}
@@ -258,19 +254,19 @@ jQuery.extend({
 			showProcessingDialog("Run job");
 			var limit = getQLimit();
 			$.post("runasyncjob"
-					, {NODE: storedTreepath[0], TREEPATH: storedTreepath[0] + ";" + storedTreepath[1] + ";" + storedTreepath[2], REQUEST: "doQuery", LANG: 'ADQL', FORMAT: 'json', PHASE: 'RUN', MAXREC: limit,QUERY: ($('#adqltext').val()) }
+					, {NODE: storedTreepath.nodekey, TREEPATH: storedTreepath.nodekey + ";" + storedTreepath.schema + ";" + storedTreepath.table, REQUEST: "doQuery", LANG: 'ADQL', FORMAT: 'json', PHASE: 'RUN', MAXREC: limit,QUERY: ($('#adqltext').val()) }
 					, function(jsondata, status) {
-						if( processJsonError(jsondata, "tap/async Cannot get jobs list") ) {
+						if( processJsonError(jsondata, "tap/async Cannot get job status") ) {
 							return;
 						}
 						else {
 							jv  = new $.JobView(jsondata.job.jobId);
-							logMsg("submitQuery " + storedTreepath[0] + " " +  jsondata);
-							jm = new $.JobModel(storedTreepath[0], jsondata.job);
+							logMsg("submitQuery " + storedTreepath + " " +  jsondata);
+							jm = new $.JobModel(storedTreepath, jsondata.job);
 							new $.JobControler(jm, jv);
 							lastJob = jv;
 							lastJob.fireInitForm('tapjobs');
-							lastTimer = setTimeout("tapView.fireCheckJobCompleted(\"" + storedTreepath[0] + "\", \"" + jsondata.job.jobId + "\", \"9\");", 1000);
+							lastTimer = setTimeout("tapView.fireCheckJobCompleted(\"" + storedTreepath.nodekey + "\", \"" + jsondata.job.jobId + "\", \"9\");", 1000);
 						}
 					});
 		}
@@ -287,7 +283,6 @@ jQuery.extend({
 				hideProcessingDialog();
 				logged_alert("Job " + jid + " not completed: processed asynchronously", 'Info');
 				pendingJobs[jid] = lastJob;
-				logMsg(Object.keys(pendingJobs).length);
 				if( Object.keys(pendingJobs).length == 1 ) {
 					listTimer = setTimeout("tapView.fireUpdateRunningJobList();", 5000);	
 				}
@@ -308,15 +303,12 @@ jQuery.extend({
 			for( var k in  pendingJobs ) {
 				pendingJobs[k].fireUpdateStatus();
 			} 
-			logMsg('Pending1 ' + Object.keys(pendingJobs).length );
 			for( var k in  pendingJobs ) {
 				var phase = pendingJobs[k].fireGetPhase();
 				if( phase != 'EXECUTING' && phase != 'QUEUED' && phase != 'PENDED') {
-					logMsg('PendingR ' + k );
 					delete pendingJobs[k];					
 				}
 			}
-			logMsg('Pending2 ' + Object.keys(pendingJobs).length );
 			if( Object.keys(pendingJobs).length > 0  ) {
 				listTimer = setTimeout("tapView.fireUpdateRunningJobList();", 5000);	
 			}
@@ -327,7 +319,7 @@ jQuery.extend({
 
 		this.removeJob = function(id) {
 			logMsg("remove job " + id);
-			if( lastTimer != null && id == lastJob.getId()) {
+			if( lastTimer != null && lastJob != null && id == lastJob.getId()) {
 				clearTimeout(lastTimer);
 				logMsg("Remove last job");
 				lastJob = null;
@@ -339,7 +331,6 @@ jQuery.extend({
 		}
 
 		this.refreshJobList= function() {
-			logMsg('refreshJobList');
 			showProcessingDialog("Refresh job list");
 			$.getJSON("joblist", {FORMAT: "json"}, function(jsondata) {
 				hideProcessingDialog();
@@ -349,9 +340,8 @@ jQuery.extend({
 				showProcessingDialog("Update Job Status");
 				for( var i=0 ; i<jsondata.length ; i++) {
 					var job = jsondata[i];
-					logMsg("refreshJobList "+ job.nodekey + " " + job.jobid);
 					jv  = new $.JobView(job.jobid);
-					jm = new $.JobModel(job.nodekey, job.status.job);
+					jm = new $.JobModel(job.treepath, job.status.job);
 					new $.JobControler(jm, jv);						
 					jv.fireInitForm('tapjobs');
 					if( jv.fireGetPhase() == 'EXECUTING' ) {
@@ -398,7 +388,6 @@ jQuery.extend({
 			});					
 		}
 		this.showSummary = function(nodekey, jid) {
-			logMsg(storedTreepath);
 			$.getJSON("jobsummary" , {NODE: nodekey, JOBID: jid}, function(jsondata) {
 				if( processJsonError(jsondata, "Cannot get summary of job "+ nodekey + '.' + jid) ) {
 					return;
@@ -437,12 +426,15 @@ jQuery.extend({
 				hideProcessingDialog();
 				if( processJsonError(jsondata, "Cannot get result of job " + jid) ) {				
 					$('#resultpane').html();
-					lastJob.fireSetOnError();
+					if( lastJob != null ) {
+						lastJob.fireSetOnError();
+					}
 					return;
 				}
 				else {
-					var treenode = $('#' + jid).data().treenode;
-					setTitlePath([ treenode.node, '--', ' job ' + treenode.jobid ]);
+					var treepath = $('#' + jid).data().treepath;
+					treepath.jobid = jid;
+					setTitlePath(treepath);
 					resultPaneView.showTapResult(storedTreepath, jid, jsondata);
 				}
 			});					

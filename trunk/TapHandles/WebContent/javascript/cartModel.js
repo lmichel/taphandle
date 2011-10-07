@@ -96,14 +96,11 @@ jQuery.extend({
 			}						
 		}
 		this.cleanCart = function(tokenArray) {
-			logMsg(tokenArray.length);
-			logMsg(tokenArray);
 			var old_cartData = cartData;
 			cartData = {};
 			for( var t=0 ; t<tokenArray.length ; t++ ) {
 				var tokens = tokenArray[t];
 
-				logMsg(tokens);
 				var tkList = tokens.split("&");
 				for( var i=0 ; i<tkList.length ; i++ ){
 					var row  = tkList[i].split('=');
