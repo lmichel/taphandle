@@ -75,7 +75,7 @@ public class UserSession  extends RootClass {
 	 * @throws IOException
 	 */
 	public void destroySession() throws IOException{
-		logger.info("Destry session " + this.sessionID);
+		logger.info("Destroy session " + this.sessionID);
 		delete(new File(baseDirectory));
 	}
 
@@ -106,12 +106,16 @@ public class UserSession  extends RootClass {
 		validWorkingDirectory(finalDir);
 		(new File(of1)).renameTo(new File(finalDir +  "status.xml"));
 		(new File(of1.replaceAll("xml", "json"))).renameTo(new File(finalDir +  "status.json"));
-		nc.saveCookie(finalDir);
-		jobStack.pushJob(nodeKey, jobID, nc);
-
+		
+		logger.debug("Create file treepath.json");
 		FileWriter fw = new FileWriter(finalDir + "treepath.json");
 		fw.write(JsonUtils.convertTreeNode(treepath));
 		fw.close();
+
+		nc.saveCookie(finalDir);
+		JobTreePath jtp = new JobTreePath(treepath);
+		jobStack.pushJob(nodeKey, jobID, jtp, nc);
+
 		return jobID;
 	}
 
@@ -160,6 +164,9 @@ public class UserSession  extends RootClass {
 	public  void deleteJob(String nodeKey, String jobID) throws Exception {
 		NodeCookie nc = new NodeCookie();
 		nc.setCookie(jobStack.getJobCookie(nodeKey, jobID));
+		if( NodeBase.getNode(nodeKey) == null ) {
+			throw new Exception("Node " + nodeKey + " not referenced by the server");
+		}
 		TapAccess.deleteAsyncJob(NodeBase.getNode(nodeKey).getUrl(), jobID, nc);
 		jobStack.removeJob(nodeKey, jobID);
 		deleteJobDir(nodeKey, jobID);
@@ -239,8 +246,12 @@ public class UserSession  extends RootClass {
 				}
 				br.close();
 				job.put("status" , JSONValue.parse(status.toString()));		
-				job.put("nodekey", jobRef.getNodeKey());
-				job.put("jobid"  , jobRef.getJobId());
+				JSONObject jstp = new JSONObject();
+				jstp.put("nodekey", jobRef.getNodeKey());
+				jstp.put("schema" , jobRef.getSchema());
+				jstp.put("table"  , jobRef.getTable());
+				jstp.put("jobid"  , jobRef.getJobId());
+				job.put("treepath", jstp);
 				retour.add(job);					
 			}
 			else {
@@ -311,7 +322,8 @@ public class UserSession  extends RootClass {
 						logger.debug("Node " + nodeKey + " Job " + jobid + " is " + status);
 						NodeCookie nc = new NodeCookie();
 						nc.restoreCookie(nodedir + File.separator + jobdirname);
-						jobStack.pushJob(nodeKey, jobid, nc);
+						JobTreePath jtp = new JobTreePath(new File(jobdir + File.separator + "treepath.json"));
+						jobStack.pushJob(nodeKey, jobid, jtp, nc);
 					}
 				}
 			}		

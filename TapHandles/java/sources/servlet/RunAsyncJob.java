@@ -61,7 +61,6 @@ public class RunAsyncJob extends RootServlet implements Servlet {
 				reportJsonError(request, response, "runasyncjob: no treepath specified");
 				return;
 			}
-
 			session.connectNode(nodeKey);
 			String jobID = session.createJob(nodeKey, query, treenode);
 			session.startJob(nodeKey, jobID);

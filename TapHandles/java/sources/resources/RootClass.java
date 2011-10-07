@@ -91,7 +91,6 @@ public class RootClass {
 	 * Max time period (ms) between service availability checking
 	 */
 
-	static private boolean formatInit = false;
 
 	public static final long AVAILABILITY_CHECK_FREQUENCY=	10*60*1000;
 
