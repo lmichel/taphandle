@@ -55,7 +55,7 @@ public class getProductInfo extends RootServlet implements Servlet {
 				k = (k != null)?k.replaceAll("-", ""): "nokey";
 				jso.put(k, s.getValue().get(0));
 			}
-			conn.getInputStream().close();
+			//conn.getInputStream().close();
 			response.getWriter().write(jso.toJSONString());
 			return;
 		}

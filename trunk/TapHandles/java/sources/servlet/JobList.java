@@ -33,7 +33,6 @@ public class JobList extends RootServlet implements Servlet {
 		try {
 			UserSession session = UserTrap.getUserAccount(request);
 			session.refreshAllJobStatus();
-			System.out.println(session.getJobList());
 			response.setContentType("text/json");
 			response.getWriter().println(session.getJobList());
 		} catch (Exception e) {

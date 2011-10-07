@@ -15,20 +15,31 @@ import resources.RootClass;
 public class JobRef extends RootClass {
 
 	private String nodeKey;
+	private String schema;
+	private String table;
 	private String jobId;
 	private HttpCookie cookie;
 	
-	public JobRef(String nodeKey, String jobId, NodeCookie cookie) {
+	public JobRef(String nodeKey, String jobId, JobTreePath jtp, NodeCookie cookie)  {
 		super();
 		this.nodeKey = nodeKey;
 		this.jobId = jobId;
-		this.cookie = cookie.getCookie();
+		this.cookie = cookie.getCookie();		
+		this.schema = jtp.getSchema();
+		this.table = jtp.getTable();
+
 	}
 	public String getNodeKey() {
 		return nodeKey;
 	}
 	public String getJobId() {
 		return jobId;
+	}
+	public String getSchema() {
+		return schema;
+	}
+	public String getTable() {
+		return table;
 	}
 	public HttpCookie getCookie() {
 		return cookie;
@@ -41,6 +52,6 @@ public class JobRef extends RootClass {
 	}
 	
 	public String toString() {
-		return "Job " + jobId + " (node " + nodeKey + ")";
+		return "Job " + jobId + " (node " + nodeKey + ",shema " + this.schema + ", table " + this.table + ")";
 	}
 }

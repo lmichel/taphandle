@@ -18,7 +18,7 @@ import resources.RootClass;
 public class jobStack extends RootClass {
 	private final Stack<JobRef> jobSet = new Stack<JobRef>();
 
-	protected  void pushJob(String nodeKey, String jobID, NodeCookie cookie) {
+	protected  void pushJob(String nodeKey, String jobID, JobTreePath jtp, NodeCookie cookie) throws Exception {
 		for( int i=0 ; i<jobSet.size() ; i++ ) {
 			JobRef jr = jobSet.get(i);
 			if( jr.match(nodeKey, jobID) ) {
@@ -26,7 +26,7 @@ public class jobStack extends RootClass {
 				return;
 			}
 		}
-		JobRef jr = new JobRef(nodeKey, jobID, cookie);
+		JobRef jr = new JobRef(nodeKey, jobID, jtp, cookie);
 		logger.debug(jr + " pushed stack");
 		jobSet.push(jr);
 	}
