@@ -76,7 +76,6 @@ jQuery.extend({
 		this.fireSendFitsDownload= function(url){
 			if( that.isSampConnect() ) {
 				showSampMessageSent();
-				logMsg("Send FITS  " + url);
 					WebSampConnector.sendMsg('image.load.fits','From TAP Result' ,'VOTable', url,'');
 			}
 			else {

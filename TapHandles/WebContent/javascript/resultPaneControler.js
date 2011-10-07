@@ -14,21 +14,6 @@ jQuery.extend({
 				controlShowMetaNode: function(treepath){
 					model.processShowMetaNode(treepath);
 				},
-				controlShowSources: function(oid){
-					model.processShowSources(oid);
-				},
-				controlShowSimbad: function(coord){
-					model.processShowSimbad(coord);
-				},
-				controlShowPreviousRecord: function(){
-					model.processPreviousRecord();
-				},
-				controlShowNextRecord: function(oid){
-					model.processNextRecord();
-				},
-				controlShowCounterparts: function(oid, relation){
-					model.processShowCounterparts(oid, relation);				
-				},
 				controlDownloadVOTable: function(){
 					model.downloadVOTable();				
 				},
@@ -61,11 +46,11 @@ jQuery.extend({
 				tableIsInit : function(dataJSONObject, query){
 					view.initTable(dataJSONObject, query);
 				},
-				detailIsLoaded: function(oid, dataJSONObject, limit){
-					view.showDetail(oid, dataJSONObject, limit);
+				detailIsLoaded: function(oid, dataJSONObject){
+					view.showDetail(oid, dataJSONObject);
 				},
-				metaIsLoaded: function(dataJSONObject, limit){
-					view.showMeta(dataJSONObject, limit);
+				metaIsLoaded: function(dataJSONObject){
+					view.showMeta(dataJSONObject);
 				},
 				counterpartsAreLoaded: function(dataJSONObject){
 					view.showCounterparts(dataJSONObject);

@@ -71,14 +71,12 @@ jQuery.extend({
 			});
 		}
 		this.fireRefreshJobList = function(){
-			logMsg('fireRefreshJobList');
 			$('#tapjobs').html('');
 			$.each(listeners, function(i){
 				listeners[i].controlRefreshJobList();
 			});
 		}
 		this.fireJobAction = function(nodekey, jid){
-			logMsg("fireJobAction");
 			$.each(listeners, function(i){
 				listeners[i].controlJobAction(nodekey, jid);
 			});
@@ -89,7 +87,6 @@ jQuery.extend({
 			});
 		}
 		this.fireCheckJobCompleted= function(nodekey, jid, counter){
-			logMsg("fireCheckJobCompleted" + counter);
 			$.each(listeners, function(i){
 				listeners[i].controlCheckJobCompleted(nodekey, jid, counter);
 			});
@@ -120,13 +117,10 @@ jQuery.extend({
 					function(){
 
 						var attr = ($(this).text().split("("))[0];
-						logMsg(val + ' ' + attr)
 						if( val == '' || attr.indexOf(val) != -1 ) {
-							logMsg('show ' + $(this).parent().html());
 							$(this).parent().show();
 						}
 						else {
-							logMsg('hide ' + $(this).parent().html());
 							$(this).parent().hide();							
 						}
 					});

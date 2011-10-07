@@ -43,7 +43,6 @@ var decimaleRegexp = new RegExp("^[+-]?[0-9]*[.][0-9]*([eE][+-]?[0-9]+)?$","m");
 var bibcodeRegexp  = new RegExp(/^[12][089]\d{2}[A-Za-z][A-Za-z0-9&][A-Za-z0-9&.]{2}[A-Za-z0-9.][0-9.][0-9.BCRU][0-9.]{2}[A-Za-z0-9.][0-9.]{4}[A-Z:.]$/);		
 
 function formatValue(columnName, value, tdNode) {
-	logMsg(value);
 	if( value.startsWith("http://") ||  value.startsWith("https://") ) {
 		var titlepath = $('#titlepath').text().split('>');
 		getDLView(titlepath[0], columnName, value, tdNode);	
@@ -68,7 +67,6 @@ function getDLView(node, columnName, url, tdNode) {
 		else {
 			var cd, ct, ce;
 			$.each(jsdata, function(k, v) {
-				logMsg(k + ": " + v );
 				if( k == 'ContentDisposition')    cd = v;
 				else if( k == 'ContentType' )     ct = v;
 				else if( k == 'ContentEncoding' ) ce = v;

@@ -1,17 +1,16 @@
 jQuery.extend({
 
-	JobModel: function(nodekey, description){
+	JobModel: function(treepath, description){
 		/**
 		 * who is listening to us?
 		 */
 		var listeners = new Array();
 		var that = this;
 
-		var node = nodekey;
+		var treePath = treepath;
 		var id = description.jobId;
 		var href = description.href;
 		var phase = description.phase;
-		logMsg("JobModel " + node + " " + id + " " + phase + " " + description);
 		var operator = ["Refresh", "get JSon result", "Show Query", "Summary"];			
 		var actions  = new Array();
 		actions['COMPLETED'] = ["Actions", "Display Result", "Download Result", "Add to Cart", "Edit Query", "Summary"];
@@ -25,12 +24,12 @@ jQuery.extend({
 		}
 		
 		this.initForm = function() {
-			logMsg("init job model " + node + " " + id + " " + phase);
+			logMsg("init job model " + treePath + " " + id + " " + phase);
 			that.notifyIsInit();
 		}
 		
 		this.updateStatus = function() {
-			$.getJSON("jobsummary", {NODE: node, JOBID: id}, function(jsondata) {
+			$.getJSON("jobsummary", {NODE: treepath.nodekey, JOBID: id}, function(jsondata) {
 				if( processJsonError(jsondata, "Cannot get summary of job " + id) ) {
 					return;
 				}
@@ -49,15 +48,15 @@ jQuery.extend({
 			return  phase;
 		}
 		this.notifyIsInit = function() {
-			logMsg("is init job model " + node + " " + id + " " + phase);
+			logMsg("is init job model " + treePath + " " + id + " " + phase);
 			$.each(listeners, function(i){
-				listeners[i].isInit(node, id, phase, actions[phase]);
+				listeners[i].isInit(treePath, id, phase, actions[phase]);
 			});
 		}
 		this.notifyUpdated = function() {
-			logMsg("update job model " + node + " " + id + " " + phase);
+			logMsg("update job model " + treePath + " " + id + " " + phase);
 			$.each(listeners, function(i){
-				listeners[i].isUpdated(node, id, phase, actions[phase]);
+				listeners[i].isUpdated(treePath, id, phase, actions[phase]);
 			});
 		}
 	}

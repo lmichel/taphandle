@@ -42,15 +42,16 @@ jQuery.extend({
 			var retour = false
 			$.each(listeners, function(i){
 				retour = listeners[i].controlGetPhase();
-				logMsg("View  " +retour);
 			});		
 			return retour;
 		}
 
-		this.initForm = function(nodekey, id, phase, actions){
+		this.initForm = function(treepath, id, phase, actions){
+			logMsg("init job form " + JSON.stringify(treepath) );
+			var nodekey  = treepath.nodekey;
 			$('#' + that.containerID).prepend("<div id=" + id + " style='float: none;'></div>");
 			$('#' + id).html('');
-			$('#' + id).data('treenode', {node: nodekey, jobid: id});
+			$('#' + id).data('treepath', treepath);
 
 			$('#' + id).append('<span id=' + id + '_id>Job "' + nodekey + ' ' + id + '"</span>');
 			$('#' + id).append('&nbsp;<span id=' + id + '_phase class="' + phase.toLowerCase() + '">' + phase + '</span>');
@@ -77,8 +78,8 @@ jQuery.extend({
 			});
 		}
 
-		this.updateForm = function(nodekey, id, phase, actions){
-			logMsg("update fonm " + id)
+		this.updateForm = function(treepath, id, phase, actions){
+			logMsg("update form " + treepath );
 			var status = $('#' + id + '_phase');
 			status.attr("class", phase.toLowerCase());
 			status.text(phase);

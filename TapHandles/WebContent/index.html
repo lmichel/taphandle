@@ -1,6 +1,6 @@
 <html>
 <head>
-<title>TapBrowser alpha</title>
+<title>Taphandle 0.5</title>
 <LINK REL="icon" HREF="images/tap16.png" TYPE="images/png" />
 <LINK REL="SHORTCUT ICON" HREF="images/saada.ico" />
 
@@ -60,9 +60,10 @@
 <body>
 <div id=superwrapper>
 	<div id=banner class="levelonediv">
-		&nbsp;<a href="http://code.google.com/p/tap-handles/" title="Saada home page" target="_blank" class=logo></a> &nbsp;&nbsp;
+		&nbsp;<a href="http://code.google.com/p/tap-handles/" title="Taphandle project page" target="_blank" class=logo></a> &nbsp;&nbsp;
 		<div id=pagetitle style='width: 100%'><span class=pagetitle>TAPHandle</span>
-			<input type=text id=node_selector class=inputvalue style="font-size: small;font-family: courier; width: 300; position: relative; bottom: 5;" >
+			<input type=text title="Enter a URL or a nickname of a TAP service. A suggestion list appears once one character has been typed"
+			id=node_selector class=inputvalue style="font-size: small;font-family: courier; width: 300; position: relative; bottom: 5;" >
 			<span class=help>Node Selector</span>
 		
 			<div id=externaltools style='position: relative;'> 
@@ -72,14 +73,14 @@
 				<a href="javascript:void(0);" id=showquerymeta title='Show Metadata' class=question></a>
 	<!-- 		<a href="javascript:void(0);"  title='Download the current selection in a FITS file' -->
 	<!-- 		class=fits onclick='resultPaneView.fireDownloadFITS();'></a>  -->
-				<a href="javascript:void(0);" title='Download the current selection in a VOTable'
+				<a href="javascript:void(0);" title='Download the results of the current job in a VOTable'
 				class=votable onclick='resultPaneView.fireDownloadVOTable();'></a> 		
-				<a href="javascript:void(0);" title='Download the current selection in a ZIP ball'
+				<a href="javascript:void(0);" title='Open the shopping cart'
 				class=zip onclick='cartView.fireOpenCart();' id=zipbutton></a> 		
 	<!--		<a href="javascript:void(0);" class=topcat></a> -->
 	<!--		<a href="javascript:void(0);" class=aladin></a> -->
 	<!--		<a href="javascript:void(0);" class=ivoa></a> -->
-				<a href="javascript:void(0);" title='Connect or Disconnect to a SAMP hub' 
+				<a href="javascript:void(0);" title='Connect a SAMP hub. (The SAMP hub must be started first e.g. by starting Aladin)' 
 				class=samp id=sampconnector ></a> 
 				<a href="javascript:void(0);" title='Send the data selection to SAMP clients' 
 				class=ivoa  onclick='resultPaneView.fireSampBroadcast();' style='visibility: hidden;'></a>
@@ -93,32 +94,32 @@
 		<div id="datapane">
 			<div id="treepane" style="border-style: hidden;">
 				<div style="border-style: hidden; vertical-align: middle;">
-					<span class=help>Tap Nodes</span>
+					<span class=help title='Select TAP nodes with the node selector on the top of the page'>Tap Nodes</span>
 				</div>
 				<div id="treedisp"></div>
 			</div>
 			<div id="resultpane">
-				<h2 class=help>&nbsp;You can access data by dropping any data node on some active area</h2>
+				<h2 class=help>&nbsp;You can access data by dropping any table node on some active area</h2>
 				<ul>
-					<li class=help style="font-size: large;"><b>Here</b> to display the content of the data collection</li>
-					<li class=help style="font-size: large;"><b>On the query area below</b> to setup a query on that data collection</li>
+					<li class=help style="font-size: large;"><b>Here</b> to display the content of the table</li>
+					<li class=help style="font-size: large;"><b>On the query area below</b> to setup a query on that table</li>
 					<li class=help style="font-size: large;"><a href="javascript:void(0);" title='Download the current selection in a VOTable' class=votable ></a>
-					<b>VOTable download icon</b> to download the data selection in a VOTable</li>
+					<b>VOTable download icon</b> to download the displayed query in a VOTable</li>
 					<li class=help style="font-size: large;"><a href="javascript:void(0);" title='Download the current selection in a ZIP ball' class=zip></a>
 					<b>ZIP download icon</b> to display the data selection in a ZIP ball</li>
 					<li class=help style="font-size: large;"><a href="javascript:void(0);" id=showquerymeta title='Show Metadata' class=question></a>
-					<b>Meta icon</b> to know more about the data selection</li>
+					<b>Meta icon</b> to display a description of the columns of the table.</li>
 				</ul>
 			</div>
 		</div>
 		<div id=formframe>
 			<div id=formpanemenu style="float: left; text-align: center ;width: 91; border-style: hidden;">
 				<div style="text-align: center ;padding: 5px; border-style: hidden;">
-					<a href="javascript:void(0);" class=accept id=submitquery title='Execute the query in the current mode'></a><hr>
+					<a href="javascript:void(0);" class=accept id=submitquery title='Execute the query as shown in the "plain text query" tab'></a><hr>
 				</div> 
 				<div style="text-align: left ;padding: 5px; text-align: center; border-style: hidden; ">
 					<span class=help>Result Limit</span><br>
-					<input type=text id='qlimit' class=numinputvalue 
+					<input type=text id='qlimit' class=numinputvalue  title='Set the max number of returned rows'
 	        		style="font-size: small;font-family: Arial, Helvetica, sans-serif;" value='10'><hr>  
 				</div>
 			</div>
@@ -126,10 +127,10 @@
 	
 				<div id="taptab" class=querytab>
 				  	<ul>
-	        			<li><a href="#tapselect"><span>Select What</span></a></li>
-	        			<li><a href="#tapwhere"><span>Where</span></a></li>
-	        			<li><a href="#taptext"><span>Plain Text Query</span></a></li>
-	        			<li><a href="#tapjob"><span>Job Control</span></a></li>
+	        			<li><a href="#tapselect" title="Set up the SELECT clause of the query"><span>Select What</span></a></li>
+	        			<li><a href="#tapwhere"  title="Set up the WHERE clause of the query"><span>Where</span></a></li>
+	        			<li><a href="#taptext"   title="Current query on ADQL text"><span>Plain Text Query</span></a></li>
+	        			<li><a href="#tapjob"    title="Acces to the jobs attached to the current session"><span>Job Control</span></a></li>
 	    			</ul>
 					<div id="tapselect" class=queryformtab >
 	 					<div style="background-color: white ; width: 380px; height: 220px; vertical-align: middle; float:left;">
