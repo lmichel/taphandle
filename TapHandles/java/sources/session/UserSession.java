@@ -36,10 +36,10 @@ public class UserSession  extends RootClass {
 		logger.info("Init session " + sessionID);
 		this.sessionID = sessionID;
 		validWorkingDirectory(SessionBaseDir);
-		validWorkingDirectory(SessionBaseDir + sessionID);
-		this.baseDirectory = SessionBaseDir + sessionID + File.separator;
+		validWorkingDirectory(SessionBaseDir + this.sessionID);
+		this.baseDirectory = SessionBaseDir + this.sessionID + File.separator;
 	}
-	
+
 	/**
 	 * @param nodeKey
 	 * @param jobID
@@ -87,7 +87,7 @@ public class UserSession  extends RootClass {
 		logger.debug("Session " + sessionID + " connect node " + nodeKey);
 		validWorkingDirectory(this.baseDirectory + nodeKey);
 	}
-	
+
 	/**
 	 * @param nodeKey
 	 * @param query
@@ -106,7 +106,7 @@ public class UserSession  extends RootClass {
 		validWorkingDirectory(finalDir);
 		(new File(of1)).renameTo(new File(finalDir +  "status.xml"));
 		(new File(of1.replaceAll("xml", "json"))).renameTo(new File(finalDir +  "status.json"));
-		
+
 		logger.debug("Create file treepath.json");
 		FileWriter fw = new FileWriter(finalDir + "treepath.json");
 		fw.write(JsonUtils.convertTreeNode(treepath));
@@ -156,6 +156,58 @@ public class UserSession  extends RootClass {
 			return "REMOVED";
 		}
 	}
+
+	/**
+	 * Returns the JSON job summary appended with the JOb treepath
+	 * @param nodeKey
+	 * @param jobID
+	 * @return
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+	public String getJobSummary(String nodeKey, String jobId) throws Exception{
+		Iterator<JobRef> iterator = jobStack.iterator();
+		while(iterator.hasNext()) {
+			JobRef jobRef = iterator.next();
+			if( jobRef.getNodeKey().equals(nodeKey) && jobRef.getJobId().equals(jobId)) {
+				String jobDirname = this.baseDirectory
+				+ File.separator + jobRef.getNodeKey() 
+				+ File.separator + "job_" + jobRef.getJobId()
+				+ File.separator;
+				File jobdir = new File(jobDirname);
+				if( jobdir.exists() && jobdir.isDirectory()) {
+					JSONObject job = new JSONObject();
+					StringBuffer status = new StringBuffer();
+					BufferedReader br = new BufferedReader(
+							new FileReader(jobDirname + "status.json"));
+					String line;
+					while( (line = br.readLine()) != null ) {
+						status.append(line);
+					}
+					br.close();
+					job.put("status" , JSONValue.parse(status.toString()));		
+					JSONObject jstp = new JSONObject();
+					jstp.put("nodekey", jobRef.getNodeKey());
+					jstp.put("schema" , jobRef.getSchema());
+					jstp.put("table"  , jobRef.getTable());
+					jstp.put("jobid"  , jobRef.getJobId());
+					job.put("treepath", jstp);
+					job.put("session" , this.sessionID);
+					return job.toJSONString();					
+				}
+				else {
+					JSONObject job = new JSONObject();
+					this.jobStack.removeJob(jobRef);
+					job.put("errmsg", "Invalid JOb state: removed");
+					return job.toJSONString();					
+				}
+			}
+		}
+		JSONObject job = new JSONObject();
+		job.put("errmsg", "Job not found");
+		return job.toJSONString();					
+	}
+
 	/**
 	 * @param nodeKey
 	 * @param jobID
@@ -207,7 +259,7 @@ public class UserSession  extends RootClass {
 		}	
 		return null;
 	}
-	
+
 	/**
 	 * @param nodeKey
 	 * @param jobID
@@ -252,13 +304,14 @@ public class UserSession  extends RootClass {
 				jstp.put("table"  , jobRef.getTable());
 				jstp.put("jobid"  , jobRef.getJobId());
 				job.put("treepath", jstp);
+				job.put("session" , this.sessionID);
 				retour.add(job);					
 			}
 			else {
 				jobToUnstack.add(jobRef);
 			}
 		}
-		
+
 		for( JobRef jobRef:jobToUnstack ) {
 			this.jobStack.removeJob(jobRef);
 		}
@@ -273,7 +326,7 @@ public class UserSession  extends RootClass {
 	public String getJobSummaryUrlPath(String nodeKey, String jobID) {
 		return this.getJobUrlPath(nodeKey, jobID) + "status.json";	
 	}
-	
+
 	/**
 	 * @param nodeKey
 	 * @param jobID
@@ -282,16 +335,16 @@ public class UserSession  extends RootClass {
 	public String getJobTreepathUrlPath(String nodeKey, String jobID) {
 		return this.getJobUrlPath(nodeKey, jobID) + "treepath.json";	
 	}
-		
+
 	/**
 	 * @param nodeKey
 	 * @param jobID
 	 * @return
 	 */
 	public String getJobResultUrlPath(String nodeKey, String jobID) {
-			return this.getJobUrlPath(nodeKey, jobID) + "result.json";	
-		}
-	
+		return this.getJobUrlPath(nodeKey, jobID) + "result.json";	
+	}
+
 	/**
 	 * @param nodeKey
 	 * @param jobID
@@ -300,7 +353,7 @@ public class UserSession  extends RootClass {
 	public String getJobDownloadUrlPath(String nodeKey, String jobID) {
 		return this.getJobUrlPath(nodeKey, jobID) + "result.xml";	
 	}
-	
+
 	public String getZipDownloadPath(){
 		return "/" + RootClass.WEB_USERBASE_DIR + "/" + sessionID + "/zipballs/cart.zip";
 	}
