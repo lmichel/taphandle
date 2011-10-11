@@ -161,6 +161,7 @@ var cartView ;
  * To be set from a JSP 
  */
 var defaultUrl = '';
+var rootUrl = '';
 var booleansupported = false;
 
 $().ready(function() {
@@ -363,5 +364,6 @@ $().ready(function() {
 	if( defaultUrl != null ) {
 		resultPaneView.fireNewNodeEvent(unescape(defaultUrl));
 	}
+	rootUrl = location.origin + location.pathname;
 	// ex http://saada.u-strasbg.fr/taphandle?url=http%3A//simbad49%3A8080/simbad/sim-tap
 });

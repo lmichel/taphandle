@@ -46,8 +46,8 @@ jQuery.extend({
 			return retour;
 		}
 
-		this.initForm = function(treepath, id, phase, actions){
-			logMsg("init job form " + JSON.stringify(treepath) );
+		this.initForm = function(treepath, id, session, phase, actions){
+			logMsg("init job form " + JSON.stringify(treepath) + " "  + session);
 			var nodekey  = treepath.nodekey;
 			$('#' + that.containerID).prepend("<div id=" + id + " style='float: none;'></div>");
 			$('#' + id).html('');
@@ -55,7 +55,7 @@ jQuery.extend({
 
 			$('#' + id).append('<span id=' + id + '_id>Job "' + nodekey + ' ' + id + '"</span>');
 			$('#' + id).append('&nbsp;<span id=' + id + '_phase class="' + phase.toLowerCase() + '">' + phase + '</span>');
-			$('#' + id).append('<select id=' + id + '_actions style="font-size: small;" onChange="tapView.fireJobAction(\'' + nodekey + '\', \'' + id + '\');"></select>');
+			$('#' + id).append('<select id=' + id + '_actions style="font-size: small;" onChange="tapView.fireJobAction(\'' + nodekey + '\', \'' + id + '\', \'' + session + '\');"></select>');
 			for( var i=0 ; i<actions.length ; i++ ) {
 				$('#' + id + '_actions').append('<option value="' + actions[i] + '">' +  actions[i] + '</option>');
 			}

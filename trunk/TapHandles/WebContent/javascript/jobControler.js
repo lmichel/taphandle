@@ -22,8 +22,8 @@ jQuery.extend({
 		view.addListener(vlist);
 
 		var mlist = {
-				isInit : function(treepath, id, phase, actions){
-					view.initForm(treepath, id, phase, actions);
+				isInit : function(treepath, id, session, phase, actions){
+					view.initForm(treepath, id, session, phase, actions);
 				},
 				isUpdated : function(treepath, id, phase, actions){
 					view.updateForm(treepath, id, phase, actions);

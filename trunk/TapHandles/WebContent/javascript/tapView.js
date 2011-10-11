@@ -76,9 +76,9 @@ jQuery.extend({
 				listeners[i].controlRefreshJobList();
 			});
 		}
-		this.fireJobAction = function(nodekey, jid){
+		this.fireJobAction = function(nodekey, jid, session){
 			$.each(listeners, function(i){
-				listeners[i].controlJobAction(nodekey, jid);
+				listeners[i].controlJobAction(nodekey, jid, session);
 			});
 		}
 		this.fireDownloadVotable = function(nodekey, jid){

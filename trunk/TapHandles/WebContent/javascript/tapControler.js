@@ -35,8 +35,8 @@ jQuery.extend({
 				controlRefreshJobList: function(){
 					model.refreshJobList();
 				},
-				controlJobAction: function(nodekey, jid){
-					model.processJobAction(nodekey, jid);
+				controlJobAction: function(nodekey, jid, session){
+					model.processJobAction(nodekey, jid, session);
 				},
 				controlDownloadVotable: function(nodekey, jid){
 					model.downloadVotable(nodekey, jid);
@@ -73,7 +73,6 @@ jQuery.extend({
 					view.jobView(jobcontroler);
 				}
 		}
-
 		model.addListener(mlist);
 	}
 });

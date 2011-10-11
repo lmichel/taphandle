@@ -53,7 +53,8 @@ jQuery.extend({
 				}
 				else {
 					$("#sampconnector").css("background", "url(images/connected.png)center left no-repeat");	
-					$(".ivoa").css('visibility', 'visible');
+					//$(".ivoa").css('visibility', 'visible');
+					$(".ivoa").css('visibility', 'hidden');
 				}
 			} catch(err) {
 				$("#sampconnector").css("background", "url(images/disconnected.png)center left no-repeat");

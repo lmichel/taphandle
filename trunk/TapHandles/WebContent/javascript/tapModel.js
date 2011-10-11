@@ -96,7 +96,6 @@ jQuery.extend({
 		}
 		this.processOrderByEvent = function(uidraggable) {
 			var kwname = uidraggable.find(".item").text().split(' ')[0];
-			logMsg('processOrderByEvent ' + kwname)
 			var ah = selectAttributesHandlers[kwname];
 			var m = new $.KWConstraintModel(true, { "name" : ah.name
 				, "dataType" : "Select"
@@ -255,18 +254,18 @@ jQuery.extend({
 			var limit = getQLimit();
 			$.post("runasyncjob"
 					, {NODE: storedTreepath.nodekey, TREEPATH: storedTreepath.nodekey + ";" + storedTreepath.schema + ";" + storedTreepath.table, REQUEST: "doQuery", LANG: 'ADQL', FORMAT: 'json', PHASE: 'RUN', MAXREC: limit,QUERY: ($('#adqltext').val()) }
-					, function(jsondata, status) {
+					, function(data, status) {
+						var jsondata = eval("(" + data + ")")
 						if( processJsonError(jsondata, "tap/async Cannot get job status") ) {
 							return;
 						}
 						else {
-							jv  = new $.JobView(jsondata.job.jobId);
-							logMsg("submitQuery " + storedTreepath + " " +  jsondata);
-							jm = new $.JobModel(storedTreepath, jsondata.job);
+							jv  = new $.JobView(jsondata.status.job.jobId);
+							jm = new $.JobModel(storedTreepath, jsondata.status.job, jsondata.session);
 							new $.JobControler(jm, jv);
 							lastJob = jv;
 							lastJob.fireInitForm('tapjobs');
-							lastTimer = setTimeout("tapView.fireCheckJobCompleted(\"" + storedTreepath.nodekey + "\", \"" + jsondata.job.jobId + "\", \"9\");", 1000);
+							lastTimer = setTimeout("tapView.fireCheckJobCompleted(\"" + storedTreepath.nodekey + "\", \"" + jsondata.status.job.jobId + "\", \"9\");", 1000);
 						}
 					});
 		}
@@ -341,7 +340,8 @@ jQuery.extend({
 				for( var i=0 ; i<jsondata.length ; i++) {
 					var job = jsondata[i];
 					jv  = new $.JobView(job.jobid);
-					jm = new $.JobModel(job.treepath, job.status.job);
+					jm = new $.JobModel(job.treepath, job.status.job, job.session);
+
 					new $.JobControler(jm, jv);						
 					jv.fireInitForm('tapjobs');
 					if( jv.fireGetPhase() == 'EXECUTING' ) {
@@ -353,7 +353,7 @@ jQuery.extend({
 			});		
 		}
 
-		this.processJobAction= function(nodekey,jid) {
+		this.processJobAction= function(nodekey,jid, session) {
 			var val = $('#' + jid + "_actions").val(); 
 			logMsg("processJobAction" + val);
 			$('#' + jid + "_actions").val('Actions'); 
@@ -371,6 +371,10 @@ jQuery.extend({
 			}			
 			else if( val == 'Add to Cart') {			
 				cartView.fireAddJobResult(nodekey,jid);
+			}			
+			else if( val == 'Send to SAMP') {				
+				var url = rootUrl + 'jobresult?node=' + nodekey.trim() + '&jobid=' + jid.trim()+ '&session=' + session.trim();
+				sampView.fireSendVOTableDownload(url);
 			}			
 			else if( val == 'Edit Query' ) {
 				that.editQuery(nodekey,jid);
@@ -394,27 +398,27 @@ jQuery.extend({
 				}
 				var report  = "";
 				report += "jobId            : " + jid + "\n";
-				report += "owner            : " + jsondata.job.owner+ "\n";
-				report += "phase            : " + jsondata.job.phase+ "\n";
-				report += "startTime        : " + jsondata.job.startTime+ "\n";
-				report += "endTime          : " + jsondata.job.endTime+ "\n";
-				report += "executionDuration: " + jsondata.job.executionDuration+ "\n";
-				report += "destruction      : " + jsondata.job.destruction+ "\n";
+				report += "owner            : " + jsondata.status.job.owner+ "\n";
+				report += "phase            : " + jsondata.status.job.phase+ "\n";
+				report += "startTime        : " + jsondata.status.job.startTime+ "\n";
+				report += "endTime          : " + jsondata.status.job.endTime+ "\n";
+				report += "executionDuration: " + jsondata.status.job.executionDuration+ "\n";
+				report += "destruction      : " + jsondata.status.job.destruction+ "\n";
 				report += "parameters " + "\n";
-				for( var i=0 ; i<jsondata.job.parameters.parameter.length ; i++ ) {
-					report += "    "  + jsondata.job.parameters.parameter[i].id + "  : " +  jsondata.job.parameters.parameter[i].$ + "\n";
+				for( var i=0 ; i<jsondata.status.job.parameters.parameter.length ; i++ ) {
+					report += "    "  + jsondata.status.job.parameters.parameter[i].id + "  : " +  jsondata.status.job.parameters.parameter[i].$ + "\n";
 
 				}
-				if( jsondata.job.results != null ) {
-					for( var i=0 ; i<jsondata.job.results.length ; i++ ) {
+				if( jsondata.status.job.results != null ) {
+					for( var i=0 ; i<jsondata.status.job.results.length ; i++ ) {
 						report += "results #" + (i+1) + "\n";
-						report += "    id  : " + jsondata.job.results[i].id+ "\n";
-						report += "    type: " + jsondata.job.results[i].type+ "\n";
-						report += "    href: " + jsondata.job.results[i].href+ "\n";
+						report += "    id  : " + jsondata.status.job.results[i].id+ "\n";
+						report += "    type: " + jsondata.status.job.results[i].type+ "\n";
+						report += "    href: " + jsondata.status.job.results[i].href+ "\n";
 					}
 				}
-				if( jsondata.job.errorSummary != null ) {
-					report += "error: " + jsondata.job.errorSummary.message+ "\n";					
+				if( jsondata.status.job.errorSummary != null ) {
+					report += "error: " + jsondata.status.job.errorSummary.message+ "\n";					
 				}
 				logged_alert(report,  "Summary of job "+ nodekey + '.' + jid);
 
@@ -440,23 +444,20 @@ jQuery.extend({
 			});					
 		}
 		this.editQuery= function(nodekey,jid) {
-			showProcessingDialog("Get Job treepath");			
-			$.getJSON("jobtreepath" , {NODE: nodekey, JOBID: jid}, function(jsondata) {
-				if( processJsonError(jsondata, "Cannot get treepath of job " + jid) ) {
+			showProcessingDialog("Get Job summary");			
+			var query  = "";
+			$.getJSON("jobsummary" , {NODE: nodekey, JOBID: jid}, function(jsonsum) {
+				hideProcessingDialog();
+				if( processJsonError(jsonsum, "Cannot get summary of job") ) {
 					return;
 				}
-				var query  = "";
-				$.getJSON("jobsummary" , {NODE: nodekey, JOBID: jid}, function(jsonsum) {
-					if( processJsonError(jsondata, "Cannot get summary of job") ) {
+				for( var i=0 ; i<jsonsum.status.job.parameters.parameter.length ; i++ ) {
+					if( jsonsum.status.job.parameters.parameter[i].id.toLowerCase() == 'query') {
+						query = jsonsum.status.job.parameters.parameter[i].$.replace(/\\n/g,'\n            ')+ "\n";
+						that.processTreeNodeEvent(jsonsum.treepath, false, query);
 						return;
 					}
-					for( var i=0 ; i<jsonsum.job.parameters.parameter.length ; i++ ) {
-						if( jsonsum.job.parameters.parameter[i].id.toLowerCase() == 'query') {
-							query = jsonsum.job.parameters.parameter[i].$.replace(/\\n/g,'\n            ')+ "\n";
-						}
-						that.processTreeNodeEvent(jsondata.path, false, query);
-					}
-				});					
+				}
 			});					
 		}
 
