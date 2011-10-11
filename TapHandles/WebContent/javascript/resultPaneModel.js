@@ -112,26 +112,14 @@ jQuery.extend({
 		}
 		this.sampBroadcast = function() {
 			/*
-			 * The mode (TAP/SaadaQL is detected by analysing the title
+			 * Job ids is detected by analysing the title
 			 */
-			var titlepath = $('#titlepath').html().split('&gt;');
-			if( titlepath.length == 3 && titlepath[1] == 'Job' ) {
-				tapView.fireSampBroadcast(titlepath[2]);
+			var titlepath = $('#titlepath').text().split('>');
+			if( titlepath.length == 4  ) {
+					tapView.fireDownloadVotable(titlepath[0], titlepath[3].replace('job ', ''));
 			}
 			else {
-
-				if (current_query.match(/\s*Select\s+IMAGE\s*.*/)) {
-					sampView.fireSendSIAQuery(current_query);
-				}
-				else if (current_query.match(/\s*Select\s+SPECTRUM\s*.*/)) {
-					sampView.fireSendSSAQuery(current_query);
-				}
-				else  if (current_query.match(/\s*Select\s+ENTRY\s*.*/)) {
-					sampView.fireSendCSQuery(current_query);
-				}
-				else {
-					logged_alert("Samp messages are not  implemented for this data category.", 'Info')
-				}
+				logged_alert("Cannot identify the current JOB", 'Error');	
 			}
 
 //			var url = "getqueryreport?query=" + escape(current_query) + "&protocol=auto&format=fits";

@@ -18,7 +18,6 @@ jQuery.extend({
 			if( (entry = cartData[nodekey]) == undefined ) {
 				cartData[nodekey] = {jobs: new Array(), urls: new Array()};
 				cartData[nodekey].jobs[0] = {name: jobid, uri: jobid};
-				logMsg("add " + nodekey + " 0000 " + jobid);
 			}
 			else {
 				var jobs = entry.jobs;
@@ -28,7 +27,6 @@ jQuery.extend({
 						return;
 					}
 				}
-				logMsg("add " + nodekey + " " + i + " " + jobid);
 				cartData[nodekey].jobs[i] = {name: jobid, uri: jobid};			
 			}
 		}
@@ -41,10 +39,8 @@ jQuery.extend({
 				var jobs = entry.jobs;
 				for( var i=0 ; i<jobs.length ; i++ ) {
 					if( jobs[i].uri == jobid ) {
-						logMsg("remove job " + nodekey + "." + jobid+ " from the cart");
 						jobs.splice(i,1);
 						if( jobs.length == 0 && entry.urls.length == 0 ) {
-							logMsg("Remove folder " + nodekey + " from the cart")
 							delete cartData[nodekey];
 						}
 						return;
@@ -82,10 +78,8 @@ jQuery.extend({
 				var urls = entry.urls;
 				for( var i=0 ; i<urls.length ; i++ ) {
 					if( urls[i].uri == url ) {
-						logMsg("remove url from the cart");
 						urls.splice(i,1);
 						if( urls.length == 0 && entry.jobs.length == 0 ) {
-							logMsg("Remove folder " + nodekey + " from the cart")
 							delete cartData[nodekey];
 						}		logger.debug("download " + zer.getUri() + " in " + fcopyName);
 

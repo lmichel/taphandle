@@ -105,7 +105,6 @@ jQuery.extend({
 						id_schema = jsdata.nodekey + "X" + jsdata.schemas[i].name;
 						for( var j=0 ; j<jsdata.schemas[i].tables.length ; j++ ) {
 							id_table = jsdata.nodekey + ";" + jsdata.schemas[i].name + ";" + jsdata.schemas[i].tables[j].name;
-							logMsg("add " + jsdata.schemas[i].tables[j].name);
 							var description = jsdata.schemas[i].tables[j].description;
 							if( description == "") {
 								description = "No Description Available";
