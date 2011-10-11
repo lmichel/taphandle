@@ -37,7 +37,8 @@ public class JobSummary extends RootServlet implements Servlet {
 			}
 			UserSession session = UserTrap.getUserAccount(request);
 			session.getJobStatus(nodeKey, jobId);
-			dumpJsonFile(session.getJobSummaryUrlPath(nodeKey, jobId), response);
+			response.getWriter().print(session.getJobSummary(nodeKey, jobId));
+			//dumpJsonFile(session.getJobSummaryUrlPath(nodeKey, jobId), response);
 		} catch (Exception e) {
 			this.reportJsonError(request, response, e);
 		}

@@ -62,9 +62,10 @@ public class RunAsyncJob extends RootServlet implements Servlet {
 				return;
 			}
 			session.connectNode(nodeKey);
-			String jobID = session.createJob(nodeKey, query, treenode);
-			session.startJob(nodeKey, jobID);
-			dumpJsonFile(session.getJobSummaryUrlPath(nodeKey, jobID), response);
+			String jobId = session.createJob(nodeKey, query, treenode);
+			session.startJob(nodeKey, jobId);
+			response.getWriter().print(session.getJobSummary(nodeKey, jobId));
+			//dumpJsonFile(session.getJobSummaryUrlPath(nodeKey, jobID), response);
 
 		} catch (Exception e) {
 			this.reportJsonError(request, response, e);
