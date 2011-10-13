@@ -54,6 +54,7 @@ public class ZipperJob extends AbstractJob {
 		this.reportDir = this.baseDir + File.separator + "zipballs";
 		try {
 			RootClass.isWorkingDirectoryValid(baseDir);
+			RootClass.emptyDirectory(new File(this.reportDir));
 			RootClass.validWorkingDirectory(this.reportDir);
 			CartDecoder decoder = new CartDecoder();
 			decoder.decode(lstParam.get("cart"));
