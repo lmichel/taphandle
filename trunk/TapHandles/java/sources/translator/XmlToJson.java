@@ -250,6 +250,7 @@ public class XmlToJson  extends RootClass {
 			 * some info about the issue
 			 */
 		} catch (Exception e) {
+			e.printStackTrace();
 			SavotPullParser  sp = new SavotPullParser(inputFile, SavotPullEngine.FULL);
 			SavotVOTable sv = sp.getVOTable(); 
 			for (int l = 0; l<sp.getResourceCount(); l++) {		    	 
