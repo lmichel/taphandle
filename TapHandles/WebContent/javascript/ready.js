@@ -149,7 +149,7 @@ var nodeList  =  [
                    {id: 'gavot', text: "gavot"},
                    {id: 'cadc', text: "cadc"},
                   {id: 'xcatdb', text: "xcatdb"},
-                  {id: 'http://simbad49:8080/simbad/sim-tap', text: "http://simbad49:8080/simbad/sim-tap"}
+               //   {id: 'http://simbad49:8080/simbad/sim-tap', text: "http://simbad49:8080/simbad/sim-tap"}
                   ];
 
 var resultPaneView;
