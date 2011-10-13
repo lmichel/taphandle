@@ -168,6 +168,9 @@ public abstract class RootServlet extends HttpServlet {
 		}
 		res.setHeader("Content-Length"     , Long.toString(f.length()));
 		res.setHeader("Last-Modified"      , (new Date(f.lastModified())).toString());
+		res.setHeader("Pragma", "no-cache" );
+		res.setHeader("Cache-Control", "no-cache" );
+		res.setDateHeader( "Expires", 0 );		
 
 		logger.debug("GetProduct file " + product_path + " (type: " + res.getContentType() + ")" + contentType);
 
