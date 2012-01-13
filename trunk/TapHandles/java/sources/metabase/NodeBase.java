@@ -31,9 +31,22 @@ public class NodeBase extends RootClass{
 		try {
 			validWorkingDirectory(MetaBaseDir);
 			emptyDirectory(new File(MetaBaseDir));
-			nodeMap.addNode("http://xcatdb.u-strasbg.fr/2xmmidr3/tap", "xcatdb");
-			nodeMap.addNode("http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/caom/", "cadc");
-			nodeMap.addNode("http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap", "gavot");
+			try {
+
+				nodeMap.addNode("http://xcatdb.u-strasbg.fr/2xmmidr3/tap", "xcatdb");
+			} catch (Exception e) {
+				logger.error("Cannot init node base http://xcatdb.u-strasbg.fr/2xmmidr3/tap", e);
+			}
+			try {
+				nodeMap.addNode("http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap", "cadc");
+			} catch (Exception e) {
+				logger.error("Cannot init node base http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap", e);
+			}
+			try {
+				nodeMap.addNode("http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap", "gavot");
+			} catch (Exception e) {
+				logger.error("Cannot init node base http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap", e);
+			}
 		} catch (Exception e) {
 			logger.error("Cannot init node base", e);
 		}
@@ -51,7 +64,7 @@ public class NodeBase extends RootClass{
 		}
 		return NodeBase.instance.nodeMap.getNode(key);
 	}
-	
+
 	/**
 	 * Return key of the node with url as url
 	 * @param key
@@ -92,7 +105,7 @@ public class NodeBase extends RootClass{
 		}
 		return NodeBase.instance.nodeMap.addNode(nodeURL, key);
 	}
-	
+
 	/**
 	 * Returns true if a node with key as key exists
 	 * @param key
@@ -117,7 +130,7 @@ public class NodeBase extends RootClass{
 		}
 		NodeBase.instance.nodeMap.removeNode(key);		
 	}
-	
+
 	/**
 	 * Return the Set of keys referenced nodes
 	 * @return
@@ -128,7 +141,7 @@ public class NodeBase extends RootClass{
 		}
 		return NodeBase.instance.nodeMap.keySet();
 	}
-	
+
 	/**
 	 * Extract a key from a node URL. 
 	 * The key is built from the host name and from application name 
