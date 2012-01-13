@@ -355,15 +355,15 @@ $().ready(function() {
 	 * This callback can be changed changed at everytime: do not use the "onclick" HTML  
 	 * attribute which is not overriden by JQuery "click" callback
 	 */
-	$('#showquerymeta').click(function(){logged_alert("No meta data available yet", 'Application not Ready')});
+	$('#showquerymeta').click(function(){logged_alert("No meta data available yet", 'Application not Ready');});
 
 	sampView.fireSampInit();
 	tapView.fireRefreshJobList();
+	rootUrl = "http://" + window.location.hostname +  (location.port?":"+location.port:"") + window.location.pathname;
 
 	defaultUrl  =  (RegExp('url=' + '(.+?)(&|$)').exec(location.search)||[,null])[1];
 	if( defaultUrl != null ) {
 		resultPaneView.fireNewNodeEvent(unescape(defaultUrl));
 	}
-	rootUrl = location.origin + location.pathname;
 	// ex http://saada.u-strasbg.fr/taphandle?url=http%3A//simbad49%3A8080/simbad/sim-tap
 });
