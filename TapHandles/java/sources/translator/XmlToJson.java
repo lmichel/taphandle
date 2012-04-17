@@ -40,8 +40,11 @@ import uk.ac.starlink.table.Tables;
  * This utility has no connection with the application resources
  * @author laurent
  * @version $Id$
+ * 
+ * 04/2012; Set MAX_ROWS field with 10000 as value
  */
 public class XmlToJson  extends RootClass {
+	public static final int MAX_ROWS = 10000;
 
 	/**
 	 * Replace in a style sheet the vosi name space with the name space given in parameter
@@ -49,12 +52,6 @@ public class XmlToJson  extends RootClass {
 	 * @param service      Either availability, capabilities or tables
 	 * @param nsDefinition Name space to use
 	 * @throws Exception   If something goes wrong
-	 */
-	/**
-	 * @param baseDir
-	 * @param service
-	 * @param nsDefinition
-	 * @throws Exception
 	 */
 	public static void setVosiNS(String baseDir , String service, NameSpaceDefinition nsDefinition) throws Exception {
 
@@ -215,8 +212,8 @@ public class XmlToJson  extends RootClass {
 
 			JSONArray aaData = new JSONArray();
 			for( int r=0 ; r<nSrc ; r++ ) {
-				if( r >= 200 ) {
-					logger.warn("JSON result truncated to 200");
+				if( r >= MAX_ROWS ) {
+					logger.warn("JSON result truncated to MAX_ROWS");
 					break;
 				}
 				Object[] o =table.getRow(r);
