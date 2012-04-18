@@ -8,15 +8,16 @@
 }
 
 
-body {
-	font-family: Arial, Helvetica, sans-serif;
-	min-width: 1010px;
-	height: auto;
+html, body {
+	width:		100%;
+	height:		100%;					
+	padding:	0;
+	margin:		0;
 	overflow: auto;
 }
 
 div {
-	background-color: #e0e0e0;
+	background-color: whiteSmoke;
 	border-width: 1px;
 	border-style: solid;
 	border-color: white;
@@ -839,31 +840,58 @@ div#datapane {
 }
 
 div#accesspane {
-	position: absolute;
-	height: 780px;
-	width: auto;
-	vertical-align: middle;
-}
+		background:	777;
+		/* HEIGHT */
+		height:		930px;					
+		min-height:	500px;
+		_height:	500px; /* min-height for IE6 */
+		/* WIDTH */
+		width:		100%;
+		/*max-width:	900px;*/
+		min-width:	700px;
+		_width:		700px; /* min-width for IE6 */
+		/* HORIZONTAL CENTERING */
+		margin:		0 auto;
+	}
+	/*
+	 *	Container sizing
+	 *
+	 *	Borders and padding are normally *added* to the width/height of the DIV
+	 *	However you can get height:100% AND padding/borders by using a nested layout. 
+	 *	The outer-layout is just a single pane: center, which is where you add your vertical padding.
+	 *	Inside this is your *real layout*. 
+	 */
+	#paddingWrapper {
+		background:	#999;
+		padding:	20px 10px;
+		border:		4px solid #BBB;
+	}
+	.pane {
+		display:	none; /* will appear when layout inits */
+	}
 
+/*
 div#treepane {
-	width: 150px;
-	height: 500px;
+ 	width: 20%;
+	height: 80%; 
 	overflow: auto;
 	border-width: 0px;
-	overflow: auto;
+	overflow: auto;*/
 }
 
 div#treedisp {
+	background-color: whiteSmoke;
 	height: 80%;
 	overflow: auto;
 	border-width: 0px;
+	width: auto;
 }
-
+/*
 div#resultpane {
 	overflow: visible;
 	border-width: 0px;
-	height: 500px;
-	width: auto;
+	height: 80%px;
+	width: 80%; */
 }
 /*
  * Right-side element of the splitter.
@@ -872,11 +900,25 @@ div#formpane {
 	overflow: hidden;
 	border-width: 0px;
 	padding: 5px;
+	height: 20%;
+
+	/* No margin or border allowed */
+}
+/*
+div#formframe {
+	width: 100%;
 	height: 267px;
+	position: fixed;
+	bottom:5;
+	overflow: hidden;
+	border-width: 0px;
+	float: right;
+	padding: 0;
 
 	/* No margin or border allowed */
 }
 
+/*
 div#formframe {
 	width: auto;
 	height: 267px;
@@ -889,7 +931,7 @@ div#formframe {
 
 	/* No margin or border allowed */
 }
-
+*/
 div#datapane .vsplitbar {
 	width: 6px;
 	background: #c0c0c0 url(../images/vgrabber.gif) no-repeat center;
@@ -1054,3 +1096,33 @@ a:hover#sessionreport {
 	color: gray;
 }
 
+
+/*
+ * Tooltip style
+ * http://jquery.bassistance.de/tooltip/demo/
+*/
+#tooltip.pretty {
+	font-family: Arial;
+	border: none;
+	width: 210px;
+	padding:20px;
+	height: 135px;
+	opacity: 0.8;
+	background: url('shadow.png');
+}
+#tooltip.pretty h3 {
+	margin-bottom: 0.75em;
+	font-size: 12pt;
+	width: 220px;
+	text-align: center;
+}
+#tooltip.pretty div { width: 220px; text-align: left; }
+
+#tooltip.fancy {
+	background: url('../styleimport/images/shadow2.png');
+	padding-top: 5em;
+	height: 100px;
+}
+#tooltip.fancy.viewport-right {
+	background: url('../styleimport/images/shadow2-reverse.png');
+}

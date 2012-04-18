@@ -33,7 +33,7 @@ div#saptab div {
 }
 
 .querytab, .formquerytab {
-	height: 260px;
+	height: 30px;
 }
 
 #saadaqltab {
@@ -254,7 +254,6 @@ div#cf1 {
 	padding-bottom: 0;
 	padding-left: 5px;
 	height: 220px;
-	width: 890px;
 }
 
 #tapwhere {
@@ -263,8 +262,8 @@ div#cf1 {
 	padding-right: 0;
 	padding-bottom: 0;
 	padding-left: 5px;
-	height: 210px;
-	width: 890px;
+	height: 220px;
+	width: 100%;
 	overflow: hidden;
 }
 
@@ -291,7 +290,7 @@ textarea#patterntext {
 }
 
 #adqltext {
-	width: 100%;
+	width: 85%;
 	height: 200px;
 	border: 3px solid #cccccc;
 	padding: 5px;
@@ -305,7 +304,16 @@ textarea#patterntext {
 }
 
 #taptext {
-	width: 880px;
+	width: 100%;
+	height: 200px;
+	padding: 10px;
+	font-family: Arial, Helvetica, sans-serif;;
+	font-size: small;
+	color: black;
+}
+
+#tapjob {
+	width: 100%;
 	height: 200px;
 	padding: 10px;
 	font-family: Arial, Helvetica, sans-serif;;
@@ -377,7 +385,6 @@ textarea#patterntext {
 #tapjobs {
 	width: 850px;
 	height: 160px;
-	float: left;
 	border-width: 1;
 	border-color: dimgray;
 	overflow: auto
