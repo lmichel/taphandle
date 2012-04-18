@@ -1,211 +1,61 @@
+/*
+ * Jquery stuff initialisation
+ */
 
-
-var DEBUG = true;
-function logMsg(message) {
-	if( DEBUG && (typeof console != 'undefined') ) {
-		console.log(message);
-	}
-}
-
-function setTitlePath(treepath) {
-	logMsg("title " + treepath);
-	var job = (treepath.jobid == null)? "": '&gt;'+ treepath.jobid;
-	$('#titlepath').html('<i>' + treepath.nodekey + '&gt;' + treepath.schema + '&gt;'+ treepath.table+ job);
-}
-
-function getQLimit() {
-	var limit = 10;
-	if( $("#qlimit").val().match(/^[0-9]*$/) ) {
-		limit = $("#qlimit").val();
-	}
-	return limit;
-}
-function logged_alert(message, title) {
-	logMsg("ALERT " + message);
-	jAlert(message, title);
-}
-
-
-var stillToBeOpen = false;
-var simbadToBeOpen = false;
-
-function showProcessingDialog(message) {
-	logMsg("PROCESSSING " + message);
-	stillToBeOpen = true;
-	if( $('#saadaworking').length == 0){		
-		$('#resultpane').append('<div id="saadaworking" class="dataTables_processing" style="visibility: hidden; "></div>');
-	}
-	$('#saadaworking').html(message);
-	/*
-	 * It is better to immediately show the profress dialog in order to give a feed back to the user
-	 * It we dopn't, user could click several time on submit a get lost with what happens
-	 *
-	 * setTimeout("if( stillToBeOpen == true ) $('#saadaworking').css('visibility', 'visible');", 500);
-	 */
-	$('#saadaworking').css('visibility', 'visible');
-}
-
-
-function hideProcessingDialog() {
-	stillToBeOpen = false;
-	if( $('#saadaworking').length != 0){
-		$('#saadaworking').css('visibility', 'hidden');	
-	}
-}
-
-function showSampMessageSent() {
-	stillToBeOpen = true;
-	if( $('#saadaworking').length == 0){		
-		$('#resultpane').append('<div id="saadaworking" class="dataTables_processing" style="visibility: hidden; "></div>');
-	}
-	$('#saadaworking').html("SAMP message sent");
-	$('#saadaworking').css('visibility', 'visible');
-	setTimeout(" $('#saadaworking').css('visibility', 'hidden');", 2000);
-
-}
-
-//function showQuerySent() {
-//stillToBeOpen = true;
-//if( $('#saadaworking').length == 0){		
-//$('#resultpane').append('<div id="saadaworking" class="dataTables_processing" style="visibility: hidden; "></div>');
-//}
-//$('#saadaworking').html("Query submitted");
-//$('#saadaworking').css('visibility', 'visible');
-//setTimeout(" $('#saadaworking').css('visibility', 'hidden');", 2000);
-//}
-
-
-function openDialog(title, content) {
-	if( $('#diagdiv').length == 0){		
-		$(document.documentElement).append("<div id=diagdiv style='width: 99%; display: none; width: auto; hight: auto;'></div>");
-	}
-	$('#diagdiv').html(content);
-	$('#diagdiv').dialog({  width: 'auto', title: title});
-}
-
-function openSimbadDialog(pos) {
-	if( $('#diagdiv').length == 0){		
-		$(document.documentElement).append("<div id=diagdiv style='display: none; width: auto; hight: auto;'></div>");
-	}
-	var table = "<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\"  id=\"simbadtable\" class=\"display\"></table>";
-	$('#diagdiv').html(table);
-
-	$.getJSON("simbadtooltip", {pos: pos}, function(jsdata) {
-		hideProcessingDialog();job
-		if( processJsonError(jsdata, "Simbad Tooltip Failure") ) {
-			return;
-		}
-		else {
-			$('#simbadtable').dataTable({
-				"aoColumns" : jsdata.aoColumns,
-				"aaData" : jsdata.aaData,
-				"sDom" : '<"top">rt<"bottom">',
-				"bPaginate" : false,
-				"aaSorting" : [],
-				"bSort" : false,
-				"bFilter" : true,
-				"bAutoWidth" : true,
-				"bDestroy" : true
-			});
-
-			var simbadpage = "<a class=simbad target=blank href=\"http://simbad.u-strasbg.fr/simbad/sim-coo?Radius=1&Coord=" + escape(pos) + "\"></a>";
-			$('#diagdiv').dialog({  width: 'auto', title: "Simbad Summary for Position " + pos + simbadpage});
-			sampView.firePointatSky(pos);
-		}
-	});
-}
-
-function openModal(title, content) {
-	if( $('#detaildiv').length == 0){		
-		$(document.documentElement).append("<div id=detaildiv style='width: 99%; display: none;'></div>");
-	}
-	$('#detaildiv').html(content);
-	$('#detaildiv').modal();
-}
-
-function switchArrow(id) {
-	var image = $('#'+id+'').find('img').attr('src');
-	if (image == 'images/tdown.png') {
-		$('#'+id+'').find('img').attr('src', 'images/tright.png');
-	} else if (image == 'images/tright.png') {
-		$('#'+id+'').find('img').attr('src', 'images/tdown.png');
-	}
-}
-
-function processJsonError(jsondata, msg) {
-	if( jsondata == undefined || jsondata == null ) {
-		logged_alert("JSON ERROR: " + msg + ": no data returned", 'Server Error');
-		return true;
-	}
-	else if( jsondata.errormsg != undefined  ){
-		logged_alert("JSON ERROR: " + msg + ": "  + jsondata.errormsg, 'Server Error');
-		return true;
-	}	
-	return false;
-
-}
-
-var nodeList  =  [
-                   {id: 'gavot', text: "gavot"},
-                   {id: 'cadc', text: "cadc"},
-                  {id: 'xcatdb', text: "xcatdb"},
-               //   {id: 'http://simbad49:8080/simbad/sim-tap', text: "http://simbad49:8080/simbad/sim-tap"}
-                  ];
-
+/**
+ * View associated with specific functionnality
+ */
 var resultPaneView;
 var sampView ;
 var tapView ;
 var cartView ;
+/*
+ * default node list
+ * The nodes given here must be initiamized in Nodebase.java
+ */
+var nodeList  =  [
+                  {id: 'gavot',  text: "gavot"},
+                  {id: 'cadc',   text: "cadc"},
+                  {id: 'xcatdb', text: "xcatdb"},
+                  {id: 'simbad', text: "simbad"},
+                  //   {id: 'http://simbad49:8080/simbad/sim-tap', text: "http://simbad49:8080/simbad/sim-tap"}
+                  ];
 
 /*
- * To be set from a JSP 
+ * No longer used but....
  */
 var defaultUrl = '';
 var rootUrl = '';
 var booleansupported = false;
 
+/*
+ * Jquery object managing splitters
+ */
+var layoutPane;
+
 $().ready(function() {
 	var resultPaneModel      = new $.ResultPaneModel();
 	resultPaneView           = new $.ResultPaneView();
-	var resultPaneController = new $.ResultPaneController(resultPaneModel, resultPaneView);
+	new $.ResultPaneController(resultPaneModel, resultPaneView);
 
 	var sampModel       = new $.SampModel();
 	sampView            = new $.SampView();
-	var sampController  = new $.SampController(sampModel, sampView);
+	new $.SampController(sampModel, sampView);
 
 	var tapModel       = new $.TapModel();
 	tapView            = new $.TapView();
-	var tapController  = new $.TapController(tapModel, tapView);
-	
+	new $.TapController(tapModel, tapView);
+
 	var cartModel       = new $.CartModel();
 	cartView            = new $.CartView();
-	var cartControler   = new $.CartControler(cartModel, cartView);
+	new $.CartControler(cartModel, cartView);
 
-		   
 	/*
-	 * Splitter functions of accesspane, the container of the db tree, 
-	 * the data panel and the query form.
-	 * see http://methvin.com/splitter
-	 */
-	$("div#accesspane").splitter({
-		splitHorizontal: true,			
-		outline: true,
-		resizeToWidth: true,
-		minTop: 100, 
-		//sizeTop: ($(window).height() - 70 - 50), 
-		sizeBottom: 250, 
-		minBottom: 100,
-		sizeTop: true,	
-		accessKey: 'I'
-	});
-	$("div#datapane").splitter({
-		splitVertical: true,
-		sizeLeft: true,
-		outline: true,
-		resizeTo: window,
-		minLeft: 100, sizeLeft: 150, minRight: 100,
-		accessKey: 'I'
-	});
+	 * layout plugin, requires JQuery 1.7 or higher
+	 * Split the bottom div in 3 splitters divs.
+	 */		
+	layoutPane = $('#accesspane').layout();
+
 	$('input#node_selector').jsonSuggest(
 			{data: nodeList
 				, minCharacters: 0
@@ -214,12 +64,12 @@ $().ready(function() {
 				}
 			});
 
-	$("div#treedisp").jstree({
-		"json_data"   : {"data" : [ {  "attr"     : { "id"   : "rootid", "title": "Dummy node: Select one first with the node selector on the page top." },
-			"data"     : { "title"   : "Tap Nodes" }}]}  , 
-			"plugins"     : [ "themes", "json_data", "dnd", "crrm"],
-			"dnd"         : {"drop_target" : "#resultpane,#taptab,#showquerymeta",
-				"drop_finish" : function (data) {
+	dataTree = $("div#treedisp").jstree({
+            "json_data"   : {"data" : [ {  "attr"     : { "id"   : "rootid", "title": "Dummy node: Select one first with the node selector on the page top." },
+            "data"        : { "title"   : "Tap Nodes" }}]}  , 
+            "plugins"     : [ "themes", "json_data", "dnd", "crrm"],
+            "dnd"         : {"drop_target" : "#resultpane,#taptab,#showquerymeta",
+            "drop_finish" : function (data) {
 					var parent = data.r;
 					var streepath = data.o.attr("id").split(';');
 					if( streepath.length < 3 ) {
@@ -252,6 +102,20 @@ $().ready(function() {
 			"crrm" : {"move" : {"check_move" : function (m) {return false; }}
 			}
 	}); // end of jstree
+	
+	dataTree.bind("dblclick.jstree", function (e, data) {
+		var node = $(e.target).closest("li");
+		var id = node[0].id; //id of the selected node					
+		var treePath = id.split(';');
+		if( treePath.length < 3 ) {
+			logged_alert("Query can only be applied on one data category or one data class: ("  +  treePath + ")", 'User Input Error');
+		} else {
+			var fTreePath = {nodekey: treePath[0], schema: treePath[1], table: treePath[2]};
+			resultPaneView.fireSetTreePath(fTreePath);	
+			setTitlePath(fTreePath);
+			resultPaneView.fireTreeNodeEvent(fTreePath);	
+		}
+	});
 
 	$("input#node_selector").keypress(function(event) {
 		if (event.which == '13') {
@@ -339,12 +203,12 @@ $().ready(function() {
 			}
 		});
 	});
-	
+
 	/*
 	 * Name resolver buton activation
 	 */
 	$(".kw_filter").keyup(function(event) {
-		var val = $(this).val()
+		var val = $(this).val();
 		tapView.fireFilterColumns(val);
 		$('.kw_filter').val(val);
 
@@ -366,4 +230,15 @@ $().ready(function() {
 		resultPaneView.fireNewNodeEvent(unescape(defaultUrl));
 	}
 	// ex http://saada.u-strasbg.fr/taphandle?url=http%3A//simbad49%3A8080/simbad/sim-tap
+
+
+	$('#azerty').tooltip({ 
+	    track: true, 
+	    delay: 0, 
+	    showURL: false, 
+	    opacity: 1, 
+	    fixPNG: true, 
+	    showBody: " - ", 
+	    top: -15, 
+	    left: 5 	});
 });

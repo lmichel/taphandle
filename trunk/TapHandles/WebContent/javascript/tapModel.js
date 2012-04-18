@@ -37,7 +37,7 @@ jQuery.extend({
 		 */
 		this.addListener = function(list){
 			listeners.push(list);
-		}
+		};
 		/*
 		 * Event processing
 		 */
@@ -58,11 +58,11 @@ jQuery.extend({
 				alphakw = "";
 				deltakw = "";
 				table = treepath.table;
-				for( i=0 ; i<jsondata.attributes.length ; i++ ) {
+				for( var i=0 ; i<jsondata.attributes.length ; i++ ) {
 					attributesHandlers[jsondata.attributes[i].name] = jsondata.attributes[i];
 				}
 				selectAttributesHandlers = new Array();
-				for( i=0 ; i<jsondata.attributes.length ; i++ ) {
+				for( var i=0 ; i<jsondata.attributes.length ; i++ ) {
 					selectAttributesHandlers[jsondata.attributes[i].name] = jsondata.attributes[i];
 				}
 				that.notifyInitDone();		
@@ -72,11 +72,13 @@ jQuery.extend({
 				else {
 					that.notifyQueryUpdated(default_query);				
 				}
+				that.lookForAlphaKeyword();
+				that.lookForDeltaKeyword();
 				if( andsubmit ) {
 					that.submitQuery();
 				}
 			});
-		}
+		};
 
 		this.processSelectEvent= function(uidraggable){
 			var kwname = uidraggable.find(".item").text().split(' ')[0];
@@ -93,7 +95,8 @@ jQuery.extend({
 			selects[div_key] =  new $.KWConstraintControler(m, v);
 			m.notifyInitDone();
 			const_key++;
-		}
+		};
+
 		this.processOrderByEvent = function(uidraggable) {
 			var kwname = uidraggable.find(".item").text().split(' ')[0];
 			var ah = selectAttributesHandlers[kwname];
@@ -110,7 +113,7 @@ jQuery.extend({
 			m.notifyInitDone();
 			const_key++;
 
-		}
+		};
 
 		this.processAttributeEvent= function(uidraggable){
 			var kwname = uidraggable.find(".item").text().split(' ')[0];
@@ -127,7 +130,7 @@ jQuery.extend({
 			that.updateQuery();
 			m.notifyInitDone();
 			const_key++;
-		}
+		};
 
 
 		this.processInputCoord= function(coord, radius, mode){
@@ -150,7 +153,7 @@ jQuery.extend({
 				logged_alert('Radius/Size must be given in degrees', 'Info');
 				return;								
 			}
-			var box_summary = coords[0] + "," + coords[1] + "," + rs
+			var box_summary = coords[0] + "," + coords[1] + "," + rs;
 			var first = true;
 			for( k in editors ) {
 				first = false;
@@ -171,11 +174,38 @@ jQuery.extend({
 			m.notifyInitDone();
 			const_key++;
 
-		}
+		};
 
 		this.processAlphaEvent= function(uidraggable){
 			var kwname = uidraggable.find(".item").text().split(' ')[0];
-			var ah = selectAttributesHandlers[kwname];
+			that.setAlphaKeyword(selectAttributesHandlers[kwname]);
+		};
+
+		this.lookForAlphaKeyword = function(ah) {
+			for( var ahn in selectAttributesHandlers ) {
+				var ah = selectAttributesHandlers[ahn];
+				logMsg("UCD ALPAH" + ah.ucd);
+				if( ah.ucd == "pos.eq.ra;meta.main" ) {
+					that.setAlphaKeyword(ah);	
+					return;
+				}
+			}
+			for( var ahn in selectAttributesHandlers ) {
+				var ah = selectAttributesHandlers[ahn];
+				if( ah.ucd  == "pos.eq.ra" ) {
+					that.setAlphaKeyword(ah);	
+					return;
+				}
+			}
+			for( var ahn in selectAttributesHandlers ) {
+				var ah = selectAttributesHandlers[ahn];
+				if( ah.name  == "s_ra" ) {
+					that.setAlphaKeyword(ah);	
+					return;
+				}
+			}
+		};
+		this.setAlphaKeyword = function(ah) {
 			var m = new $.KWConstraintModel(true, { "name" : ah.name
 				, "dataType" : "Select"
 					, "ucd" : ah.ucd
@@ -186,13 +216,39 @@ jQuery.extend({
 			var div_key = "kwalpha";
 			var v = new $.KWConstraintView(div_key, 'tapalpha');
 			alphakw =  new $.KWConstraintControler(m, v);
-			m.notifyInitDone();
-
-		}
+			m.notifyInitDone();					
+		};
 
 		this.processDeltaEvent= function(uidraggable){
 			var kwname = uidraggable.find(".item").text().split(' ')[0];
-			var ah = selectAttributesHandlers[kwname];
+			that.setDeltaKeyword(selectAttributesHandlers[kwname]);
+		};
+		this.lookForDeltaKeyword = function(ah) {
+			for( var ahn in selectAttributesHandlers ) {
+				var ah = selectAttributesHandlers[ahn];
+				logMsg("UCD DELTA" + ah.ucd);
+				if( ah.ucd == "pos.eq.dec;meta.main" ) {
+					that.setDeltaKeyword(ah);	
+					return;
+				}
+			}
+			for( var ahn in selectAttributesHandlers ) {
+				var ah = selectAttributesHandlers[ahn];
+				if( ah.ucd  == "pos.eq.dec" ) {
+					that.setDeltaKeyword(ah);	
+					return;
+				}
+			}
+			for( var ahn in selectAttributesHandlers ) {
+				var ah = selectAttributesHandlers[ahn];
+				if( ah.name  == "s_dec" ) {
+					that.setDeltaKeyword(ah);	
+					return;
+				}
+			}
+		};
+
+		this.setDeltaKeyword = function(ah) {
 			var m = new $.KWConstraintModel(true, { "name" : ah.name
 				, "dataType" : "Select"
 					, "ucd" : ah.ucd
@@ -202,11 +258,9 @@ jQuery.extend({
 			, this, '');
 			var div_key = "kwdelta";
 			var v = new $.KWConstraintView(div_key, 'tapdelta');
-			deltakw =  new $.KWConstraintControler(m, v);		
-			m.notifyInitDone();
-
-		}
-
+			alphakw =  new $.KWConstraintControler(m, v);
+			m.notifyInitDone();					
+		};
 
 		this.updateQuery = function() {
 			var limit = getQLimit();
@@ -247,7 +301,7 @@ jQuery.extend({
 
 			}
 			that.notifyQueryUpdated(query);
-		}
+		};
 
 		this.submitQuery = function(){
 			showProcessingDialog("Run job");
@@ -255,7 +309,7 @@ jQuery.extend({
 			$.post("runasyncjob"
 					, {NODE: storedTreepath.nodekey, TREEPATH: storedTreepath.nodekey + ";" + storedTreepath.schema + ";" + storedTreepath.table, REQUEST: "doQuery", LANG: 'ADQL', FORMAT: 'json', PHASE: 'RUN', MAXREC: limit,QUERY: ($('#adqltext').val()) }
 					, function(data, status) {
-						var jsondata = eval("(" + data + ")")
+						var jsondata = eval("(" + data + ")");
 						if( processJsonError(jsondata, "tap/async Cannot get job status") ) {
 							return;
 						}
@@ -264,11 +318,11 @@ jQuery.extend({
 							jm = new $.JobModel(storedTreepath, jsondata.status.job, jsondata.session);
 							new $.JobControler(jm, jv);
 							lastJob = jv;
-							lastJob.fireInitForm('tapjobs');
+							lastJob.fireInitForm('tapjobs', attributesHandlers);
 							lastTimer = setTimeout("tapView.fireCheckJobCompleted(\"" + storedTreepath.nodekey + "\", \"" + jsondata.status.job.jobId + "\", \"9\");", 1000);
 						}
 					});
-		}
+		};
 
 		this.checkJobCompleted = function(nodeKey, jid, counter) {
 			if( lastJob == null ) {
@@ -296,7 +350,7 @@ jQuery.extend({
 				hideProcessingDialog();
 			}
 
-		}
+		};
 
 		this.updateRunningJobList = function() {    
 			for( var k in  pendingJobs ) {
@@ -314,7 +368,7 @@ jQuery.extend({
 			else {
 				listTimer = null;
 			}
-		}
+		};
 
 		this.removeJob = function(id) {
 			logMsg("remove job " + id);
@@ -327,7 +381,7 @@ jQuery.extend({
 			if( listTimer != null ) {timerOn = true;clearTimeout(listTimer);}			
 			delete pendingJobs[id];
 			if( timerOn ) { listTimer = setTimeout("tapView.fireUpdateRunningJobList();", 5000);}
-		}
+		};
 
 		this.refreshJobList= function() {
 			showProcessingDialog("Refresh job list");
@@ -351,7 +405,7 @@ jQuery.extend({
 				}
 				hideProcessingDialog();
 			});		
-		}
+		};
 
 		this.processJobAction= function(nodekey,jid, session) {
 			var val = $('#' + jid + "_actions").val(); 
@@ -379,7 +433,7 @@ jQuery.extend({
 			else if( val == 'Edit Query' ) {
 				that.editQuery(nodekey,jid);
 			}
-		}
+		};
 
 		this.showQuery = function(nodekey,jid) {
 			$.getJSON("jobsummary" , {NODE: nodekey, JOBID: jid}, function(jsondata) {
@@ -390,7 +444,7 @@ jQuery.extend({
 				report = jsondata.parameters.query.replace(/\\n/g,'\n            ')+ "\n";
 				logged_alert(report, 'Query of job ' + nodekey + '.' + jid);
 			});					
-		}
+		};
 		this.showSummary = function(nodekey, jid) {
 			$.getJSON("jobsummary" , {NODE: nodekey, JOBID: jid}, function(jsondata) {
 				if( processJsonError(jsondata, "Cannot get summary of job "+ nodekey + '.' + jid) ) {
@@ -423,7 +477,7 @@ jQuery.extend({
 				logged_alert(report,  "Summary of job "+ nodekey + '.' + jid);
 
 			});					
-		}
+		};
 		this.displayResult = function(nodekey, jid) {
 			showProcessingDialog("Get result of job " + jid);			
 			$.getJSON("jobresult" , {NODE: nodekey, JOBID: jid, FORMAT: 'json'}, function(jsondata) {
@@ -439,10 +493,10 @@ jQuery.extend({
 					var treepath = $('#' + jid).data().treepath;
 					treepath.jobid = jid;
 					setTitlePath(treepath);
-					resultPaneView.showTapResult(storedTreepath, jid, jsondata);
+					resultPaneView.showTapResult(storedTreepath, jid, jsondata, $('#' + jid).data("AttributeHandlers") );
 				}
 			});					
-		}
+		};
 		this.editQuery= function(nodekey,jid) {
 			showProcessingDialog("Get Job summary");			
 			var query  = "";
@@ -459,12 +513,12 @@ jQuery.extend({
 					}
 				}
 			});					
-		}
+		};
 
 		this.downloadVotable= function(nodekey,jid) {
 			var url = 'jobresult?NODE=' + nodekey.trim() + '&JOBID=' + jid.trim();
 			window.location = url;
-		}
+		};
 
 		this.sampBroadcast= function(nodekey,jid) {
 			$.getJSON("tap/async/" + jid , function(jsondata) {
@@ -481,7 +535,7 @@ jQuery.extend({
 				logged_alert("No result file looking like a VOTable, sorry.", 'Error')
 			});					
 
-		}
+		};
 
 		this.processRemoveFirstAndOr = function(key) {
 			delete editors[key];
@@ -489,7 +543,7 @@ jQuery.extend({
 				editors[k].controlRemoveAndOr();
 				break;
 			}
-		}
+		};
 
 		/*
 		 * Listener notifications
@@ -498,20 +552,20 @@ jQuery.extend({
 			$.each(listeners, function(i){
 				listeners[i].isInit(attributesHandlers, selectAttributesHandlers);
 			});
-		}
+		};
 		this.notifyCoordDone = function(key, constr){
 			$.each(listeners, function(i){
 				listeners[i].coordDone(key, constr);
 			});
-		}
+		};
 		this.notifyQueryUpdated= function(query) {
 			$.each(listeners, function(i){
 				listeners[i].queryUpdated(query);
 			});
-		}
+		};
 		this.notifyNewJobs= function() {
 			lastJob.controlInitForm();
-		}
+		};
 
 	}
 });

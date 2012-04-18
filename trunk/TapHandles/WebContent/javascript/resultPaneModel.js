@@ -21,13 +21,13 @@ jQuery.extend({
 		 */
 		this.addListener = function(list){
 			listeners.push(list);
-		}
+		};
 		/*
 		 * Event processing
 		 */
 		this.setTreePath = function(treepath){
 			treePath = treepath;
-		}
+		};
 
 		this.processShowRecord= function(oid){
 			var jsdata ="";
@@ -43,7 +43,7 @@ jQuery.extend({
 					that.notifyDetailLoaded(oid, jsdata);
 				}
 			});
-		}
+		};
 
 		this.processShowMeta= function(){
 			var jsdata ="";
@@ -58,7 +58,7 @@ jQuery.extend({
 					that.notifyMetaLoaded(data);
 				}
 			});
-		}
+		};
 
 		this.processShowMetaNode= function(treepath){
 			var jsdata ="";
@@ -73,12 +73,12 @@ jQuery.extend({
 					that.notifyMetaLoaded(data);
 				}
 			});
-		}
+		};
 
 
 		this.processShowSimbad= function(coord){
 			window.open("simbad?coord=" + escape(coord), "Simbad");
-		}
+		};
 
 		
 		this.downloadVOTable = function() {
@@ -92,11 +92,11 @@ jQuery.extend({
 			else {
 				logged_alert("Cannot identify the current JOB", 'Error');	
 			}
-		}
+		};
 		this.downloadFITS = function() {
 			var url = "getqueryreport?query=" + escape(current_query) + "&protocol=auto&format=fits";
 			window.open(url, 'DL FITS');
-		}
+		};
 		this.downloadZip = function() {
 			/*
 			 * The mode (TAP/SaadaQL is detected by analysing the title
@@ -109,7 +109,7 @@ jQuery.extend({
 				var url = "getqueryreport?query=" + escape(current_query) + "&protocol=noprotocol&format=zipball";
 				window.open(url, 'DL Zipball');
 			}
-		}
+		};
 		this.sampBroadcast = function() {
 			/*
 			 * Job ids is detected by analysing the title
@@ -124,7 +124,7 @@ jQuery.extend({
 
 //			var url = "getqueryreport?query=" + escape(current_query) + "&protocol=auto&format=fits";
 //			window.open(url, 'DL VOTable');
-		}
+		};
 
 		/*
 		 * Listener notifications
@@ -133,32 +133,32 @@ jQuery.extend({
 			$.each(listeners, function(i){
 				listeners[i].jobInProgress();
 			});
-		}
+		};
 		this.notifyJobDone = function(dataJSONObject){
 			$.each(listeners, function(i){
 				listeners[i].jobIsDone(dataJSONObject);
 			});
-		}
+		};
 		this.notifyTableInitDone = function(dataJSONObject, query){
 			$.each(listeners, function(i){
 				listeners[i].tableIsInit(dataJSONObject, query);
 			});
-		}
+		};
 		this.notifyJobFailed = function(textStatus){
 			$.each(listeners, function(i){
 				listeners[i].jobFailed(textStatus);
 			});
-		}
+		};
 		this.notifyDetailLoaded= function(oid, jsdata){
 			$.each(listeners, function(i){
 				listeners[i].detailIsLoaded(oid, jsdata);
 			});
-		}
+		};
 		this.notifyMetaLoaded= function(jsdata){
 			$.each(listeners, function(i){
 				listeners[i].metaIsLoaded(jsdata);
 			});
-		}
+		};
 		this.notifyCounterpartsLoaded= function(jsdata){
 			$.each(listeners, function(i){
 				listeners[i].counterpartsAreLoaded(jsdata);
