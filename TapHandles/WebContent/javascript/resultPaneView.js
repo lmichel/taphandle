@@ -15,7 +15,7 @@ jQuery.extend({
 		 */
 		this.addListener = function(list) {
 			listeners.push(list);
-		}
+		};
 
 		this.fireGetProductInfo = function(url) {
 			showProcessingDialog("Waiting on product info");
@@ -33,7 +33,7 @@ jQuery.extend({
 					logged_alert(retour, "Product Info");
 				}
 			});
-		}		
+		}	;	
 		this.fireDownloadProduct = function(url) {
 			showProcessingDialog("Waiting on product info");
 
@@ -64,8 +64,7 @@ jQuery.extend({
 				}
 			});
 
-		}
-
+		};
 
 		this.fireNewNodeEvent = function(nodekey) {
 			showProcessingDialog("Waiting on " + nodekey + " node description");
@@ -123,62 +122,62 @@ jQuery.extend({
 				}
 				$( "div#treedisp").jstree('close_all', -1);
 			});
-		}
+		};
 
 		this.fireTreeNodeEvent = function(treepath) {
 			runTAP = true;
 			tapView.fireTreeNodeEvent(treepath, runTAP);
-		}
+		};
 
 		this.fireSubmitQueryEvent = function() {
 			$("#resultpane").html();
 			tapView.fireSubmitQueryEvent();
-		}
+		};
 		this.fireSetTreePath = function(treepath) {
 			$.each(listeners, function(i) {
 				listeners[i].controlSetTreePath(treepath);
 			});
-		}
+		};
 		this.fireHisto = function(direction) {
-		}
+		};
 		this.fireStoreHisto = function(query) {
-		}
+		};
 
 		this.fireDownloadVOTable = function(query) {
 			$.each(listeners, function(i) {
 				listeners[i].controlDownloadVOTable();
 			});
-		}
+		};
 		this.fireDownloadFITS = function(query) {
 			$.each(listeners, function(i) {
 				listeners[i].controlDownloadFITS();
 			});
-		}
+		};
 		this.fireDownloadCart = function(query) {
 			$.each(listeners, function(i) {
 				listeners[i].controlDownloadCart();
 			});
-		}
+		};
 		this.fireSampBroadcast = function(query) {
 			$.each(listeners, function(i) {
 				listeners[i].controlSampBroadcast();
 			});
-		}
+		};
 		this.fireShowRecord = function(oid) {
 			$.each(listeners, function(i) {
 				listeners[i].controlShowRecord(oid);
 			});
-		}
+		};
 		this.fireShowMeta = function() {
 			$.each(listeners, function(i) {
 				listeners[i].controlShowMeta();
 			});
-		}
+		};
 		this.fireShowMetaNode = function(treepath) {
 			$.each(listeners, function(i) {
 				listeners[i].controlShowMetaNode(treepath);
 			});
-		}
+		};
 		this.fireShowSources = function(oid) {
 			$('#saadaqllang').attr('checked', 'checked');
 			$('#taptab').hide();
@@ -190,21 +189,21 @@ jQuery.extend({
 			$.each(listeners, function(i) {
 				listeners[i].controlShowSources(oid);
 			});
-		}
+		};
 		this.fireShowSimbad = function(coord) {
 			$.each(listeners, function(i) {
 				listeners[i].controlShowSimbad(coord);
 			});
-		}
+		};
 		this.fireShowVignette = function(oid, title) {
 			openDialog('Preview of ' + title,
 					"<img class=vignette src='getvignette?oid=" + oid
 					+ "'>");
-		}
+		};
 		this.fireShowPreview = function(preview_url, title) {
 			openDialog('Preview of ' + title,
 					"<img class=vignette src='" + preview_url + "'>");
-		}
+		};
 
 		this.fireExpendForm= function() {
 			var height;
@@ -225,14 +224,15 @@ jQuery.extend({
 					height = 100;
 				}
 			}
-			$("div#accesspane").trigger("resize",[ height]);		
-		}
+			layoutPane.sizePane("south", height);
+			//	$("div#accesspane").trigger("resize",[ height]);		
+		};
 		this.showProgressStatus = function() {
 			logged_alert("Job in progress", 'Info');
-		}
+		};
 		this.showFailure = function(textStatus) {
 			logged_alert("view: " + textStatus, 'Failutr');
-		}
+		};
 
 		this.showMeta = function(jsdata) {
 			if (jsdata.errormsg != null) {
@@ -243,7 +243,7 @@ jQuery.extend({
 
 			var table = '';
 			var histo = '<img src="images/question.png">';
-	
+
 
 			var title = "Columns of table <i>"
 				+ jsdata.table
@@ -277,11 +277,11 @@ jQuery.extend({
 
 			$('#detaildiv').modal();
 
-		}
+		};
 
-		this.showTapResult = function(treepath, jid, jsdata) {
-			var table = "<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\"  id=\"datatable\" class=\"display\"></table>"
-				$("#resultpane").html(table);
+		this.showTapResult = function(treepath, jid, jsdata, attributeHandlers) {
+			var table = "<table cellpadding=\"0\" cellspacing=\"0\" border=\"1\"  id=\"datatable\" class=\"display\"></table>";
+			$("#resultpane").html(table);
 			var nb_cols = jsdata.aoColumns.length;
 			for( var r=0 ; r<jsdata.aaData.length ; r++) {
 				var line = jsdata.aaData[r];
@@ -291,10 +291,31 @@ jQuery.extend({
 				}
 
 			}
+
+			var aoColumns = new Array();
+			for(var i=0 ; i<jsdata.aoColumns.length ; i++) {
+				var title ;
+				if( attributeHandlers == undefined ) {
+					title = "No descritption available"
+					+ " - This job has likely been initiated in a previous session" ;
+				}
+				else {
+					var ah = attributeHandlers[jsdata.aoColumns[i].sTitle];
+					title = ah.description
+					+ " - Name: " + ah.name
+					+ " - Unit: " + ah.unit
+					+ " - UCD: " + ah.ucd
+					+ " - UType: " + ah.utype
+					+ " - DataType: " + ah.dataType;
+				}
+				aoColumns[i] = {sTitle: '<span title="' + title + '">' + jsdata.aoColumns[i].sTitle + '</span>'};
+			}
+
 			var t = $('#datatable').dataTable({
-				"aoColumns" : jsdata.aoColumns,
+				"aLengthMenu": [5, 10, 25, 50, 100],
+				"aoColumns" : aoColumns,
 				"aaData" : jsdata.aaData,
-				"sDom" : '<"top">lrt<"bottom">pi',
+				//"sDom" : '<"top"f>rt',
 				"bPaginate" : true,
 				"aaSorting" : [],
 				"bSort" : false,
@@ -303,14 +324,25 @@ jQuery.extend({
 					for( var c=0 ; c<aData.length ; c++ ) {
 						formatValue(this.fnSettings().aoColumns[c].sTitle, aData[c], $('td:eq(' + c + ')', nRow));
 					}
-
 					return nRow;
 				}
 			} );
-		}
+
+			$('#datatable span').tooltip( { 
+				track: true, 
+				delay: 0, 
+				showURL: false, 
+				opacity: 1, 
+				fixPNG: true, 
+				showBody: " - ", 
+				// extraClass: "pretty fancy", 
+				top: -15, 
+				left: 5 	
+			});	
+		};;
 
 		this.displayResult = function(dataJSONObject) {
-		}
+		};
 
 		this.initTable = function(dataJSONObject, query) {
 			if( processJsonError(dataJSONObject, "") ) {
@@ -349,8 +381,6 @@ jQuery.extend({
 					"sAjaxSource" : "nextpage"
 				});
 			}
-
-		}
-
+		};
 	}
 });

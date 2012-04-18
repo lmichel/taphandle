@@ -24,8 +24,8 @@ jQuery.extend({
 			listeners.push(list);
 		}
 		
-		this.initForm = function() {
-			that.notifyIsInit();
+		this.initForm = function(attributesHandlers) {
+			that.notifyIsInit(attributesHandlers);
 		}
 		
 		this.updateStatus = function() {
@@ -45,9 +45,9 @@ jQuery.extend({
 		this.getPhase = function() {
 			return  phase;
 		}
-		this.notifyIsInit = function() {
+		this.notifyIsInit = function(attributesHandlers) {
 			$.each(listeners, function(i){
-				listeners[i].isInit(treePath, id, sessionId, phase, actions[phase]);
+				listeners[i].isInit(treePath, id, sessionId, phase, actions[phase], attributesHandlers);
 			});
 		}
 		this.notifyUpdated = function() {

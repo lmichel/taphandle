@@ -14,7 +14,7 @@ jQuery.extend({
 		 */
 		this.addListener = function(list){
 			listeners.push(list);
-		}
+		};
 		/*
 		 * Fire external events
 		 */
@@ -22,23 +22,23 @@ jQuery.extend({
 			$.each(listeners, function(i){
 				listeners[i].controlTreeNodeEvent(treepath, andsubmit, null);
 			});
-		}
+		};
 		this.fireAttributeEvent = function(uidraggable){
 			$.each(listeners, function(i){
 				listeners[i].controlAttributeEvent(uidraggable);
 			});
-		}
+		};
 		this.fireSelectEvent = function(uidraggable){
 			$.each(listeners, function(i){
 				listeners[i].controlSelectEvent(uidraggable);
 			});
-		}
+		};
 		this.fireOrderByEventEvent= function(uidraggable){
 			$("#taporderby").html('');
 			$.each(listeners, function(i){
 				listeners[i].controlOrderByEventEvent(uidraggable);
 			});
-		}
+		};
 		this.fireInputCoordEvent = function(){
 			if( $("#tapcoordval").val() == '' || $("#tapradiusval").val() == '' ) {
 				logged_alert("Both position and radius must be given", 'Info');
@@ -49,69 +49,69 @@ jQuery.extend({
 				listeners[i].controlInputCoord($("#tapcoordval").val()
 						, $("#tapradiusval").val(), $('#tapboxcircle').val());
 			});
-		}
+		};
 		this.fireAlphaEvent = function(uidraggable){
 			$.each(listeners, function(i){
 				listeners[i].controlAlphaEvent(uidraggable);
 			});
-		}
+		};
 		this.fireDeltaEvent = function(uidraggable){
 			$.each(listeners, function(i){
 				listeners[i].controlDeltaEvent(uidraggable);
 			});
-		}
+		};
 		this.fireUpdateQueryEvent = function(){
 			$.each(listeners, function(i){
 				listeners[i].controlUpdateQueryEvent();
 			});
-		}
+		};
 		this.fireSubmitQueryEvent = function(){
 			$.each(listeners, function(i){
 				listeners[i].controlSubmitQueryEvent();
 			});
-		}
+		};
 		this.fireRefreshJobList = function(){
 			$('#tapjobs').html('');
 			$.each(listeners, function(i){
 				listeners[i].controlRefreshJobList();
 			});
-		}
+		};
 		this.fireJobAction = function(nodekey, jid, session){
 			$.each(listeners, function(i){
 				listeners[i].controlJobAction(nodekey, jid, session);
 			});
-		}
+		};
 		this.fireDownloadVotable = function(nodekey, jid){
 			$.each(listeners, function(i){
 				listeners[i].controlDownloadVotable(nodekey, jid);
 			});
-		}
+		};
 		this.fireCheckJobCompleted= function(nodekey, jid, counter){
 			$.each(listeners, function(i){
 				listeners[i].controlCheckJobCompleted(nodekey, jid, counter);
 			});
-		}
+		};
 		
 		this.fireUpdateRunningJobList= function() {			
 			$.each(listeners, function(i){
 				listeners[i].controlUpdateRunningJobList();
 			});
-		}
+		};
 		this.fireRemoveJob = function(id) {
 			$.each(listeners, function(i){
 				listeners[i].controlRemoveJob(id);
 			});		
-		}
+		};
 		this.fireSampBroadcast= function(nodekey, jid){
 			$.each(listeners, function(i){
 				listeners[i].controlSampBroadcast(nodekey, jid);
 			});
-		}
+		};
 		this.fireDisplayResult= function(nodekey, jid){
 			$.each(listeners, function(i){
 				listeners[i].controlDisplayResult(nodekey, jid);
 			});
-		}
+		};
 		this.fireFilterColumns = function(val) {
 			$('.kw_list').find('span').each(
 					function(){
@@ -124,17 +124,17 @@ jQuery.extend({
 							$(this).parent().hide();							
 						}
 					});
-		}
+		};
 		/*
 		 * Local processing
 		 */
 
 		this.showProgressStatus = function(){
 			logged_alert("Job in progress", 'Info');
-		}
+		};
 		this.showFailure = function(textStatus){
 			logged_alert("view: " + textStatus, 'Info');
-		}		
+		}	;	
 		this.initForm= function(attributesHandlers, selectAttributesHandlers){
 			/*
 			 * Reset form
@@ -153,14 +153,35 @@ jQuery.extend({
 			 */
 			var table  = "<ul class=attlist>";
 			for( i in attributesHandlers  ) {
-				table += "<li class=\"ui-state-default\"><span class=item>" 
-					+ attributesHandlers[i].name
-					+ " (" + attributesHandlers[i].dataType 
-					+ ") " + attributesHandlers[i].unit 
+				var ah = attributesHandlers[i];
+				var title = ah.description
+				+ " - Name: " + ah.name
+				+ " - Unit: " + ah.unit
+				+ " - UCD: " + ah.ucd
+				+ " - UType: " + ah.utype
+				+ " - DataType: " + ah.dataType;
+				
+				table += "<li class=\"ui-state-default\"><span class=item title='" + title + "'>" 
+					+ ah.name
+					+ " (" + ah.dataType 
+					+ ") " + ah.unit 
 					+ "</span></li>";
+				logMsg(table);
 			}
 			table += "</select>";
 			$("#tapmeta").html(table);
+			$('#tapmeta span').tooltip( { 
+				track: true, 
+				delay: 0, 
+				showURL: false, 
+				opacity: 1, 
+				fixPNG: true, 
+				showBody: " - ", 
+				// extraClass: "pretty fancy", 
+				top: -15, 
+				left: 5 	
+			});	
+
 			$(function() {
 				$("#tapmeta" ).sortable({
 					revert: "true"
@@ -199,7 +220,7 @@ jQuery.extend({
 			$("#taptab").tabs({
 				selected: 2
 			});
-		}
+		};
 
 		this.coordDone= function(key, constr){
 			$('#CoordList').append("<div id=" + key + "></div>");
@@ -210,15 +231,15 @@ jQuery.extend({
 				$('#' +  key).remove();
 				that.fireUpdateQueryEvent();
 			});
-		}
+		};
 
 		this.queryUpdated= function(query){
 			$('#adqltext').val(query);
-		}
+		};
 
 		this.jobView= function(jobcontroler){
 			jobcontroler.fireInitForm('tapjobs');
-		}
+		};
 
 		this.fireDisplayHisto = function(){
 			var result = '';
@@ -226,6 +247,6 @@ jQuery.extend({
 			result += '<img src="images/historight-grey.png">';	
 			$('#histoarrows').html('');
 			$('#histoarrows').html(result);
-		}
+		};
 	}
 });

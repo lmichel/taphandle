@@ -16,40 +16,41 @@ jQuery.extend({
 		 */
 		this.addListener = function(list){
 			listeners.push(list);
-		}
-		this.fireInitForm = function(containerID) {
+		};
+		this.fireInitForm = function(containerID, attributesHandlers) {
 			that.containerID = containerID;
 			$.each(listeners, function(i){
-				listeners[i].controlInitForm();
+				listeners[i].controlInitForm(attributesHandlers);
 			});
-		}
+		};
 
 		this.fireUpdateStatus = function() {
 			$.each(listeners, function(i){
 				listeners[i].controlUpdateStatus();
 			});
-		}
+		};
 		this.fireSetOnError = function() {
 			$.each(listeners, function(i){
 				listeners[i].controlSetOnError();
 			});
-		}
+		};
 
 		this.getId = function() {
 			return id;
-		}
+		};
 		this.fireGetPhase = function() {
 			var retour = false
 			$.each(listeners, function(i){
 				retour = listeners[i].controlGetPhase();
 			});		
 			return retour;
-		}
+		};
 
-		this.initForm = function(treepath, id, session, phase, actions){
+		this.initForm = function(treepath, id, session, phase, actions, attributesHandlers){
 			logMsg("init job form " + JSON.stringify(treepath) + " "  + session);
 			var nodekey  = treepath.nodekey;
 			$('#' + that.containerID).prepend("<div id=" + id + " style='float: none;'></div>");
+			$('#' + id).data("AttributeHandlers", attributesHandlers);
 			$('#' + id).html('');
 			$('#' + id).data('treepath', treepath);
 
@@ -76,7 +77,7 @@ jQuery.extend({
 			$("#taptab").tabs({
 				selected: 3
 			});
-		}
+		};
 
 		this.updateForm = function(treepath, id, phase, actions){
 			logMsg("update form " + treepath );
@@ -88,6 +89,6 @@ jQuery.extend({
 			for( var i=0 ; i<actions.length ; i++ ) {
 				actionMenu.append('<option value="' + actions[i] + '">' +  actions[i] + '</option>');
 			}
-		}
+		};
 	}
 });
