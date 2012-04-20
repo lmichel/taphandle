@@ -18,7 +18,7 @@
  &quot;unit&quot;: &quot;<xsl:value-of select="unit" />&quot;,
  &quot;ucd&quot;: &quot;<xsl:value-of select="ucd" />&quot;,
  &quot;utype&quot;: &quot;<xsl:value-of select="utype" />&quot;,
- &quot;dataType&quot;: &quot;<xsl:value-of select="dataType" />&quot;,
+ &quot;dataType&quot;: &quot;<xsl:value-of select="dataType" /><xsl:if test="dataType[@arraysize]">(<xsl:value-of select="dataType/@arraysize" />)</xsl:if>&quot;,
  &quot;description&quot;: &quot;<xsl:value-of select="description" />&quot;}
 </xsl:for-each>]
 </xsl:if></xsl:for-each>}

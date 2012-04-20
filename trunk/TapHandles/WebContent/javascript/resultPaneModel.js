@@ -46,9 +46,7 @@ jQuery.extend({
 		};
 
 		this.processShowMeta= function(){
-			var jsdata ="";
 			showProcessingDialog("Get table description");
-			var tp = treePath.table;
 			$.getJSON("gettable", {node: "aharray", name:tp }, function(data) {
 				hideProcessingDialog();
 				if( processJsonError(data, "get metadata") ) {
@@ -61,9 +59,7 @@ jQuery.extend({
 		};
 
 		this.processShowMetaNode= function(treepath){
-			var jsdata ="";
 			showProcessingDialog("Get table description");
-			var tp = treePath.nodekey + "." + treePath.schema + "." + treePath.table;
 			$.getJSON("gettable", {node: treepath.nodekey, table:treepath.table }, function(data) {
 				hideProcessingDialog();
 				if( processJsonError(data, "get attribute handlers") ) {

@@ -184,7 +184,6 @@ jQuery.extend({
 		this.lookForAlphaKeyword = function(ah) {
 			for( var ahn in selectAttributesHandlers ) {
 				var ah = selectAttributesHandlers[ahn];
-				logMsg("UCD ALPAH" + ah.ucd);
 				if( ah.ucd == "pos.eq.ra;meta.main" ) {
 					that.setAlphaKeyword(ah);	
 					return;
@@ -226,7 +225,6 @@ jQuery.extend({
 		this.lookForDeltaKeyword = function(ah) {
 			for( var ahn in selectAttributesHandlers ) {
 				var ah = selectAttributesHandlers[ahn];
-				logMsg("UCD DELTA" + ah.ucd);
 				if( ah.ucd == "pos.eq.dec;meta.main" ) {
 					that.setDeltaKeyword(ah);	
 					return;
@@ -312,8 +310,7 @@ jQuery.extend({
 						var jsondata = eval("(" + data + ")");
 						if( processJsonError(jsondata, "tap/async Cannot get job status") ) {
 							return;
-						}
-						else {
+						} else {
 							jv  = new $.JobView(jsondata.status.job.jobId);
 							jm = new $.JobModel(storedTreepath, jsondata.status.job, jsondata.session);
 							new $.JobControler(jm, jv);
@@ -550,7 +547,7 @@ jQuery.extend({
 		 */
 		this.notifyInitDone = function(){
 			$.each(listeners, function(i){
-				listeners[i].isInit(attributesHandlers, selectAttributesHandlers);
+				listeners[i].isInit(attributesHandlers, attributesHandlers);
 			});
 		};
 		this.notifyCoordDone = function(key, constr){

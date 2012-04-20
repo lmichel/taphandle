@@ -34,6 +34,56 @@ jQuery.extend({
 				}
 			});
 		}	;	
+		this.fireGetDataLink = function(url) {
+			showProcessingDialog("Waiting on product info");
+
+			$.getJSON("getdatalink", {url: url}, function(jsdata) {
+				hideProcessingDialog();
+				if( processJsonError(jsdata, "Cannot get datalink") ) {
+					return;
+				}
+				else {
+					var table = '';
+					var title = "Data link provided by <i>"
+						+ url 
+						+ "</i>";
+					table += '<h2><img src="images/Relation.png"><span>' + title
+					+ '</span></h2>';
+					table += "<h4 id=\"mappedmeta\" class='detailhead'> <img src=\"images/tdown.png\"> Links </h4>";
+					table += "<div class='detaildata'>";
+					table += "<table width=99% cellpadding=\"0\" cellspacing=\"0\" border=\"0\"  id=\"detailtable\" class=\"display\"></table>";
+					table += "</div>";
+
+
+					if ($('#detaildiv').length == 0) {
+						$(document.documentElement).append(
+						"<div id=detaildiv style='width: 99%; display: none;'></div>");
+					}
+					$('#detaildiv').html(table);
+					$('#detailtable').dataTable(
+							{
+								"aoColumns" : jsdata.columns,
+								"aaData" : jsdata.data,
+								//	"sDom" : '<"top"f>rt<"bottom">',
+								"bPaginate" : false,
+								"aaSorting" : [],
+								"bSort" : false,
+								"bFilter" : true,
+								"bAutoWidth" : true,
+								"fnRowCallback": function( nRow, aData, iDisplayIndex ) {
+									for( var c=0 ; c<aData.length ; c++ ) {
+										formatValue(this.fnSettings().aoColumns[c].sTitle, aData[c], $('td:eq(' + c + ')', nRow));
+									}
+									return nRow;
+								}
+
+							});
+
+					$('#detaildiv').modal();
+
+				}
+			});
+		}	;	
 		this.fireDownloadProduct = function(url) {
 			showProcessingDialog("Waiting on product info");
 
@@ -267,7 +317,7 @@ jQuery.extend({
 					{
 						"aoColumns" : jsdata.attributes.aoColumns,
 						"aaData" : jsdata.attributes.aaData,
-						"sDom" : '<"top"f>rt<"bottom">',
+						//	"sDom" : '<"top"f>rt<"bottom">',
 						"bPaginate" : false,
 						"aaSorting" : [],
 						"bSort" : false,
@@ -289,7 +339,6 @@ jQuery.extend({
 					var num = line[l];
 					//line[l] = formatValue(jsdata.aoColumns[l].sTitle, num);
 				}
-
 			}
 
 			var aoColumns = new Array();
@@ -297,16 +346,29 @@ jQuery.extend({
 				var title ;
 				if( attributeHandlers == undefined ) {
 					title = "No descritption available"
-					+ " - This job has likely been initiated in a previous session" ;
+						+ " - This job has likely been initiated in a previous session" ;
 				}
 				else {
-					var ah = attributeHandlers[jsdata.aoColumns[i].sTitle];
-					title = ah.description
-					+ " - Name: " + ah.name
-					+ " - Unit: " + ah.unit
-					+ " - UCD: " + ah.ucd
-					+ " - UType: " + ah.utype
-					+ " - DataType: " + ah.dataType;
+					var ah = attributeHandlers[jsdata.aoColumns[i].sTitle];/*
+					/*
+					 * Column name could be published in upper case but returned by the DBMS in lower case.
+					 */
+					if(ah == undefined  ) {
+						ah = attributeHandlers[jsdata.aoColumns[i].sTitle.toLowerCase()];
+					}
+					if(ah == undefined  ) {
+						ah = attributeHandlers[jsdata.aoColumns[i].sTitle.toUpperCase()];
+					}
+					if( ah == undefined ) {
+						title = "Column not published";
+					} else {
+						title = ah.description
+						+ " - Name: " + ah.name
+						+ " - Unit: " + ah.unit
+						+ " - UCD: " + ah.ucd
+						+ " - UType: " + ah.utype
+						+ " - DataType: " + ah.dataType;
+					}
 				}
 				aoColumns[i] = {sTitle: '<span title="' + title + '">' + jsdata.aoColumns[i].sTitle + '</span>'};
 			}
