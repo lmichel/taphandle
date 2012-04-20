@@ -24,7 +24,7 @@ public class XmlToJsonTest extends RootClass {
 		String outputfile =  inputfile.replaceAll("xml", "json");
 		XmlToJson.applyStyle(inputfile
 				, outputfile
-				, "/home/michel/Desktop/CatalogueEntry.xsl");
+				, "/home/michel/Desktop/CATALOGUE_ENTRY.xsl");
 		BufferedReader br = new BufferedReader(new FileReader(outputfile));
 		String b;
 		while( (b = br.readLine()) != null ) {
