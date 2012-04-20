@@ -92,7 +92,7 @@ function openSimbadDialog(pos) {
 	$('#diagdiv').html(table);
 
 	$.getJSON("simbadtooltip", {pos: pos}, function(jsdata) {
-		hideProcessingDialog();job
+		hideProcessingDialog();
 		if( processJsonError(jsdata, "Simbad Tooltip Failure") ) {
 			return;
 		}
@@ -144,5 +144,14 @@ function processJsonError(jsondata, msg) {
 	}	
 	return false;
 
+}
+
+
+function jsonAlert(jsdata, title) {
+	var retour='';
+	$.each(jsdata, function(k, v) {
+		retour += k + ": " + v  + "\n";
+	});
+	logged_alert(retour, 'Json Object');
 }
 

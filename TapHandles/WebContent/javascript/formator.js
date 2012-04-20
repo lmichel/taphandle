@@ -4,30 +4,30 @@
 if(!String.prototype.startsWith){
 	String.prototype.startsWith = function (str) {
 		return !this.indexOf(str);
-	}
+	};
 };
 if(!String.prototype.endsWith){
 	String.prototype.endsWith = function(suffix) {
 		return this.indexOf(suffix, this.length - suffix.length) !== -1;
-	}
+	};
 };
 
 if(!String.prototype.hashCode){
 	String.prototype.hashCode = function(){
 		var hash = 0;
 		if (this.length == 0) return code;
-		for (i = 0; i < this.length; i++) {
-			char = this.charCodeAt(i);
+		for (var i = 0; i < this.length; i++) {
+			var char = this.charCodeAt(i);
 			hash = 31*hash+char;
 			hash = hash & hash; 
 		}
 		return hash;
-	}
+	};
 };
 if(!String.prototype.trim){
 	String.prototype.trim = function(chaine){
 		return chaine.replace(/^\s+|\s+$/g,"");
-	} 
+	} ;
 };
 
 function trim(chaine) {
@@ -43,7 +43,14 @@ var decimaleRegexp = new RegExp("^[+-]?[0-9]*[.][0-9]*([eE][+-]?[0-9]+)?$","m");
 var bibcodeRegexp  = new RegExp(/^[12][089]\d{2}[A-Za-z][A-Za-z0-9&][A-Za-z0-9&.]{2}[A-Za-z0-9.][0-9.][0-9.BCRU][0-9.]{2}[A-Za-z0-9.][0-9.]{4}[A-Z:.]$/);		
 
 function formatValue(columnName, value, tdNode) {
-	if( value.startsWith("http://") ||  value.startsWith("https://") ) {
+	logMsg(columnName);
+	if( columnName.match(/.*datalink.*/i)  ){
+		logMsg("datalink");
+	//	var url = 'getdatalink?url=' + escape(value);
+		tdNode.html("<a class='dl_datalink' title='Get LinkedData'   href='#' onclick='resultPaneView.fireGetDataLink(\"" + value + "\"); return false;'/></a>");
+			
+	}
+	else if( value.startsWith("http://") ||  value.startsWith("https://") ) {
 		var titlepath = $('#titlepath').text().split('>');
 		getDLView(titlepath[0], columnName, value, tdNode);	
 	}

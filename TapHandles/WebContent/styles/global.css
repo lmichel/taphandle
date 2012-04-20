@@ -791,6 +791,25 @@ a:active.dl_info {
 	opacity: 0.8;
 }
 
+a.dl_datalink {
+	display: inline-block;
+	width: 0px;
+	overflow: visible;
+	padding: 9px 0px 9px 23px;
+	background: transparent url(../images/Relation.png) center left
+		no-repeat;
+}
+a:hover.dl_datalink {
+	filter: alpha(opacity = 50);
+	-moz-opacity: 0.5;
+	opacity: 0.5;
+}
+a:active.dl_datalink {
+	filter: alpha(opacity = 50);
+	-moz-opacity: 0.8;
+	opacity: 0.8;
+}
+
 /*********************************************************************
  * Page header style
  */

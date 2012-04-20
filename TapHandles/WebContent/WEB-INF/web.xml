@@ -129,4 +129,14 @@
     <servlet-name>getProductInfo</servlet-name>
     <url-pattern>/getproductinfo</url-pattern>
   </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>GetDataLink</display-name>
+    <servlet-name>GetDataLink</servlet-name>
+    <servlet-class>servlet.GetDataLink</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>GetDataLink</servlet-name>
+    <url-pattern>/getdatalink</url-pattern>
+  </servlet-mapping>
 </web-app>

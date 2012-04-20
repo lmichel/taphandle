@@ -229,16 +229,5 @@ $().ready(function() {
 	if( defaultUrl != null ) {
 		resultPaneView.fireNewNodeEvent(unescape(defaultUrl));
 	}
-	// ex http://saada.u-strasbg.fr/taphandle?url=http%3A//simbad49%3A8080/simbad/sim-tap
 
-
-	$('#azerty').tooltip({ 
-	    track: true, 
-	    delay: 0, 
-	    showURL: false, 
-	    opacity: 1, 
-	    fixPNG: true, 
-	    showBody: " - ", 
-	    top: -15, 
-	    left: 5 	});
 });
