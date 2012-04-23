@@ -116,65 +116,65 @@ jQuery.extend({
 
 		};
 
-		this.fireNewNodeEvent = function(nodekey) {
-			showProcessingDialog("Waiting on " + nodekey + " node description");
+	      this.fireNewNodeEvent = function(nodekey) {
+	            showProcessingDialog("Waiting on " + nodekey + " node description");
 
-			$.getJSON("getnode", {node: nodekey }, function(jsdata) {
-				hideProcessingDialog();
-				if( processJsonError(jsdata, "Cannot make data tree") ) {
-					return;
-				}
-				else {
-					$("div#treedisp").jstree("remove","#rootid" );
-					$("div#treedisp").jstree("remove","#" + jsdata.nodekey);
-					$("div#treedisp").jstree("create"
-							, $("div#treedisp")
-							, false
-							, {"data" : {"attr":{"id": jsdata.nodekey}, "title" : jsdata.nodekey},
-								"state": "closed"}
-							,false
-							,true);			
-					var id_schema, id_table;
-					for( var i=0 ; i<jsdata.schemas.length ; i++ ) {
-						id_schema = jsdata.nodekey + "X" + jsdata.schemas[i].name;
-						var description = jsdata.schemas[i].description;
-						if( description == "") {
-							description = "No Description Available";
-						}
-						$("div#treedisp").jstree("create"
-								, $("#" + jsdata.nodekey)
-								, false
-								, {"data" : {"attr":{"id": id_schema, "title": description}, "title" : jsdata.schemas[i].name},
-									"state": "closed",
-									"attr" :{"id": id_schema}}
-								,false
-								,true);		
-					}
-					for( var i=0 ; i<jsdata.schemas.length ; i++ ) {
-						id_schema = jsdata.nodekey + "X" + jsdata.schemas[i].name;
-						for( var j=0 ; j<jsdata.schemas[i].tables.length ; j++ ) {
-							id_table = jsdata.nodekey + ";" + jsdata.schemas[i].name + ";" + jsdata.schemas[i].tables[j].name;
-							var description = jsdata.schemas[i].tables[j].description;
-							if( description == "") {
-								description = "No Description Available";
-							}
-							$("div#treedisp").jstree("create"
-									, $("#" + id_schema)
-									, false
-									, {"data"  : {"attr":{"id": id_table, "title": description}, "title" : jsdata.schemas[i].tables[j].name},
-										"state": "closed",
-										"attr" :{"id": id_table}
-									}
-									,false
-									,true);	
-						}
-					}
-				}
-				$( "div#treedisp").jstree('close_all', -1);
-			});
-		};
+	            $.getJSON("getnode", {node: nodekey }, function(jsdata) {
+	                hideProcessingDialog();
+	                if( processJsonError(jsdata, "Cannot make data tree") ) {
+	                    return;
+	                }
+	                else {
+	                    $("div#treedisp").jstree("remove","#rootid" );
+	                    $("div#treedisp").jstree("remove","#" + jsdata.nodekey);
+	                    $("div#treedisp").jstree("create"
+	                            , $("div#treedisp")
+	                            , false
+	                            , {"data" : {"icon": "images/Database.png", "attr":{"id": jsdata.nodekey}, "title" : jsdata.nodekey},
+	                                "state": "closed"}
+	                            ,false
+	                            ,true);           
+	                    var id_schema, id_table;
+	                    for( var i=0 ; i<jsdata.schemas.length ; i++ ) {
+	                        id_schema = jsdata.nodekey + "X" + jsdata.schemas[i].name;
+	                        var description = jsdata.schemas[i].description;
+	                        if( description == "") {
+	                            description = "No Description Available";
+	                        }
+	                        $("div#treedisp").jstree("create"
+	                                , $("#" + jsdata.nodekey)
+	                                , false
+	                                , {"data" : {"icon": "images/Bluecube.png", "attr":{"id": id_schema, "title": description}, "title" : jsdata.schemas[i].name},
+	                                    "state": "closed",
+	                                    "attr" :{"id": id_schema}}
+	                                ,false
+	                                ,true);       
+	                    }
+	                    for( var i=0 ; i<jsdata.schemas.length ; i++ ) {
+	                        id_schema = jsdata.nodekey + "X" + jsdata.schemas[i].name;
+	                        for( var j=0 ; j<jsdata.schemas[i].tables.length ; j++ ) {
+	                            id_table = jsdata.nodekey + ";" + jsdata.schemas[i].name + ";" + jsdata.schemas[i].tables[j].name;
+	                            var description = jsdata.schemas[i].tables[j].description;
+	                            if( description == "") {
+	                                description = "No Description Available";
+	                            }
+	                            $("div#treedisp").jstree("create"
+	                                    , $("#" + id_schema)
+	                                    , false
+	                                    , {"data"  : {"icon": "images/SQLTable.png", "attr":{"id": id_table, "title": description}, "title" : jsdata.schemas[i].tables[j].name},
+	                                        "state": "closed",
+	                                        "attr" :{"id": id_table}
+	                                    }
+	                                    ,false
+	                                    ,true);   
+	                        }
+	                    }
+	                }
+	                $( "div#treedisp").jstree('close_all', -1);
+	            });
+	        };
 
-		this.fireTreeNodeEvent = function(treepath) {
+	      this.fireTreeNodeEvent = function(treepath) {
 			runTAP = true;
 			tapView.fireTreeNodeEvent(treepath, runTAP);
 		};
