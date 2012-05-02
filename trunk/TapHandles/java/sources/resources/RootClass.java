@@ -78,7 +78,7 @@ public class RootClass {
 	 * are replaced with Tomcat subdirs.
 	 * Could be initialized with properties
 	 */
-	protected static  String StyleDir       = "/home/michel/workspace/TAPBrowser/WebContent/styles/";
+	protected static  String StyleDir       = "/home/michel/workspace/TapHandles/WebContent/styles/";
 	protected static  String MetaBaseDir    = "/home/michel/Desktop/tapbase/meta/";
 	protected static  String SessionBaseDir = "/home/michel/Desktop/tapbase/sessions/";
 	/*

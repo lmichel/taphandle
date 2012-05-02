@@ -50,7 +50,7 @@ public class NodeBase extends RootClass{
 			try {
 				nodeMap.addNode("http://simbad.u-strasbg.fr/simbad/sim-tap", "simbad");
 			} catch (Exception e) {
-				logger.error("Cannot init node base http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap", e);
+				logger.error("Cannot init node base http://simbad.u-strasbg.fr/simbad/sim-tap", e);
 			}
 		} catch (Exception e) {
 			logger.error("Cannot init node base", e);
