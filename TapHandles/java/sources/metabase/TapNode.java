@@ -105,8 +105,8 @@ public class TapNode  extends RootClass {
 		logger.debug("check availability");
 		long t = new Date().getTime();
 		if( (t - this.last_availability_check) > AVAILABILITY_CHECK_FREQUENCY) {
-			getServiceReponse("availability", availabilityNS);
-			translateServiceReponse("availability", availabilityNS);
+			this.getServiceReponse("availability", availabilityNS);
+			this.translateServiceReponse("availability", availabilityNS);
 			this.last_availability_check = t;
 		} else {
 			logger.debug("availability already checked");
@@ -139,8 +139,8 @@ public class TapNode  extends RootClass {
 			return;
 		}
 		logger.debug("check capabilities");
-		getServiceReponse("capabilities", capabilityNS);
-		translateServiceReponse("capabilities", capabilityNS);
+		this.getServiceReponse("capabilities", capabilityNS);
+		this.translateServiceReponse("capabilities", capabilityNS);
 		logger.debug(this.url + " Capabilities is available");
 	}
 
@@ -160,9 +160,9 @@ public class TapNode  extends RootClass {
 			return;
 		}
 		logger.debug("check tables");
-		getServiceReponse("tables", tablesNS);
-		translateServiceReponse("tables", tablesNS);
-		setNodekeyInJsonResponse("tables");
+		this.getServiceReponse("tables", tablesNS);
+		this.translateServiceReponse("tables", tablesNS);
+		this.setNodekeyInJsonResponse("tables");
 		logger.debug(this.url + " tables is available");
 
 	}
