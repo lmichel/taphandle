@@ -1,10 +1,6 @@
 package test;
 
 
-import java.net.HttpCookie;
-
-import metabase.NodeBase;
-
 import resources.RootClass;
 import session.NodeCookie;
 import tapaccess.TapAccess;

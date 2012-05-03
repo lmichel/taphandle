@@ -13,6 +13,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import resources.RootClass;
+import tapaccess.JoinKeysJob;
 import translator.JsonUtils;
 import translator.NameSpaceDefinition;
 import translator.XmlToJson;
@@ -92,6 +93,11 @@ public class TapNode  extends RootClass {
 		this.checkTables() ;
 		logger.debug("NS for tables " + tablesNS.getNsName());
 		logger.info("Service " + this.url + " seems to be working");
+		try {
+			JoinKeysJob.getJoinKeys(this.url, this.baseDirectory);
+		} catch (Exception e) {
+			logger.warn("Can't get join keys for node " + this.url);
+		}
 	}
 
 	/**
