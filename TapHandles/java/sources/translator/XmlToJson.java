@@ -9,7 +9,13 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.TreeSet;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 
 import javax.xml.transform.Transformer;
@@ -262,6 +268,88 @@ public class XmlToJson  extends RootClass {
 			}         
 		}
 	}
+	
+	/**
+	 * Translate a TAP query response joining key and key_columns tables into a set of JSON files.
+	 * There is one JSON file per source table. These files are used by the client to handle queries with JOINs
+	 * The input file is supposed to have ' columns: source_table, target_table, source_column, target_columns
+	 * @param inputFile   XML file to translate
+	 * @param outputDir   Output dir
+	 * @throws Exception  If something goes wrong
+	 */
+	@SuppressWarnings("unchecked")
+	public static void translateJoinKeysTable(String inputFile, String outputDir  ) throws Exception {
+		Map<String, Collection<JSONObject>> map = new LinkedHashMap<String, Collection<JSONObject>>();
+		StarTableFactory stf = new StarTableFactory();
+		logger.info("Translate " +inputFile);
+		try {
+			StarTable table = stf.makeStarTable(inputFile); 
+			int nSrc = (int) table.getRowCount();
+			int nCol = table.getColumnCount();
+			
+			if( nCol != 4 ) {
+				throw new Exception("Key join table must have 4 columns");				
+			}
+			/*
+			 * Stores join links in a map 
+			 */
+			for( int r=0 ; r<nSrc ; r++ ) {
+				Object[] o =table.getRow(r);
+				String source_table = o[0].toString();
+				
+				JSONObject jso = new JSONObject();
+				jso.put("target_table", o[1].toString());
+				jso.put("source_column", o[2].toString());
+				jso.put("target_column", o[3].toString());
+				Collection<JSONObject> set;
+				if( (set = map.get(source_table)) == null) {
+					set =  new ArrayList<JSONObject>();
+					map.put(source_table,set);
+				}
+				set.add(jso);
+			}
+			/*
+			 * Builds individual JSON files for each table
+			 */
+			for( Entry<String, Collection<JSONObject>> e: map.entrySet() ){
+				String source_table = e.getKey().toString(); 
+				Collection<JSONObject> targets = e.getValue();
+				
+				JSONObject jso = new JSONObject();
+				JSONArray jsa  = new JSONArray();
+				jso.put("source_table", source_table);
+				jso.put("targets", jsa);
+				
+				for( JSONObject target:targets) {
+					jsa.add(target);
+				}
+				String file = 	outputDir + File.separator + source_table + "_joinkeys.json"	;
+				logger.info("Write joinkey file " + file);
+				FileWriter fw = new FileWriter(file);
+				fw.write(jso.toJSONString());
+				fw.close();				
+			}
+			/*
+			 * If an error occurs while StartTable building, we suppose that the VO table contains 
+			 * some info about the issue
+			 */
+		} catch (Exception e) {
+			e.printStackTrace();
+			SavotPullParser  sp = new SavotPullParser(inputFile, SavotPullEngine.FULL);
+			SavotVOTable sv = sp.getVOTable(); 
+			for (int l = 0; l<sp.getResourceCount(); l++) {		    	 
+				SavotResource currentResource = (SavotResource)(sv.getResources().getItemAt(l));
+				System.err.println(l + " " + currentResource);
+				InfoSet is = currentResource.getInfos();
+				String msg = "";;
+				for( int i=0 ; i<is.getItemCount() ; i++ ) {
+					msg += ((SavotInfo)is.getItemAt(i)).getContent() + "\n";
+				}
+				throw new Exception(msg);
+			}         
+		}
+	}
+
 
 	/**
 	 * Apply a style sheet to an XML file
