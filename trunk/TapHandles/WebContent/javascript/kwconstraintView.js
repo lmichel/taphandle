@@ -17,31 +17,31 @@ jQuery.extend({
 		 */
 		this.addListener = function(list){
 			listeners.push(list);
-		}
+		};
 
 
-		this.initForm= function(ah, operators, andors, default_value){
-			$('#' + constlist_id).append("<div id=" + id_root + " style='float: none;'>");
+		this.initForm= function(table, ah, operators, andors, default_value){
+			$('#' + constlist_id).append("<div id=" + id_root + " style='float: none;'></div>");
 			$('#' + id_root).html('');
 			/*
 			 * AND/OR operators
 			 */
 			if( andors.length > 0 ) {
 			    var select='<select id=' + id_root + "_andor style=\"font-size: small;font-family: courier;\">";
-				for( i=0 ; i<andors.length; i++ ) {
+				for( var i=0 ; i<andors.length; i++ ) {
 					var op = andors[i];
 					select += '<option value=' + op + '>' +op + '</option>';
 				}	
 				select += '</select>';
 				$('#' + id_root).append(select);
 			}
-			$('#' + id_root).append('<span id=' + id_root + '_name>' + ah.name + '</span>');
+			$('#' + id_root).append('<span id=' + id_root + '_name>' + table + "." + ah.name + '</span>');
 			/*
 			 * Logical operators
 			 */
 			if( operators.length > 0 ) {
 			    var select='<select id=' + id_root + "_op style=\"font-size: small;font-family: courier;\">";
-				for( i=0 ; i<operators.length; i++ ) {
+				for( var i=0 ; i<operators.length; i++ ) {
 					var op = operators[i];
 					var selected = '';
 					if( op == '>' ) {
@@ -69,7 +69,7 @@ jQuery.extend({
 				$('#' +  id_root).remove();
 				that.fireRemoveFirstAndOr(id_root);
 				that.fireEnterEvent();
-			});
+			});			
 
 			$('#' +  id_root + "_op").change(function() {
 				var regex = /=\s('.+')$/;
@@ -77,7 +77,7 @@ jQuery.extend({
 			    var results = regex.exec(op); 
 			    if(results) {
 			    	op = '=';
-			    	$('#' +  id_root + "_val").val(results[1])
+			    	$('#' +  id_root + "_val").val(results[1]);
 			    }
 				that.fireEnterEvent($('#' +  id_root + "_andor option:selected").text()
 						, op
@@ -99,11 +99,10 @@ jQuery.extend({
 				          , this.value);
 			});
 
-
 			that.fireEnterEvent($('#' +  id_root + "_andor option:selected").text()
 					,$('#' +  id_root + "_op option:selected").text()
 					,$('#' +  id_root + "_val").val());
-		}
+		};
 
 		this.printTypomsg= function(fault, msg){
 			$(".typomsg").each(function() {
@@ -115,11 +114,11 @@ jQuery.extend({
 				}
 				$(this).text(msg);
 			});
-		}
+		};
 		
 		this.removeAndOr = function() {
 			$('#' + id_root + "_andor" ).remove();
-		}
+		};
 		
 		this.fireRemoveFirstAndOr = function(id_root){
 			$.each(listeners, function(i){

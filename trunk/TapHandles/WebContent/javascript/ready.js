@@ -213,7 +213,12 @@ $().ready(function() {
 		$('.kw_filter').val(val);
 
 	});
-
+	/*
+	 * Change the table displayed in the KW lists
+	 */
+	$('.table_filter').change(function() {
+		tapView.fireChangeTable(this.value);
+	});
 
 	/*
 	 * This callback can be changed changed at everytime: do not use the "onclick" HTML  

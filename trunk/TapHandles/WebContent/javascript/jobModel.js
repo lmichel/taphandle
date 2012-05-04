@@ -22,11 +22,11 @@ jQuery.extend({
 		actions['ERROR']     = ["Actions", "Show Query", "Edit Query", "Summary"];
 		this.addListener = function(list){
 			listeners.push(list);
-		}
+		};
 		
 		this.initForm = function(attributesHandlers) {
 			that.notifyIsInit(attributesHandlers);
-		}
+		};
 		
 		this.updateStatus = function() {
 			$.getJSON("jobsummary", {NODE: treepath.nodekey, JOBID: id}, function(jsondata) {
@@ -37,23 +37,23 @@ jQuery.extend({
 				that.notifyUpdated();
 			});		
 
-		}
+		};
 		this.setOnError = function() {
 			phase = 'ERROR';
 			that.notifyUpdated();		
-		}
+		};
 		this.getPhase = function() {
 			return  phase;
-		}
+		};
 		this.notifyIsInit = function(attributesHandlers) {
 			$.each(listeners, function(i){
 				listeners[i].isInit(treePath, id, sessionId, phase, actions[phase], attributesHandlers);
 			});
-		}
+		};
 		this.notifyUpdated = function() {
 			$.each(listeners, function(i){
 				listeners[i].isUpdated(treePath, id, phase, actions[phase]);
 			});
-		}
+		};
 	}
 });

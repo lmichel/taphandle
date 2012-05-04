@@ -125,6 +125,11 @@ jQuery.extend({
 						}
 					});
 		};
+		this.fireChangeTable = function(newtable) {
+			$.each(listeners, function(i){
+				listeners[i].controlChangeTable(newtable);
+			});			
+		};
 		/*
 		 * Local processing
 		 */
@@ -148,6 +153,13 @@ jQuery.extend({
 			$('#taporderby').html('');
 			$('#tapselectmeta').html('');
 			$('.kw_filter').val('');
+			that.setNewTable(attributesHandlers, selectAttributesHandlers);
+			$("#taptab").tabs({
+				selected: 2
+			});
+		};
+
+		this.setNewTable= function(attributesHandlers, selectAttributesHandlers){
 			/*
 			 * Get table columns for where clause
 			 */
@@ -166,7 +178,6 @@ jQuery.extend({
 					+ " (" + ah.dataType 
 					+ ") " + ah.unit 
 					+ "</span></li>";
-				logMsg(table);
 			}
 			table += "</select>";
 			$("#tapmeta").html(table);
@@ -183,9 +194,9 @@ jQuery.extend({
 			});	
 
 			$(function() {
-				$("#tapmeta" ).sortable({
-					revert: "true"
-				});
+//				$("#tapmeta" ).sortable({
+//					revert: "true"
+//				});
 				$( "div#tapmeta li" ).draggable({
 					connectToSortable: "#tapconstraintslist",
 					helper: "clone",
@@ -193,6 +204,7 @@ jQuery.extend({
 				});
 
 			});
+
 			/*
 			 * Get table columns for select clause
 			 */
@@ -207,9 +219,9 @@ jQuery.extend({
 			table += "</select>";
 			$("#tapselectmeta").html(table);
 			$(function() {
-				$("#tapselectmeta" ).sortable({
-					revert: "true"
-				});
+//				$("#tapselectmeta" ).sortable({
+//					revert: "true"
+//				});
 				$( "div#tapselectmeta li" ).draggable({
 					connectToSortable: "#tapselectlist",
 					helper: "clone",
@@ -217,11 +229,8 @@ jQuery.extend({
 				});
 
 			});
-			$("#taptab").tabs({
-				selected: 2
-			});
+			
 		};
-
 		this.coordDone= function(key, constr){
 			$('#CoordList').append("<div id=" + key + "></div>");
 

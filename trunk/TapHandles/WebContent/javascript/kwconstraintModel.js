@@ -1,6 +1,6 @@
 jQuery.extend({
 
-	KWConstraintModel: function(first, ah, model, def_value){
+	KWConstraintModel: function(first, tbl, ah, model, def_value){
 		var val1;
 		var val2;
 		var that = this;
@@ -11,19 +11,20 @@ jQuery.extend({
 
 		this.addListener = function(list){
 			listeners.push(list);
-		}
+		};
 
 		var attributehandler = ah;
+		var table = tbl;
 		attributehandler.dataType = attributehandler.dataType.replace('adql:', '').toLowerCase();
 		var qlmodel = model;
 		var default_value = def_value;
 		var operator ;
 		var operand ;
 		var andor ;
-
+logMsg("KWM " + table);
 		var presetValues = new Array();
 		presetValues["dataproduct_type"] = ["'image'", "'spectrum'", "'cube'",
-		                                    "'timeseries'", "'visibility'", "'eventlist'"]
+		                                    "'timeseries'", "'visibility'", "'eventlist'"];
 		presetValues["calibration_level"] = [0, 1, 2, 3];
 		presetValues["access_format"] = ["'text/html'", "'text/xml'","'text/plain'"
 		                                 , "'application/fits'","'application/x-votable+xml'", "'application/pdf'"
@@ -35,7 +36,7 @@ jQuery.extend({
 				return true;
 			}
 			return false;
-		}
+		};
 
 		if( attributehandler.dataType == 'select' ) {
 			operators = [];
@@ -84,7 +85,7 @@ jQuery.extend({
 				that.removeAndOr();
 			}
 			qlmodel.updateQuery();
-		}
+		};
 
 		this.checkAndFormatNum = function(op, opd) {
 			/*
@@ -155,7 +156,7 @@ jQuery.extend({
 				operand = opd;
 				return 1 ;			
 			}
-		}
+		};
 
 		this.checkAndFormatString = function(op, opd) {
 			if( op == 'IS NULL' ) {
@@ -178,19 +179,19 @@ jQuery.extend({
 				operator = op;
 				return 1;			
 			}
-		}
+		};
 
 		this.processRemoveConstRef = function(ahname) {
 			qlmodel.processRemoveConstRef(ahname);
-		}
+		};
 
 		this.processRemoveFirstAndOr = function(key) {
 			qlmodel.processRemoveFirstAndOr(key);
-		}
+		};
 
 		this.removeAndOr = function() {
 			andor = "";
-		}
+		};
 
 		this.getADQL = function(attrQuoted) {	
 			var quote = "";
@@ -212,19 +213,22 @@ jQuery.extend({
 				+ operator + ") = " + bcomp;
 			}
 			else {
-				return andor + ' ' + quote + attributehandler.name + quote + ' ' + operator + ' ' + operand;
+				return andor + ' ' + quote + table + "." + attributehandler.name + quote + ' ' + operator + ' ' + operand;
 			}
-		}
+		};
+		this.getTable = function(attrQuoted) {	
+			return table;
+		};
 		this.notifyInitDone = function(){
 			$.each(listeners, function(i){
-				listeners[i].isInit(attributehandler, operators, andors, default_value);
+				listeners[i].isInit(table, attributehandler, operators, andors, default_value);
 			});
-		}
+		};
 		this.notifyTypomsg = function(fault, msg) {
 			$.each(listeners, function(i){
 				listeners[i].printTypomsg(fault,msg);
 			});			
-		}
+		};
 
 	}
 });
