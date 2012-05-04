@@ -17,7 +17,7 @@ html, body {
 }
 
 div {
-	background-color: whiteSmoke;
+	background-color: white;
 	border-width: 1px;
 	border-style: solid;
 	border-color: white;
@@ -28,7 +28,7 @@ div {
 	overflow: none;
 }
 
-span, p, option {
+span, p, option, select {
 	font-size: small;
 	color: black;
 }
