@@ -140,9 +140,11 @@
 	    		<div id="tapselect" class=queryformtab>
 	 				<div style="background-color: white ; width: 380px; height: 220px; vertical-align: middle; float:left;">
 	 					<div style="background: white;">
-	 						<span class=help>Available Keywords. Filter:</span>
-	 						<input type=text  class=kw_filter style="width: 100; position: relative; bottom: 5;font-size: small; 
+	 						<span class=help>Keywords. Filter:</span>
+	 						<input type=text  class=kw_filter style="width: 60px; position: relative; bottom: 5;font-size: small; 
 	 						font-family: Arial, Helvetica, sans-serif;" />	 							
+	 						<span class=help>Tables:</span>
+	 						<select id=tableSelector class=table_filter></select>
 	 					</div>
 	        			<div id="tapselectmeta" class=kw_list>
 	        			</div>      
@@ -150,27 +152,30 @@
 	        				<span class=help>Drag and Drop keywords to the list of selected fields</span>
 	        			</div>
 	        		</div>
-	 				<div style="background-color: white ; width: 480px; height: 125px; float:left;">
-	  					<div style="background: white;">
-	  						<span class=help>Selected Fields</span>
-	  					</div>
-	        			<div id="tapselectlist">
-	        			</div>
-	    			</div>
-	 				<div style="background-color: white ; width: 480px; height: 60px; float:left;">
-	  					<div style="background: white;">
-	  						<span class=help>Order By Field</span>
-	  					</div>
-	        			<div id="taporderby"></div>
+	        		<div style="background-color: white ;  width: 485px; height: 200px; float: left">
+	 					<div style="background-color: white ; width: 480px; height: 125px; float:left;">
+	  						<div style="background: white;">
+	  							<span class=help>Selected Fields</span>
+	  						</div>
+	        				<div id="tapselectlist"></div>
+	    				</div>
+	 					<div style="background-color: white ; width: 480px; height: 60px; float:left;">
+	  						<div style="background: white;">
+	  							<span class=help>Order By Field</span>
+	  						</div>
+	        				<div id="taporderby"></div>
+	    				</div>
 	    			</div>
 	    		</div>  
 	    		<!-- keywords selection -->
 	    		<div id="tapwhere" class=queryformtab >
 					<div style="background-color: white ; width: 340px; vertical-align: middle; float:left;">
 	 						<div style="background: white;">
-	 							<span class=help>Available Keywords. Filter:</span>
-	 							<input type=text  class=kw_filter style="width: 100; position: relative; bottom: 5;font-size: small; 
+	 							<span class=help>Keywords. Filter:</span>
+	 							<input type=text  class=kw_filter style="width: 60px; position: relative; bottom: 5;font-size: small; 
 	 							font-family: Arial, Helvetica, sans-serif;" />	 							
+	 							<span class=help>Tables:</span>
+	 							<select id=tableSelector class=table_filter></select>
 	 						</div>
 	        				<div id="tapmeta" class=kw_list ></div>      
 	        				<div style="background-color: white;">
@@ -238,6 +243,7 @@
 				<div id="tapjob">        
 					 <div style="background: white;">
 	 					<span class=help>List of UWS jobs</span>
+	 					<a title="Remove all jobs" href="javascript:void(0);" class=closekw onclick="resultPaneView.fireRemoveAllJobs();"></a>
 	 				</div>
 	        		<div id="tapjobs" ></div>      							    	
 				</div>	
