@@ -14,25 +14,28 @@ jQuery.extend({
 			controlRemoveFirstAndOr: function(key){
 				model.processRemoveFirstAndOr(key);
 			}
-		}
+		};
 		view.addListener(vlist);
 
 		var mlist = {
-			isInit : function(attributehandler, operators, andors, default_value){
-				view.initForm(attributehandler, operators, andors, default_value);
+			isInit : function(table,attributehandler, operators, andors, default_value){
+				view.initForm(table, attributehandler, operators, andors, default_value);
 			},
 			printTypomsg: function(fault, msg){
 				view.printTypomsg(fault,  msg);
 			}
-		}
+		};
 		model.addListener(mlist);
 		
 		this.controlRemoveAndOr= function() {
 			model.removeAndOr();
 			view.removeAndOr();
-		}
+		};
 		this.getADQL = function(attQuoted) {
 			return model.getADQL(attQuoted);
-		}
+		};
+		this.getTable = function() {
+			return model.getTable();;
+		};
 	}
 });

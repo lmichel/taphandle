@@ -18,13 +18,12 @@ jQuery.extend({
 		 * What we have to store and play with
 		 */
 		var attributesHandlers = new Array();
+		var joinKeys = new Array();
 		var selectAttributesHandlers = new Array();
 		var editors = new Array();
 		var selects = new Array();
 		var orderby = null;
 
-		var alphakw ;
-		var deltakw ;
 		var const_key = 1;
 		var table ;
 		var storedTreepath = new Array();
@@ -42,8 +41,6 @@ jQuery.extend({
 		 * Event processing
 		 */
 		this.processTreeNodeEvent = function(treepath, andsubmit, default_query){
-			var jsondata;
-			var params;
 			showProcessingDialog("Waiting on table description");
 			storedTreepath = treepath;
 			$.getJSON("gettableatt", {node: treepath.nodekey, table:treepath.table }, function(jsondata) {
@@ -74,16 +71,56 @@ jQuery.extend({
 				}
 				that.lookForAlphaKeyword();
 				that.lookForDeltaKeyword();
+				$(".table_filter").html("<option>" + table + "</option>");
+				showProcessingDialog("Waiting on join keys");
+				$.getJSON("gettablejoinkeys", {node: treepath.nodekey, table:treepath.table }, function(data) {
+					hideProcessingDialog();
+					if( processJsonError(data, "Cannot get join key") ) {
+						return;
+					}
+					joinKeys = data.targets;
+					for( var i=0 ; i<joinKeys.length ; i++ ) {
+						$(".table_filter").append("<option>" + joinKeys[i].target_table + "</option>");						
+					}
+				});
+
 				if( andsubmit ) {
 					that.submitQuery();
 				}
 			});
 		};
 
+		this.changeTable = function(newTable) {		
+			table= newTable;
+			showProcessingDialog("Waiting on table description");
+			$.getJSON("gettableatt", {node: storedTreepath.nodekey, table:newTable }, function(jsondata) {
+				hideProcessingDialog();
+				if( processJsonError(jsondata, "Cannot get meta data") ) {
+					return;
+				}
+//				editors = new Array();
+//				selects = new Array();
+				selectattributesHandlers = new Array();
+				attributesHandlers = new Array();
+				alphakw = "";
+				deltakw = "";
+				for( var i=0 ; i<jsondata.attributes.length ; i++ ) {
+					attributesHandlers[jsondata.attributes[i].name] = jsondata.attributes[i];
+				}
+				selectAttributesHandlers = new Array();
+				for( var i=0 ; i<jsondata.attributes.length ; i++ ) {
+					selectAttributesHandlers[jsondata.attributes[i].name] = jsondata.attributes[i];
+				}
+				that.notifyTableChanged();		
+				that.lookForAlphaKeyword();
+				that.lookForDeltaKeyword();
+			});
+
+		};
 		this.processSelectEvent= function(uidraggable){
 			var kwname = uidraggable.find(".item").text().split(' ')[0];
 			var ah = selectAttributesHandlers[kwname];
-			var m = new $.KWConstraintModel(true, { "name" : ah.name
+			var m = new $.KWConstraintModel(true, table, { "name" : ah.name
 				, "dataType" : "Select"
 					, "ucd" : ah.ucd
 					, "utype" : ah.utype
@@ -100,7 +137,7 @@ jQuery.extend({
 		this.processOrderByEvent = function(uidraggable) {
 			var kwname = uidraggable.find(".item").text().split(' ')[0];
 			var ah = selectAttributesHandlers[kwname];
-			var m = new $.KWConstraintModel(true, { "name" : ah.name
+			var m = new $.KWConstraintModel(true, table, { "name" : ah.name
 				, "dataType" : "Select"
 					, "ucd" : ah.ucd
 					, "utype" : ah.utype
@@ -123,7 +160,7 @@ jQuery.extend({
 				first = false;
 				break;
 			}
-			var m = new $.KWConstraintModel(first, ah, this, '');
+			var m = new $.KWConstraintModel(first, table, ah, this, '');
 			var div_key = "kw" +  const_key;
 			var v = new $.KWConstraintView(div_key, 'tapconstraintlist');
 			editors[div_key] =  new $.KWConstraintControler(m, v);
@@ -159,7 +196,7 @@ jQuery.extend({
 				first = false;
 				break;
 			}
-			var m = new $.KWConstraintModel(first, { "name" : alphaname + " " + deltaname
+			var m = new $.KWConstraintModel(first, table, { "name" : alphaname + " " + deltaname
 				, "dataType" : "ADQLPos"
 					, "ucd" : "adql.coor.columns"
 						, "utype" : ""
@@ -205,7 +242,7 @@ jQuery.extend({
 			}
 		};
 		this.setAlphaKeyword = function(ah) {
-			var m = new $.KWConstraintModel(true, { "name" : ah.name
+			var m = new $.KWConstraintModel(true, table, { "name" : ah.name
 				, "dataType" : "Select"
 					, "ucd" : ah.ucd
 					, "utype" : ah.utype
@@ -247,7 +284,7 @@ jQuery.extend({
 		};
 
 		this.setDeltaKeyword = function(ah) {
-			var m = new $.KWConstraintModel(true, { "name" : ah.name
+			var m = new $.KWConstraintModel(true, table, { "name" : ah.name
 				, "dataType" : "Select"
 					, "ucd" : ah.ucd
 					, "utype" : ah.utype
@@ -264,31 +301,27 @@ jQuery.extend({
 			var limit = getQLimit();
 			if( limit != '' ) {
 				limit = ' TOP ' + limit + ' ' ;
-			}
-			else {
+			} else {
 				limit = '';
 			}
 			var query = "SELECT " + limit;
 			var cq = "";
-
-			cq = "";
 			$("#tapselectlist div").each(function() {
-				if( cq.length > 0 ) cq += " , ";
-				cq +=  '    ' + selects[$(this).attr('id')].getADQL(true) ;
-				if( cq.length > 50 ) cq += '\n';
+				if( cq.length > 100 ) cq += '\n';
+				if( cq.length > 0 ) cq += ", ";
+				cq +=  selects[$(this).attr('id')].getADQL(true) ;
 			}); 
 			if( cq.length > 0 ) {
 				query +=  cq ;
-			}
-			else {
+			} else {
 				query += '*';
 			}
-			query += "\nFROM " + table;
-
+			query += "\nFROM " + storedTreepath.table;
+			query += that.getJoin();
 			cq = "";
 			$("#tapconstraintlist div").each(function() {
+				if( cq.length > 1100 ) cq += '\n';
 				cq +=  '    ' + editors[$(this).attr('id')].getADQL(true) ;
-				if( cq.length > 50 ) cq += '\n';
 			}); 
 			if( cq.length > 0 ) {
 				query += "\nWHERE \n" + cq + "";
@@ -296,11 +329,41 @@ jQuery.extend({
 
 			if( orderby != null ) {
 				query += "\nORDER BY " + orderby.getADQL(true);
-
 			}
 			that.notifyQueryUpdated(query);
 		};
 
+		this.getJoin = function() {
+			var joinTables = new Array();
+			for( var kw in selects ) {
+				var tbl = selects[kw].getTable();
+				if( tbl != storedTreepath.table ) {
+					joinTables[tbl] = true;
+				}
+			}
+			for( var kw in editors ) {
+				var tbl = editors[kw].getTable();
+				if( tbl != storedTreepath.table ) {
+					joinTables[tbl] = true;
+				}
+			}
+			if( orderby != null ) {
+				joinTables[orderby.getTable()] = true;
+			}
+			var retour = "";
+			for( var jt in joinTables ) {
+				for( var i=0 ; i<joinKeys.length ; i++ ) {
+					if( joinKeys[i].target_table == jt ) {
+						if( retour == "" ) retour = "\n";
+						retour += "JOIN " + jt + " ON " + storedTreepath.table + "." + joinKeys[i].source_column 
+						+ " = " + joinKeys[i].target_table + "." + joinKeys[i].target_column  + "\n";		
+						break;
+					}
+				}
+			}
+			return retour;
+		};
+		
 		this.submitQuery = function(){
 			showProcessingDialog("Run job");
 			var limit = getQLimit();
@@ -529,7 +592,7 @@ jQuery.extend({
 						return;
 					}
 				}
-				logged_alert("No result file looking like a VOTable, sorry.", 'Error')
+				logged_alert("No result file looking like a VOTable, sorry.", 'Error');
 			});					
 
 		};
@@ -563,6 +626,10 @@ jQuery.extend({
 		this.notifyNewJobs= function() {
 			lastJob.controlInitForm();
 		};
-
+		this.notifyTableChanged= function() {
+			$.each(listeners, function(i){
+				listeners[i].tableChanged(attributesHandlers, attributesHandlers);
+			});
+		};
 	}
 });

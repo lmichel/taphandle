@@ -277,6 +277,11 @@ jQuery.extend({
 			layoutPane.sizePane("south", height);
 			//	$("div#accesspane").trigger("resize",[ height]);		
 		};
+		this.fireRemoveAllJobs= function() {
+			if( confirm("Do you really want to remave all jobs?") ) {
+				$("#tapjobs a").click();
+			}
+		};
 		this.showProgressStatus = function() {
 			logged_alert("Job in progress", 'Info');
 		};

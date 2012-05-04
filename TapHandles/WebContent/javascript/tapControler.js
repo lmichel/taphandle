@@ -55,6 +55,9 @@ jQuery.extend({
 				},
 				controlDisplayResult: function(nodekey, jid){
 					model.displayResult(nodekey, jid);
+				},
+				controlChangeTable: function(newTable){
+					model.changeTable(newTable);
 				}
 		}
 		view.addListener(vlist);
@@ -62,6 +65,9 @@ jQuery.extend({
 		var mlist = {
 				isInit : function(attributesHandlers, selectAttributesHandlers){
 					view.initForm(attributesHandlers, selectAttributesHandlers);
+				},
+				tableChanged : function(attributesHandlers, selectAttributesHandlers){
+					view.setNewTable(attributesHandlers, selectAttributesHandlers);
 				},
 				coordDone : function(key, constr){
 					view.coordDone(key, constr);
