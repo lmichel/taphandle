@@ -44,7 +44,6 @@ public class JoinKeysJob extends RootClass {
 			Thread.sleep(1000);
 
 		} while( phase.equals("EXECUTING") || phase.equals("PENDING"));
-		System.out.println(phase);
 		String[] resultURLs = TapAccess.getAsyncJobResults(url
 				, jobID
 				, baseFN + "result.xml"
