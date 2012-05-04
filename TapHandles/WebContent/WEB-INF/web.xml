@@ -139,4 +139,14 @@
     <servlet-name>GetDataLink</servlet-name>
     <url-pattern>/getdatalink</url-pattern>
   </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>GetTableJoinKeys</display-name>
+    <servlet-name>GetTableJoinKeys</servlet-name>
+    <servlet-class>servlet.GetTableJoinKeys</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>GetTableJoinKeys</servlet-name>
+    <url-pattern>/gettablejoinkeys</url-pattern>
+  </servlet-mapping>
 </web-app>
