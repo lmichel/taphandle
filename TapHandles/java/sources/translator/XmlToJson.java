@@ -9,13 +9,13 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Scanner;
-import java.util.TreeSet;
 import java.util.Map.Entry;
+import java.util.Scanner;
 import java.util.regex.Matcher;
 
 import javax.xml.transform.Transformer;
@@ -26,18 +26,17 @@ import javax.xml.transform.stream.StreamSource;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import resources.RootClass;
+import uk.ac.starlink.table.ColumnInfo;
+import uk.ac.starlink.table.StarTable;
+import uk.ac.starlink.table.StarTableFactory;
+import uk.ac.starlink.table.Tables;
 import cds.savot.model.InfoSet;
 import cds.savot.model.SavotInfo;
 import cds.savot.model.SavotResource;
 import cds.savot.model.SavotVOTable;
 import cds.savot.pull.SavotPullEngine;
 import cds.savot.pull.SavotPullParser;
-
-import resources.RootClass;
-import uk.ac.starlink.table.ColumnInfo;
-import uk.ac.starlink.table.StarTable;
-import uk.ac.starlink.table.StarTableFactory;
-import uk.ac.starlink.table.Tables;
 
 
 /**
@@ -48,6 +47,7 @@ import uk.ac.starlink.table.Tables;
  * @version $Id$
  * 
  * 04/2012; Set MAX_ROWS field with 10000 as value
+ * 05/2012: Display arrays of atomics
  */
 public class XmlToJson  extends RootClass {
 	public static final int MAX_ROWS = 10000;
@@ -111,8 +111,6 @@ public class XmlToJson  extends RootClass {
 		}
 		in.close();
 		out.close();
-
-
 	}
 
 	/**
@@ -186,8 +184,8 @@ public class XmlToJson  extends RootClass {
 	}
 	public static void main(String[] args) throws Exception {
 		translateResultTable(
-		"/home/michel/workspace/.metadata/.plugins/org.eclipse.wst.server.core/tmp0/wtpwebapps/TapHandles/userbase/./0F42FA965A1C1FBD3EA46C1D2F113F66/localhost_2xmmidr3/job_2_ObsCore/result.xml"
-		, "/home/michel/Desktop/resul.json");
+				"/home/michel/workspace/.metadata/.plugins/org.eclipse.wst.server.core/tmp0/wtpwebapps/TapHandles/userbase/./0F42FA965A1C1FBD3EA46C1D2F113F66/localhost_2xmmidr3/job_2_ObsCore/result.xml"
+				, "/home/michel/Desktop/resul.json");
 	}
 
 	/**
@@ -228,16 +226,22 @@ public class XmlToJson  extends RootClass {
 					Object obj = o[i];
 					if(obj == null ) {
 						rowData.add("null");
-					}
-					else if(obj instanceof Object[]) {
-						Object[] ot = (Object[])obj;
+					} else 	if(obj.getClass().isArray()) {
 						String v = "";
-						for( Object cell: ot) {
-							v += cell + " ";
+						for( int p=0 ; p<Array.getLength(obj) ; p++ ){
+							Object cell = Array.get(obj, p);
+							if( cell.getClass().isArray()) {
+								v += "[";
+								for( int q=0 ; q<Array.getLength(cell) ; q++ ){
+									v += Array.get(cell, i) + " ";
+								}
+								v += "] "; 
+							} else {
+								v += cell + " ";
+							}
 						}
-						rowData.add(v);				
-					}
-					else {
+						rowData.add("Array[" + v + "]");				
+					} else {
 						rowData.add(obj.toString());				
 					}
 				}
@@ -256,9 +260,9 @@ public class XmlToJson  extends RootClass {
 			e.printStackTrace();
 			SavotPullParser  sp = new SavotPullParser(inputFile, SavotPullEngine.FULL);
 			SavotVOTable sv = sp.getVOTable(); 
-			for (int l = 0; l<sp.getResourceCount(); l++) {		    	 
+			long rc = sp.getResourceCount();
+			for (int l=0 ; l<rc ; l++) {		    	 
 				SavotResource currentResource = (SavotResource)(sv.getResources().getItemAt(l));
-				System.err.println(l + " " + currentResource);
 				InfoSet is = currentResource.getInfos();
 				String msg = "";;
 				for( int i=0 ; i<is.getItemCount() ; i++ ) {
@@ -268,7 +272,7 @@ public class XmlToJson  extends RootClass {
 			}         
 		}
 	}
-	
+
 	/**
 	 * Translate a TAP query response joining key and key_columns tables into a set of JSON files.
 	 * There is one JSON file per source table. These files are used by the client to handle queries with JOINs
@@ -286,7 +290,7 @@ public class XmlToJson  extends RootClass {
 			StarTable table = stf.makeStarTable(inputFile); 
 			int nSrc = (int) table.getRowCount();
 			int nCol = table.getColumnCount();
-			
+
 			if( nCol != 4 ) {
 				throw new Exception("Key join table must have 4 columns");				
 			}
@@ -296,7 +300,7 @@ public class XmlToJson  extends RootClass {
 			for( int r=0 ; r<nSrc ; r++ ) {
 				Object[] o =table.getRow(r);
 				String source_table = o[0].toString();
-				
+
 				JSONObject jso = new JSONObject();
 				jso.put("target_table", o[1].toString());
 				jso.put("source_column", o[2].toString());
@@ -314,12 +318,12 @@ public class XmlToJson  extends RootClass {
 			for( Entry<String, Collection<JSONObject>> e: map.entrySet() ){
 				String source_table = e.getKey().toString(); 
 				Collection<JSONObject> targets = e.getValue();
-				
+
 				JSONObject jso = new JSONObject();
 				JSONArray jsa  = new JSONArray();
 				jso.put("source_table", source_table);
 				jso.put("targets", jsa);
-				
+
 				for( JSONObject target:targets) {
 					jsa.add(target);
 				}
@@ -334,19 +338,18 @@ public class XmlToJson  extends RootClass {
 			 * some info about the issue
 			 */
 		} catch (Exception e) {
-			e.printStackTrace();
 			SavotPullParser  sp = new SavotPullParser(inputFile, SavotPullEngine.FULL);
 			SavotVOTable sv = sp.getVOTable(); 
+			String msg = e.getMessage() + "\n";;
 			for (int l = 0; l<sp.getResourceCount(); l++) {		    	 
 				SavotResource currentResource = (SavotResource)(sv.getResources().getItemAt(l));
 				System.err.println(l + " " + currentResource);
 				InfoSet is = currentResource.getInfos();
-				String msg = "";;
 				for( int i=0 ; i<is.getItemCount() ; i++ ) {
 					msg += ((SavotInfo)is.getItemAt(i)).getContent() + "\n";
 				}
-				throw new Exception(msg);
-			}         
+			}   
+			throw new Exception(msg);
 		}
 	}
 

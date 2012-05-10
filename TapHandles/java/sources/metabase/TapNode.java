@@ -13,6 +13,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import resources.RootClass;
+import session.NodeCookie;
 import tapaccess.JoinKeysJob;
 import translator.JsonUtils;
 import translator.NameSpaceDefinition;
@@ -92,14 +93,40 @@ public class TapNode  extends RootClass {
 		logger.debug("NS for capability " + capabilityNS.getNsName());
 		this.checkTables() ;
 		logger.debug("NS for tables " + tablesNS.getNsName());
-		logger.info("Service " + this.url + " seems to be working");
+		logger.info("Service " + this.url + " seems to be working");			
+		this.setJoinKeys();
+	}
+
+	/**
+	 * 
+	 */
+	public void setJoinKeys() {
 		try {
 			JoinKeysJob.getJoinKeys(this.url, this.baseDirectory);
 		} catch (Exception e) {
-			logger.warn("Can't get join keys for node " + this.url);
+			e.printStackTrace();
+			logger.warn("Can't get join keys for node: continue in background " + this.url);
+			Runnable r = new Runnable() {
+				public void run() {
+					int DELAY = 5; // Delay in minutes
+					while( true ) {
+						try {
+							Thread.sleep(DELAY*60*1000);
+							logger.info("Attempt to get join keys from  " + TapNode.this.url );
+							JoinKeysJob.getJoinKeys(TapNode.this.url, TapNode.this.baseDirectory);
+							logger.info("Sucessed");
+							return;
+						} catch (Exception e) {
+							e.printStackTrace();
+							logger.info("Failed (" + e.getMessage() + "), try again in " + DELAY + "'");							
+						}
+					}
+				}
+			};
+			new Thread(r).start();
 		}
-	}
 
+	}
 	/**
 	 * Check the service availability. This method is invoked each time the node is acceded.
 	 * The avoid useless network accesses, the  service is actually invoked every 
@@ -186,7 +213,7 @@ public class TapNode  extends RootClass {
 		BufferedReader in = new BufferedReader(
 				new InputStreamReader(
 						(new URL(this.url + service)).openStream()));
-
+		
 		String inputLine;
 		BufferedWriter bfw = new BufferedWriter(new FileWriter(this.baseDirectory + service + ".xml"));
 		boolean found = false;
