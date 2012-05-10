@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
@@ -11,7 +12,12 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
+
+import org.json.simple.JSONObject;
 
 import resources.RootClass;
 import session.NodeCookie;
@@ -37,12 +43,12 @@ public class TapAccess  extends RootClass {
 	 */
 	public static void sendPostRequest(String endpoint, String data, String outputfile, NodeCookie cookie) throws Exception {
 
-        logger.debug("send request " + endpoint + "(" + data + ")");
+        logger.debug("send POST request " + endpoint + "(" + data + ") " + cookie);
 		// Send the request
 		URL url = new URL(endpoint);  
 		cookie.addCookieToUrl(url);   
-
 		URLConnection conn = url.openConnection();
+		((HttpURLConnection)conn).setRequestMethod("POST");		
 		conn.setDoOutput(true);
 		if( data != null ) {
 			OutputStreamWriter writer = new OutputStreamWriter(conn.getOutputStream());
@@ -51,6 +57,56 @@ public class TapAccess  extends RootClass {
 			writer.flush();
 			writer.close();
 		}
+
+		// Get the response
+		BufferedWriter bw ;
+		bw = new BufferedWriter(new FileWriter(outputfile));
+		InputStream is = conn.getInputStream();
+
+		/*
+		 * Put the error page in the result file
+		 *
+		if( ((HttpURLConnection)conn).getResponseCode() >= 500 ) {
+			logger.error(endpoint + "return error " +  ((HttpURLConnection)conn).getResponseCode());
+			is =((HttpURLConnection)conn).getErrorStream();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+			String line;
+			while ((line = reader.readLine()) != null) {
+				bw.write(line + "\n");
+			}
+			return ;
+		} */
+		BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+		String line;
+		while ((line = reader.readLine()) != null) {
+			bw.write(line + "\n");
+		}
+		bw.close();
+		reader.close();
+
+		cookie.storeCookie();	        
+	        
+		XmlToJson.applyStyle(outputfile, outputfile.replaceAll("xml", "json")
+				, StyleDir + "asyncjob.xsl");
+
+	}
+
+	/**
+	 * @param endpoint
+	 * @param data
+	 * @param outputfile
+	 * @param cookie
+	 * @throws Exception
+	 */
+	public static void sendGetRequest(String endpoint, String outputfile, NodeCookie cookie) throws Exception {
+
+        logger.debug("send GET request " + endpoint + " " + cookie);
+		// Send the request
+		URL url = new URL(endpoint);  
+		cookie.addCookieToUrl(url);   
+
+		URLConnection conn = url.openConnection();
+		((HttpURLConnection)conn).setRequestMethod("GET");		
 
 		// Get the response
 		BufferedWriter bw ;
@@ -86,6 +142,7 @@ public class TapAccess  extends RootClass {
 		URL url = new URL(URLDecoder.decode(endpoint, "ISO-8859-1"));
 		cookie.addCookieToUrl(url);   
 		URLConnection conn = url.openConnection();
+		//((HttpURLConnection)conn).setRequestMethod("POST");		
 		conn.setDoOutput(true);
 
 		// Get the response
@@ -184,8 +241,7 @@ public class TapAccess  extends RootClass {
 	 * @throws Exception
 	 */
 	public static String getAsyncJobPhase(String endpoint, String jobId, String outputfile, NodeCookie cookie) throws Exception {
-		sendPostRequest(endpoint + "async/" + jobId
-				, null
+		sendGetRequest(endpoint + "async/" + jobId
 				, outputfile
 				, cookie);
 		return  JsonUtils.getValue (outputfile.replaceAll("xml", "json"), "job.phase");

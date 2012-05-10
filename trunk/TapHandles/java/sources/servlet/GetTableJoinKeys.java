@@ -1,5 +1,6 @@
 package servlet;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
@@ -41,6 +42,8 @@ public class GetTableJoinKeys extends RootServlet implements Servlet {
 			}
 			tn.buildJsonTableAttributes(table);
 			dumpJsonFile("/" + RootClass.WEB_NODEBASE_DIR + "/" + node + "/" + table + "_joinkeys.json", response);
+		} catch (FileNotFoundException e) {
+			return;
 		} catch (Exception e) {
 			reportJsonError(request, response, e);
 			return;
