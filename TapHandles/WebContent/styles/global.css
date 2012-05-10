@@ -230,7 +230,7 @@ a.add {
 	width: 0px;
 	overflow: visible;
 	padding: 0px 0 0px 24px;
-	background: transparent url(../images/add.png) bottom left no-repeat;
+	background: transparent url(../images/add_record.png) bottom left no-repeat;
 	vertical-align: middle;
 }
 
@@ -752,6 +752,24 @@ a:active.dl_download {
 	-moz-opacity: 0.8;
 	opacity: 0.8;
 }
+a.dl_securedownload {
+	display: inline-block;
+	width: 0px;
+	overflow: visible;
+	padding: 9px 0px 9px 23px;
+	background: transparent url(../images/dl_key_cart.png) center left
+		no-repeat;
+}
+a:hover.dl_securedownload {
+	filter: alpha(opacity = 50);
+	-moz-opacity: 0.5;
+	opacity: 0.5;
+}
+a:active.dl_securedownload {
+	filter: alpha(opacity = 50);
+	-moz-opacity: 0.8;
+	opacity: 0.8;
+}
 
 a.dl_cart {
 	display: inline-block;
@@ -767,6 +785,25 @@ a:hover.dl_cart {
 	opacity: 0.5;
 }
 a:active.dl_cart {
+	filter: alpha(opacity = 50);
+	-moz-opacity: 0.8;
+	opacity: 0.8;
+}
+
+a.dl_securecart {
+	display: inline-block;
+	width: 0px;
+	overflow: visible;
+	padding: 9px 0px 9px 23px;
+	background: transparent url(../images/dl_key_cart.png) center left
+		no-repeat;
+}
+a:hover.dl_securecart {
+	filter: alpha(opacity = 50);
+	-moz-opacity: 0.5;
+	opacity: 0.5;
+}
+a:active.dl_securecart {
 	filter: alpha(opacity = 50);
 	-moz-opacity: 0.8;
 	opacity: 0.8;
