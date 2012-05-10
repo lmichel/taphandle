@@ -5,7 +5,7 @@
 	xmlns:json="http://json.org/" 
 	xmlns:vosi="http://www.ivoa.net/xml/VOSITables/v1.0"
 	xmlns:uws="http://www.ivoa.net/xml/UWS/v1.0">
-	<xsl:import href="http://www.bramstein.com/projects/xsltjson/xml-to-json.xsl" />
+	<xsl:import href="http://saada.unistra.fr/taphandle/styleimport/xml-to-json.xsl" />
 	<xsl:output method="text" media-type="text/html" encoding="UTF-8" version="4.0" />
 	<xsl:strip-space elements="name" />
 	<xsl:template match="/">
