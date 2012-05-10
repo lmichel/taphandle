@@ -278,7 +278,7 @@ jQuery.extend({
 			//	$("div#accesspane").trigger("resize",[ height]);		
 		};
 		this.fireRemoveAllJobs= function() {
-			if( confirm("Do you really want to remave all jobs?") ) {
+			if( confirm("Do you really want to remove all jobs?") ) {
 				$("#tapjobs a").click();
 			}
 		};

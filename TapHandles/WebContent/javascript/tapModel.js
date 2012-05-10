@@ -75,7 +75,8 @@ jQuery.extend({
 				showProcessingDialog("Waiting on join keys");
 				$.getJSON("gettablejoinkeys", {node: treepath.nodekey, table:treepath.table }, function(data) {
 					hideProcessingDialog();
-					if( processJsonError(data, "Cannot get join key") ) {
+					if( jsondata == undefined || jsondata == null || jsondata.errormsg != undefined )  {
+						logMsg("Cannot get JoinKeys");
 						return;
 					}
 					joinKeys = data.targets;
