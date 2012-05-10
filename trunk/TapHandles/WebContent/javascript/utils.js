@@ -143,9 +143,7 @@ function processJsonError(jsondata, msg) {
 		return true;
 	}	
 	return false;
-
 }
-
 
 function jsonAlert(jsdata, title) {
 	var retour='';

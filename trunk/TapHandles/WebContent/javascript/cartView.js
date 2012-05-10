@@ -26,60 +26,63 @@ jQuery.extend({
 			$.each(listeners, function(i){
 				listeners[i].controlAddJobResult(nodekey, jobid);
 			});
-		}
+		};
 		this.fireRemoveJobResult = function(nodekey, jobid) {
 			$.each(listeners, function(i){
 				listeners[i].controlRemoveJobResult(nodekey, jobid);
 			});
-		}
+		};
 		this.fireAddUrl = function(nodekey, url) {
 			logged_alert("Data returned by " + url + " added to the cart");
 			$.each(listeners, function(i){
 				listeners[i].controlAddUrl(nodekey, url);
 			});
-		}
+		};
 		this.fireRemoveUrl = function(nodekey, url) {
 			$.each(listeners, function(i){
 				listeners[i].controlRemoveUrl(nodekey, url);
 			});
-		}
+		};
+		this.fireRestrictedUrl = function(nodekey, url) {
+			openDialog("Restricted Access", "Shopping cart facility does not support URL with a restricted access.");
+		};
 		this.fireOpenCart = function() {			
 			$.each(listeners, function(i){
 				listeners[i].controlOpenCart();
 			});
-		}
+		};
 		this.fireCleanCart = function(tokens) {
 			$.each(listeners, function(i){
 				listeners[i].controleCleanCart(tokens);
 			});
-		}
+		};
 		this.fireStartArchiveBuilding = function() {
 			$.each(listeners, function(i){
 				listeners[i].controlStartArchiveBuilding();
 			});
-		}
+		};
 		this.fireKillArchiveBuilding = function() {
 			$.each(listeners, function(i){
 				listeners[i].controlKillArchiveBuilding();
 			});
-		}
+		};
 		this.fireArchiveDownload = function() {			
 			$.each(listeners, function(i){
 				listeners[i].controlArchiveDownload();
 			});
-		}
+		};
 		this.fireGetJobPhase = function() {
-			var retour;
+			var retour=null;
 			$.each(listeners, function(i){
 				retour = listeners[i].controlGetJobPhase();
 			});
 			return retour;
-		}
+		};
 		this.fireChangeName = function(nodekey, dataType, rowNum, newName){
 			$.each(listeners, function(i){
 				listeners[i].controlChangeName(nodekey, dataType, rowNum, newName);
 			});			
-		}
+		};
 
 		this.fireCheckArchiveCompleted = function() {
 			var phase = that.fireGetJobPhase();
@@ -99,7 +102,7 @@ jQuery.extend({
 			else {
 				$('.zip').css("border", "2px solid red");
 			}
-		}
+		};
 
 		this.initForm = function(cartData) {
 			$('#detaildiv').remove();
@@ -123,13 +126,12 @@ jQuery.extend({
 			table += '<h2><img src="images/groscaddy.png"> Shopping Cart</h2>';
 			table += '<div id=table_div></div>';
 			table += "<h4 id=\"cartjob\" class='detailhead'> <img src=\"images/tdown.png\">Processing status</h4>";
-			table += '<br><span>Current Job Status</span> <span id=cartjob_phase class="' + phase.toLowerCase() + '">' + phase + '</span><BR>'
+			table += '<br><span>Current Job Status</span> <span id=cartjob_phase class="' + phase.toLowerCase() + '">' + phase + '</span><BR>';
 			table += "<span>Manage Content</span> <input type=button id=detaildiv_clean value='Remove Unselected Items'>";			
 			table += "<input type=button id=detaildiv_cleanall value='Remove All Items'><br>";			
 			table += "<span>Manage Job</span> <input type=button id=detaildiv_submit value='Start Processing'>";			
 			table += "<input type=button id=detaildiv_abort value='Abort'><br>";			
 			table += "<span>Get the Result</span> <input type=button id=detaildiv_download value='Download Cart'>";			
-
 
 			$('#detaildiv').html(table);
 
@@ -163,7 +165,7 @@ jQuery.extend({
 				$('.zip').css("border", "0px");
 				return false;
 			} );
-		}
+		};
 		
 		this.setTableDiv= function(cartData) {
 			folderTables = new Array();
@@ -224,6 +226,6 @@ jQuery.extend({
 			        "width": "16em"}
 			    );
 			}	
-		}
+		};
 	}
 });

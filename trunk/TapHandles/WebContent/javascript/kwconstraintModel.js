@@ -21,7 +21,6 @@ jQuery.extend({
 		var operator ;
 		var operand ;
 		var andor ;
-logMsg("KWM " + table);
 		var presetValues = new Array();
 		presetValues["dataproduct_type"] = ["'image'", "'spectrum'", "'cube'",
 		                                    "'timeseries'", "'visibility'", "'eventlist'"];
