@@ -256,23 +256,17 @@ jQuery.extend({
 		};
 
 		this.fireExpendForm= function() {
-			var height;
+			var height = $(window).height() ;
 			var icon = $('#formexpender').css("background-image");
 			if( icon.match("screen_up") != null ) {
 				$('#formexpender').css("background-image", "url(images/screen_down.png)");
 				$('#formexpender').attr("title", "Expend query form");
-				var height = $(window).height() - 70 - 50;
-				if( height < 100) {
-					height = 100;
-				}
+				height='10%';
 			}
 			else {
 				$('#formexpender').css("background-image", "url(images/screen_up.png)");
 				$('#formexpender').attr("title", "Minimize query form");
-				height = 200;
-				if( height < 100) {
-					height = 100;
-				}
+				height='100%';
 			}
 			layoutPane.sizePane("south", height);
 			//	$("div#accesspane").trigger("resize",[ height]);		
