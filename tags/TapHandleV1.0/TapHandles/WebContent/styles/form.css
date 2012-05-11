@@ -1,0 +1,454 @@
+@font-face {
+	font-family: Lane;
+	src: url('Lane.ttf');
+}	
+	
+div#saadaqltab div {
+	display: block;
+	float: left;
+	overflow: auto;
+}
+
+div#saptab div {
+	float: left;
+	overflow: auto
+}
+
+.editorhead {
+	
+}
+
+.langswitch {
+	
+}
+
+.kweditor {
+	background: white;
+	height: 160px;
+	width: 240px;
+}
+
+.item {
+	
+}
+
+.querytab, .formquerytab {
+	height: 30px;
+}
+
+#saadaqltab {
+	background: white;
+	padding-top: 5px;
+	padding-right: 0;
+	padding-bottom: 0;
+	padding-left: 5px;
+}
+
+#kwtab {
+	background: white;
+	padding-top: 5px;
+	padding-right: 0;
+	padding-bottom: 0;
+	padding-left: 5px;
+	height: 275px;
+	width: 900px;
+	display: block;
+}
+
+#kwtab1 {
+	background-color: white !important;
+	float: left;
+	width: 375px;
+	height: 80%;
+	vertical-align: middle;
+}
+
+#kwtab2 {
+	background-color: white !important;
+	width: 500px;
+	height: 80%;
+	vertical-align: middle;
+}
+
+#kweditor {
+	background: white;
+	width: 820px;
+	height: 192px;
+	float: none;
+}
+
+#meta {
+	width: 325px;
+	height: 150px;
+	float: left;
+	border-width: 1;
+	border-color: dimgray;
+}
+
+#ConstraintsList {
+	width: 480px;
+	height: 175px;
+	padding-left: 10;
+	border-width : 1;
+	border-color: dimgray;
+}
+
+#ucdtab {
+	background: white;
+	padding-top: 5px;
+	padding-right: 0;
+	padding-bottom: 0;
+	padding-left: 5px;
+	height: 275px;
+	width: 900px;
+	display: block;
+}
+
+#ucdtab1 {
+	background-color: white !important;
+	float: left;
+	width: 375px;
+	height: 80%;
+	vertical-align: middle;
+}
+
+#ucdtab2 {
+	background-color: white !important;
+	width: 500px;
+	height: 80%;
+	vertical-align: middle;
+}
+
+#ucdmeta {
+	width: 325px;
+	height: 150px;
+	float: left;
+	border-width: 1;
+	border-color: dimgray;
+}
+
+#UCDConstraintsList {
+	width: 480px;
+	height: 175px;
+	padding-left: 10;
+	border-width : 1;
+	border-color: dimgray;
+}
+
+.droppableconstarea {
+	
+}
+
+.hidden {
+	visibility: hidden;
+}
+
+#coordgetter {
+	background: white;
+	width: 350px;
+	height: 75%;
+	float: left;
+	vertical-align: middle;
+}
+
+#listpos {
+	background: white;
+	width: 480px;
+	height: 75%;
+	vertical-align: middle;
+}
+
+#CoordList {
+	width: 475px;
+	height: 150px;
+	float: left;
+	border-width: 1;
+	border-color: dimgray;
+}
+
+div#coordsubmit {
+	border-width: 0;
+	background: white;
+}
+
+div#coordform {
+	width: 368x;
+	border-width: 0;
+	background: white;
+	height: 100%;
+}
+
+div#cf1 {
+	overflow: hidden !important;
+}
+
+#patterntab {
+	background: white;
+	padding-top: 5px;
+	padding-right: 0;
+	padding-bottom: 0;
+	padding-left: 5px;
+	height: 220px;
+	width: 890px;
+	overflow: hidden !important;
+}
+
+#patternbox1 {
+	background-color: white;
+	float: left;
+	width: 306px;
+}
+
+#patternbox2 {
+	background-color: white;
+	float: left; 
+	width: 270px;
+	margin-right: 15px;
+	margin-left: 15px;
+	margin-bottom: 15px;
+}
+	
+#patternbox3 {
+	background-color: white;
+	float: left;
+	width: 265px;
+}
+
+#patternatt {
+	width: 300px;
+	height: 64px;
+	border-width: 1;
+	border-color: dimgray;
+}
+
+#patternconst {
+	width: 265px;
+	height: 108px;
+	border-width: 1;
+	border-color: dimgray;
+}
+
+#patternlist {
+	width: 260px;
+	height: 150px;
+	border-width: 1;
+	border-color: dimgray;
+}
+
+#patterncardqual {
+	width: 300px;
+	height: 48px;
+	border-width: 1;
+	border-color: dimgray;
+}
+
+.patternitem {
+	width: 171x;
+	height: 30px;
+}
+
+#tapselect {
+	background: white;
+	padding-top: 5px;
+	padding-right: 0;
+	padding-bottom: 0;
+	padding-left: 5px;
+	height: 220px;
+}
+
+#tapwhere {
+	background: white;
+	padding-top: 5px;
+	padding-right: 0;
+	padding-bottom: 0;
+	padding-left: 5px;
+	height: 220px;
+	width: 100%;
+	overflow: hidden;
+}
+
+textarea#patterntext {
+	width: 240px;
+	height: 32x;
+	padding: 5px;
+	font-size: small;
+	font-family: Arial, Helvetica, sans-serif;
+}
+
+#saadaqltext {
+	width: 850px;
+	height: 190px;
+	border: 3px solid #cccccc;
+	padding: 5px;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: small;
+	color: black;
+	border-bottom-left-radius: 4px 4px;
+	border-bottom-right-radius: 4px 4px;
+	border-top-left-radius: 4px 4px;
+	border-top-right-radius: 4px 4px;
+}
+
+#adqltext {
+	width: 85%;
+	height: 200px;
+	border: 3px solid #cccccc;
+	padding: 5px;
+	font-family: Arial, Helvetica, sans-serif;;
+	font-size: small;
+	color: black;
+	border-bottom-left-radius: 4px 4px;
+	border-bottom-right-radius: 4px 4px;
+	border-top-left-radius: 4px 4px;
+	border-top-right-radius: 4px 4px;
+}
+
+#taptext {
+	width: 100%;
+	height: 200px;
+	padding: 10px;
+	font-family: Arial, Helvetica, sans-serif;;
+	font-size: small;
+	color: black;
+}
+
+#tapjob {
+	width: 100%;
+	height: 200px;
+	padding: 10px;
+	font-family: Arial, Helvetica, sans-serif;;
+	font-size: small;
+	color: black;
+}
+
+#tapmeta {
+	width: 100%;
+	height: 170px;
+	float: left;
+	border-width: 1;
+	border-color: dimgray;
+	overflow: auto
+}
+
+#tapselectmeta {
+	width: 350px;
+	height: 160px;
+	border-width: 1;
+	border-color: dimgray;
+	overflow: auto
+}
+
+#tapconstraintlist {
+	width: 100%;
+	height: 100px;
+	padding-left: 10;
+	border-width: 1;
+	border-color: dimgray;
+	overflow: auto
+}
+#taporderby {
+	width: 100%;
+	height: 40px;
+	padding-left: 10;
+	border-width: 1;
+	border-color: dimgray;
+	overflow: auto
+}
+
+#tapselectlist {
+	width: 100%;
+	height: 100px;
+	padding-left: 10;
+	border-width: 1;
+	border-color: dimgray;
+	overflow: auto
+}
+
+#tapalpha {
+	width: 300px;
+	height: 24px;
+	padding-left: 10;
+	border-width: 1;
+	border-color: dimgray;
+	overflow: auto
+}
+
+#tapdelta {
+	width: 300px;
+	height: 24px;
+	padding-left: 10;
+	border-width: 1;
+	border-color: dimgray;
+	overflow: auto
+}
+
+#tapjobs {
+	width: 850px;
+	height: 160px;
+	border-width: 1;
+	border-color: dimgray;
+	overflow: auto
+}
+
+.sapcapability {
+	
+}
+
+.sapregistry {
+	
+}
+
+.sapglu {
+	
+}
+
+ul.attlist {
+	width: 100%;
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+	margin-bottom: 10px;
+	overflow: auto;
+}
+
+.attlist li {
+	margin: 0px;
+}
+
+.coordinputvalue {
+	width: 130px;
+	font-family: Arial, Helvetica, sans-serif;;
+	font-size: small;
+	color: black;
+}
+
+.numinputvalue {
+	width: 64px;
+	font-family: Arial, Helvetica, sans-serif;;
+	font-size: small;
+	color: black;
+}
+
+a.closekw {
+	display: inline-block;
+	height: 16x;
+	width: 0px;
+	overflow: visible;
+	padding: 16px 0 2px 16px;
+	background: transparent url(../images/small_trash.png) bottom left
+		no-repeat;
+	vertical-align: middle;
+}
+
+a.closekwss {
+	padding: 0px 0 8px 16px;
+	height: 16px;
+	width: 0px;
+	background: url(../images/close-icon.png) no-repeat;
+}
+
+a:hover.closekw {
+	filter: alpha(opacity = 50);
+	-moz-opacity: 0.5;
+	opacity: 0.5;
+}
