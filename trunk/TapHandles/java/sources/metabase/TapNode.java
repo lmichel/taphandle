@@ -109,6 +109,7 @@ public class TapNode  extends RootClass {
 			Runnable r = new Runnable() {
 				public void run() {
 					int DELAY = 5; // Delay in minutes
+					int attempts = 0;
 					while( true ) {
 						try {
 							Thread.sleep(DELAY*60*1000);
@@ -118,7 +119,12 @@ public class TapNode  extends RootClass {
 							return;
 						} catch (Exception e) {
 							e.printStackTrace();
-							logger.info("Failed (" + e.getMessage() + "), try again in " + DELAY + "'");							
+							logger.info("Failed (" + e.getMessage() + "), try again in " + DELAY + "'");	
+							attempts++;
+							if( attempts > 10 ){
+								logger.warn("Cannot get join keys from  " + TapNode.this.url + " after 10 attempts, stop to try.");
+								return;
+							}
 						}
 					}
 				}
