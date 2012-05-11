@@ -52,7 +52,7 @@ function formatValue(columnName, value, tdNode) {
 		var titlepath = $('#titlepath').text().split('>');
 		getDLView(titlepath[0], columnName, value, tdNode);	
 	}
-	else if( value.startsWith("REGION") ||  value.startsWith("POLYGON") ) {
+	else if( value.match(/^((region)|(polygon))/i) ) {
 		tdNode.html("<a title='STC Region (click to expand)' class='dl_stc' href='#'  onclick='openDialog(\"STC Region\", \"" + value + "\");'></a>");
 	}
 	else if( value.startsWith("Array") ) {
