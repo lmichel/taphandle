@@ -229,7 +229,7 @@ jQuery.extend({
 			}
 			for( var ahn in selectAttributesHandlers ) {
 				var ah = selectAttributesHandlers[ahn];
-				if( ah.ucd  == "pos.eq.ra" ) {
+				if( ah.ucd  == "pos.eq.ra" || ah.ucd.match( /POS_EQ_RA/i)) {
 					that.setAlphaKeyword(ah);	
 					return;
 				}
@@ -270,7 +270,7 @@ jQuery.extend({
 			}
 			for( var ahn in selectAttributesHandlers ) {
 				var ah = selectAttributesHandlers[ahn];
-				if( ah.ucd  == "pos.eq.dec" ) {
+				if( ah.ucd  == "pos.eq.dec" || ah.ucd.match( /POS_EQ_DEC/i) ) {
 					that.setDeltaKeyword(ah);	
 					return;
 				}
