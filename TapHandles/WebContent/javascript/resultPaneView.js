@@ -266,7 +266,7 @@ jQuery.extend({
 			else {
 				$('#formexpender').css("background-image", "url(images/screen_up.png)");
 				$('#formexpender').attr("title", "Minimize query form");
-				height='100%';
+				height='90%';
 			}
 			layoutPane.sizePane("south", height);
 			//	$("div#accesspane").trigger("resize",[ height]);		
