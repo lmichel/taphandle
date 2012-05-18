@@ -236,7 +236,7 @@ jQuery.extend({
 			}
 			for( var ahn in selectAttributesHandlers ) {
 				var ah = selectAttributesHandlers[ahn];
-				if( ah.name  == "s_ra" ) {
+				if( ah.name  == "s_ra" || ah.name.toUpperCase()  == "RA" || ah.name.toUpperCase()  == "RAJ2000") {
 					that.setAlphaKeyword(ah);	
 					return;
 				}
@@ -277,7 +277,7 @@ jQuery.extend({
 			}
 			for( var ahn in selectAttributesHandlers ) {
 				var ah = selectAttributesHandlers[ahn];
-				if( ah.name  == "s_dec" ) {
+				if( ah.name  == "s_dec" || ah.name.toUpperCase()  == "DEC" || ah.name.toUpperCase()  == "DECJ2000" ) {
 					that.setDeltaKeyword(ah);	
 					return;
 				}

@@ -73,8 +73,7 @@ jQuery.extend({
 				if( !that.checkAndFormatString(op, opd) ) {
 					return;
 				}
-			}
-			else {
+			} else {
 				if( !that.checkAndFormatNum(op, opd) ) {
 					return;
 				}			
