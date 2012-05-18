@@ -23,6 +23,7 @@ public class NodeBase extends RootClass{
 	 */
 	private  final NodeMap nodeMap = new NodeMap();
 	private static NodeBase instance;
+	private static final boolean NOINIT = false;
 
 	/**
 	 * Private creator checking he validity of the base and recording some nodes
@@ -31,29 +32,32 @@ public class NodeBase extends RootClass{
 		try {
 			validWorkingDirectory(MetaBaseDir);
 			emptyDirectory(new File(MetaBaseDir));
-			try {
-				nodeMap.addNode("http://xcatdb.u-strasbg.fr/2xmmvo/tap", "xcatdb");
-			} catch (Exception e) {
-				logger.error("Cannot init node base http://xcatdb.u-strasbg.fr/2xmmvo/tap", e);
-			}
-			try {
-				nodeMap.addNode("http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap", "cadc");
-			} catch (Exception e) {
-				logger.error("Cannot init node base http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap", e);
-			}
-			try {
-				nodeMap.addNode("http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap", "gavot");
-			} catch (Exception e) {
-				logger.error("Cannot init node base http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap", e);
-			}
-			try {
-				nodeMap.addNode("http://simbad.u-strasbg.fr/simbad/sim-tap", "simbad");
-			} catch (Exception e) {
-				logger.error("Cannot init node base http://simbad.u-strasbg.fr/simbad/sim-tap", e);
+			if( !NOINIT){
+				try {
+					nodeMap.addNode("http://xcatdb.u-strasbg.fr/2xmmvo/tap", "xcatdb");
+				} catch (Exception e) {
+					logger.error("Cannot init node base http://xcatdb.u-strasbg.fr/2xmmvo/tap", e);
+				}
+				try {
+					nodeMap.addNode("http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap", "cadc");
+				} catch (Exception e) {
+					logger.error("Cannot init node base http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap", e);
+				}
+				try {
+					nodeMap.addNode("http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap", "gavot");
+				} catch (Exception e) {
+					logger.error("Cannot init node base http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap", e);
+				}
+				//			try {
+				//				nodeMap.addNode("http://simbad.u-strasbg.fr/simbad/sim-tap", "simbad");
+				//			} catch (Exception e) {
+				//				logger.error("Cannot init node base http://simbad.u-strasbg.fr/simbad/sim-tap", e);
+				//		
 			}
 		} catch (Exception e) {
 			logger.error("Cannot init node base", e);
 		}
+
 	}
 
 	/**
