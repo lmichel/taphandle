@@ -13,7 +13,8 @@
     <description></description>
     <display-name>GetNode</display-name>
     <servlet-name>GetNode</servlet-name>
-    <servlet-class>servlet.GetNode</servlet-class>
+    <servlet-class>servlet.GetNode</servlet-class> 
+    <load-on-startup>1</load-on-startup>
   </servlet>
   <servlet-mapping>
     <servlet-name>GetNode</servlet-name>
