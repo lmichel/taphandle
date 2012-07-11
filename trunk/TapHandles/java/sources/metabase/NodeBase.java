@@ -34,9 +34,9 @@ public class NodeBase extends RootClass{
 			emptyDirectory(new File(MetaBaseDir));
 			if( !NOINIT){
 				try {
-					nodeMap.addNode("http://xcatdb.u-strasbg.fr/2xmmvo/tap", "xcatdb");
+					nodeMap.addNode("http://xcatdb.u-strasbg.fr/2xmmidr3/tap", "xcatdb");
 				} catch (Exception e) {
-					logger.error("Cannot init node base http://xcatdb.u-strasbg.fr/2xmmvo/tap", e);
+					logger.error("Cannot init node base http://xcatdb.u-strasbg.fr/2xmmidr3/tap", e);
 				}
 				try {
 					nodeMap.addNode("http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap", "cadc");
