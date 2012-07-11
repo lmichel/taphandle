@@ -53,7 +53,11 @@ public abstract class RootServlet extends HttpServlet {
 			deux.setDecimalFormatSymbols(new DecimalFormatSymbols(Locale.ENGLISH));
 			six.setDecimalFormatSymbols(new DecimalFormatSymbols(Locale.ENGLISH));
 			exp.setDecimalFormatSymbols(new DecimalFormatSymbols(Locale.ENGLISH));	
-
+			try {
+				NodeBase.getNode("xcatdb");
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			INIT = true;
 		}
 	}
