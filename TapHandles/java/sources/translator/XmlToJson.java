@@ -257,7 +257,8 @@ public class XmlToJson  extends RootClass {
 			 * some info about the issue
 			 */
 		} catch (Exception e) {
-			e.printStackTrace();
+			//System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@cvouuouououou");
+			//e.printStackTrace();
 			SavotPullParser  sp = new SavotPullParser(inputFile, SavotPullEngine.FULL);
 			SavotVOTable sv = sp.getVOTable(); 
 			long rc = sp.getResourceCount();
@@ -268,8 +269,10 @@ public class XmlToJson  extends RootClass {
 				for( int i=0 ; i<is.getItemCount() ; i++ ) {
 					msg += ((SavotInfo)is.getItemAt(i)).getContent() + "\n";
 				}
+				//System.out.println("@@@@@@@@@@@@@@@@@@@@@@@ " + msg);
 				throw new Exception(msg);
 			}         
+			throw new Exception("No resource in VOTable " + inputFile);
 		}
 	}
 
