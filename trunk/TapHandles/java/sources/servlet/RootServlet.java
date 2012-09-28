@@ -56,7 +56,7 @@ public abstract class RootServlet extends HttpServlet {
 			try {
 				NodeBase.getNode("xcatdb");
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error("Try to init xcatdb 2xmmidr3", e);
 			}
 			INIT = true;
 		}
