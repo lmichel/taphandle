@@ -81,23 +81,23 @@ div#saptab div {
 	width: 325px;
 	height: 150px;
 	float: left;
-	border-width: 1;
+	border-width: 1px;
 	border-color: dimgray;
 }
 
 #ConstraintsList {
 	width: 480px;
 	height: 175px;
-	padding-left: 10;
-	border-width : 1;
+	padding-left: 10px;
+	border-width : 1px;
 	border-color: dimgray;
 }
 
 #ucdtab {
 	background: white;
 	padding-top: 5px;
-	padding-right: 0;
-	padding-bottom: 0;
+	padding-right: 0px;
+	padding-bottom: 0px;
 	padding-left: 5px;
 	height: 275px;
 	width: 900px;
@@ -123,15 +123,15 @@ div#saptab div {
 	width: 325px;
 	height: 150px;
 	float: left;
-	border-width: 1;
+	border-width: 1px;
 	border-color: dimgray;
 }
 
 #UCDConstraintsList {
 	width: 480px;
 	height: 175px;
-	padding-left: 10;
-	border-width : 1;
+	padding-left: 10px;
+	border-width : 1px;
 	border-color: dimgray;
 }
 
@@ -162,18 +162,18 @@ div#saptab div {
 	width: 475px;
 	height: 150px;
 	float: left;
-	border-width: 1;
+	border-width: 1px;
 	border-color: dimgray;
 }
 
 div#coordsubmit {
-	border-width: 0;
+	border-width: 0px;
 	background: white;
 }
 
 div#coordform {
-	width: 368x;
-	border-width: 0;
+	width: 368px;
+	border-width: 0px;
 	background: white;
 	height: 100%;
 }
@@ -185,8 +185,8 @@ div#cf1 {
 #patterntab {
 	background: white;
 	padding-top: 5px;
-	padding-right: 0;
-	padding-bottom: 0;
+	padding-right: 0px;
+	padding-bottom: 0px;
 	padding-left: 5px;
 	height: 220px;
 	width: 890px;
@@ -217,41 +217,41 @@ div#cf1 {
 #patternatt {
 	width: 300px;
 	height: 64px;
-	border-width: 1;
+	border-width: 1px;
 	border-color: dimgray;
 }
 
 #patternconst {
 	width: 265px;
 	height: 108px;
-	border-width: 1;
+	border-width: 1px;
 	border-color: dimgray;
 }
 
 #patternlist {
 	width: 260px;
 	height: 150px;
-	border-width: 1;
+	border-width: 1px;
 	border-color: dimgray;
 }
 
 #patterncardqual {
 	width: 300px;
 	height: 48px;
-	border-width: 1;
+	border-width: 1px;
 	border-color: dimgray;
 }
 
 .patternitem {
-	width: 171x;
+	width: 171px;
 	height: 30px;
 }
 
 #tapselect {
 	background: white;
 	padding-top: 5px;
-	padding-right: 0;
-	padding-bottom: 0;
+	padding-right: 0px;
+	padding-bottom: 0px;
 	padding-left: 5px;
 	height: 220px;
 }
@@ -259,8 +259,8 @@ div#cf1 {
 #tapwhere {
 	background: white;
 	padding-top: 5px;
-	padding-right: 0;
-	padding-bottom: 0;
+	padding-right: 0px;
+	padding-bottom: 0px;
 	padding-left: 5px;
 	height: 220px;
 	width: 100%;
@@ -269,7 +269,7 @@ div#cf1 {
 
 textarea#patterntext {
 	width: 240px;
-	height: 32x;
+	height: 32px;
 	padding: 5px;
 	font-size: small;
 	font-family: Arial, Helvetica, sans-serif;
@@ -325,7 +325,7 @@ textarea#patterntext {
 	width: 100%;
 	height: 170px;
 	float: left;
-	border-width: 1;
+	border-width: 1px;
 	border-color: dimgray;
 	overflow: auto
 }
@@ -333,7 +333,7 @@ textarea#patterntext {
 #tapselectmeta {
 	width: 350px;
 	height: 160px;
-	border-width: 1;
+	border-width: 1px;
 	border-color: dimgray;
 	overflow: auto
 }
@@ -341,16 +341,16 @@ textarea#patterntext {
 #tapconstraintlist {
 	width: 100%;
 	height: 100px;
-	padding-left: 10;
-	border-width: 1;
+	padding-left: 10px;
+	border-width: 1px;
 	border-color: dimgray;
 	overflow: auto
 }
 #taporderby {
 	width: 100%;
 	height: 40px;
-	padding-left: 10;
-	border-width: 1;
+	padding-left: 10px;
+	border-width: 1px;
 	border-color: dimgray;
 	overflow: auto
 }
@@ -358,8 +358,8 @@ textarea#patterntext {
 #tapselectlist {
 	width: 100%;
 	height: 100px;
-	padding-left: 10;
-	border-width: 1;
+	padding-left: 10px;
+	border-width: 1px;
 	border-color: dimgray;
 	overflow: auto
 }
@@ -367,8 +367,8 @@ textarea#patterntext {
 #tapalpha {
 	width: 300px;
 	height: 24px;
-	padding-left: 10;
-	border-width: 1;
+	padding-left: 10px;
+	border-width: 1px;
 	border-color: dimgray;
 	overflow: auto
 }
@@ -376,8 +376,8 @@ textarea#patterntext {
 #tapdelta {
 	width: 300px;
 	height: 24px;
-	padding-left: 10;
-	border-width: 1;
+	padding-left: 10px;
+	border-width: 1px;
 	border-color: dimgray;
 	overflow: auto
 }
@@ -385,7 +385,7 @@ textarea#patterntext {
 #tapjobs {
 	width: 850px;
 	height: 160px;
-	border-width: 1;
+	border-width: 1px;
 	border-color: dimgray;
 	overflow: auto
 }
@@ -405,8 +405,8 @@ textarea#patterntext {
 ul.attlist {
 	width: 100%;
 	list-style-type: none;
-	margin: 0;
-	padding: 0;
+	margin: 0px;
+	padding: 0px;
 	margin-bottom: 10px;
 	overflow: auto;
 }
@@ -431,24 +431,23 @@ ul.attlist {
 
 a.closekw {
 	display: inline-block;
-	height: 16x;
+	height: 16px;
 	width: 0px;
 	overflow: visible;
-	padding: 16px 0 2px 16px;
+	padding: 16px 0px 2px 16px;
 	background: transparent url(../images/small_trash.png) bottom left
 		no-repeat;
 	vertical-align: middle;
 }
 
 a.closekwss {
-	padding: 0px 0 8px 16px;
+	padding: 0px 0px 8px 16px;
 	height: 16px;
 	width: 0px;
 	background: url(../images/close-icon.png) no-repeat;
 }
 
 a:hover.closekw {
-	filter: alpha(opacity = 50);
 	-moz-opacity: 0.5;
 	opacity: 0.5;
 }

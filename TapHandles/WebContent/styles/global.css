@@ -25,7 +25,7 @@ div {
 	border-bottom-right-radius: 4px 4px;
 	border-top-left-radius: 4px 4px;
 	border-top-right-radius: 4px 4px;
-	overflow: none;
+	overflow: auto;
 }
 
 span, p, option, select {
@@ -92,19 +92,17 @@ a.logo {
 	height: 64px;
 	width: 0px;
 	overflow: visible;
-	padding: 2px 0 2px 116px;
+	padding: 2px 0px 2px 116px;
 	background: transparent url(../images/tap64.png) bottom left no-repeat;
 	vertical-align: middle;
 }
 
 a:hover.logo {
-	filter: alpha(opacity = 50);
 	-moz-opacity: 0.5;
 	opacity: 0.5;
 }
 
 a:active.logo {
-	filter: alpha(opacity = 50);
 	-moz-opacity: 0.8;
 	opacity: 0.8;
 }
@@ -121,13 +119,11 @@ a.preview {
 }
 
 a:hover.preview {
-	filter: alpha(opacity = 50);
 	-moz-opacity: 0.5;
 	opacity: 0.5;
 }
 
 a:active.preview {
-	filter: alpha(opacity = 50);
 	-moz-opacity: 0.8;
 	opacity: 0.8;
 }
@@ -144,13 +140,11 @@ a.readmeta {
 }
 
 a:hover.readmeta {
-	filter: alpha(opacity = 50);
 	-moz-opacity: 0.5;
 	opacity: 0.5;
 }
 
 a:active.readmeta {
-	filter: alpha(opacity = 50);
 	-moz-opacity: 0.8;
 	opacity: 0.8;
 }
@@ -167,13 +161,11 @@ a.accept {
 }
 
 a:hover.accept {
-	filter: alpha(opacity = 50);
 	-moz-opacity: 0.5;
 	opacity: 0.5;
 }
 
 a:active.accept {
-	filter: alpha(opacity = 50);
 	-moz-opacity: 0.8;
 	opacity: 0.8;
 }
@@ -445,7 +437,7 @@ a:active.sesame {
 }
 
 .pagetitle {
-	font-style: bold;
+	font-weight: bold;
 	font-size: 150%;
 	color: #888;
 }
@@ -614,13 +606,9 @@ a:hover.formexpender {
 	opacity: 0.5;
 }
 a:active.formexpender {
-	filter: alpha(opacity = 50);
 	-moz-opacity: 0.8;
-	opacity: 0.8;auto
+	opacity: 0.8;
 }
-
-
-
 
 a.question {
 	display: inline-block;
@@ -631,14 +619,12 @@ a.question {
 		no-repeat;
 }
 a:hover.question {
-	filter: alpha(opacity = 50);
 	-moz-opacity: 0.5;
 	opacity: 0.5;
 }
 a:active.question {
-	filter: alpha(opacity = 50);
 	-moz-opacity: 0.8;
-	opacity: 0.8;auto
+	opacity: 0.8;
 }
 
 a.sources {
@@ -895,7 +881,7 @@ div#banner {
 }
 
 div#pagetitle {
-	width: 300;
+	width: 300px;
 	margin-left: 150px;
 	margin-top: -65px;
 	border-width: 0;
@@ -934,7 +920,7 @@ div#datapane {
 }
 
 div#accesspane {
-		background:	777;
+		background:	#777;
 		/* HEIGHT */
 		height:		930px;					
 		min-height:	500px;
@@ -970,8 +956,8 @@ div#treepane {
 	height: 80%; 
 	overflow: auto;
 	border-width: 0px;
-	overflow: auto;*/
-}
+	overflow: auto;
+}*/
 
 div#treedisp {
 	background-color: whiteSmoke;
@@ -985,8 +971,8 @@ div#resultpane {
 	overflow: visible;
 	border-width: 0px;
 	height: 80%px;
-	width: 80%; */
-}
+	width: 80%; 
+}*/
 /*
  * Right-side element of the splitter.
  */
@@ -1009,8 +995,7 @@ div#formframe {
 	float: right;
 	padding: 0;
 
-	/* No margin or border allowed */
-}
+}*/
 
 /*
 div#formframe {
@@ -1023,9 +1008,8 @@ div#formframe {
 	float: right;
 	padding: 0;
 
-	/* No margin or border allowed */
-}
-*/
+}*/
+
 div#datapane .vsplitbar {
 	width: 6px;
 	background: #c0c0c0 url(../images/vgrabber.gif) no-repeat center;
