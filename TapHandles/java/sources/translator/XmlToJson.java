@@ -269,7 +269,6 @@ public class XmlToJson  extends RootClass {
 				for( int i=0 ; i<is.getItemCount() ; i++ ) {
 					msg += ((SavotInfo)is.getItemAt(i)).getContent() + "\n";
 				}
-				//System.out.println("@@@@@@@@@@@@@@@@@@@@@@@ " + msg);
 				throw new Exception(msg);
 			}         
 			throw new Exception("No resource in VOTable " + inputFile);
