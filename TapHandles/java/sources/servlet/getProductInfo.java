@@ -42,6 +42,7 @@ public class getProductInfo extends RootServlet implements Servlet {
 	private void process(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		printAccess(request, false);
 		String url = request.getParameter("url");
+		response.setContentType("application/json");
 		if( url == null || url.length() == 0  ) {
 			reportJsonError(request, response, "No url given");
 			return;

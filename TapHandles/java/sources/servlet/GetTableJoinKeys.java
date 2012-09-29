@@ -23,6 +23,7 @@ public class GetTableJoinKeys extends RootServlet implements Servlet {
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		printAccess(request, true);
+		response.setContentType("application/json");
 
 		String node = this.getParameter(request, "node");
 		String table = this.getParameter(request, "table");

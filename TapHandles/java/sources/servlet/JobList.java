@@ -30,6 +30,7 @@ public class JobList extends RootServlet implements Servlet {
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		printAccess(request, false);
+		response.setContentType("application/json");
 		try {
 			UserSession session = UserTrap.getUserAccount(request);
 			session.refreshAllJobStatus();

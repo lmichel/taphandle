@@ -40,6 +40,7 @@ public class Sesame extends RootServlet {
 	private void process(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		String object = request.getParameter("object");
 		ServletOutputStream out = response.getOutputStream();
+		response.setContentType("application/json");
 		if( object == null || object.trim().length() == 0 ) {
 			JsonUtils.teePrint(out , "{");
 			JsonUtils.teePrint(out , JsonUtils.getParam("alpha", "") + ",");
