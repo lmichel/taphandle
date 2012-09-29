@@ -104,8 +104,7 @@ public class TapNode  extends RootClass {
 		try {
 			JoinKeysJob.getJoinKeys(this.url, this.baseDirectory);
 		} catch (Exception e) {
-			e.printStackTrace();
-			logger.warn("Can't get join keys for node: continue in background " + this.url);
+			logger.warn("Can't get join keys for node: continue in background " + this.url + " " + e.getMessage());
 			Runnable r = new Runnable() {
 				public void run() {
 					int DELAY = 5; // Delay in minutes
