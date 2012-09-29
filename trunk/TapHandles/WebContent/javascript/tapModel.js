@@ -75,7 +75,7 @@ jQuery.extend({
 				showProcessingDialog("Waiting on join keys");
 				$.getJSON("gettablejoinkeys", {node: treepath.nodekey, table:treepath.table }, function(data) {
 					hideProcessingDialog();
-					if( jsondata == undefined || jsondata == null || jsondata.errormsg != undefined )  {
+					if( data == undefined || data == null || data.errormsg != undefined )  {
 						logMsg("Cannot get JoinKeys");
 						return;
 					}
@@ -364,25 +364,27 @@ jQuery.extend({
 			}
 			return retour;
 		};
-		
+
 		this.submitQuery = function(){
 			showProcessingDialog("Run job");
 			var limit = getQLimit();
-			$.post("runasyncjob"
-					, {NODE: storedTreepath.nodekey, TREEPATH: storedTreepath.nodekey + ";" + storedTreepath.schema + ";" + storedTreepath.table, REQUEST: "doQuery", LANG: 'ADQL', FORMAT: 'json', PHASE: 'RUN', MAXREC: limit,QUERY: ($('#adqltext').val()) }
-					, function(data, status) {
-						var jsondata = eval("(" + data + ")");
-						if( processJsonError(jsondata, "tap/async Cannot get job status") ) {
-							return;
-						} else {
-							jv  = new $.JobView(jsondata.status.job.jobId);
-							jm = new $.JobModel(storedTreepath, jsondata.status.job, jsondata.session);
-							new $.JobControler(jm, jv);
-							lastJob = jv;
-							lastJob.fireInitForm('tapjobs', attributesHandlers);
-							lastTimer = setTimeout("tapView.fireCheckJobCompleted(\"" + storedTreepath.nodekey + "\", \"" + jsondata.status.job.jobId + "\", \"9\");", 1000);
-						}
-					});
+			$.ajax({type: 'POST'
+				, url:"runasyncjob"
+					, dataType: 'json'
+						, data: {NODE: storedTreepath.nodekey, TREEPATH: storedTreepath.nodekey + ";" + storedTreepath.schema + ";" + storedTreepath.table, REQUEST: "doQuery", LANG: 'ADQL', FORMAT: 'json', PHASE: 'RUN', MAXREC: limit,QUERY: ($('#adqltext').val()) }
+			, success: function(jsondata) {
+				if( processJsonError(jsondata, "tap/async Cannot get job status") ) {
+					return;
+				} else {
+					jv  = new $.JobView(jsondata.status.job.jobId);
+					jm = new $.JobModel(storedTreepath, jsondata.status.job, jsondata.session);
+					new $.JobControler(jm, jv);
+					lastJob = jv;
+					lastJob.fireInitForm('tapjobs', attributesHandlers);
+					lastTimer = setTimeout("tapView.fireCheckJobCompleted(\"" + storedTreepath.nodekey + "\", \"" + jsondata.status.job.jobId + "\", \"9\");", 1000);
+				}
+			}
+			});
 		};
 
 		this.checkJobCompleted = function(nodeKey, jid, counter) {
