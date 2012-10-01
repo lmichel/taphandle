@@ -15,7 +15,7 @@ import resources.RootClass;
  * @author laurent
  * @version $Id$
  */
-class NodeMap  extends RootClass {
+public class NodeMap  extends RootClass {
 	/**
 	 * {@link TapNode} map. Created at loading time
 	 */
@@ -57,7 +57,7 @@ class NodeMap  extends RootClass {
 	 * @throws Exception if the service is not valid or if another node is already
 	 *                   referenced by that key
 	 */
-	protected String addNode(String url, String key) throws Exception {
+	public String addNode(String url, String key) throws Exception {
 		TapNode nm;
 		if( (nm = this.getNode(key)) != null ) {
 			throw new Exception("Node with \"" + key + "\" as key already exists (" + nm.getUrl() + ")");
@@ -91,7 +91,7 @@ class NodeMap  extends RootClass {
 	 * @return  Returns the TAP node
 	 * @throws Exception If the node cannot be found
 	 */
-	protected TapNode getNode(String key)  throws Exception{
+	public TapNode getNode(String key)  throws Exception{
 		return  nodeMap.get(key);
 	}
 	

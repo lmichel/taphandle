@@ -3,7 +3,10 @@ package metabase;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.URL;
@@ -12,8 +15,12 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
 import resources.RootClass;
-import session.NodeCookie;
 import tapaccess.JoinKeysJob;
 import translator.JsonUtils;
 import translator.NameSpaceDefinition;
@@ -94,7 +101,7 @@ public class TapNode  extends RootClass {
 		this.checkTables() ;
 		logger.debug("NS for tables " + tablesNS.getNsName());
 		logger.info("Service " + this.url + " seems to be working");			
-		this.setJoinKeys();
+		//@@@@@@ this.setJoinKeys();
 	}
 
 	/**
@@ -212,8 +219,8 @@ public class TapNode  extends RootClass {
 	 * @throws Exception If something goes wrong
 	 */
 	private void getServiceReponse(String service, NameSpaceDefinition nsDefinition) throws Exception {
-		Pattern pattern  = Pattern.compile("(?i)(?:.*(xmlns(?:\\:\\w+)?=\\\"http\\:\\/\\/www\\.ivoa\\.net\\/.*" + service + "[^\\\"]*\\\").*)");
-		pattern  = Pattern.compile(".*xmlns(?::\\w+)?=(\"[^\"]*(?i)(?:" + service + ")[^\"]*\").*");
+		//Pattern pattern  = Pattern.compile("(?i)(?:.*(xmlns(?:\\:\\w+)?=\\\"http\\:\\/\\/www\\.ivoa\\.net\\/.*" + service + "[^\\\"]*\\\").*)");
+		Pattern pattern  = Pattern.compile(".*xmlns(?::\\w+)?=(\"[^\"]*(?i)(?:" + service + ")[^\"]*\").*");
 		logger.debug("read " + this.url + service);
 		BufferedReader in = new BufferedReader(
 				new InputStreamReader(
@@ -245,8 +252,8 @@ public class TapNode  extends RootClass {
 	private void getNamspaceDefinition(String service, NameSpaceDefinition nsDefinition) throws Exception {
 		logger.debug("get VOSI ns for " + service);
 		Scanner s = new Scanner(new File(this.baseDirectory + service + ".xml"));
-		Pattern pattern  = Pattern.compile("(?i)(?:.*(xmlns(?:\\:\\w+)?=\"http\\:\\/\\/www.ivoa.net\\/.*" + service + "[^\"]*\").*)");
-		pattern  = Pattern.compile(".*(xmlns:\\w+=\"[^\"]*(?i)(?:" + service + ")[^\"]*\").*");
+		//Pattern pattern  = Pattern.compile("(?i)(?:.*(xmlns(?:\\:\\w+)?=\"http\\:\\/\\/www.ivoa.net\\/.*" + service + "[^\"]*\").*)");
+		Pattern pattern  = Pattern.compile(".*(xmlns:\\w+=\"[^\"]*(?i)(?:" + service + ")[^\"]*\").*");
 		while ( s.hasNextLine()) {
 			Matcher m = pattern.matcher(s.nextLine());
 			if (m.matches()) {
@@ -303,7 +310,63 @@ public class TapNode  extends RootClass {
 	 * @throws Exception If something goes wrong
 	 */
 	public void buildJsonTableAttributes(String tableName) throws Exception {
-		XmlToJson.translateTableAttributes(this.baseDirectory, tableName, tablesNS);		
-		//@@@@@@@@@@@@@@setNodekeyInJsonResponse(tableName);
+		XmlToJson.translateTableAttributes(this.baseDirectory, "tables", tableName, tablesNS);		
+		/*
+		 * If there is no attribute in the JSON table description, the service delivers it likley table by table
+		 */
+		if( !isThereJsonTableAtt(tableName) ) {
+			File fn = new File(this.baseDirectory + tableName  +  "_att.xml");
+			String noSchemaName = tableName;
+			int pos = noSchemaName.indexOf('.');
+			if( pos > 0 ) {
+				noSchemaName = noSchemaName.substring(pos + 1);
+			}
+			this.getServiceReponse("columns?query=" + noSchemaName, tablesNS);
+			if( ! (new File(this.baseDirectory + "columns?query=" + noSchemaName  +  ".xml")).renameTo(fn) ) {
+				throw new Exception("Cannot store columns of table  " + tableName +" in file " + this.baseDirectory + tableName  +  "_att.xml");
+			}
+			XmlToJson.translateTableAttributes(this.baseDirectory, tableName, tablesNS);	
+			fn.delete();
+			(new File(this.baseDirectory + tableName  +  "_att.xsl")).delete();
+		}
 	}		
+	
+	/**
+	 * Return true if the JSON file describing the table tableName is not empty of attributes.
+	 * If it is, the table comes likely from Vizier and a special query must be sent to get those column description
+	 * @param tableName
+	 * @return
+	 * @throws Exception
+	 */
+	private boolean isThereJsonTableAtt(String tableName) throws Exception{
+		JSONParser parser = new JSONParser();
+		Object obj = parser.parse(new FileReader(this.baseDirectory + tableName + "_att.json"));
+		JSONObject jsonObject = (JSONObject) obj;
+		return (((JSONArray) jsonObject.get("attributes")).size() > 0)? true: false;
+	}
+	
+	public JSONObject filterTableList(int maxSize) throws Exception {
+		JSONParser parser = new JSONParser();
+		Object obj = parser.parse(new FileReader(this.getBaseDirectory() + "tables.json"));
+		JSONObject jsonObject = (JSONObject) obj;
+		JSONArray schemas = (JSONArray) jsonObject.get("schemas");
+		for(Object sn: schemas) {
+			JSONObject s = (JSONObject)sn;
+			System.out.println("*********** " + s.get("name"));
+			JSONArray tables = (JSONArray) s.get("tables");
+			int cpt = 0;
+			for( Object ts: tables) {
+				JSONObject t = (JSONObject)ts;
+				cpt++;
+				
+				if( cpt > maxSize ) {
+					tables.remove(t);
+				}
+			}
+		}
+		return jsonObject;
+
+	}
+
+
 }
