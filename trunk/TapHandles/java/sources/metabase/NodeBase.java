@@ -34,15 +34,20 @@ public class NodeBase extends RootClass{
 			emptyDirectory(new File(MetaBaseDir));
 			if( !NOINIT){
 				try {
-					nodeMap.addNode("http://xcatdb.u-strasbg.fr/2xmmidr3/tap", "xcatdb");
+					nodeMap.addNode("http://tapvizier.u-strasbg.fr/TAPVizieR/tap/", "vizier");
 				} catch (Exception e) {
 					logger.error("Cannot init node base http://xcatdb.u-strasbg.fr/2xmmvo/tap", e);
 				}
-				try {
-					nodeMap.addNode("http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap", "cadc");
-				} catch (Exception e) {
-					logger.error("Cannot init node base http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap", e);
-				}
+//				try {
+//					nodeMap.addNode("http://xcatdb.u-strasbg.fr/2xmmidr3/tap", "xcatdb");
+//				} catch (Exception e) {
+//					logger.error("Cannot init node base http://xcatdb.u-strasbg.fr/2xmmvo/tap", e);
+//				}
+//				try {
+//					nodeMap.addNode("http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap", "cadc");
+//				} catch (Exception e) {
+//					logger.error("Cannot init node base http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap", e);
+//				}
 				try {
 					nodeMap.addNode("http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap", "gavot");
 				} catch (Exception e) {
