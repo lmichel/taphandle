@@ -18,7 +18,8 @@ var nodeList  =  [
                   {id: 'cadc',   text: "cadc"},
                   {id: 'xcatdb', text: "xcatdb"},
                   {id: 'simbad', text: "simbad"},
-                  //   {id: 'http://simbad49:8080/simbad/sim-tap', text: "http://simbad49:8080/simbad/sim-tap"}
+                  {id: 'vizier', text: "vizier"},
+                 //   {id: 'http://simbad49:8080/simbad/sim-tap', text: "http://simbad49:8080/simbad/sim-tap"}
                   ];
 
 /*

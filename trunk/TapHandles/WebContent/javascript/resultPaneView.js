@@ -125,6 +125,7 @@ jQuery.extend({
 	                    return;
 	                }
 	                else {
+                    	logged_alert("c'est parti");
 	                    $("div#treedisp").jstree("remove","#rootid" );
 	                    $("div#treedisp").jstree("remove","#" + jsdata.nodekey);
 	                    $("div#treedisp").jstree("create"
@@ -135,6 +136,9 @@ jQuery.extend({
 	                            ,false
 	                            ,true);           
 	                    var id_schema, id_table;
+	                    /*
+	                     * Create first the first level tree (schemas)
+	                     */
 	                    for( var i=0 ; i<jsdata.schemas.length ; i++ ) {
 	                        id_schema = jsdata.nodekey + "X" + jsdata.schemas[i].name;
 	                        var description = jsdata.schemas[i].description;
@@ -150,8 +154,12 @@ jQuery.extend({
 	                                ,false
 	                                ,true);       
 	                    }
+	                    /*
+	                     * add leaves (tables) the the schemas
+	                     */
 	                    for( var i=0 ; i<jsdata.schemas.length ; i++ ) {
 	                        id_schema = jsdata.nodekey + "X" + jsdata.schemas[i].name;
+	                        var nb_tables = 0;
 	                        for( var j=0 ; j<jsdata.schemas[i].tables.length ; j++ ) {
 	                            id_table = jsdata.nodekey + ";" + jsdata.schemas[i].name + ";" + jsdata.schemas[i].tables[j].name;
 	                            var description = jsdata.schemas[i].tables[j].description;
@@ -167,6 +175,10 @@ jQuery.extend({
 	                                    }
 	                                    ,false
 	                                    ,true);   
+	                            if( nb_tables > 20 ) {
+	                            	logMsg("table list truncated to 20");
+	                            	break
+	                            }
 	                        }
 	                    }
 	                }
