@@ -194,12 +194,15 @@ public abstract class RootServlet extends HttpServlet {
 		logger.debug("dump resource " + urlPath);
 		InputStream is = new FileInputStream(getServletContext().getRealPath(urlPath));
 		Scanner s = new Scanner(is);
-		PrintWriter out = response.getWriter();
 		try {
+			PrintWriter out = response.getWriter();
+			int nbl = 0;
 			while (s.hasNextLine()){
 				String l = s.nextLine();
 				out.println(l);
+				nbl++;
 			}
+			logger.debug("done " + nbl + " lines");
 		}
 		finally{
 			s.close();
