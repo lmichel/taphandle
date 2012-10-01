@@ -14,8 +14,7 @@ import resources.RootClass;
  * @author laurent
  * @version $Id$
  */
-public class NameSpaceDefinition extends RootClass{
-	
+public class NameSpaceDefinition extends RootClass{	
 	/**
 	 * Name of he name space
 	 */
@@ -25,7 +24,6 @@ public class NameSpaceDefinition extends RootClass{
 	 */
 	private String nsDeclaration;
 	
-
 	/**
 	 * Extract the name of the name space from declaration
 	 * @param declaration
