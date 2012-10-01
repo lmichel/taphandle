@@ -163,7 +163,30 @@ public class XmlToJson  extends RootClass {
 	}
 
 	/**
-	 * Builds a JSON file describing the table tableName to setup
+	 * Builds a JSON file describing the table tableName to setup query form.
+	 * The table attributes are extracted from the file tablesFile. The .xml suffix is implicit.
+	 * @param baseDir      Working directory
+	 * @param tablesFile  Name of the file containing all table metadata
+	 * @param tableName  Name of the table
+	 * @param nsDefinition Name space to use
+	 * @throws Exception If something goes wrong
+	 */
+	public static void translateTableAttributes(String baseDir , String tablesFile, String tableName, NameSpaceDefinition nsDefinition) throws Exception {
+		setVosiNS(baseDir, "table_att", nsDefinition);
+		String filename = baseDir + "table_att.xsl";
+		Scanner s = new Scanner(new File(filename));
+		PrintWriter fw = new PrintWriter(new File( baseDir + tableName + "_att.xsl"));
+		while( s.hasNextLine() ) {
+			fw.println(s.nextLine().replaceAll("TABLENAME", tableName));
+		}
+		s.close();
+		fw.close();
+		applyStyle(baseDir  + tablesFile + ".xml", baseDir + tableName + "_att.json", baseDir + tableName + "_att.xsl");
+	}
+	
+	/**
+	 * Builds a JSON file describing the table tableName to setup.
+	 * The XML table description is supposed to be in a file names  tableName_att.xml
 	 * query form
 	 * @param baseDir      Working directory
 	 * @param tableName  Name of the table
@@ -180,12 +203,7 @@ public class XmlToJson  extends RootClass {
 		}
 		s.close();
 		fw.close();
-		applyStyle(baseDir  + "tables.xml", baseDir + tableName + "_att.json", baseDir + tableName + "_att.xsl");
-	}
-	public static void main(String[] args) throws Exception {
-		translateResultTable(
-				"/home/michel/workspace/.metadata/.plugins/org.eclipse.wst.server.core/tmp0/wtpwebapps/TapHandles/userbase/./0F42FA965A1C1FBD3EA46C1D2F113F66/localhost_2xmmidr3/job_2_ObsCore/result.xml"
-				, "/home/michel/Desktop/resul.json");
+		applyStyle(baseDir  + tableName + "_att.xml", baseDir + tableName + "_att.json", baseDir + tableName + "_att.xsl");
 	}
 
 	/**
