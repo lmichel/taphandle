@@ -1,6 +1,6 @@
 jQuery.extend({
 
-	ResultPaneView : function() {
+	NodeFilterView : function() {
 		/**
 		 * keep a reference to ourselves
 		 */
@@ -17,70 +17,51 @@ jQuery.extend({
 			listeners.push(list);
 		};
 
-		this.fireGetProductInfo = function(url) {
-			showProcessingDialog("Waiting on product info");
 
-			$.getJSON("getproductinfo", {url: url}, function(jsdata) {
-				hideProcessingDialog();
-				if( processJsonError(jsdata, "Cannot get product info") ) {
-					return;
-				}
-				else {
-					retour = "url: " + url + "\n";
-					$.each(jsdata, function(k, v) {
-						retour += k + ": " + v  + "\n";
+		this.fireOpenSelectorWindow = function(node) {
+
+			var table = '';
+			var title = "Table Selector for node  <i>"
+				+ node 
+				+ "</i>";
+			table = '<h2><img src="images/Relation.png"><span>' + title
+			+ '</span></h2>'
+			+ "<h4 id=\"mappedmeta\" class='detailhead'> <img src=\"images/tdown.png\"> Links </h4>"
+			+ "<div class='detaildata'>"
+			+ "    <div class='detaildata' style='background-color: red;width: 49%; height: 50px;display: inline;float:left;overflow: hidden;'>set a filter<BR>set a filter<BR>set a filter<BR></div>"
+			+ "    <div class='detaildata' style='background-color: green; width: 50%; height: 50px;display: inline;float:right; '>"
+			+ "        <input id=nodeFilter type=texte width=24>"
+			+ "    </div>"
+			+ "    <div class='detaildata' style='background-color: green; width: 100%; height: 400px; margin-top: 52px; padding-top: 5px'>"
+			+ "        <div class='detaildata' style='background-color: white; width: 80%; height: 380px; margin-top: 90px; overflow: auto;margin : auto;position:relative'></div>"
+			+ "    </div>"
+			+ "    <div class='detaildata' style='background-color: green; width: 100%; height: 40px; padding-top: 5px'>"
+			+ "        <input type=button value='accept'><input type=button value='cancel'>"
+			+ "    </div>"
+			+ "</div>";
+
+
+
+			if ($('#detaildiv').length == 0) {
+				$(document.documentElement).append(
+				"<div id=detaildiv style='width: 99%; display: none;'></div>");
+			}
+			$('#detaildiv').html(table);
+
+			$('#detaildiv').modal( { onShow: function(dlg) {
+				$(dlg.container).css('height','auto').css('width','500px');
+			}});
+			$("#nodeFilter").keyup(function(event) {
+				if(event.keyCode == 13) {	            
+					$.getJSON("getnode", {node: 'vizier', filter: $("#nodeFilter").val()}, function(jsdata) {
+
+						hideProcessingDialog();
+						if( processJsonError(jsdata, "Cannot make data tree") ) {
+							return;
+						}
+						else {
+						}
 					});
-					logged_alert(retour, "Product Info");
-				}
-			});
-		}	;	
-		this.fireGetDataLink = function(url) {
-			showProcessingDialog("Waiting on product info");
-
-			$.getJSON("getdatalink", {url: url}, function(jsdata) {
-				hideProcessingDialog();
-				if( processJsonError(jsdata, "Cannot get datalink") ) {
-					return;
-				}
-				else {
-					var table = '';
-					var title = "Data link provided by <i>"
-						+ url 
-						+ "</i>";
-					table += '<h2><img src="images/Relation.png"><span>' + title
-					+ '</span></h2>';
-					table += "<h4 id=\"mappedmeta\" class='detailhead'> <img src=\"images/tdown.png\"> Links </h4>";
-					table += "<div class='detaildata'>";
-					table += "<table width=99% cellpadding=\"0\" cellspacing=\"0\" border=\"0\"  id=\"detailtable\" class=\"display\"></table>";
-					table += "</div>";
-
-
-					if ($('#detaildiv').length == 0) {
-						$(document.documentElement).append(
-						"<div id=detaildiv style='width: 99%; display: none;'></div>");
-					}
-					$('#detaildiv').html(table);
-					$('#detailtable').dataTable(
-							{
-								"aoColumns" : jsdata.columns,
-								"aaData" : jsdata.data,
-								//	"sDom" : '<"top"f>rt<"bottom">',
-								"bPaginate" : false,
-								"aaSorting" : [],
-								"bSort" : false,
-								"bFilter" : true,
-								"bAutoWidth" : true,
-								"fnRowCallback": function( nRow, aData, iDisplayIndex ) {
-									for( var c=0 ; c<aData.length ; c++ ) {
-										formatValue(this.fnSettings().aoColumns[c].sTitle, aData[c], $('td:eq(' + c + ')', nRow));
-									}
-									return nRow;
-								}
-
-							});
-
-					$('#detaildiv').modal();
-
 				}
 			});
 		}	;	
@@ -116,79 +97,79 @@ jQuery.extend({
 
 		};
 
-	      this.fireNewNodeEvent = function(nodekey) {
-	            showProcessingDialog("Waiting on " + nodekey + " node description");
+		this.fireNewNodeEvent = function(nodekey) {
+			showProcessingDialog("Waiting on " + nodekey + " node description");
 
-	            $.getJSON("getnode", {node: nodekey }, function(jsdata) {
-	                hideProcessingDialog();
-	                if( processJsonError(jsdata, "Cannot make data tree") ) {
-	                    return;
-	                }
-	                else {
-	                    $("div#treedisp").jstree("remove","#rootid" );
-	                    $("div#treedisp").jstree("remove","#" + jsdata.nodekey);
-	                    /*
-	                     * Create the root of the subtree of this node
-	                     */
-	                    $("div#treedisp").jstree("create"
-	                            , $("div#treedisp")
-	                            , false
-	                            , {"data" : {"icon": "images/Database.png", "attr":{"id": jsdata.nodekey, "title": jsdata.nodeurl}, "title" : jsdata.nodekey},
-	                                "state": "closed"}
-	                            ,false
-	                            ,true);       
-	                    var id_schema, id_table;
-	                    /*
-	                     * Create first the first level tree (schemas)
-	                     */
-	                    for( var i=0 ; i<jsdata.schemas.length ; i++ ) {
-	                        id_schema = jsdata.nodekey + "X" + jsdata.schemas[i].name;
-	                        var description = jsdata.schemas[i].description;
-	                        if( description == "") {
-	                            description = "No Description Available";
-	                        }
-	                        $("div#treedisp").jstree("create"
-	                                , $("#" + jsdata.nodekey)
-	                                , false
-	                                , {"data" : {"icon": "images/Bluecube.png", "attr":{"id": id_schema, "title": description}, "title" : jsdata.schemas[i].name},
-	                                    "state": "closed",
-	                                    "attr" :{"id": id_schema}}
-	                                ,false
-	                                ,true);       
-	                    }
-	                    /*
-	                     * add leaves (tables) the the schemas
-	                     */
-	                    for( var i=0 ; i<jsdata.schemas.length ; i++ ) {
-	                        id_schema = jsdata.nodekey + "X" + jsdata.schemas[i].name;
-	                        var nb_tables = 0;
-	                        for( var j=0 ; j<jsdata.schemas[i].tables.length ; j++ ) {
-	                            id_table = jsdata.nodekey + ";" + jsdata.schemas[i].name + ";" + jsdata.schemas[i].tables[j].name;
-	                            var description = jsdata.schemas[i].tables[j].description;
-	                            if( description == "") {
-	                                description = "No Description Available";
-	                            }
-	                            $("div#treedisp").jstree("create"
-	                                    , $("#" + id_schema)
-	                                    , false
-	                                    , {"data"  : {"icon": "images/SQLTable.png", "attr":{"id": id_table, "title": description}, "title" : jsdata.schemas[i].tables[j].name},
-	                                        "state": "closed",
-	                                        "attr" :{"id": id_table}
-	                                    }
-	                                    ,false
-	                                    ,true);   
-	                            if( nb_tables > 20 ) {
-	                            	logMsg("table list truncated to 20");
-	                            	break
-	                            }
-	                        }
-	                    }
-	                }
-	                $( "div#treedisp").jstree('close_all', -1);
-	            });
-	        };
+			$.getJSON("getnode", {node: nodekey }, function(jsdata) {
+				hideProcessingDialog();
+				if( processJsonError(jsdata, "Cannot make data tree") ) {
+					return;
+				}
+				else {
+					$("div#treedisp").jstree("remove","#rootid" );
+					$("div#treedisp").jstree("remove","#" + jsdata.nodekey);
+					/*
+					 * Create the root of the subtree of this node
+					 */
+					$("div#treedisp").jstree("create"
+							, $("div#treedisp")
+							, false
+							, {"data" : {"icon": "images/Database.png", "attr":{"id": jsdata.nodekey, "title": jsdata.nodeurl}, "title" : jsdata.nodekey},
+								"state": "closed"}
+							,false
+							,true);       
+					var id_schema, id_table;
+					/*
+					 * Create first the first level tree (schemas)
+					 */
+					for( var i=0 ; i<jsdata.schemas.length ; i++ ) {
+						id_schema = jsdata.nodekey + "X" + jsdata.schemas[i].name;
+						var description = jsdata.schemas[i].description;
+						if( description == "") {
+							description = "No Description Available";
+						}
+						$("div#treedisp").jstree("create"
+								, $("#" + jsdata.nodekey)
+								, false
+								, {"data" : {"icon": "images/Bluecube.png", "attr":{"id": id_schema, "title": description}, "title" : jsdata.schemas[i].name},
+									"state": "closed",
+									"attr" :{"id": id_schema}}
+								,false
+								,true);       
+					}
+					/*
+					 * add leaves (tables) the the schemas
+					 */
+					for( var i=0 ; i<jsdata.schemas.length ; i++ ) {
+						id_schema = jsdata.nodekey + "X" + jsdata.schemas[i].name;
+						var nb_tables = 0;
+						for( var j=0 ; j<jsdata.schemas[i].tables.length ; j++ ) {
+							id_table = jsdata.nodekey + ";" + jsdata.schemas[i].name + ";" + jsdata.schemas[i].tables[j].name;
+							var description = jsdata.schemas[i].tables[j].description;
+							if( description == "") {
+								description = "No Description Available";
+							}
+							$("div#treedisp").jstree("create"
+									, $("#" + id_schema)
+									, false
+									, {"data"  : {"icon": "images/SQLTable.png", "attr":{"id": id_table, "title": description}, "title" : jsdata.schemas[i].tables[j].name},
+										"state": "closed",
+										"attr" :{"id": id_table}
+									}
+									,false
+									,true);   
+							if( nb_tables > 20 ) {
+								logMsg("table list truncated to 20");
+								break
+							}
+						}
+					}
+				}
+				$( "div#treedisp").jstree('close_all', -1);
+			});
+		};
 
-	      this.fireTreeNodeEvent = function(treepath) {
+		this.fireTreeNodeEvent = function(treepath) {
 			runTAP = true;
 			tapView.fireTreeNodeEvent(treepath, runTAP);
 		};
