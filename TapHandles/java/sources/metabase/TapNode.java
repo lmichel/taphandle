@@ -3,13 +3,12 @@ package metabase;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Scanner;
 import java.util.regex.Matcher;
@@ -18,7 +17,6 @@ import java.util.regex.Pattern;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 import resources.RootClass;
 import tapaccess.JoinKeysJob;
@@ -35,6 +33,8 @@ import translator.XmlToJson;
  * 
  * @author laurentmichel
  * @version $Id$
+ * 
+ * 10/1012: Support per-table access for vizier and cache for table descriptions
  */
 public class TapNode  extends RootClass {
 
@@ -45,6 +45,8 @@ public class TapNode  extends RootClass {
 	private NameSpaceDefinition capabilityNS   = new NameSpaceDefinition();
 	private NameSpaceDefinition tablesNS       = new NameSpaceDefinition();
 	private long last_availability_check = -1;
+	public final boolean largeResource;
+	public static final int MAXTABLES = 100; // Max number of tables sent back to the client
 
 
 	/**
@@ -83,6 +85,16 @@ public class TapNode  extends RootClass {
 		emptyDirectory(new File(baseDirectory));
 		validWorkingDirectory(baseDirectory);
 		this.checkServices();
+		/*
+		 * Assuming that one table declaration requirs about 100 bytes, we limit infer to limit the 
+		 * number of displayed tables to  MAXTABLES
+		 */
+		if( (new File(this.baseDirectory + "tables.json")).length() > MAXTABLES*100 ) {
+			this.largeResource = true;
+		} else {
+			this.largeResource = false;
+		}
+		
 	}
 
 	/**
@@ -101,7 +113,7 @@ public class TapNode  extends RootClass {
 		this.checkTables() ;
 		logger.debug("NS for tables " + tablesNS.getNsName());
 		logger.info("Service " + this.url + " seems to be working");			
-		//@@@@@@ this.setJoinKeys();
+		this.setJoinKeys();
 	}
 
 	/**
@@ -225,7 +237,7 @@ public class TapNode  extends RootClass {
 		BufferedReader in = new BufferedReader(
 				new InputStreamReader(
 						(new URL(this.url + service)).openStream()));
-		
+
 		String inputLine;
 		BufferedWriter bfw = new BufferedWriter(new FileWriter(this.baseDirectory + service + ".xml"));
 		boolean found = false;
@@ -285,7 +297,7 @@ public class TapNode  extends RootClass {
 		Scanner s = new Scanner(new File(filename));
 		PrintWriter fw = new PrintWriter(new File(filename + ".new"));
 		while( s.hasNextLine() ) {
-			fw.println(s.nextLine().replaceAll("NODEKEY", this.key));
+			fw.println(s.nextLine().replaceAll("NODEKEY", this.key).replaceAll("NODEURL", this.url));
 		}
 		s.close();
 		fw.close();
@@ -299,8 +311,47 @@ public class TapNode  extends RootClass {
 	 * @throws Exception If something goes wrong
 	 */
 	public void buildJsonTableDescription(String tableName) throws Exception {
-		XmlToJson.translateTableMetaData(this.baseDirectory, tableName, tablesNS);		
+		String productName = this.baseDirectory + tableName ;
+		if( new File(productName + ".json").exists()) {
+			return;
+		}
+		logger.debug("JSON file " + tableName + ".json not found: build it");
+		XmlToJson.translateTableMetaData(this.baseDirectory, "tables", tableName, tablesNS);		
+		/*
+		 * If there is no attribute in the JSON table description, the service delivers it likley table by table
+		 */
+		if( !isThereJsonTableDesc(tableName) ) {
+			logger.debug("No colmuns found in " + tableName + ": make a per table query");
+			File fn = new File(productName + ".xml");
+			String noSchemaName = tableName;
+			int pos = noSchemaName.indexOf('.');
+			if( pos > 0 ) {
+				noSchemaName = noSchemaName.substring(pos + 1);
+			}
+			this.getServiceReponse("columns?query=" + noSchemaName, tablesNS);
+			if( ! (new File(this.baseDirectory + "columns?query=" + noSchemaName  +  ".xml")).renameTo(fn) ) {
+				throw new Exception("Cannot store columns of table  " + tableName +" in file " + this.baseDirectory + tableName  +  ".xml");
+			}
+			XmlToJson.translateTableMetaData(this.baseDirectory, tableName, tablesNS);	
+			fn.delete();
+			(new File(this.baseDirectory + tableName  +  ".xsl")).delete();
+		}
+
 		setNodekeyInJsonResponse(tableName);
+	}
+	/**
+	 * Return true if the JSON file describing the metadata of the table tableName is not empty of attributes.
+	 * If it is, the table comes likely from Vizier and a special query must be sent to get those column description
+	 * @param tableName
+	 * @return
+	 * @throws Exception
+	 */
+	private boolean isThereJsonTableDesc(String tableName) throws Exception{
+		JSONParser parser = new JSONParser();
+		Object obj = parser.parse(new FileReader(this.baseDirectory + tableName + ".json"));
+		JSONObject jsonObject = (JSONObject) ((JSONObject) obj).get("attributes");
+
+		return (((JSONArray) jsonObject.get("aaData")).size() > 0)? true: false;
 	}
 
 	/**
@@ -310,12 +361,18 @@ public class TapNode  extends RootClass {
 	 * @throws Exception If something goes wrong
 	 */
 	public void buildJsonTableAttributes(String tableName) throws Exception {
+		String productName = this.baseDirectory + tableName + "_att";
+		if( new File(productName + ".json").exists()) {
+			return;
+		}
+		logger.debug("JSON file " + tableName + ".json not found: build it");
 		XmlToJson.translateTableAttributes(this.baseDirectory, "tables", tableName, tablesNS);		
 		/*
 		 * If there is no attribute in the JSON table description, the service delivers it likley table by table
 		 */
 		if( !isThereJsonTableAtt(tableName) ) {
-			File fn = new File(this.baseDirectory + tableName  +  "_att.xml");
+			logger.debug("No colmuns found in " + tableName + ": make a per table query");
+			File fn = new File(productName  +  ".xml");
 			String noSchemaName = tableName;
 			int pos = noSchemaName.indexOf('.');
 			if( pos > 0 ) {
@@ -330,7 +387,7 @@ public class TapNode  extends RootClass {
 			(new File(this.baseDirectory + tableName  +  "_att.xsl")).delete();
 		}
 	}		
-	
+
 	/**
 	 * Return true if the JSON file describing the table tableName is not empty of attributes.
 	 * If it is, the table comes likely from Vizier and a special query must be sent to get those column description
@@ -344,29 +401,95 @@ public class TapNode  extends RootClass {
 		JSONObject jsonObject = (JSONObject) obj;
 		return (((JSONArray) jsonObject.get("attributes")).size() > 0)? true: false;
 	}
-	
+
+	/**
+	 * Returns a JSON table list with maxSize first tables and tap schema tables
+	 * @param maxSize
+	 * @return
+	 * @throws Exception
+	 */
 	public JSONObject filterTableList(int maxSize) throws Exception {
 		JSONParser parser = new JSONParser();
 		Object obj = parser.parse(new FileReader(this.getBaseDirectory() + "tables.json"));
 		JSONObject jsonObject = (JSONObject) obj;
 		JSONArray schemas = (JSONArray) jsonObject.get("schemas");
 		for(Object sn: schemas) {
+			boolean takeAnyway = false;
+			ArrayList<JSONObject> toRemove = new ArrayList<JSONObject>();
 			JSONObject s = (JSONObject)sn;
-			System.out.println("*********** " + s.get("name"));
+			if( ((String)s.get("name")).equalsIgnoreCase("tap_schema") ) {
+				takeAnyway = true;
+			}
 			JSONArray tables = (JSONArray) s.get("tables");
 			int cpt = 0;
 			for( Object ts: tables) {
 				JSONObject t = (JSONObject)ts;
-				cpt++;
-				
-				if( cpt > maxSize ) {
-					tables.remove(t);
+
+				if( cpt > maxSize && !takeAnyway ) {
+					toRemove.add(t);
 				}
+				if( !takeAnyway) cpt++;
+			}
+			for( JSONObject tr: toRemove) {
+				tables.remove(tr);
 			}
 		}
 		return jsonObject;
-
 	}
 
-
+	/**
+	 * Returns a JSON table list with only tables matching the filer (filtered by name or by description)
+	 * and tap schema tables
+	 * @param filter
+	 * @return
+	 * @throws Exception
+	 */
+	public JSONObject filterTableList(String filter) throws Exception {
+		JSONParser parser = new JSONParser();
+		Object obj = parser.parse(new FileReader(this.getBaseDirectory() + "tables.json"));
+		JSONObject jsonObject = (JSONObject) obj;
+		JSONArray schemas = (JSONArray) jsonObject.get("schemas");
+		int kept = 0;
+		for(Object sn: schemas) {
+			boolean takeAnyway = false;
+			ArrayList<JSONObject> toRemove = new ArrayList<JSONObject>();
+			JSONObject s = (JSONObject)sn;
+			String schema = (String) s.get("name");
+			if( schema.equalsIgnoreCase("tap_schema") ) {
+				takeAnyway = true;
+			}
+			JSONArray tables = (JSONArray) s.get("tables");
+			for( Object ts: tables) {
+				JSONObject t = (JSONObject)ts;
+				String table = (String) t.get("name");
+				String desc = (String) t.get("description");
+				if(takeAnyway ) {
+					continue;
+				} else if( kept > MAXTABLES || (!desc.matches("(?i)(.*" + filter + ".*)") && !table.matches("(?i)(.*" + filter + ".*)")) ){
+					toRemove.add(t);	
+					continue;
+				} else {
+					kept++;					
+				}
+			}
+			for( JSONObject tr: toRemove) {
+				tables.remove(tr);
+			}
+		}
+		/*
+		 * remove empty schemas
+		 */
+		ArrayList<JSONObject> toRemove = new ArrayList<JSONObject>();
+		for(Object sn: schemas) {
+			JSONObject s = (JSONObject)sn;
+			JSONArray tables = (JSONArray) s.get("tables");
+			if( tables.size() == 0 ) {
+				toRemove.add(s);					
+			}
+		}			
+		for( JSONObject tr: toRemove) {
+			schemas.remove(tr);
+		}
+		return jsonObject;
+	}
 }
