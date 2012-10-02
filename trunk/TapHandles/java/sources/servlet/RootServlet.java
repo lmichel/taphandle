@@ -192,6 +192,7 @@ public abstract class RootServlet extends HttpServlet {
 	protected void dumpJsonFile(String urlPath, HttpServletResponse response) throws Exception {
 		response.setContentType("text/json");
 		logger.debug("dump resource " + urlPath);
+		logger.debug("Real path  " + getServletContext().getRealPath(urlPath));
 		InputStream is = new FileInputStream(getServletContext().getRealPath(urlPath));
 		Scanner s = new Scanner(is);
 		try {
@@ -203,8 +204,7 @@ public abstract class RootServlet extends HttpServlet {
 				nbl++;
 			}
 			logger.debug("done " + nbl + " lines");
-		}
-		finally{
+		} finally{
 			s.close();
 		}
 	}

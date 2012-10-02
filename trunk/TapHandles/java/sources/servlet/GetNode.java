@@ -9,7 +9,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.json.simple.JSONObject;
+
 import metabase.NodeBase;
+import metabase.TapNode;
 import resources.RootClass;
 
 /**
@@ -29,6 +32,7 @@ public class GetNode extends RootServlet implements Servlet {
 		response.setContentType("application/json");
 
 		String node = this.getParameter(request, "node");
+		String filter = this.getParameter(request, "filter");
 		if( node == null || node.length() ==  0 ) {
 			reportJsonError(request, response, "getnode: no node specified");
 			return;
@@ -40,15 +44,26 @@ public class GetNode extends RootServlet implements Servlet {
 			}
 			else if( (key = NodeBase.getKeyNodeByUrl(node) ) != null) {
 
-			}
-			else if( node.startsWith("http://") || node.startsWith("https://") ){
+			} else if( node.startsWith("http://") || node.startsWith("https://") ){
 				key = NodeBase.addNode(node);			
-			}
-			else {
+			} else {
 				reportJsonError(request, response, "Node " + node + " not referenced, enter its URL please");
 				return ;
 			}
-			dumpJsonFile("/" + RootClass.WEB_NODEBASE_DIR + "/" + key + "/tables.json", response);
+			
+			TapNode tn = NodeBase.getNode(node);
+			if( filter != null ) {
+				logger.debug("Node " + key + " Apply the filter: " + filter);
+				// IN 2 steps in order to avoid to call twice response.getWriter() in case of error
+				JSONObject jso = tn.filterTableList(filter);
+				response.getWriter().print(jso.toJSONString());				
+			} else if( tn.largeResource ){
+				logger.debug("Node " + key + " Seems to be too large to return all tables: apply a selection");
+				JSONObject jso = tn.filterTableList(100);
+				response.getWriter().print(jso.toJSONString());
+			} else {
+				dumpJsonFile("/" + RootClass.WEB_NODEBASE_DIR + "/" + key + "/tables.json", response);				
+			}
 		} catch (Exception e) {
 			reportJsonError(request, response, e);
 			return;
