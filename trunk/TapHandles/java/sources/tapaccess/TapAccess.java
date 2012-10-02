@@ -100,7 +100,7 @@ public class TapAccess  extends RootClass {
 	 */
 	public static void sendGetRequest(String endpoint, String outputfile, NodeCookie cookie) throws Exception {
 
-        logger.debug("send GET request " + endpoint + " " + cookie);
+        logger.debug("send GET request " + endpoint + " cookie: " + cookie);
 		// Send the request
 		URL url = new URL(endpoint);  
 		cookie.addCookieToUrl(url);   
