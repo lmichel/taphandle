@@ -150,7 +150,7 @@ public class UserSession  extends RootClass {
 					, nc);
 			return status;
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error(e.getMessage());
 			this.deleteJobDir(nodeKey,  jobID);
 			jobStack.removeJob(nodeKey, jobID);
 			return "REMOVED";

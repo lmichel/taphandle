@@ -39,11 +39,10 @@ public class TapVizier  extends RootClass {
 				cpt++;
 				if( cpt < 5 ) {
 					System.out.println("    " + cpt + " " + t.get("name"));
-					tn.buildJsonTableAttributes((String) t.get("name"));
+					//tn.buildJsonTableAttributes((String) t.get("name"));
 				}
 			}
-		}
-		
-		System.out.println(tn.filterTableList(5));
+		}	
+		tn.filterTableList("galax");
 	}
 }

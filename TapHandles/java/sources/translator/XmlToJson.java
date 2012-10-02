@@ -48,6 +48,7 @@ import cds.savot.pull.SavotPullParser;
  * 
  * 04/2012; Set MAX_ROWS field with 10000 as value
  * 05/2012: Display arrays of atomics
+ * 10/1012: Support per-table access for vizier
  */
 public class XmlToJson  extends RootClass {
 	public static final int MAX_ROWS = 10000;
@@ -128,6 +129,7 @@ public class XmlToJson  extends RootClass {
 
 	/**
 	 * Translate the XML file service.xml into service.json by using the style sheet style.xsl
+	 * The table attributes are extracted from the file tablesFile. The .xml suffix is implicit.
 	 * @param baseDir      Working directory
 	 * @param service      Either availability, capabilities or tables
 	 * @param style        Style sheet name 
@@ -145,6 +147,29 @@ public class XmlToJson  extends RootClass {
 	 * Builds a JSON file describing the table tableName in a format 
 	 * comprehensible by JQuery datatable widget
 	 * @param baseDir      Working directory
+	 * @param tablesFile  Name of the file containing all table metadata
+	 * @param tableName  Name of the table
+	 * @param nsDefinition Name space to use
+	 * @throws Exception If something goes wrong
+	 */
+	public static void translateTableMetaData(String baseDir , String tablesFile, String tableName, NameSpaceDefinition nsDefinition) throws Exception {
+		setVosiNS(baseDir, "table", nsDefinition);
+		String filename = baseDir + "table.xsl";
+		Scanner s = new Scanner(new File(filename));
+		PrintWriter fw = new PrintWriter(new File( baseDir + tableName + ".xsl"));
+		while( s.hasNextLine() ) {
+			fw.println(s.nextLine().replaceAll("TABLENAME", tableName));
+		}
+		s.close();
+		fw.close();
+		applyStyle(baseDir  + tablesFile + ".xml", baseDir + tableName + ".json", baseDir + tableName + ".xsl");
+	}
+	
+	/**
+	 * Builds a JSON file describing the table tableName in a format 
+	 * comprehensible by JQuery datatable widget
+	 * The XML table description is supposed to be in a file names  tableName.xml
+	 * @param baseDir      Working directory
 	 * @param tableName  Name of the table
 	 * @param nsDefinition Name space to use
 	 * @throws Exception If something goes wrong
@@ -159,7 +184,7 @@ public class XmlToJson  extends RootClass {
 		}
 		s.close();
 		fw.close();
-		applyStyle(baseDir  + "tables.xml", baseDir + tableName + ".json", baseDir + tableName + ".xsl");
+		applyStyle(baseDir  + tableName + ".xml", baseDir + tableName + ".json", baseDir + tableName + ".xsl");
 	}
 
 	/**
@@ -185,9 +210,8 @@ public class XmlToJson  extends RootClass {
 	}
 	
 	/**
-	 * Builds a JSON file describing the table tableName to setup.
+	 * Builds a JSON file describing the table tableName to setup query form.
 	 * The XML table description is supposed to be in a file names  tableName_att.xml
-	 * query form
 	 * @param baseDir      Working directory
 	 * @param tableName  Name of the table
 	 * @param nsDefinition Name space to use
