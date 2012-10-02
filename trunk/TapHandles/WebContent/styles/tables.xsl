@@ -14,6 +14,7 @@
 	
 <xsl:template match="vosi:tableset | tableset">
 {&quot;nodekey&quot;: &quot;NODEKEY&quot;,
+&quot;nodeurl&quot;: &quot;NODEURL&quot;,
 &quot;schemas&quot;: [<xsl:for-each select="schema"><xsl:if test="position() > 1">,</xsl:if>
     {&quot;name&quot;: &quot;<xsl:value-of select="name" />&quot;,
     &quot;description&quot;: &quot;<xsl:for-each select="description"><xsl:value-of select="json:encode-string(.)" /></xsl:for-each>&quot;,
