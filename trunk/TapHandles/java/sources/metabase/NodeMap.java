@@ -64,7 +64,7 @@ public class NodeMap  extends RootClass {
 		}
 		else {
 			logger.info("Create new Tap node " + url + " referenced with the key " + key);
-			nm = new TapNode(url, MetaBaseDir + key, key );
+			nm = new TapNode(url, MetaBaseDir + key, key);
 			nodeMap.put(key, nm);
 			return key;
 		}
