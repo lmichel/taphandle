@@ -19,7 +19,7 @@ var nodeList  =  [
                   {id: 'xcatdb', text: "xcatdb"},
                   {id: 'simbad', text: "simbad"},
                   {id: 'vizier', text: "vizier"},
-                 //   {id: 'http://simbad49:8080/simbad/sim-tap', text: "http://simbad49:8080/simbad/sim-tap"}
+                  //   {id: 'http://simbad49:8080/simbad/sim-tap', text: "http://simbad49:8080/simbad/sim-tap"}
                   ];
 
 /*
@@ -51,6 +51,9 @@ $().ready(function() {
 	cartView            = new $.CartView();
 	new $.CartControler(cartModel, cartView);
 
+	var nodeFilterModel       = new $.NodeFilterModel();
+	nodeFilterView            = new $.NodeFilterView();
+	new $.NodeFilterController(nodeFilterModel, nodeFilterView);
 	/*
 	 * layout plugin, requires JQuery 1.7 or higher
 	 * Split the bottom div in 3 splitters divs.
@@ -66,11 +69,11 @@ $().ready(function() {
 			});
 
 	dataTree = $("div#treedisp").jstree({
-            "json_data"   : {"data" : [ {  "attr"     : { "id"   : "rootid", "title": "Dummy node: Select one first with the node selector on the page top." },
-            "data"        : { "title"   : "Tap Nodes" }}]}  , 
-            "plugins"     : [ "themes", "json_data", "dnd", "crrm"],
-            "dnd"         : {"drop_target" : "#resultpane,#taptab,#showquerymeta",
-            "drop_finish" : function (data) {
+		"json_data"   : {"data" : [ {  "attr"     : { "id"   : "rootid", "title": "Dummy node: Select one first with the node selector on the page top." },
+			"data"        : { "title"   : "Tap Nodes" }}]}  , 
+			"plugins"     : [ "themes", "json_data", "dnd", "crrm"],
+			"dnd"         : {"drop_target" : "#resultpane,#taptab,#showquerymeta",
+				"drop_finish" : function (data) {
 					var parent = data.r;
 					var streepath = data.o.attr("id").split(';');
 					if( streepath.length < 3 ) {
@@ -103,12 +106,17 @@ $().ready(function() {
 			"crrm" : {"move" : {"check_move" : function (m) {return false; }}
 			}
 	}); // end of jstree
-	
+
 	dataTree.bind("dblclick.jstree", function (e, data) {
 		var node = $(e.target).closest("li");
 		var id = node[0].id; //id of the selected node					
 		var treePath = id.split(';');
-		if( treePath.length < 3 ) {
+		if( treePath.length == 1 ) {
+			var nm = $(e.target).closest("a")[0].id;
+			if( nm != "" ) {
+				logged_alert("filter >" + nm);
+			}
+		} else if( treePath.length < 3 ) {
 			logged_alert("Query can only be applied on one data category or one data class: ("  +  treePath + ")", 'User Input Error');
 		} else {
 			var fTreePath = {nodekey: treePath[0], schema: treePath[1], table: treePath[2]};
@@ -236,5 +244,6 @@ $().ready(function() {
 		resultPaneView.fireNewNodeEvent(unescape(defaultUrl));
 	}
 
+	nodeFilterView.fireOpenSelectorWindow("pouet");
 });
 
