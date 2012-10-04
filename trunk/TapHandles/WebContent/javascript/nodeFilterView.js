@@ -1,6 +1,10 @@
 jQuery.extend({
 
-	NodeFilterView : function() {
+	NodeFilterView : 
+		/**
+	 * 
+	 */
+		function() {
 		/**
 		 * keep a reference to ourselves
 		 */
@@ -17,426 +21,96 @@ jQuery.extend({
 			listeners.push(list);
 		};
 
-
+		this.fireGetFilteredNodes  = function(node){
+			$.each(listeners, function(i) {
+				listeners[i].controlGetFilteredNodes(node);
+			});
+		};
+		/**
+		 * Open a modal box allowing to select the tables of the node which must be displayed in the tree
+		 * @param node
+		 */
 		this.fireOpenSelectorWindow = function(node) {
 
-			var table = '';
-			var title = "Table Selector for node  <i>"
-				+ node 
-				+ "</i>";
-			table = '<h2><img src="images/Relation.png"><span>' + title
-			+ '</span></h2>'
-			+ "<h4 id=\"mappedmeta\" class='detailhead'> <img src=\"images/tdown.png\"> Links </h4>"
+			var table = '<h2><span>Table Selector for node  <i>' + node + '</i></span></h2>'
 			+ "<div class='detaildata'>"
-			+ "    <div class='detaildata' style='background-color: red;width: 49%; height: 50px;display: inline;float:left;overflow: hidden;'>set a filter<BR>set a filter<BR>set a filter<BR></div>"
-			+ "    <div class='detaildata' style='background-color: green; width: 50%; height: 50px;display: inline;float:right; '>"
-			+ "        <input id=nodeFilter type=texte width=24>"
+			+ "    <div class='detaildata' style='width: 60%; height: 60px;display: inline;float:left;overflow: hidden;'>"
+			+ "        <span class=help>Give a filter on catalogue name or description"
+			+ "        <br> - The filter is a RegExp non case sensitive"
+			+ "        <br> - Type return to apply"
+			+ "        </span>"
 			+ "    </div>"
-			+ "    <div class='detaildata' style='background-color: green; width: 100%; height: 400px; margin-top: 52px; padding-top: 5px'>"
-			+ "        <div class='detaildata' style='background-color: white; width: 80%; height: 380px; margin-top: 90px; overflow: auto;margin : auto;position:relative'></div>"
+			+ "    <div class='detaildata' style='width: 39%; height: 45px;display: inline;float:right; padding-top:15px;'>"
+			+ "        <input id=nodeFilter type=texte width=24 style='background-color: whitesmoke;'>"
 			+ "    </div>"
-			+ "    <div class='detaildata' style='background-color: green; width: 100%; height: 40px; padding-top: 5px'>"
-			+ "        <input type=button value='accept'><input type=button value='cancel'>"
+			+ "    <hr><p class=help>The number of selected tables returned by the server is limited to 100 <p>"
+			+ "    <div id=nodeFilterList class='detaildata' style='border: 1px black solid; background-color: whitesmoke; width: 90%; height: 380px; overflow: auto;margin : auto;position:relative'></div>"
+			+ "    <p class=help>Unselect the table you not want to have access<p><hr>"
+			+ "    <input type=button value='accept' onclick='nodeFilterView.fireGetFilteredNodes(\"" + node + "\");' style='font-weight: bold;'>"
+			+ "    <span class=help>(Type ESC to close the window)</span>"
 			+ "    </div>"
 			+ "</div>";
 
-
-
 			if ($('#detaildiv').length == 0) {
 				$(document.documentElement).append(
-				"<div id=detaildiv style='width: 99%; display: none;'></div>");
+				"<div id=detaildiv style='width: 99%; display: none;'></div><hr>");
 			}
 			$('#detaildiv').html(table);
 
 			$('#detaildiv').modal( { onShow: function(dlg) {
 				$(dlg.container).css('height','auto').css('width','500px');
-			}});
+				}
+			});
 			$("#nodeFilter").keyup(function(event) {
 				if(event.keyCode == 13) {	            
-					$.getJSON("getnode", {node: 'vizier', filter: $("#nodeFilter").val()}, function(jsdata) {
-
+					$.getJSON("getnode", {node: node, filter: $("#nodeFilter").val()}, function(jsdata) {
 						hideProcessingDialog();
-						if( processJsonError(jsdata, "Cannot make data tree") ) {
+						if( processJsonError(jsdata, "Cannot get the node selection") ) {
 							return;
-						}
-						else {
+						} else {
+							that.fireShowNodeSelection($("#nodeFilterList"), jsdata);
 						}
 					});
 				}
 			});
-		}	;	
-		this.fireDownloadProduct = function(url) {
-			showProcessingDialog("Waiting on product info");
-
-			$.getJSON("getproductinfo", {url: url}, function(jsdata) {
-				hideProcessingDialog();
-				if( jsdata == undefined || jsdata == null ) {
-					window.open(url);
-					return;
+		};	
+		/**
+		 * Display in the div the list of selected tables returned by the server 
+		 */
+		this.fireShowNodeSelection = function(listDiv, jsSelection)  {
+			listDiv.html('');		
+			for( var i=0 ; i<jsSelection.schemas.length ; i++ ) {
+				var schema = jsSelection.schemas[i];
+				var sn = schema.name;
+				if( sn == "TAP_SCHEMA" || sn == 'tap_schema' ) {
+					continue;
 				}
-				else {
-					var fn, ct, ce;
-					$.each(jsdata, function(k, v) {
-						if( k == 'ContentDisposition')    fn = v;
-						else if( k == 'ContentType' )     ct = v;
-						else if( k == 'ContentEncoding' ) ce = v;
-					});
-					/*
-					 * Will be downloaded by the browser: no need to open a new tab
-					 */
-					if( (ce != null && (ce == 'gzip' || ce == 'zip')) ||
-							(ct != null && (ct.match(/\.fit/i) || ct.match(/fits/))) ){
-						document.location = url;
-					}
-					else {
-						window.open(url);
-					}
-
+				listDiv.append("<span style='float: left; width: 100%; background-color: white; border: 1px solid black'><b>Schema</b> " + sn + "</span>");		
+				var list = "<ul class=attlist>";
+				for( var j=0 ; j<schema.tables.length ; j++ ) {
+					var table = schema.tables[j];
+					list += "<li class=tableSelected >" 
+						+ "<input  type='checkbox' checked onclick='nodeFilterView.fireSelectFilteredNode($(this));'>"
+						+ "<span style='font-color: black;'>" + table.name + "</span>"
+					    + " <i>" + table.description + "</i>"
+					    + "</li>";
 				}
-			});
-
-		};
-
-		this.fireNewNodeEvent = function(nodekey) {
-			showProcessingDialog("Waiting on " + nodekey + " node description");
-
-			$.getJSON("getnode", {node: nodekey }, function(jsdata) {
-				hideProcessingDialog();
-				if( processJsonError(jsdata, "Cannot make data tree") ) {
-					return;
-				}
-				else {
-					$("div#treedisp").jstree("remove","#rootid" );
-					$("div#treedisp").jstree("remove","#" + jsdata.nodekey);
-					/*
-					 * Create the root of the subtree of this node
-					 */
-					$("div#treedisp").jstree("create"
-							, $("div#treedisp")
-							, false
-							, {"data" : {"icon": "images/Database.png", "attr":{"id": jsdata.nodekey, "title": jsdata.nodeurl}, "title" : jsdata.nodekey},
-								"state": "closed"}
-							,false
-							,true);       
-					var id_schema, id_table;
-					/*
-					 * Create first the first level tree (schemas)
-					 */
-					for( var i=0 ; i<jsdata.schemas.length ; i++ ) {
-						id_schema = jsdata.nodekey + "X" + jsdata.schemas[i].name;
-						var description = jsdata.schemas[i].description;
-						if( description == "") {
-							description = "No Description Available";
-						}
-						$("div#treedisp").jstree("create"
-								, $("#" + jsdata.nodekey)
-								, false
-								, {"data" : {"icon": "images/Bluecube.png", "attr":{"id": id_schema, "title": description}, "title" : jsdata.schemas[i].name},
-									"state": "closed",
-									"attr" :{"id": id_schema}}
-								,false
-								,true);       
-					}
-					/*
-					 * add leaves (tables) the the schemas
-					 */
-					for( var i=0 ; i<jsdata.schemas.length ; i++ ) {
-						id_schema = jsdata.nodekey + "X" + jsdata.schemas[i].name;
-						var nb_tables = 0;
-						for( var j=0 ; j<jsdata.schemas[i].tables.length ; j++ ) {
-							id_table = jsdata.nodekey + ";" + jsdata.schemas[i].name + ";" + jsdata.schemas[i].tables[j].name;
-							var description = jsdata.schemas[i].tables[j].description;
-							if( description == "") {
-								description = "No Description Available";
-							}
-							$("div#treedisp").jstree("create"
-									, $("#" + id_schema)
-									, false
-									, {"data"  : {"icon": "images/SQLTable.png", "attr":{"id": id_table, "title": description}, "title" : jsdata.schemas[i].tables[j].name},
-										"state": "closed",
-										"attr" :{"id": id_table}
-									}
-									,false
-									,true);   
-							if( nb_tables > 20 ) {
-								logMsg("table list truncated to 20");
-								break
-							}
-						}
-					}
-				}
-				$( "div#treedisp").jstree('close_all', -1);
-			});
-		};
-
-		this.fireTreeNodeEvent = function(treepath) {
-			runTAP = true;
-			tapView.fireTreeNodeEvent(treepath, runTAP);
-		};
-
-		this.fireSubmitQueryEvent = function() {
-			$("#resultpane").html();
-			tapView.fireSubmitQueryEvent();
-		};
-		this.fireSetTreePath = function(treepath) {
-			$.each(listeners, function(i) {
-				listeners[i].controlSetTreePath(treepath);
-			});
-		};
-		this.fireHisto = function(direction) {
-		};
-		this.fireStoreHisto = function(query) {
-		};
-
-		this.fireDownloadVOTable = function(query) {
-			$.each(listeners, function(i) {
-				listeners[i].controlDownloadVOTable();
-			});
-		};
-		this.fireDownloadFITS = function(query) {
-			$.each(listeners, function(i) {
-				listeners[i].controlDownloadFITS();
-			});
-		};
-		this.fireDownloadCart = function(query) {
-			$.each(listeners, function(i) {
-				listeners[i].controlDownloadCart();
-			});
-		};
-		this.fireSampBroadcast = function(query) {
-			$.each(listeners, function(i) {
-				listeners[i].controlSampBroadcast();
-			});
-		};
-		this.fireShowRecord = function(oid) {
-			$.each(listeners, function(i) {
-				listeners[i].controlShowRecord(oid);
-			});
-		};
-		this.fireShowMeta = function() {
-			$.each(listeners, function(i) {
-				listeners[i].controlShowMeta();
-			});
-		};
-		this.fireShowMetaNode = function(treepath) {
-			$.each(listeners, function(i) {
-				listeners[i].controlShowMetaNode(treepath);
-			});
-		};
-		this.fireShowSources = function(oid) {
-			$('#saadaqllang').attr('checked', 'checked');
-			$('#taptab').hide();
-			$('#saptab').hide();
-			$('#saadaqltab').show('slow');
-			$("#qhistocount").css("visibility", "visible");
-			saadaqlView.fireDisplayHisto();
-
-			$.each(listeners, function(i) {
-				listeners[i].controlShowSources(oid);
-			});
-		};
-		this.fireShowSimbad = function(coord) {
-			$.each(listeners, function(i) {
-				listeners[i].controlShowSimbad(coord);
-			});
-		};
-		this.fireShowVignette = function(oid, title) {
-			openDialog('Preview of ' + title,
-					"<img class=vignette src='getvignette?oid=" + oid
-					+ "'>");
-		};
-		this.fireShowPreview = function(preview_url, title) {
-			openDialog('Preview of ' + title,
-					"<img class=vignette src='" + preview_url + "'>");
-		};
-
-		this.fireExpendForm= function() {
-			var height = $(window).height() ;
-			var icon = $('#formexpender').css("background-image");
-			if( icon.match("screen_up") != null ) {
-				$('#formexpender').css("background-image", "url(images/screen_down.png)");
-				$('#formexpender').attr("title", "Expend query form");
-				height='10%';
-			}
-			else {
-				$('#formexpender').css("background-image", "url(images/screen_up.png)");
-				$('#formexpender').attr("title", "Minimize query form");
-				height='90%';
-			}
-			layoutPane.sizePane("south", height);
-			//	$("div#accesspane").trigger("resize",[ height]);		
-		};
-		this.fireRemoveAllJobs= function() {
-			if( confirm("Do you really want to remove all jobs?") ) {
-				$("#tapjobs a").click();
+				list += "</ul>";
+				listDiv.append(list);		
 			}
 		};
-		this.showProgressStatus = function() {
-			logged_alert("Job in progress", 'Info');
-		};
-		this.showFailure = function(textStatus) {
-			logged_alert("view: " + textStatus, 'Failutr');
-		};
-
-		this.showMeta = function(jsdata) {
-			if (jsdata.errormsg != null) {
-				logged_alert("FATAL ERROR: Cannot show object detail: "
-						+ jsdata.errormsg, 'Server Error');
-				return;
-			}
-
-			var table = '';
-			var histo = '<img src="images/question.png">';
-
-
-			var title = "Columns of table <i>"
-				+ jsdata.table
-				+ "</i> of node <i>"
-				+ jsdata.nodekey 
-				+ "</i>";
-			table += '<h2> ' + histo + ' META <span>' + title
-			+ '</span></h2>';
-			table += "<h4 id=\"mappedmeta\" class='detailhead'> <img src=\"images/tdown.png\"> Table Columns </h4>";
-			table += "<div class='detaildata'>";
-			table += "<table width=99% cellpadding=\"0\" cellspacing=\"0\" border=\"0\"  id=\"detailtable\" class=\"display\"></table>";
-			table += "</div>";
-
-
-			if ($('#detaildiv').length == 0) {
-				$(document.documentElement).append(
-				"<div id=detaildiv style='width: 99%; display: none;'></div>");
-			}
-			$('#detaildiv').html(table);
-			$('#detailtable').dataTable(
-					{
-						"aoColumns" : jsdata.attributes.aoColumns,
-						"aaData" : jsdata.attributes.aaData,
-						//	"sDom" : '<"top"f>rt<"bottom">',
-						"bPaginate" : false,
-						"aaSorting" : [],
-						"bSort" : false,
-						"bFilter" : true,
-						"bAutoWidth" : true
-					});
-
-			$('#detaildiv').modal();
-
-		};
-
-		this.showTapResult = function(treepath, jid, jsdata, attributeHandlers) {
-			var table = "<table cellpadding=\"0\" cellspacing=\"0\" border=\"1\"  id=\"datatable\" class=\"display\"></table>";
-			$("#resultpane").html(table);
-			var nb_cols = jsdata.aoColumns.length;
-			for( var r=0 ; r<jsdata.aaData.length ; r++) {
-				var line = jsdata.aaData[r];
-				for( var l=0 ; l<nb_cols ; l++) {
-					var num = line[l];
-					//line[l] = formatValue(jsdata.aoColumns[l].sTitle, num);
-				}
-			}
-
-			var aoColumns = new Array();
-			for(var i=0 ; i<jsdata.aoColumns.length ; i++) {
-				var title ;
-				if( attributeHandlers == undefined ) {
-					title = "No descritption available"
-						+ " - This job has likely been initiated in a previous session" ;
-				}
-				else {
-					var ah = attributeHandlers[jsdata.aoColumns[i].sTitle];/*
-					/*
-					 * Column name could be published in upper case but returned by the DBMS in lower case.
-					 */
-					if(ah == undefined  ) {
-						ah = attributeHandlers[jsdata.aoColumns[i].sTitle.toLowerCase()];
-					}
-					if(ah == undefined  ) {
-						ah = attributeHandlers[jsdata.aoColumns[i].sTitle.toUpperCase()];
-					}
-					if( ah == undefined ) {
-						title = "Column not published";
-					} else {
-						title = ah.description
-						+ " - Name: " + ah.name
-						+ " - Unit: " + ah.unit
-						+ " - UCD: " + ah.ucd
-						+ " - UType: " + ah.utype
-						+ " - DataType: " + ah.dataType;
-					}
-				}
-				aoColumns[i] = {sTitle: '<span title="' + title + '">' + jsdata.aoColumns[i].sTitle + '</span>'};
-			}
-
-			var t = $('#datatable').dataTable({
-				"aLengthMenu": [5, 10, 25, 50, 100],
-				"aoColumns" : aoColumns,
-				"aaData" : jsdata.aaData,
-				//"sDom" : '<"top"f>rt',
-				"bPaginate" : true,
-				"aaSorting" : [],
-				"bSort" : false,
-				"bFilter" : true,
-				"fnRowCallback": function( nRow, aData, iDisplayIndex ) {
-					for( var c=0 ; c<aData.length ; c++ ) {
-						formatValue(this.fnSettings().aoColumns[c].sTitle, aData[c], $('td:eq(' + c + ')', nRow));
-					}
-					return nRow;
-				}
-			} );
-
-			$('#datatable span').tooltip( { 
-				track: true, 
-				delay: 0, 
-				showURL: false, 
-				opacity: 1, 
-				fixPNG: true, 
-				showBody: " - ", 
-				// extraClass: "pretty fancy", 
-				top: -15, 
-				left: 5 	
-			});	
-		};;
-
-		this.displayResult = function(dataJSONObject) {
-		};
-
-		this.initTable = function(dataJSONObject, query) {
-			if( processJsonError(dataJSONObject, "") ) {
-				return;
-			}
-			else {
-				/*
-				 * Get table columns
-				 */
-				var ahs = dataJSONObject["attributes"];
-				var table = "<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\"  id=\"datatable\" class=\"display\">"
-					+ "<thead>" + "<tr>";
-				for (i = 0; i < ahs.length; i++) {
-					table += "<th>" + ahs[i].name + "</th>";
-				}
-				/*
-				 * Build empty table
-				 */
-				table += "</tr>"
-					+ "</thead>"
-					+ "<tbody>"
-					+ "<tr><td colspan="
-					+ i
-					+ " class=\"dataTables_empty\">Loading data from server</td></tr>"
-					+ "</tbody>" + "</table>";
-				$("#resultpane").html(table);
-				/*
-				 * Connect the table with the DB
-				 */
-				$('#datatable').dataTable({
-					"bServerSide" : true,
-					"bProcessing" : true,
-					"aaSorting" : [],
-					"bSort" : false,
-					"bFilter" : false,
-					"sAjaxSource" : "nextpage"
-				});
+				
+		/**
+		 * Select unselect one filter table
+		 * 
+		 */
+		this.fireSelectFilteredNode = function(button) {
+			if( button.attr('checked') ) {
+				button.parent().attr('class', 'tableSelected');
+			} else {
+				button.parent().attr('class', 'tableNotSelected');
 			}
 		};
+
 	}
 });

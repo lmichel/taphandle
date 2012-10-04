@@ -54,6 +54,10 @@ $().ready(function() {
 	var nodeFilterModel       = new $.NodeFilterModel();
 	nodeFilterView            = new $.NodeFilterView();
 	new $.NodeFilterController(nodeFilterModel, nodeFilterView);
+
+	$.alerts.overlayOpacity = 0.5;
+	$.alerts.overlayColor = '#000';
+
 	/*
 	 * layout plugin, requires JQuery 1.7 or higher
 	 * Split the bottom div in 3 splitters divs.
@@ -114,7 +118,7 @@ $().ready(function() {
 		if( treePath.length == 1 ) {
 			var nm = $(e.target).closest("a")[0].id;
 			if( nm != "" ) {
-				logged_alert("filter >" + nm);
+				nodeFilterView.fireOpenSelectorWindow(nm);
 			}
 		} else if( treePath.length < 3 ) {
 			logged_alert("Query can only be applied on one data category or one data class: ("  +  treePath + ")", 'User Input Error');
@@ -238,12 +242,12 @@ $().ready(function() {
 	sampView.fireSampInit();
 	tapView.fireRefreshJobList();
 	rootUrl = "http://" + window.location.hostname +  (location.port?":"+location.port:"") + window.location.pathname;
-
+	/*
+	 * Connect the URL passed as parameter
+	 */
 	defaultUrl  =  (RegExp('url=' + '(.+?)(&|$)').exec(location.search)||[,null])[1];
 	if( defaultUrl != null ) {
 		resultPaneView.fireNewNodeEvent(unescape(defaultUrl));
 	}
-
-	nodeFilterView.fireOpenSelectorWindow("pouet");
 });
 

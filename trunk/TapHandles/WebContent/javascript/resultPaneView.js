@@ -94,7 +94,7 @@ jQuery.extend({
 					return;
 				}
 				else {
-					var fn, ct, ce;
+					var ct, ce;
 					$.each(jsdata, function(k, v) {
 						if( k == 'ContentDisposition')    fn = v;
 						else if( k == 'ContentType' )     ct = v;
@@ -106,8 +106,7 @@ jQuery.extend({
 					if( (ce != null && (ce == 'gzip' || ce == 'zip')) ||
 							(ct != null && (ct.match(/\.fit/i) || ct.match(/fits/))) ){
 						document.location = url;
-					}
-					else {
+					} else {
 						window.open(url);
 					}
 
@@ -116,79 +115,88 @@ jQuery.extend({
 
 		};
 
-	      this.fireNewNodeEvent = function(nodekey) {
-	            showProcessingDialog("Waiting on " + nodekey + " node description");
+		this.fireNewNodeEvent = function(nodekey) {
+			showProcessingDialog("Waiting on " + nodekey + " node description");
 
-	            $.getJSON("getnode", {node: nodekey }, function(jsdata) {
-	                hideProcessingDialog();
-	                if( processJsonError(jsdata, "Cannot make data tree") ) {
-	                    return;
-	                }
-	                else {
-	                    $("div#treedisp").jstree("remove","#rootid" );
-	                    $("div#treedisp").jstree("remove","#" + jsdata.nodekey);
-	                    /*
-	                     * Create the root of the subtree of this node
-	                     */
-	                    $("div#treedisp").jstree("create"
-	                            , $("div#treedisp")
-	                            , false
-	                            , {"data" : {"icon": "images/Database.png", "attr":{"id": jsdata.nodekey, "title": jsdata.nodeurl}, "title" : jsdata.nodekey},
-	                                "state": "closed"}
-	                            ,false
-	                            ,true);       
-	                    var id_schema, id_table;
-	                    /*
-	                     * Create first the first level tree (schemas)
-	                     */
-	                    for( var i=0 ; i<jsdata.schemas.length ; i++ ) {
-	                        id_schema = jsdata.nodekey + "X" + jsdata.schemas[i].name;
-	                        var description = jsdata.schemas[i].description;
-	                        if( description == "") {
-	                            description = "No Description Available";
-	                        }
-	                        $("div#treedisp").jstree("create"
-	                                , $("#" + jsdata.nodekey)
-	                                , false
-	                                , {"data" : {"icon": "images/Bluecube.png", "attr":{"id": id_schema, "title": description}, "title" : jsdata.schemas[i].name},
-	                                    "state": "closed",
-	                                    "attr" :{"id": id_schema}}
-	                                ,false
-	                                ,true);       
-	                    }
-	                    /*
-	                     * add leaves (tables) the the schemas
-	                     */
-	                    for( var i=0 ; i<jsdata.schemas.length ; i++ ) {
-	                        id_schema = jsdata.nodekey + "X" + jsdata.schemas[i].name;
-	                        var nb_tables = 0;
-	                        for( var j=0 ; j<jsdata.schemas[i].tables.length ; j++ ) {
-	                            id_table = jsdata.nodekey + ";" + jsdata.schemas[i].name + ";" + jsdata.schemas[i].tables[j].name;
-	                            var description = jsdata.schemas[i].tables[j].description;
-	                            if( description == "") {
-	                                description = "No Description Available";
-	                            }
-	                            $("div#treedisp").jstree("create"
-	                                    , $("#" + id_schema)
-	                                    , false
-	                                    , {"data"  : {"icon": "images/SQLTable.png", "attr":{"id": id_table, "title": description}, "title" : jsdata.schemas[i].tables[j].name},
-	                                        "state": "closed",
-	                                        "attr" :{"id": id_table}
-	                                    }
-	                                    ,false
-	                                    ,true);   
-	                            if( nb_tables > 20 ) {
-	                            	logMsg("table list truncated to 20");
-	                            	break
-	                            }
-	                        }
-	                    }
-	                }
-	                $( "div#treedisp").jstree('close_all', -1);
-	            });
-	        };
+			$.getJSON("getnode", {node: nodekey }, function(jsdata) {
+				hideProcessingDialog();
+				if( processJsonError(jsdata, "Cannot make data tree") ) {
+					return;
+				}
+				else {
+					that.fireBuildTree(jsdata);
+				}
+			});
+		};
 
-	      this.fireTreeNodeEvent = function(treepath) {
+		this.fireBuildTree = function(jsdata) {
+			$("div#treedisp").jstree("remove","#rootid" );
+			$("div#treedisp").jstree("remove","#" + jsdata.nodekey);
+			/*
+			 * Create the root of the subtree of this node
+			 */
+			$("div#treedisp").jstree("create"
+					, $("div#treedisp")
+					, false
+					, {"data" : {"icon": "images/Database.png", "attr":{"id": jsdata.nodekey, "title": jsdata.nodeurl}, "title" : jsdata.nodekey},
+						"state": "closed"}
+					,false
+					,true);       
+			var id_schema, id_table;
+			/*
+			 * Create first the first level tree (schemas)
+			 */
+			for( var i=0 ; i<jsdata.schemas.length ; i++ ) {
+				id_schema = jsdata.nodekey + "X" + jsdata.schemas[i].name;
+				var description = jsdata.schemas[i].description;
+				if( description == "") {
+					description = "No Description Available";
+				}
+				$("div#treedisp").jstree("create"
+						, $("#" + jsdata.nodekey)
+						, false
+						, {"data" : {"icon": "images/Bluecube.png", "attr":{"id": id_schema, "title": description}, "title" : jsdata.schemas[i].name},
+							"state": "closed",
+							"attr" :{"id": id_schema}}
+						,false
+						,true);       
+			}
+			/*
+			 * add leaves (tables) the the schemas
+			 */
+			for( var i=0 ; i<jsdata.schemas.length ; i++ ) {
+				var schema = jsdata.schemas[i];
+				var id_schema = jsdata.nodekey + "X" + schema.name;
+				var nb_tables = 0;
+				for( var j=0 ; j<schema.tables.length ; j++ ) {
+					var table = schema.tables[j];
+					var id_table = jsdata.nodekey + ";" + schema.name + ";" + table.name;
+					var description = table.description;
+					if( description == "") {
+						description = "No Description Available";
+					}
+					$("div#treedisp").jstree("create"
+							, $("#" + id_schema)
+							, false
+							, {"data"  : {"icon": "images/SQLTable.png", "attr":{"id": id_table, "title": description}, "title" : table.name},
+								"state": "closed",
+								"attr" : {"id": id_table}
+							}
+							,false
+							,true);   
+					if( nb_tables > 20 ) {
+						logMsg("table list truncated to 20");
+						break;
+					}
+				}
+			}
+			$( "div#treedisp").jstree('close_all', -1);	    
+			if(jsdata.truncated != null  ) {
+				logged_alert("Table list truncated by the server, double click on the " + jsdata.nodekey + " node to make you own selection");
+			}
+		};
+		
+		this.fireTreeNodeEvent = function(treepath) {
 			runTAP = true;
 			tapView.fireTreeNodeEvent(treepath, runTAP);
 		};

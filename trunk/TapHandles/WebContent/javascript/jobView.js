@@ -65,11 +65,14 @@ jQuery.extend({
 				tapView.fireRemoveJob( id);
 				$.post("killjob"
 						, {NODE: nodekey, JOBID: id}
-						, function(jsondata, status) {
-							if( processJsonError(jsondata, "Cannot delete job: " +id) ) {
+						, function(jsondata, status) {	
+							// Nothing is returned when everything is OK
+							if( jsondata == undefined || jsondata == null ) {
+								$('#' +  id).remove();		
 								return;
-							}
-							else {
+							} else if( processJsonError(jsondata, "Cannot delete job: " +id) ) {
+								return;
+							} else {
 								$('#' +  id).remove();		
 							}
 						});

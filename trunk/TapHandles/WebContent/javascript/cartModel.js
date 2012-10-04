@@ -126,12 +126,12 @@ jQuery.extend({
 			$.each(listeners, function(i){
 				listeners[i].isCartCleaned(cartData);
 			});			
-		}
+		};
 		this.notifyCartOpen = function() {
 			$.each(listeners, function(i){
 				listeners[i].isInit(cartData);
 			});			
-		}
+		};
 
 		this.startArchiveBuilding = function() {
 			$.ajax({
@@ -147,7 +147,7 @@ jQuery.extend({
 					alert("Error: " + textStatus);
 				}
 			});
-		}
+		};
 
 		this.killArchiveBuilding = function() {
 			if( zipJob == null ) {

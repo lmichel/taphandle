@@ -15,18 +15,23 @@ jQuery.extend({
 		var results;
 
 		this.init = function(xmlSummary) {
-			var xmlRoot = $(xmlSummary).find("[nodeName=uws:job]");
-			that.jobId = xmlRoot.find("[nodeName=uws:jobId]").text();
-			that.phase = xmlRoot.find("[nodeName=uws:phase]").text();
-			that.params = new Array();
-			xmlRoot.find("[nodeName=uws:parameters]").find("[nodeName=uws:parameter]").each(function() {
+	        logMsg((new XMLSerializer()).serializeToString(xmlSummary));
+	        /*
+	         * The pair Chrome 15 and after and Jquery 1.7 do not support NS in XML
+	         * parsing. We must feed the find() function selector including both NS an no NS filed names
+	         */
+			var xmlRoot = $(xmlSummary).find('uws\\:job, job');
+			this.jobId = xmlRoot.find('uws\\:jobId, jobId').text();
+			this.phase = xmlRoot.find('uws\\:phase, phase').text();
+			this.params = new Array();
+			xmlRoot.find("uws\\:parameters, parameters").find("uws\\:parameter, parameter").each(function() {
 				that.params[$(this).attr("id")] = $(this).text();
 			});	
 			that.results = new Array();
-			xmlRoot.find("[nodeName=uws:results]").find("[nodeName=uws:result]").each(function() {
+			xmlRoot.find("uws\\:results, results").find("uws\\:result, result").each(function() {
 				that.results[that.results.length] = $(this).attr("xlink:href");
 			});
-		}
+		};
 		
 		that.init(xmlSummary);
 
@@ -39,13 +44,13 @@ jQuery.extend({
 					that.refresh();
 				}
 			});
-		}
+		};
 
 		this.refresh = function() {
 			$.get("datapack/zipper/" + that.jobId
 				, function(data) {that.init(data);}
 			    , "xml") ;
-		}
+		};
 		this.download = function() {
 			if( that.results.length >= 1 ) {
 				var url = that.results[0];
@@ -55,6 +60,6 @@ jQuery.extend({
 			else {
 				logged_alert("No ZIP archive available");
 			}
- 		}
+ 		};
 	}
 });
