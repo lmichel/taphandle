@@ -434,7 +434,7 @@ a.closekw {
 	height: 16px;
 	width: 0px;
 	overflow: visible;
-	padding: 16px 0px 2px 16px;
+	padding: 0px 0px 0px 16px;
 	background: transparent url(../images/small_trash.png) bottom left
 		no-repeat;
 	vertical-align: middle;
@@ -451,3 +451,16 @@ a:hover.closekw {
 	-moz-opacity: 0.5;
 	opacity: 0.5;
 }
+
+/*
+ * Styles,applied to the table selector
+ */
+li.tableSelected {
+	background-color: whitesmoke;
+	color: dimgray;
+}
+li.tableNotSelected {
+	background-color: rgb(235, 192, 192);
+	color: dimgray;
+}
+
