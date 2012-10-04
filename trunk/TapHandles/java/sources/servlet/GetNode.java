@@ -2,6 +2,9 @@
 package servlet;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
@@ -33,6 +36,7 @@ public class GetNode extends RootServlet implements Servlet {
 
 		String node = this.getParameter(request, "node");
 		String filter = this.getParameter(request, "filter");
+		String rejected = this.getParameter(request, "rejected");
 		if( node == null || node.length() ==  0 ) {
 			reportJsonError(request, response, "getnode: no node specified");
 			return;
@@ -54,12 +58,17 @@ public class GetNode extends RootServlet implements Servlet {
 			TapNode tn = NodeBase.getNode(node);
 			if( filter != null ) {
 				logger.debug("Node " + key + " Apply the filter: " + filter);
-				// IN 2 steps in order to avoid to call twice response.getWriter() in case of error
-				JSONObject jso = tn.filterTableList(filter);
+				Set<String> ra = null;
+				if( rejected != null && rejected.length() > 0) {
+					logger.debug("Node " + key + " Tables discarded by the user: " + rejected);
+					ra = new HashSet<String>(Arrays.asList(rejected.split(",")));
+				}
+				// IN 2 steps in order not to call twice response.getWriter() in case of error
+				JSONObject jso = tn.filterTableList(filter, ra);
 				response.getWriter().print(jso.toJSONString());				
 			} else if( tn.largeResource ){
 				logger.debug("Node " + key + " Seems to be too large to return all tables: apply a selection");
-				JSONObject jso = tn.filterTableList(100);
+				JSONObject jso = tn.filterTableList(2);
 				response.getWriter().print(jso.toJSONString());
 			} else {
 				dumpJsonFile("/" + RootClass.WEB_NODEBASE_DIR + "/" + key + "/tables.json", response);				

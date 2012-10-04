@@ -11,6 +11,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -94,7 +95,7 @@ public class TapNode  extends RootClass {
 		} else {
 			this.largeResource = false;
 		}
-		
+
 	}
 
 	/**
@@ -408,11 +409,13 @@ public class TapNode  extends RootClass {
 	 * @return
 	 * @throws Exception
 	 */
+	@SuppressWarnings("unchecked")
 	public JSONObject filterTableList(int maxSize) throws Exception {
 		JSONParser parser = new JSONParser();
 		Object obj = parser.parse(new FileReader(this.getBaseDirectory() + "tables.json"));
 		JSONObject jsonObject = (JSONObject) obj;
 		JSONArray schemas = (JSONArray) jsonObject.get("schemas");
+		boolean truncated = false;
 		for(Object sn: schemas) {
 			boolean takeAnyway = false;
 			ArrayList<JSONObject> toRemove = new ArrayList<JSONObject>();
@@ -425,7 +428,8 @@ public class TapNode  extends RootClass {
 			for( Object ts: tables) {
 				JSONObject t = (JSONObject)ts;
 
-				if( cpt > maxSize && !takeAnyway ) {
+				if( cpt >= maxSize && !takeAnyway ) {
+					truncated = true;
 					toRemove.add(t);
 				}
 				if( !takeAnyway) cpt++;
@@ -433,6 +437,12 @@ public class TapNode  extends RootClass {
 			for( JSONObject tr: toRemove) {
 				tables.remove(tr);
 			}
+		}
+		/*
+		 * Advice the client that the lsit is truncated
+		 */
+		if( truncated ) {
+			jsonObject.put("truncated", "true");
 		}
 		return jsonObject;
 	}
@@ -444,11 +454,13 @@ public class TapNode  extends RootClass {
 	 * @return
 	 * @throws Exception
 	 */
+	@SuppressWarnings("unchecked")
 	public JSONObject filterTableList(String filter) throws Exception {
 		JSONParser parser = new JSONParser();
 		Object obj = parser.parse(new FileReader(this.getBaseDirectory() + "tables.json"));
 		JSONObject jsonObject = (JSONObject) obj;
 		JSONArray schemas = (JSONArray) jsonObject.get("schemas");
+		boolean truncated = false;
 		int kept = 0;
 		for(Object sn: schemas) {
 			boolean takeAnyway = false;
@@ -465,7 +477,11 @@ public class TapNode  extends RootClass {
 				String desc = (String) t.get("description");
 				if(takeAnyway ) {
 					continue;
-				} else if( kept > MAXTABLES || (!desc.matches("(?i)(.*" + filter + ".*)") && !table.matches("(?i)(.*" + filter + ".*)")) ){
+				} else if( kept >= MAXTABLES ) {
+					truncated = true;
+					toRemove.add(t);	
+					continue;
+				} else if (!desc.matches("(?i)(.*" + filter + ".*)") && !table.matches("(?i)(.*" + filter + ".*)") ){
 					toRemove.add(t);	
 					continue;
 				} else {
@@ -490,6 +506,66 @@ public class TapNode  extends RootClass {
 		for( JSONObject tr: toRemove) {
 			schemas.remove(tr);
 		}
+		/*
+		 * Advice the client that the lsit is truncated
+		 */
+		if( truncated ) {
+			jsonObject.put("truncated", "true");
+		}
 		return jsonObject;
 	}
+
+	/**
+	 * Returns a JSON table list with only tables matching the filer (filtered by name or by description)
+	 * and not contained in rejectedIndividuals in addition with tap schema tables which cannot be discarded
+	 * @param filter
+	 * @param rejectedIndividuals
+	 * @return
+	 * @throws Exception
+	 */
+	public JSONObject filterTableList(String filter, Set<String> rejectedIndividuals) throws Exception {
+		JSONObject jsonObject = this.filterTableList(filter) ;
+		if( rejectedIndividuals != null && rejectedIndividuals.size() != 0 ) {
+			JSONArray schemas = (JSONArray) jsonObject.get("schemas");
+			for(Object sn: schemas) {
+				boolean takeAnyway = false;
+				ArrayList<JSONObject> toRemove = new ArrayList<JSONObject>();
+				JSONObject s = (JSONObject)sn;
+				String schema = (String) s.get("name");
+				if( schema.equalsIgnoreCase("tap_schema") ) {
+					takeAnyway = true;
+				}
+				JSONArray tables = (JSONArray) s.get("tables");
+				for( Object ts: tables) {
+					JSONObject t = (JSONObject)ts;
+					String table = (String) t.get("name");
+					if(takeAnyway ) {
+						continue;
+					} else if (rejectedIndividuals.contains(table)  ){
+						toRemove.add(t);	
+						continue;
+					}
+				}
+				for( JSONObject tr: toRemove) {
+					tables.remove(tr);
+				}
+			}
+			/*
+			 * remove empty schemas
+			 */
+			ArrayList<JSONObject> toRemove = new ArrayList<JSONObject>();
+			for(Object sn: schemas) {
+				JSONObject s = (JSONObject)sn;
+				JSONArray tables = (JSONArray) s.get("tables");
+				if( tables.size() == 0 ) {
+					toRemove.add(s);					
+				}
+			}			
+			for( JSONObject tr: toRemove) {
+				schemas.remove(tr);
+			}
+		}
+		return jsonObject;
+	}
+
 }
