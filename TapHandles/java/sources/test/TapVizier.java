@@ -43,6 +43,6 @@ public class TapVizier  extends RootClass {
 				}
 			}
 		}	
-		tn.filterTableList("galax");
+		System.out.println(tn.filterTableList(2).toJSONString());
 	}
 }

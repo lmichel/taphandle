@@ -30,10 +30,10 @@ public class NodeBase extends RootClass{
 
 	static {
 		defaultNodes.put("vizier", "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/");
-//		defaultNodes.put("xcatdb", "http://xcatdb.u-strasbg.fr/2xmmidr3/tap");
-//		defaultNodes.put("cadc"  , "http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap");
-//		defaultNodes.put("gavot" , "http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap");
-//		defaultNodes.put("simbad", "http://simbad.u-strasbg.fr/simbad/sim-tap");
+		defaultNodes.put("xcatdb", "http://xcatdb.u-strasbg.fr/2xmmidr3/tap");
+		defaultNodes.put("cadc"  , "http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap");
+		defaultNodes.put("gavot" , "http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap");
+		defaultNodes.put("simbad", "http://simbad.u-strasbg.fr/simbad/sim-tap");
 	}
 	/**
 	 * Private creator checking he validity of the base and recording some nodes
