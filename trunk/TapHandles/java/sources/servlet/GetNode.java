@@ -45,8 +45,7 @@ public class GetNode extends RootServlet implements Servlet {
 			String key;
 			if( NodeBase.getNode(node) != null ) {
 				key = node;
-			}
-			else if( (key = NodeBase.getKeyNodeByUrl(node) ) != null) {
+			} else if( (key = NodeBase.getKeyNodeByUrl(node) ) != null) {
 
 			} else if( node.startsWith("http://") || node.startsWith("https://") ){
 				key = NodeBase.addNode(node);			
@@ -55,7 +54,7 @@ public class GetNode extends RootServlet implements Servlet {
 				return ;
 			}
 			
-			TapNode tn = NodeBase.getNode(node);
+			TapNode tn = NodeBase.getNode(key);
 			if( filter != null ) {
 				logger.debug("Node " + key + " Apply the filter: " + filter);
 				Set<String> ra = null;

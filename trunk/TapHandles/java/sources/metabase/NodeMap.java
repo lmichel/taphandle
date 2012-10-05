@@ -61,8 +61,7 @@ public class NodeMap  extends RootClass {
 		TapNode nm;
 		if( (nm = this.getNode(key)) != null ) {
 			throw new Exception("Node with \"" + key + "\" as key already exists (" + nm.getUrl() + ")");
-		}
-		else {
+		} else {
 			logger.info("Create new Tap node " + url + " referenced with the key " + key);
 			nm = new TapNode(url, MetaBaseDir + key, key);
 			nodeMap.put(key, nm);
@@ -79,8 +78,7 @@ public class NodeMap  extends RootClass {
 	public boolean hasNode(String key) throws Exception {
 		if( this.getNode(key) != null ) {
 			return true;
-		}
-		else {
+		} else {
 			return false;
 		}
 	}

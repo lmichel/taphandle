@@ -43,22 +43,21 @@ public abstract class RootServlet extends HttpServlet {
 	static private DecimalFormat exp =  new DecimalFormat("0.00E00");
 	static private DecimalFormat deux = new DecimalFormat("0.000");
 	static private DecimalFormat six = new DecimalFormat("0.000000");
-	
-	
+
+
+	static {
+		deux.setDecimalFormatSymbols(new DecimalFormatSymbols(Locale.ENGLISH));
+		six.setDecimalFormatSymbols(new DecimalFormatSymbols(Locale.ENGLISH));
+		exp.setDecimalFormatSymbols(new DecimalFormatSymbols(Locale.ENGLISH));			
+	}
 	@Override
 	public void init(ServletConfig conf) throws ServletException {
 		super.init(conf);
-		if( ! INIT) {
-			NodeBase.switchToContext(getServletContext().getRealPath("/"));
-			deux.setDecimalFormatSymbols(new DecimalFormatSymbols(Locale.ENGLISH));
-			six.setDecimalFormatSymbols(new DecimalFormatSymbols(Locale.ENGLISH));
-			exp.setDecimalFormatSymbols(new DecimalFormatSymbols(Locale.ENGLISH));	
-			try {
-				NodeBase.getNode("xcatdb");
-			} catch (Exception e) {
-				logger.error("Try to init xcatdb 2xmmidr3", e);
+		synchronized (this) {
+			if( ! INIT) {
+				NodeBase.switchToContext(getServletContext().getRealPath("/"));
+				INIT = true;
 			}
-			INIT = true;
 		}
 	}
 
@@ -140,7 +139,7 @@ public abstract class RootServlet extends HttpServlet {
 			res.setHeader("Content-Encoding", "zip");
 			s_product = product_path.replaceAll("(?i)(\\.zip$)", "");
 		}
-		
+
 		if( s_product.toLowerCase().endsWith(".htm") || s_product.toLowerCase().endsWith(".html") ) {
 			res.setContentType("text/html;charset=ISO-8859-1");
 		} else if( s_product.toLowerCase().endsWith(".pdf")  ) {
@@ -222,17 +221,17 @@ public abstract class RootServlet extends HttpServlet {
 		}
 		return retour;
 	}
-	
+
 	protected String getParameter(HttpServletRequest req, String param) {
 		String retour = req.getParameter(param.toLowerCase());
- 		if( retour == null ) {
- 			return  req.getParameter(param.toUpperCase());
- 		}
- 		else {
- 			return retour;
- 		}
+		if( retour == null ) {
+			return  req.getParameter(param.toUpperCase());
+		}
+		else {
+			return retour;
+		}
 	}
-	
+
 	/**
 	 * returns a decimal representation of val with a 1e-6 precision
 	 * @param val
