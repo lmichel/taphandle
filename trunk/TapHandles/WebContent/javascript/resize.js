@@ -35,7 +35,5 @@ $().ready(function() {
 //		adjustHeights();
 		
 	});
-	
-	
-	
+		
 });

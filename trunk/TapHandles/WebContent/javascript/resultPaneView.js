@@ -294,9 +294,10 @@ jQuery.extend({
 			//	$("div#accesspane").trigger("resize",[ height]);		
 		};
 		this.fireRemoveAllJobs= function() {
-			if( confirm("Do you really want to remove all jobs?") ) {
-				$("#tapjobs a").click();
-			}
+			openConfirm({title: "Removing Jobs"
+					   , message: "Do you really want to remove all jobs?"
+					   , handler: function(){$("#tapjobs a").click();}
+			});
 		};
 		this.showProgressStatus = function() {
 			logged_alert("Job in progress", 'Info');
