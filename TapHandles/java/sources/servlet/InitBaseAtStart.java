@@ -1,27 +1,22 @@
 package servlet;
 
-import java.io.File;
-
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
 import metabase.NodeBase;
 import resources.RootClass;
 
+/**
+ * Listener invoked by Tomcat at starting time and at shutdown time.
+ * It is declared in web.xml
+ * @author michel
+ *
+ */
 public class InitBaseAtStart extends RootClass implements ServletContextListener {
-
-
-	/*This method is invoked when the Web Application has been removed 
-		  and is no longer able to accept requests
-	 */
 
 	public void contextDestroyed(ServletContextEvent event) {
 		logger.info("Bye Bye");
 	}
-
-
-	//This method is invoked when the Web Application
-	//is ready to service requests
 
 	public void contextInitialized(ServletContextEvent event) {
 		try {
@@ -31,7 +26,6 @@ public class InitBaseAtStart extends RootClass implements ServletContextListener
 		} catch (Exception e) {
 			logger.error("Can't init the node base : " + e.getMessage());
 		}
-
 	}
 }
 

@@ -64,7 +64,7 @@ public class NodeBase extends RootClass{
 				emptyDirectory(new File(SessionBaseDir));
 				if( !NOINIT){
 					for( Entry<String, String> e: defaultNodes.entrySet()) {
-						new ThreadInit(e).start();
+						(new ThreadInit(e)).start();
 					}
 //						for( Entry<String, String> e: defaultNodes.entrySet()) {
 //						try {

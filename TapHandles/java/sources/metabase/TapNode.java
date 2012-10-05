@@ -137,7 +137,6 @@ public class TapNode  extends RootClass {
 							logger.info("Sucessed");
 							return;
 						} catch (Exception e) {
-							e.printStackTrace();
 							logger.info("Failed (" + e.getMessage() + "), try again in " + DELAY + "'");	
 							attempts++;
 							if( attempts > 10 ){
