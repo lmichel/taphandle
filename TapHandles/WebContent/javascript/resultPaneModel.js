@@ -86,7 +86,7 @@ jQuery.extend({
 				tapView.fireDownloadVotable(titlepath[0], titlepath[3].replace('job ', ''));
 			}
 			else {
-				logged_alert("Cannot identify the current JOB", 'Error');	
+				loggedAlert("Cannot identify the current JOB", 'Error');	
 			}
 		};
 		this.downloadFITS = function() {
@@ -99,7 +99,7 @@ jQuery.extend({
 			 */
 			var titlepath = $('#titlepath').html().split('&gt;');
 			if( titlepath.length == 3 && titlepath[1] == 'Job' ) {
-				logged_alert("Not implemented for TAP queries", 'Info');
+				loggedAlert("Not implemented for TAP queries", 'Info');
 			}
 			else {
 				var url = "getqueryreport?query=" + escape(current_query) + "&protocol=noprotocol&format=zipball";
@@ -115,7 +115,7 @@ jQuery.extend({
 					tapView.fireDownloadVotable(titlepath[0], titlepath[3].replace('job ', ''));
 			}
 			else {
-				logged_alert("Cannot identify the current JOB", 'Error');	
+				loggedAlert("Cannot identify the current JOB", 'Error');	
 			}
 
 //			var url = "getqueryreport?query=" + escape(current_query) + "&protocol=auto&format=fits";

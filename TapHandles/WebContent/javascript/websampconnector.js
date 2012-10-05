@@ -53,7 +53,7 @@ var WebSampConnector = {
       } else if (window.opera && opera.postError) {
          opera.postError(message);
       } else {
-         logged_alert(message, 'Error');
+         loggedAlert(message, 'Error');
       }
    },
 
@@ -187,7 +187,7 @@ var WebSampConnector = {
 //            + " <param name='archive' value='WebSampConnector-" + this.jAppletVersion + ".jar' />"
 //            + " <param name='mayscript' value='true' />";
       }
-     // logged_alert(this.Netscape + " " + applet);
+     // loggedAlert(this.Netscape + " " + applet);
       // Append the applet to the document
       var body = document.body;
       var div = document.createElement("div");
