@@ -9,11 +9,17 @@
     <welcome-file>default.htm</welcome-file>
     <welcome-file>default.jsp</welcome-file>
   </welcome-file-list>
-<listener>
+  
+  <!-- 
+  Class invoked at both starting and shutdown tile 
+  -->
+  <listener>
     <listener-class>
 	servlet.InitBaseAtStart
 	</listener-class>
-  </listener>  <servlet>
+  </listener>  
+  
+  <servlet>
     <description></description>
     <display-name>GetNode</display-name>
     <servlet-name>GetNode</servlet-name>
