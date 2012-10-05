@@ -10,6 +10,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.lang.reflect.Array;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -18,10 +19,19 @@ import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 
+import javax.xml.transform.ErrorListener;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
+
+import net.sf.saxon.TransformerFactoryImpl;
+import net.sf.saxon.expr.XPathContext;
+import net.sf.saxon.lib.FeatureKeys;
+import net.sf.saxon.lib.TraceListener;
+import net.sf.saxon.om.Item;
+import net.sf.saxon.trace.InstructionInfo;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -164,7 +174,7 @@ public class XmlToJson  extends RootClass {
 		fw.close();
 		applyStyle(baseDir  + tablesFile + ".xml", baseDir + tableName + ".json", baseDir + tableName + ".xsl");
 	}
-	
+
 	/**
 	 * Builds a JSON file describing the table tableName in a format 
 	 * comprehensible by JQuery datatable widget
@@ -208,7 +218,7 @@ public class XmlToJson  extends RootClass {
 		fw.close();
 		applyStyle(baseDir  + tablesFile + ".xml", baseDir + tableName + "_att.json", baseDir + tableName + "_att.xsl");
 	}
-	
+
 	/**
 	 * Builds a JSON file describing the table tableName to setup query form.
 	 * The XML table description is supposed to be in a file names  tableName_att.xml
@@ -408,14 +418,23 @@ public class XmlToJson  extends RootClass {
 	 * @throws Exception  If something goes wrong
 	 */
 	public static void applyStyle(String inputFile, String outputFile, String styleSheet) throws Exception{
-		System.setProperty("javax.xml.transform.TransformerFactory", "net.sf.saxon.TransformerFactoryImpl");
-		// Create a transform factory instance.
-		TransformerFactory tfactory = TransformerFactory.newInstance();
+//		logger.debug("Apply style to " + inputFile);
+//		logger.debug("   Style sheet " + styleSheet);
+		TransformerFactory tfactory = TransformerFactory.newInstance("net.sf.saxon.TransformerFactoryImpl", null);
+		tfactory.setErrorListener(new EcouteurDErreurs());
 
+		tfactory.setAttribute(FeatureKeys.COMPILE_WITH_TRACING, true);
+		//		File moduleFile = new File
+		//		(net.sf.saxon.TransformerFactoryImpl.class.getProtectionDomain()
+		//				.getCodeSource().getLocation().toURI());
+
+		StreamSource ss = new StreamSource(new File(styleSheet));
 		// Create a transformer for the stylesheet.
-		Transformer transformer = tfactory.newTransformer(new StreamSource(new File(styleSheet)));
-		// Transform the source XML to System.out.
+		Transformer transformer = tfactory.newTransformer(ss);
 		transformer.transform(new StreamSource(new File(inputFile)),
 				new StreamResult(new File(outputFile)));	
 	}
+
+
+
 }

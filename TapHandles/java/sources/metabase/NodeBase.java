@@ -35,26 +35,55 @@ public class NodeBase extends RootClass{
 		defaultNodes.put("gavot" , "http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap");
 		defaultNodes.put("simbad", "http://simbad.u-strasbg.fr/simbad/sim-tap");
 	}
+	
+	class ThreadInit extends Thread {
+		private String url;
+		private String key;
+
+		ThreadInit(Entry<String, String> node) {
+			url = node.getValue();
+			key = node.getKey();
+		}
+	    public void run() {
+			try {
+				nodeMap.addNode(url, key);
+			} catch (Exception ex) {
+				logger.error("Cannot init node " + key + " served by " + url, ex);
+			}	
+	    }
+	}
 	/**
 	 * Private creator checking he validity of the base and recording some nodes
 	 */
-	private NodeBase()  {
-		try {
-			validWorkingDirectory(MetaBaseDir);
-			emptyDirectory(new File(MetaBaseDir));
-			emptyDirectory(new File(SessionBaseDir));
-			if( !NOINIT){
-				for( Entry<String, String> e: defaultNodes.entrySet()) {
-					try {
-						nodeMap.addNode(e.getValue(), e.getKey());
-					} catch (Exception ex) {
-						logger.error("Cannot init node " + e.getKey() + " served by " + e.getValue(), ex);
-					}					
+	private NodeBase() {
+		synchronized (this) {
+
+			try {
+				validWorkingDirectory(MetaBaseDir);
+				emptyDirectory(new File(MetaBaseDir));
+				emptyDirectory(new File(SessionBaseDir));
+				if( !NOINIT){
+					for( Entry<String, String> e: defaultNodes.entrySet()) {
+						new ThreadInit(e).start();
+					}
+//						for( Entry<String, String> e: defaultNodes.entrySet()) {
+//						try {
+//							nodeMap.addNode(e.getValue(), e.getKey());
+//						} catch (Exception ex) {
+//							logger.error("Cannot init node " + e.getKey() + " served by " + e.getValue(), ex);
+//						}					
+//					}
 				}
+			} catch (Exception e) {
+				logger.error("Cannot init node base", e);
 			}
-		} catch (Exception e) {
-			logger.error("Cannot init node base", e);
 		}
+	}
+
+	public static void init() throws Exception {
+		if( NodeBase.instance == null ) {
+			NodeBase.instance = new NodeBase();
+		}		
 	}
 
 	/**
@@ -66,7 +95,7 @@ public class NodeBase extends RootClass{
 	public static TapNode getNode(String key) throws Exception {
 		if( NodeBase.instance == null ) {
 			NodeBase.instance = new NodeBase();
-		}
+		}		
 		return NodeBase.instance.nodeMap.getNode(key);
 	}
 
