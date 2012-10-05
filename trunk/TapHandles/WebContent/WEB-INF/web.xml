@@ -9,12 +9,16 @@
     <welcome-file>default.htm</welcome-file>
     <welcome-file>default.jsp</welcome-file>
   </welcome-file-list>
-  <servlet>
+<listener>
+    <listener-class>
+	servlet.InitBaseAtStart
+	</listener-class>
+  </listener>  <servlet>
     <description></description>
     <display-name>GetNode</display-name>
     <servlet-name>GetNode</servlet-name>
     <servlet-class>servlet.GetNode</servlet-class> 
-    <load-on-startup>1</load-on-startup>
+    <!--  load-on-startup>1</load-on-startup -->
   </servlet>
   <servlet-mapping>
     <servlet-name>GetNode</servlet-name>
