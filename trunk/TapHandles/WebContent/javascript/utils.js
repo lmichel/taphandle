@@ -21,7 +21,7 @@ function getQLimit() {
 	}
 	return limit;
 }
-function logged_alert(message, title) {
+function loggedAlert(message, title) {
 	logMsg("ALERT " + message);
 	jAlert(message, title);
 }
@@ -149,11 +149,11 @@ function switchArrow(id) {
 
 function processJsonError(jsondata, msg) {
 	if( jsondata == undefined || jsondata == null ) {
-		logged_alert("JSON ERROR: " + msg + ": no data returned", 'Server Error');
+		loggedAlert("JSON ERROR: " + msg + ": no data returned", 'Server Error');
 		return true;
 	}
 	else if( jsondata.errormsg != undefined  ){
-		logged_alert("JSON ERROR: " + msg + ": "  + jsondata.errormsg, 'Server Error');
+		loggedAlert("JSON ERROR: " + msg + ": "  + jsondata.errormsg, 'Server Error');
 		return true;
 	}	
 	return false;
@@ -164,6 +164,6 @@ function jsonAlert(jsdata, title) {
 	$.each(jsdata, function(k, v) {
 		retour += k + ": " + v  + "\n";
 	});
-	logged_alert(retour, 'Json Object');
+	loggedAlert(retour, 'Json Object');
 }
 

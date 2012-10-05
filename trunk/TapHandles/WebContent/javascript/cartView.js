@@ -22,7 +22,7 @@ jQuery.extend({
 		}
 
 		this.fireAddJobResult = function(nodekey, jobid) {
-			logged_alert("Result of job " + nodekey + "." + jobid + " added to the cart")
+			loggedAlert("Result of job " + nodekey + "." + jobid + " added to the cart")
 			$.each(listeners, function(i){
 				listeners[i].controlAddJobResult(nodekey, jobid);
 			});
@@ -33,7 +33,7 @@ jQuery.extend({
 			});
 		};
 		this.fireAddUrl = function(nodekey, url) {
-			logged_alert("Data returned by " + url + " added to the cart");
+			loggedAlert("Data returned by " + url + " added to the cart");
 			$.each(listeners, function(i){
 				listeners[i].controlAddUrl(nodekey, url);
 			});
@@ -116,7 +116,7 @@ jQuery.extend({
 				break;
 			}			
 			if( empty ) {
-				logged_alert("Empty Shopping Cart");
+				loggedAlert("Empty Shopping Cart");
 				return;
 			}
 
@@ -176,7 +176,7 @@ jQuery.extend({
 				break;
 			}			
 			if( empty ) {
-				logged_alert("Empty Shopping Cart");
+				loggedAlert("Empty Shopping Cart");
 				$.modal.close();
 				return;
 			}

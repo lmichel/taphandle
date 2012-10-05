@@ -23,7 +23,7 @@ jQuery.extend({
 				var jobs = entry.jobs;
 				for( var i=0 ; i<jobs.length ; i++ ) {
 					if( jobs[i].uri == jobid ) {
-						logged_alert("Result of job " + nodekey + "." + jobid + " already in the cart", "input Error");
+						loggedAlert("Result of job " + nodekey + "." + jobid + " already in the cart", "input Error");
 						return;
 					}
 				}
@@ -33,7 +33,7 @@ jQuery.extend({
 		this.removeJobResult = function(nodekey, jobid) {
 			var entry;
 			if( (entry = cartData[nodekey]) == undefined ) {
-				logged_alert("Ther is no data associated with node " + nodekey + " in the cart", "input Error");
+				loggedAlert("Ther is no data associated with node " + nodekey + " in the cart", "input Error");
 			}
 			else {
 				var jobs = entry.jobs;
@@ -46,7 +46,7 @@ jQuery.extend({
 						return;
 					}
 				}
-				logged_alert("Job " + nodekey + "." + jobid+ " not found in from the cart", "input Error");
+				loggedAlert("Job " + nodekey + "." + jobid+ " not found in from the cart", "input Error");
 			}			
 		}
 		this.addUrl = function(nodekey, url) {
@@ -62,7 +62,7 @@ jQuery.extend({
 				var urls = entry.urls;
 				for( var i=0 ; i<urls.length ; i++ ) {
 					if( urls[i].uri == url ) {
-						logged_alert("This url of node " + nodekey  + " is already in the cart", "input Error");
+						loggedAlert("This url of node " + nodekey  + " is already in the cart", "input Error");
 						return;
 					}
 				}
@@ -72,7 +72,7 @@ jQuery.extend({
 		this.removeUrl = function(nodekey, url) {
 			var entry;
 			if( (entry = cartData[nodekey]) == undefined ) {
-				logged_alert("There is no data associated with node " + nodekey + " in the cart", "input Error")
+				loggedAlert("There is no data associated with node " + nodekey + " in the cart", "input Error")
 			}
 			else {
 				var urls = entry.urls;
@@ -86,7 +86,7 @@ jQuery.extend({
 						return;
 					}
 				}
-				logged_alert("URL not found in from the cart", "input Error");
+				loggedAlert("URL not found in from the cart", "input Error");
 			}						
 		}
 		this.cleanCart = function(tokenArray) {
@@ -144,7 +144,7 @@ jQuery.extend({
 				},
 				dataType: "xml",
 				error: function(xmljob, textStatus, errorThrown) {
-					logged_alert("Error: " + textStatus);
+					loggedAlert("Error: " + textStatus);
 				}
 			});
 		};
@@ -171,7 +171,7 @@ jQuery.extend({
 
 		this.archiveDownload = function() {
 			if( zipJob == null ) {
-				logged_alert("There is no active ZIP builder");
+				loggedAlert("There is no active ZIP builder");
 			}
 			else {
 				zipJob.download();

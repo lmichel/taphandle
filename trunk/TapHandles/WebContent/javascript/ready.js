@@ -81,7 +81,7 @@ $().ready(function() {
 					var parent = data.r;
 					var streepath = data.o.attr("id").split(';');
 					if( streepath.length < 3 ) {
-						logged_alert("Query can only be applied on one data category or one data class: ("  +  streepath + ")", 'User Input Error');
+						loggedAlert("Query can only be applied on one data category or one data class: ("  +  streepath + ")", 'User Input Error');
 					}
 					else {
 						var treePath = {nodekey: streepath[0], schema: streepath[1], table: streepath[2]};
@@ -121,7 +121,7 @@ $().ready(function() {
 				nodeFilterView.fireOpenSelectorWindow(nm);
 			}
 		} else if( treePath.length < 3 ) {
-			logged_alert("Query can only be applied on one data category or one data class: ("  +  treePath + ")", 'User Input Error');
+			loggedAlert("Query can only be applied on one data category or one data class: ("  +  treePath + ")", 'User Input Error');
 		} else {
 			var fTreePath = {nodekey: treePath[0], schema: treePath[1], table: treePath[2]};
 			resultPaneView.fireSetTreePath(fTreePath);	
@@ -148,7 +148,7 @@ $().ready(function() {
 			tapView.fireUpdateQueryEvent();			
 		}
 		else {
-			logged_alert('The result limit must be a positive integer value' , "User Input Error");
+			loggedAlert('The result limit must be a positive integer value' , "User Input Error");
 			$("#qlimit").val(100);
 			tapView.fireUpdateQueryEvent();			
 			return false;
@@ -237,7 +237,7 @@ $().ready(function() {
 	 * This callback can be changed changed at everytime: do not use the "onclick" HTML  
 	 * attribute which is not overriden by JQuery "click" callback
 	 */
-	$('#showquerymeta').click(function(){logged_alert("No meta data available yet", 'Application not Ready');});
+	$('#showquerymeta').click(function(){loggedAlert("No meta data available yet", 'Application not Ready');});
 
 	sampView.fireSampInit();
 	tapView.fireRefreshJobList();

@@ -178,17 +178,17 @@ jQuery.extend({
 			var alphaname = $('#kwalpha_name').html();
 			var deltaname = $('#kwdelta_name').html();
 			if( alphaname == "" || deltaname.length == "" ) {
-				logged_alert('Give one KW for both alpha and delta', 'Info');
+				loggedAlert('Give one KW for both alpha and delta', 'Info');
 				return;
 			}
 			var coords = $('#tapcoordval').val().split(' ');
 			if( coords.length != 2 || isNaN(coords[0]) || isNaN(coords[1])) {
-				logged_alert('Both coordinates must be given in degrees', 'Info');
+				loggedAlert('Both coordinates must be given in degrees', 'Info');
 				return;				
 			}
 			var rs = $('#tapradiusval').val();
 			if( isNaN(rs) ){
-				logged_alert('Radius/Size must be given in degrees', 'Info');
+				loggedAlert('Radius/Size must be given in degrees', 'Info');
 				return;								
 			}
 			var box_summary = coords[0] + "," + coords[1] + "," + rs;
@@ -397,7 +397,7 @@ jQuery.extend({
 			}
 			else if( counter < 0 ) {
 				hideProcessingDialog();
-				logged_alert("Job " + jid + " not completed: processed asynchronously", 'Info');
+				loggedAlert("Job " + jid + " not completed: processed asynchronously", 'Info');
 				pendingJobs[jid] = lastJob;
 				if( Object.keys(pendingJobs).length == 1 ) {
 					listTimer = setTimeout("tapView.fireUpdateRunningJobList();", 5000);	
@@ -505,7 +505,7 @@ jQuery.extend({
 				}
 				var report  = "";
 				report = jsondata.parameters.query.replace(/\\n/g,'\n            ')+ "\n";
-				logged_alert(report, 'Query of job ' + nodekey + '.' + jid);
+				loggedAlert(report, 'Query of job ' + nodekey + '.' + jid);
 			});					
 		};
 		this.showSummary = function(nodekey, jid) {
@@ -537,7 +537,7 @@ jQuery.extend({
 				if( jsondata.status.job.errorSummary != null ) {
 					report += "error: " + jsondata.status.job.errorSummary.message+ "\n";					
 				}
-				logged_alert(report,  "Summary of job "+ nodekey + '.' + jid);
+				loggedAlert(report,  "Summary of job "+ nodekey + '.' + jid);
 
 			});					
 		};
@@ -595,7 +595,7 @@ jQuery.extend({
 						return;
 					}
 				}
-				logged_alert("No result file looking like a VOTable, sorry.", 'Error');
+				loggedAlert("No result file looking like a VOTable, sorry.", 'Error');
 			});					
 
 		};

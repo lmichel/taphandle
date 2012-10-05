@@ -40,7 +40,7 @@ jQuery.extend({
 				type: 'DELETE',
 				url: "datapack/zipper/" + that.jobId,
 				success: function(xmljob, status) {
-					logged_alert("Job killed");
+					loggedAlert("Job killed");
 					that.refresh();
 				}
 			});
@@ -58,7 +58,7 @@ jQuery.extend({
 				window.location = url;
 			}
 			else {
-				logged_alert("No ZIP archive available");
+				loggedAlert("No ZIP archive available");
 			}
  		};
 	}

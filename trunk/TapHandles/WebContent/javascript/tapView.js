@@ -41,7 +41,7 @@ jQuery.extend({
 		};
 		this.fireInputCoordEvent = function(){
 			if( $("#tapcoordval").val() == '' || $("#tapradiusval").val() == '' ) {
-				logged_alert("Both position and radius must be given", 'Info');
+				loggedAlert("Both position and radius must be given", 'Info');
 				return;
 			}
 
@@ -135,10 +135,10 @@ jQuery.extend({
 		 */
 
 		this.showProgressStatus = function(){
-			logged_alert("Job in progress", 'Info');
+			loggedAlert("Job in progress", 'Info');
 		};
 		this.showFailure = function(textStatus){
-			logged_alert("view: " + textStatus, 'Info');
+			loggedAlert("view: " + textStatus, 'Info');
 		}	;	
 		this.initForm= function(attributesHandlers, selectAttributesHandlers){
 			/*

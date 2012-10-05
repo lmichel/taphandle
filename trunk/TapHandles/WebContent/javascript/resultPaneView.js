@@ -30,7 +30,7 @@ jQuery.extend({
 					$.each(jsdata, function(k, v) {
 						retour += k + ": " + v  + "\n";
 					});
-					logged_alert(retour, "Product Info");
+					loggedAlert(retour, "Product Info");
 				}
 			});
 		}	;	
@@ -164,6 +164,7 @@ jQuery.extend({
 			/*
 			 * add leaves (tables) the the schemas
 			 */
+			var trunc = new Array();
 			for( var i=0 ; i<jsdata.schemas.length ; i++ ) {
 				var schema = jsdata.schemas[i];
 				var id_schema = jsdata.nodekey + "X" + schema.name;
@@ -185,14 +186,18 @@ jQuery.extend({
 							,false
 							,true);   
 					if( nb_tables > 20 ) {
-						logMsg("table list truncated to 20");
+						logMsg("table list of schema " + schema.name + " has been truncated to 20");
+						trunc[trunc.length] = schema.name;
 						break;
 					}
 				}
 			}
 			$( "div#treedisp").jstree('close_all', -1);	    
 			if(jsdata.truncated != null  ) {
-				logged_alert("Table list truncated by the server, double click on the " + jsdata.nodekey + " node to make you own selection");
+				loggedAlert("Table list truncated by the server, double click on the " + jsdata.nodekey + " node to make you own selection");
+			} else if( trunc.length > 0 ) {
+				loggedAlert("table list of schemas [" + trunc.join(",") + "] has been truncated to 20");
+				
 			}
 		};
 		
@@ -300,15 +305,15 @@ jQuery.extend({
 			});
 		};
 		this.showProgressStatus = function() {
-			logged_alert("Job in progress", 'Info');
+			loggedAlert("Job in progress", 'Info');
 		};
 		this.showFailure = function(textStatus) {
-			logged_alert("view: " + textStatus, 'Failutr');
+			loggedAlert("view: " + textStatus, 'Failutr');
 		};
 
 		this.showMeta = function(jsdata) {
 			if (jsdata.errormsg != null) {
-				logged_alert("FATAL ERROR: Cannot show object detail: "
+				loggedAlert("FATAL ERROR: Cannot show object detail: "
 						+ jsdata.errormsg, 'Server Error');
 				return;
 			}
