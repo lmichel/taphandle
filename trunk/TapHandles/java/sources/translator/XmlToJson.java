@@ -10,7 +10,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.lang.reflect.Array;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -19,19 +18,12 @@ import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 
-import javax.xml.transform.ErrorListener;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import net.sf.saxon.TransformerFactoryImpl;
-import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.FeatureKeys;
-import net.sf.saxon.lib.TraceListener;
-import net.sf.saxon.om.Item;
-import net.sf.saxon.trace.InstructionInfo;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -309,8 +301,6 @@ public class XmlToJson  extends RootClass {
 			 * some info about the issue
 			 */
 		} catch (Exception e) {
-			//System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@cvouuouououou");
-			//e.printStackTrace();
 			SavotPullParser  sp = new SavotPullParser(inputFile, SavotPullEngine.FULL);
 			SavotVOTable sv = sp.getVOTable(); 
 			long rc = sp.getResourceCount();
