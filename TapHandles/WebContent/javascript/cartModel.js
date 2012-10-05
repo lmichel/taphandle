@@ -144,7 +144,7 @@ jQuery.extend({
 				},
 				dataType: "xml",
 				error: function(xmljob, textStatus, errorThrown) {
-					alert("Error: " + textStatus);
+					logged_alert("Error: " + textStatus);
 				}
 			});
 		};

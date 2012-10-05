@@ -78,10 +78,24 @@ function showSampMessageSent() {
 
 function openDialog(title, content) {
 	if( $('#diagdiv').length == 0){		
-		$(document.documentElement).append("<div id=diagdiv style='width: 99%; display: none; width: auto; hight: auto;'></div>");
+		$(document.documentElement).append("<div id=diagdiv style='width: 50%; display: none; hight: auto;'></div>");
 	}
 	$('#diagdiv').html(content);
-	$('#diagdiv').dialog({  width: 'auto', title: title});
+	$('#diagdiv').dialog({  maxWidth: '50%', title: title,  modal: true});
+}
+
+function openConfirm(params) {
+	if( $('#confirmdiv').length == 0){		
+		$(document.documentElement).append("<div id=confirmdiv style='width: 50%; display: none; hight: auto;'></div>");
+	}
+	$('#confirmdiv').html(params.message);
+	$('#confirmdiv').dialog({  maxWidth: '50%'
+		, title: params.title
+		, modal: true			
+		, buttons: {"OK": function() {$( this ).dialog( "close" );params.handler();}
+	              , Cancel: function() {$( this ).dialog( "close" );}
+				}
+		});
 }
 
 function openSimbadDialog(pos) {
