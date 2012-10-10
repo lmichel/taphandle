@@ -12,12 +12,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.regex.Matcher;
-
-import org.json.simple.JSONObject;
 
 import resources.RootClass;
 import session.NodeCookie;
@@ -29,9 +24,11 @@ import translator.XmlToJson;
 /**
  * @author laurent
  * @version $Id
+ * 
+ * 10/2012: Add client address to createAsyncJob in order to transmit the real client address to TAP services
  */
 public class TapAccess  extends RootClass {
-	private final static String  RUNID = "test-client-lm";
+	private final static String  RUNID = "TapHandle-Proxy";
 
 
 	/**
@@ -192,15 +189,16 @@ public class TapAccess  extends RootClass {
 	 * @param query
 	 * @param outputfile
 	 * @param cookie
+	 * @param remoteAddress
 	 * @return
 	 * @throws Exception
 	 */
-	public static String createAsyncJob(String endpoint, String query, String outputfile, NodeCookie cookie) throws Exception {
+	public static String createAsyncJob(String endpoint, String query, String outputfile, NodeCookie cookie, String remoteAddress) throws Exception {
+		String runId = (remoteAddress == null )? RUNID: "TapHandle-" + remoteAddress;
 		sendPostRequest(endpoint + "async"
-				,  "RUNID=" + RUNID + "&REQUEST=doQuery&LANG=ADQL&QUERY=" + URLEncoder.encode(query, "ISO-8859-1")
+				, "RUNID=" + runId + "&REQUEST=doQuery&LANG=ADQL&QUERY=" + URLEncoder.encode(query, "ISO-8859-1")
 				, outputfile
 				, cookie);
-
 		return  JsonUtils.getValue (outputfile.replaceAll("xml", "json"), "job.jobId");
 	}
 

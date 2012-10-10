@@ -40,7 +40,7 @@ public class JoinKeysJob extends RootClass {
 	private static void tryJoinKeys(String url, String query, String baseDirectory) throws Exception{
 		NodeCookie nc=new NodeCookie();
 		String baseFN = baseDirectory + File.separator + prefix;
-		String jobID = TapAccess.createAsyncJob(url, query,baseFN + "job.xml", nc);
+		String jobID = TapAccess.createAsyncJob(url, query,baseFN + "job.xml", nc, null);
 		TapAccess.runAsyncJob(url, jobID, baseFN + "status.xml", nc);
 		String phase;
 		int cpt = 10;		
