@@ -22,18 +22,21 @@ import translator.JsonUtils;
  * @author laurent
  * @version $Id$
  *
+ * 10/2012: store client address  order to transmit it  to TAP services
  */
 public class UserSession  extends RootClass {
 	public final String sessionID;
 	private final String baseDirectory;
 	private jobStack jobStack = new jobStack();
+	public final String remoteAddress ;
 
 	/**
 	 * @param sessionID
 	 * @throws Exception
 	 */
-	UserSession(String sessionID)  throws Exception {
+	UserSession(String sessionID, String remoteAddress)  throws Exception {
 		logger.info("Init session " + sessionID);
+		this.remoteAddress = remoteAddress;
 		this.sessionID = sessionID;
 		validWorkingDirectory(SessionBaseDir);
 		validWorkingDirectory(SessionBaseDir + this.sessionID);
@@ -96,25 +99,26 @@ public class UserSession  extends RootClass {
 	 * @throws Exception
 	 */
 	public  String createJob(String nodeKey, String query, String treepath) throws Exception {
-		String of1 = this.baseDirectory + nodeKey + File.separator + "status.xml";
-		NodeCookie nc = new NodeCookie();
+		String statusFileName = this.baseDirectory + nodeKey + File.separator + "status.xml";
+		NodeCookie nodeCookie = new NodeCookie();
 		String jobID = TapAccess.createAsyncJob(NodeBase.getNode(nodeKey).getUrl()
 				, query
-				, of1
-				, nc);
+				, statusFileName
+				, nodeCookie
+				, this.remoteAddress);
 		String finalDir = this.getJobDir(nodeKey, jobID);
 		validWorkingDirectory(finalDir);
-		(new File(of1)).renameTo(new File(finalDir +  "status.xml"));
-		(new File(of1.replaceAll("xml", "json"))).renameTo(new File(finalDir +  "status.json"));
+		(new File(statusFileName)).renameTo(new File(finalDir +  "status.xml"));
+		(new File(statusFileName.replaceAll("xml", "json"))).renameTo(new File(finalDir +  "status.json"));
 
 		logger.debug("Create file treepath.json");
 		FileWriter fw = new FileWriter(finalDir + "treepath.json");
 		fw.write(JsonUtils.convertTreeNode(treepath));
 		fw.close();
 
-		nc.saveCookie(finalDir);
+		nodeCookie.saveCookie(finalDir);
 		JobTreePath jtp = new JobTreePath(treepath);
-		jobStack.pushJob(nodeKey, jobID, jtp, nc);
+		jobStack.pushJob(nodeKey, jobID, jtp, nodeCookie);
 
 		return jobID;
 	}
@@ -384,7 +388,7 @@ public class UserSession  extends RootClass {
 	}
 
 	public static void main(String[] args) throws Exception{
-		UserSession us = new UserSession("QWERTY");
+		UserSession us = new UserSession("QWERTY", null);
 		//String node = "xidresult_xcatdb";
 		String node = "cadc-ccdahia-ihanrc-cnrcgcca_caom";		
 		us.connectNode(node);

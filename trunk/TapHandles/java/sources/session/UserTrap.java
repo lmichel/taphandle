@@ -19,7 +19,7 @@ public class UserTrap {
 		session.setMaxInactiveInterval(-1);
 		String session_id = session.getId();
 		if (session.isNew()) {
-			UserSession account = new UserSession(session_id);
+			UserSession account = new UserSession(session_id, request.getRemoteAddr());
 			session.setAttribute("account", account);
 			return account;
 		} 
@@ -29,7 +29,7 @@ public class UserTrap {
 			 * The reason of this situation (a session without account) are not well understood!!
 			 */
 			if( account == null ) {
-				account = new UserSession(session_id);
+				account = new UserSession(session_id, request.getRemoteAddr());
 				session.setAttribute("account", account);
 			}
 			return account;	    			
