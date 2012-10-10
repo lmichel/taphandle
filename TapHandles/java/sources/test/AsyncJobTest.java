@@ -26,7 +26,7 @@ public class AsyncJobTest  extends RootClass {
 			usage();
 		}
 		NodeCookie cookie=new NodeCookie();
-		String jobID = TapAccess.createAsyncJob(args[0], args[1], "/home/michel/Desktop/tapbase/job.xml", cookie);
+		String jobID = TapAccess.createAsyncJob(args[0], args[1], "/home/michel/Desktop/tapbase/job.xml", cookie, null);
 		System.out.println("Create: " + jobID + " " + cookie);
 		System.out.println("Run: " + TapAccess.runAsyncJob(args[0], jobID,  "/home/michel/Desktop/tapbase/status.xml", cookie)+ " " + cookie);
 		String phase = "";
