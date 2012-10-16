@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
@@ -40,7 +41,7 @@ import translator.XmlToJson;
 public class TapNode  extends RootClass {
 
 	private String baseDirectory;
-	private String url;
+	private NodeUrl url;
 	private String key;
 	private NameSpaceDefinition availabilityNS = new NameSpaceDefinition();
 	private NameSpaceDefinition capabilityNS   = new NameSpaceDefinition();
@@ -60,11 +61,21 @@ public class TapNode  extends RootClass {
 
 	/**
 	 * @return Return the TAP node URL
+	 * @throws MalformedURLException 
 	 */
-	public String getUrl() {
-		return url;
+	public String getUrl() throws MalformedURLException {
+		return url.getAbsoluteURL(null);
 	}
-
+	
+	/**
+	 * Returns a valid absolute URL containing the path
+	 * @param path
+	 * @return
+	 * @throws MalformedURLException
+	 */
+	public String getAbsoluteURL(String path) throws MalformedURLException {
+		return url.getAbsoluteURL(path);
+	}
 
 	/**
 	 * Creator
@@ -76,10 +87,7 @@ public class TapNode  extends RootClass {
 	public TapNode(String url, String baseDirectory, String key) throws Exception {
 		this.baseDirectory = baseDirectory;
 		this.key = key;
-		this.url = url;
-		if( !this.url.endsWith("/") ) {
-			this.url += "/";
-		}
+		this.url = new NodeUrl(url);
 		if( !this.baseDirectory.endsWith(File.separator) ) {
 			this.baseDirectory += File.separator;
 		}
@@ -122,7 +130,7 @@ public class TapNode  extends RootClass {
 	 */
 	public void setJoinKeys() {
 		try {
-			JoinKeysJob.getJoinKeys(this.url, this.baseDirectory);
+			JoinKeysJob.getJoinKeys(this.url.getAbsoluteURL(null), this.baseDirectory);
 		} catch (Exception e) {
 			logger.warn("Can't get join keys for node: continue in background " + this.url + " " + e.getMessage());
 			Runnable r = new Runnable() {
@@ -133,7 +141,7 @@ public class TapNode  extends RootClass {
 						try {
 							Thread.sleep(DELAY*60*1000);
 							logger.info("Attempt to get join keys from  " + TapNode.this.url );
-							JoinKeysJob.getJoinKeys(TapNode.this.url, TapNode.this.baseDirectory);
+							JoinKeysJob.getJoinKeys(TapNode.this.url.getAbsoluteURL(null), TapNode.this.baseDirectory);
 							logger.info("Sucessed");
 							return;
 						} catch (Exception e) {
@@ -236,7 +244,7 @@ public class TapNode  extends RootClass {
 		logger.debug("read " + this.url + service);
 		BufferedReader in = new BufferedReader(
 				new InputStreamReader(
-						(new URL(this.url + service)).openStream()));
+						(new URL(this.url.getAbsoluteURL(null) + service)).openStream()));
 
 		String inputLine;
 		BufferedWriter bfw = new BufferedWriter(new FileWriter(this.baseDirectory + service + ".xml"));
@@ -297,7 +305,7 @@ public class TapNode  extends RootClass {
 		Scanner s = new Scanner(new File(filename));
 		PrintWriter fw = new PrintWriter(new File(filename + ".new"));
 		while( s.hasNextLine() ) {
-			fw.println(s.nextLine().replaceAll("NODEKEY", this.key).replaceAll("NODEURL", this.url));
+			fw.println(s.nextLine().replaceAll("NODEKEY", this.key).replaceAll("NODEURL", this.url.getAbsoluteURL(null)));
 		}
 		s.close();
 		fw.close();
@@ -438,7 +446,7 @@ public class TapNode  extends RootClass {
 			}
 		}
 		/*
-		 * Advice the client that the lsit is truncated
+		 * Advice the client that the litt is truncated
 		 */
 		if( truncated ) {
 			jsonObject.put("truncated", "true");
@@ -565,6 +573,16 @@ public class TapNode  extends RootClass {
 			}
 		}
 		return jsonObject;
+	}
+	
+	/**
+	 * Filter not significant characters ending the URLS
+	 * @param url
+	 * @return
+	 * @throws Exception
+	 */
+	public static String filterURLTail(String url) throws Exception{
+		return url.replaceAll("[^a-zA-Z\\d_-]*$", "");
 	}
 
 }

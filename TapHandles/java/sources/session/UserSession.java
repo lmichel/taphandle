@@ -253,8 +253,8 @@ public class UserSession  extends RootClass {
 			}
 		}
 		for( String r: resultURLs) {
-			logger.debug("Download " + r);
-			TapAccess.getAsyncJobResultFile(r
+			logger.debug("Download " + NodeBase.getNode(nodeKey).getAbsoluteURL(r));
+			TapAccess.getAsyncJobResultFile(NodeBase.getNode(nodeKey).getAbsoluteURL(r)
 					, this.getJobDir(nodeKey, jobID)
 					, "result.xml"
 					, nc);

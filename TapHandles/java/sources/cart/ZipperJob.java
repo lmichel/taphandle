@@ -47,9 +47,9 @@ public class ZipperJob extends AbstractJob {
 		this.lstParam = lstParam;
 		globalCounter++;
 		this.sessionId = lstParam.get("owner");
-		for (Entry<String, String> k: lstParam.entrySet()) {
-			System.out.println(k.getKey() + " " + k.getValue());
-		}
+//		for (Entry<String, String> k: lstParam.entrySet()) {
+//			System.out.println(k.getKey() + " " + k.getValue());
+//		}
 		this.baseDir = System.getProperty("sessions.dir") + File.separator + lstParam.get("owner");
 		this.reportDir = this.baseDir + File.separator + "zipballs";
 		try {

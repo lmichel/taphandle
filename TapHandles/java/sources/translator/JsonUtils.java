@@ -1,6 +1,7 @@
 package translator;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
@@ -81,6 +82,9 @@ public abstract class JsonUtils {
 		}
 		in.close();
 		Object obj=JSONValue.parse(sb.toString());
+		if( obj == null ) {
+			throw new Exception("File " + jsonFile + " (" + (new File(jsonFile)).length() + " bytes) is not a JSON file");
+		}
 		for( String f: Fields) {
 			obj = ((JSONObject)obj).get(f);
 		}

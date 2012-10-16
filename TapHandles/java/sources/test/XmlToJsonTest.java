@@ -20,11 +20,11 @@ public class XmlToJsonTest extends RootClass {
 	 * @throws Exception 
 	 */
 	public static void main(String[] args) throws Exception {
-		String inputfile = "/services/tomcat/webapps/taphandle//nodebase/simbad/tables.xml";
+		String inputfile = "/home/michel/Desktop/tapbase/tables.xml";
 		String outputfile =  inputfile.replaceAll("xml", "json");
 		XmlToJson.applyStyle(inputfile
 				, outputfile
-				, "/services/tomcat/webapps/taphandle//nodebase/simbad/tables.xsl");
+				, "/home/michel/Desktop/tapbase/TAP_SCHEMA.tables_att.xsl");
 		BufferedReader br = new BufferedReader(new FileReader(outputfile));
 		String b;
 		while( (b = br.readLine()) != null ) {
