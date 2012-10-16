@@ -72,7 +72,14 @@ public class RootClass {
 	
 	public static final String ONE_COORDINATE = "[+-]?(?:(?:\\.[0-9]+)|(?:[0-9]+\\.?[0-9]*))(?:[eE][+-]?[0-9]+)?";
 	public static final String POSITION_COORDINATE = "^(" + ONE_COORDINATE + ")((?:[+-]|(?:[,:;\\s]+[+-]?))" +  ONE_COORDINATE + ")$";
+	
+	/*
+	 * 
+	 */
+	public static final String URL = "(http|https)://[\\w-]+(\\.[\\w-]+)+([\\w.,@?^=%&amp;:/~+#-]*[\\w@?^=%&amp;/~+#-])?";
 
+		
+		
 	/*
 	 * Working directories pathes used in standalone mode (in dev e.g.). In production mode these directories
 	 * are replaced with Tomcat subdirs.

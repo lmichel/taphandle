@@ -38,7 +38,6 @@ public class JobTreepath extends RootServlet implements Servlet {
 			}
 			UserSession session = UserTrap.getUserAccount(request);
 			session.getJobStatus(nodeKey, jobId);
-			System.out.println(session.getJobTreepathUrlPath(nodeKey, jobId));
 			dumpJsonFile(session.getJobTreepathUrlPath(nodeKey, jobId), response);
 		} catch (Exception e) {
 			this.reportJsonError(request, response, e);

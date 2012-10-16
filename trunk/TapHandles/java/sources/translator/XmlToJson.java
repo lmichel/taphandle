@@ -139,7 +139,6 @@ public class XmlToJson  extends RootClass {
 	 * @throws Exception   If something goes wrong
 	 */
 	public static void translate(String baseDir , String service, String style, NameSpaceDefinition nsDefinition) throws Exception {
-		System.out.println(nsDefinition);
 		logger.debug("Translate " +  service + ".xml with "  + style + ".xsl");
 		setVosiNS(baseDir, style, nsDefinition);
 		applyStyle(baseDir + service + ".xml", baseDir + style + ".json", baseDir + style + ".xsl in " + baseDir);

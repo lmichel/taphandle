@@ -43,6 +43,7 @@ public class GetNode extends RootServlet implements Servlet {
 		}
 		try {
 			String key;
+			node = TapNode.filterURLTail(node);
 			if( NodeBase.getNode(node) != null ) {
 				key = node;
 			} else if( (key = NodeBase.getKeyNodeByUrl(node) ) != null) {
@@ -67,7 +68,7 @@ public class GetNode extends RootServlet implements Servlet {
 				response.getWriter().print(jso.toJSONString());				
 			} else if( tn.largeResource ){
 				logger.debug("Node " + key + " Seems to be too large to return all tables: apply a selection");
-				JSONObject jso = tn.filterTableList(2);
+				JSONObject jso = tn.filterTableList(100);
 				response.getWriter().print(jso.toJSONString());
 			} else {
 				dumpJsonFile("/" + RootClass.WEB_NODEBASE_DIR + "/" + key + "/tables.json", response);				

@@ -26,23 +26,32 @@ public class NodeBase extends RootClass{
 	private  final NodeMap nodeMap = new NodeMap();
 	private static NodeBase instance;
 	private static final boolean NOINIT = false;
-	private static final LinkedHashMap<String, String> defaultNodes = new LinkedHashMap<String, String>();
+	private static final LinkedHashMap<String, NodeUrl> defaultNodes = new LinkedHashMap<String, NodeUrl>();
 
 	static {
-		defaultNodes.put("vizier", "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/");
-		defaultNodes.put("xcatdb", "http://xcatdb.u-strasbg.fr/2xmmidr3/tap");
-		defaultNodes.put("cadc"  , "http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap");
-		defaultNodes.put("gavot" , "http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap");
-		defaultNodes.put("simbad", "http://simbad.u-strasbg.fr/simbad/sim-tap");
+		try {
+//		defaultNodes.put("vizier", "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/");
+//		defaultNodes.put("xcatdb", "http://xcatdb.u-strasbg.fr/2xmmidr3/tap");
+//		defaultNodes.put("cadc"  , "http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap");
+//		defaultNodes.put("gavo"  , "http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap");
+//		defaultNodes.put("simbad", "http://simbad.u-strasbg.fr/simbad/sim-tap");
+			defaultNodes.put("heasarc-xamin", new NodeUrl("http://heasarc.gsfc.nasa.gov/xamin/vo/tap"));
+		} catch (Exception e) {
+			logger.error(e);
+		}
 	}
 	
 	class ThreadInit extends Thread {
 		private String url;
 		private String key;
 
-		ThreadInit(Entry<String, String> node) {
-			url = node.getValue();
-			key = node.getKey();
+		ThreadInit(Entry<String, NodeUrl> node) {
+			try {
+				url = node.getValue().getAbsoluteURL("");
+				key = node.getKey();
+			} catch (MalformedURLException e) {
+				logger.error(e);
+			}
 		}
 	    public void run() {
 			try {
@@ -63,7 +72,7 @@ public class NodeBase extends RootClass{
 				emptyDirectory(new File(MetaBaseDir));
 				emptyDirectory(new File(SessionBaseDir));
 				if( !NOINIT){
-					for( Entry<String, String> e: defaultNodes.entrySet()) {
+					for( Entry<String, NodeUrl> e: defaultNodes.entrySet()) {
 						(new ThreadInit(e)).start();
 					}
 //						for( Entry<String, String> e: defaultNodes.entrySet()) {
