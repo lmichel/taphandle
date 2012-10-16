@@ -185,7 +185,7 @@ jQuery.extend({
 							}
 							,false
 							,true);   
-					if( nb_tables > 20 ) {
+					if( (nb_tables++) > 100 ) {
 						logMsg("table list of schema " + schema.name + " has been truncated to 20");
 						trunc[trunc.length] = schema.name;
 						break;

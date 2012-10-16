@@ -14,13 +14,34 @@ var cartView ;
  * The nodes given here must be initiamized in Nodebase.java
  */
 var nodeList  =  [
-                  {id: 'gavot',  text: "gavot"},
+                  {id: 'gavo ',  text: "gavo "},
                   {id: 'cadc',   text: "cadc"},
                   {id: 'xcatdb', text: "xcatdb"},
                   {id: 'simbad', text: "simbad"},
                   {id: 'vizier', text: "vizier"},
-                  //   {id: 'http://simbad49:8080/simbad/sim-tap', text: "http://simbad49:8080/simbad/sim-tap"}
+                  {id: 'heasarc-xamin', text: "heasarc-xamin"},
+                 //   {id: 'http://simbad49:8080/simbad/sim-tap', text: "http://simbad49:8080/simbad/sim-tap"}
                   ];
+
+/*
+ * Using a Jquery bind() here has a strange behaviour...
+ * http://stackoverflow.com/questions/4458630/unable-to-unbind-the-window-beforeunload-event-in-jquery
+ */
+window.onbeforeunload = function() {
+	if( !authOK) {
+		return  'WARNING: Reloading or leaving this page will lost the current session';
+	}
+	else {
+		authOK = false;
+	}
+};
+var authOK = false;
+function changeLocation(url){
+	logMsg("changeLocation " + url);
+	authOK = true;
+	window.open (url, "_blank");
+}
+
 
 /*
  * No longer used but....
