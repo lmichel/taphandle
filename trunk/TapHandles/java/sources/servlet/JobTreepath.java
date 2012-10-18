@@ -24,7 +24,7 @@ public class JobTreepath extends RootServlet implements Servlet {
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		printAccess(request, false);
-		response.setContentType("application/json");
+		response.setContentType("application/json; charset=UTF-8");
 		try {
 			String nodeKey = this.getParameter(request, "node");
 			String jobId = this.getParameter(request, "jobid");
