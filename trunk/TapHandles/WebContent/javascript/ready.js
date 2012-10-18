@@ -270,5 +270,15 @@ $().ready(function() {
 	if( defaultUrl != null ) {
 		resultPaneView.fireNewNodeEvent(unescape(defaultUrl));
 	}
+	
+//	showProcessingDialog("Waiting");
+//	$.getJSON("dummyservlet", {}, function(jsondata) {
+//		hideProcessingDialog();
+//		if( processJsonError(jsondata, "Cannot get meta data") ) {
+//			return;
+//		}
+//		alert("OK");
+//	});
+
 });
 

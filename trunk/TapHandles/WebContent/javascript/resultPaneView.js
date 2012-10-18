@@ -169,6 +169,7 @@ jQuery.extend({
 				var schema = jsdata.schemas[i];
 				var id_schema = jsdata.nodekey + "X" + schema.name;
 				var nb_tables = 0;
+				var root = $("#" + id_schema);
 				for( var j=0 ; j<schema.tables.length ; j++ ) {
 					var table = schema.tables[j];
 					var id_table = jsdata.nodekey + ";" + schema.name + ";" + table.name;
@@ -177,7 +178,7 @@ jQuery.extend({
 						description = "No Description Available";
 					}
 					$("div#treedisp").jstree("create"
-							, $("#" + id_schema)
+							, root
 							, false
 							, {"data"  : {"icon": "images/SQLTable.png", "attr":{"id": id_table, "title": description}, "title" : table.name},
 								"state": "closed",
@@ -185,19 +186,22 @@ jQuery.extend({
 							}
 							,false
 							,true);   
-					if( (nb_tables++) > 100 ) {
-						logMsg("table list of schema " + schema.name + " has been truncated to 20");
+					if( (nb_tables++) > 20 ) {
 						trunc[trunc.length] = schema.name;
 						break;
 					}
 				}
 			}
-			$( "div#treedisp").jstree('close_all', -1);	    
+			$( "div#treedisp").jstree('close_all', -1);	
+			var msg = "";
 			if(jsdata.truncated != null  ) {
-				loggedAlert("Table list truncated by the server, double click on the " + jsdata.nodekey + " node to make you own selection");
-			} else if( trunc.length > 0 ) {
-				loggedAlert("table list of schemas [" + trunc.join(",") + "] has been truncated to 20");
-				
+				msg = "TRUNCATED TABLE LIST: The table list has been truncated by the server (~100 tables)";
+			} 
+			if( trunc.length > 0 ) {
+				msg += "\nTRUNCATED SCHEMA: The table list of following schemas [" + trunc.join(",") + "] have been truncated to 20 items";
+			}
+			if( msg != "" ) {
+				loggedAlert(msg + "\n\nDouble click on the '" + jsdata.nodekey + "' node to make you own selection");
 			}
 		};
 		

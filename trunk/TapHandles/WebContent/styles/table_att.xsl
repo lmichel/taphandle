@@ -1,25 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:vosi="http://www.ivoa.net/xml/VOSITables/v1.0">
+<xsl:stylesheet version="2.0" 
+	xmlns:xsl="http://www.w3.org/1999/XSL/Transform" 
+	xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+	xmlns:xlink="http://www.w3.org/1999/xlink" 
+	xmlns:vosi="http://www.ivoa.net/xml/VOSITables/v1.0"
+	xmlns:json="http://json.org/">
+	
 	<xsl:output method="text" media-type="text/html" encoding="UTF-8" version="4.0" />
 	<xsl:strip-space elements="name" />
+	
 	<xsl:template match="/">
 				<xsl:apply-templates select="vosi:tableset | tableset" />
 	</xsl:template>
 	
-		<xsl:template name="escapeQuote">
-     	<xsl:param name="pText" select="."/>
-      		<xsl:if test="string-length($pText) >0">
-       			<xsl:value-of select=
-        		"substring-before(concat($pText, '&quot;'), '&quot;')"/>
-      			 <xsl:if test="contains($pText, '&quot;')">
-        			<xsl:text>\"</xsl:text>
-        			<xsl:call-template name="escapeQuote">
-          				<xsl:with-param name="pText" select=
-         		 		"substring-after($pText, '&quot;')"/>
-        			</xsl:call-template>
-       		</xsl:if>
-    	</xsl:if>
-	</xsl:template>
+	<xsl:function name="json:encode-string" as="xs:string">
+		<xsl:param name="string" as="xs:string?"/>
+<!-- 		<xsl:sequence select="replace($string, '(\{|\}|\[|\]|\\|&quot;|\\n)', '\\$1')"/> -->	
+        <xsl:sequence select="replace($string, '(\\|&quot;|\\n)', '\\$1')"/>	
+    </xsl:function>
 	
 <xsl:template match="vosi:tableset | tableset">
 <xsl:for-each select="schema/table"><xsl:if test="name = 'TABLENAME'">
@@ -29,12 +27,12 @@
 
 <xsl:for-each select="column">
 <xsl:if test="position() > 1">,</xsl:if>
-{&quot;name&quot;: &quot;<xsl:call-template name="escapeQuote"><xsl:with-param name="pText" select="name"/></xsl:call-template>&quot;,
- &quot;unit&quot;: &quot;<xsl:call-template name="escapeQuote"><xsl:with-param name="pText" select="unit"/></xsl:call-template>&quot;,
+{&quot;name&quot;: &quot;<xsl:value-of select="json:encode-string(name)"/>&quot;,
+ &quot;unit&quot;: &quot;<xsl:value-of select="json:encode-string(unit)"/>&quot;,
  &quot;ucd&quot;: &quot;<xsl:value-of select="ucd" />&quot;,
  &quot;utype&quot;: &quot;<xsl:value-of select="utype" />&quot;,
  &quot;dataType&quot;: &quot;<xsl:value-of select="dataType" /><xsl:if test="dataType[@arraysize]">(<xsl:value-of select="dataType/@arraysize" />)</xsl:if>&quot;,
- &quot;description&quot;: &quot;<xsl:call-template name="escapeQuote"><xsl:with-param name="pText" select="description"/></xsl:call-template>&quot;}
+ &quot;description&quot;: &quot;<xsl:value-of select="json:encode-string(description)"/>&quot;}
 </xsl:for-each>]
 </xsl:if></xsl:for-each>}
 </xsl:template>

@@ -63,12 +63,6 @@ jQuery.extend({
 					selectAttributesHandlers[jsondata.attributes[i].name] = jsondata.attributes[i];
 				}
 				that.notifyInitDone();		
-				if( default_query == null || default_query == "") {
-					that.notifyQueryUpdated("SELECT TOP " + getQLimit() + " * \n FROM " + jsondata.table );
-				}
-				else {
-					that.notifyQueryUpdated(default_query);				
-				}
 				that.lookForAlphaKeyword();
 				that.lookForDeltaKeyword();
 				$(".table_filter").html("<option>" + table + "</option>");
@@ -84,6 +78,12 @@ jQuery.extend({
 						$(".table_filter").append("<option>" + joinKeys[i].target_table + "</option>");						
 					}
 				});
+				if( default_query == null || default_query == "") {
+					that.notifyQueryUpdated("SELECT TOP " + getQLimit() + " * \n FROM " + jsondata.table );
+				}
+				else {
+					that.notifyQueryUpdated(default_query);				
+				}
 
 				if( andsubmit ) {
 					that.submitQuery();
@@ -504,8 +504,16 @@ jQuery.extend({
 					return;
 				}
 				var report  = "";
-				report = jsondata.parameters.query.replace(/\\n/g,'\n            ')+ "\n";
-				loggedAlert(report, 'Query of job ' + nodekey + '.' + jid);
+				var pa = jsondata.status.job.parameters.parameter;
+				for( var i=0 ; i< pa.length ;i++ ) {
+					var p = pa[i];
+						if( p.id.toLowerCase() == "query" ) {
+							report =p.$.replace(/\\n/g,'\n            ')+ "\n";
+							loggedAlert(report, 'Query of job ' + nodekey + '.' + jid);
+							return;
+						}
+				}
+				loggedAlert(report, 'No queryfound in ' + jsondata);
 			});					
 		};
 		this.showSummary = function(nodekey, jid) {
@@ -562,19 +570,21 @@ jQuery.extend({
 		};
 		this.editQuery= function(nodekey,jid) {
 			showProcessingDialog("Get Job summary");			
-			var query  = "";
 			$.getJSON("jobsummary" , {NODE: nodekey, JOBID: jid}, function(jsonsum) {
 				hideProcessingDialog();
 				if( processJsonError(jsonsum, "Cannot get summary of job") ) {
 					return;
 				}
-				for( var i=0 ; i<jsonsum.status.job.parameters.parameter.length ; i++ ) {
-					if( jsonsum.status.job.parameters.parameter[i].id.toLowerCase() == 'query') {
-						query = jsonsum.status.job.parameters.parameter[i].$.replace(/\\n/g,'\n            ')+ "\n";
-						that.processTreeNodeEvent(jsonsum.treepath, false, query);
-						return;
-					}
+				var pa = jsonsum.status.job.parameters.parameter;
+				var default_query = "";
+				for( var i=0 ; i< pa.length ;i++ ) {
+					var p = pa[i];
+						if( p.id.toLowerCase() == "query" ) {
+							default_query = p.$.replace(/\\n/g,'\n            ')+ "\n";
+							break;
+						}
 				}
+				that.processTreeNodeEvent(jsonsum.treepath, false, default_query);
 			});					
 		};
 

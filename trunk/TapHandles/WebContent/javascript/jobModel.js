@@ -14,11 +14,11 @@ jQuery.extend({
 		var phase = description.phase;
 		var operator = ["Refresh", "get JSon result", "Show Query", "Summary"];			
 		var actions  = new Array();
-		actions['COMPLETED'] = ["Actions", "Display Result", "Download Result", "Add to Cart", "Send to SAMP", "Edit Query", "Summary"];
-		actions['PENDING']   = ["Actions", "Run", "Edit Query", "Summary"];
-		actions['EXECUTING'] = ["Actions", "Kill", "Summary"];
-		actions['QUEUED']    = ["Actions", "Kill", "Summary"];
-		actions['PENDED']    = ["Actions", "Start", "Edit Query", "Summary"];
+		actions['COMPLETED'] = ["Actions", "Show Query", "Display Result", "Download Result", "Add to Cart", "Send to SAMP", "Edit Query", "Summary"];
+		actions['PENDING']   = ["Actions", "Show Query", "Run", "Edit Query", "Summary"];
+		actions['EXECUTING'] = ["Actions", "Show Query", "Kill", "Summary"];
+		actions['QUEUED']    = ["Actions", "Show Query", "Kill", "Summary"];
+		actions['PENDED']    = ["Actions", "Show Query", "Start", "Edit Query", "Summary"];
 		actions['ERROR']     = ["Actions", "Show Query", "Edit Query", "Summary"];
 		this.addListener = function(list){
 			listeners.push(list);

@@ -159,6 +159,6 @@ jQuery.extend({
 			$.each(listeners, function(i){
 				listeners[i].counterpartsAreLoaded(jsdata);
 			});
-		}
+		};
 	}
 });
