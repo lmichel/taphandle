@@ -55,7 +55,7 @@ jQuery.extend({
 			if( that.results.length >= 1 ) {
 				var url = that.results[0];
 				logMsg("download " + url);
-				window.location = url;
+				changeLocation(url);
 			}
 			else {
 				loggedAlert("No ZIP archive available");
