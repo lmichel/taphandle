@@ -7,6 +7,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import resources.RootClass;
+import tapaccess.TapException;
 
 /**
  * This class wraps a {@link LinkedHashMap} of TAP nodes.
@@ -60,7 +61,7 @@ public class NodeMap  extends RootClass {
 	public String addNode(String url, String key) throws Exception {
 		TapNode nm;
 		if( (nm = this.getNode(key)) != null ) {
-			throw new Exception("Node with \"" + key + "\" as key already exists (" + nm.getUrl() + ")");
+			throw new TapException("Node with \"" + key + "\" as key already exists (" + nm.getUrl() + ")");
 		} else {
 			logger.info("Create new Tap node " + url + " referenced with the key " + key);
 			nm = new TapNode(url, MetaBaseDir + key, key);

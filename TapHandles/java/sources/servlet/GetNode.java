@@ -67,9 +67,12 @@ public class GetNode extends RootServlet implements Servlet {
 				JSONObject jso = tn.filterTableList(filter, ra);
 				response.getWriter().print(jso.toJSONString());				
 			} else if( tn.largeResource ){
-				logger.debug("Node " + key + " Seems to be too large to return all tables: apply a selection");
-				JSONObject jso = tn.filterTableList(100);
-				response.getWriter().print(jso.toJSONString());
+				JSONObject jso = tn.filterTableList(100);		
+				String jjs = jso.toJSONString();
+				logger.debug("Node " + key + " Seems to be too large to return all tables: apply a selection " + jjs.length() + " bytes returned");
+				response.setHeader("Content-Length"     , Long.toString(jjs.length()));
+
+				response.getWriter().print(jjs);
 			} else {
 				dumpJsonFile("/" + RootClass.WEB_NODEBASE_DIR + "/" + key + "/tables.json", response);				
 			}

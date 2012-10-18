@@ -21,6 +21,7 @@ import org.apache.commons.io.IOUtils;
 import org.json.simple.JSONObject;
 
 import resources.RootClass;
+import tapaccess.TapException;
 
 /**
  * @author laurent
@@ -51,15 +52,14 @@ public class ZipMap extends RootClass {
 			String node = e.getKey();
 			String nodeDir = baseDir + File.separator + node;
 			if( ! isWorkingDirectoryValid(nodeDir) ) {
-				throw new Exception("Cannot acces to " + nodeDir);
+				throw new TapException("Cannot acces to " + nodeDir);
 			}
 			Set<ZipEntryRef> zers = e.getValue();
 			LinkedHashSet<ZipEntryRef> statusZers = new LinkedHashSet<ZipEntryRef>();
 			for( ZipEntryRef zer: zers) {
 				if( zer.getType() == ZipEntryRef.JOB ) {
 					this.prepareJobFile(zer, nodeDir, reportDir, statusZers);
-				}
-				else {
+				} else {
 					this.prepareUrlFile(zer, nodeDir, reportDir);
 				}
 			}
@@ -101,11 +101,11 @@ public class ZipMap extends RootClass {
 	private void prepareJobFile(ZipEntryRef zer, String nodeDir, String reportDir, Set<ZipEntryRef> statusZers) throws Exception {
 		String jobDir = nodeDir + File.separator + "job_" + zer.getUri();
 		if( ! isWorkingDirectoryValid(jobDir) ) {
-			throw new Exception("Cannot acces to " + jobDir);
+			throw new TapException("Cannot acces to " + jobDir);
 		}
 		File f = new File(jobDir + File.separator + "result.xml");
 		if( !f.exists() || !f.isFile() || !f.canRead()) {
-			throw new Exception("Cannot acces to result file " + f.getAbsolutePath());
+			throw new TapException("Cannot acces to result file " + f.getAbsolutePath());
 		}
 		/*
 		 * Replace the Job ID with the path of the result file renamed with the 
@@ -123,7 +123,7 @@ public class ZipMap extends RootClass {
 		 */
 		f = new File(jobDir + File.separator + "status.xml");
 		if( !f.exists() || !f.isFile() || !f.canRead()) {
-			throw new Exception("Cannot acces to status file " + f.getAbsolutePath());
+			throw new TapException("Cannot acces to status file " + f.getAbsolutePath());
 		}
 		fcopyName = reportDir + File.separator + zer.getName() + "_status.xml";
 		bis       = new BufferedInputStream(new FileInputStream(f));

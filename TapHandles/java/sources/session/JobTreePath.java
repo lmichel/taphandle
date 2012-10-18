@@ -10,6 +10,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
 import resources.RootClass;
+import tapaccess.TapException;
 
 /**
  * @author laurent
@@ -38,7 +39,7 @@ public class JobTreePath extends RootClass{
 	public JobTreePath(String  treePath) throws Exception {
 		String[] pts = treePath.split("[\\s;:]");
 		if( pts.length != 3 ) {
-			throw new Exception(treePath + " badly formated");
+			throw new TapException(treePath + " badly formated");
 		}
 		this.nodekey = pts[0];
 		this.schema = pts[1];

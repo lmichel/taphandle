@@ -30,17 +30,17 @@ public class NodeBase extends RootClass{
 
 	static {
 		try {
-//		defaultNodes.put("vizier", "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/");
-//		defaultNodes.put("xcatdb", "http://xcatdb.u-strasbg.fr/2xmmidr3/tap");
-//		defaultNodes.put("cadc"  , "http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap");
-//		defaultNodes.put("gavo"  , "http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap");
-//		defaultNodes.put("simbad", "http://simbad.u-strasbg.fr/simbad/sim-tap");
+			defaultNodes.put("vizier", new NodeUrl("http://tapvizier.u-strasbg.fr/TAPVizieR/tap/"));
+			defaultNodes.put("xcatdb", new NodeUrl("http://xcatdb.u-strasbg.fr/2xmmidr3/tap"));
+			defaultNodes.put("cadc"  , new NodeUrl("http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap"));
+			defaultNodes.put("gavo"  , new NodeUrl("http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap"));
+			defaultNodes.put("simbad", new NodeUrl("http://simbad.u-strasbg.fr/simbad/sim-tap"));
 			defaultNodes.put("heasarc-xamin", new NodeUrl("http://heasarc.gsfc.nasa.gov/xamin/vo/tap"));
 		} catch (Exception e) {
 			logger.error(e);
 		}
 	}
-	
+
 	class ThreadInit extends Thread {
 		private String url;
 		private String key;
@@ -53,13 +53,13 @@ public class NodeBase extends RootClass{
 				logger.error(e);
 			}
 		}
-	    public void run() {
+		public void run() {
 			try {
 				nodeMap.addNode(url, key);
 			} catch (Exception ex) {
 				logger.error("Cannot init node " + key + " served by " + url, ex);
 			}	
-	    }
+		}
 	}
 	/**
 	 * Private creator checking he validity of the base and recording some nodes
@@ -75,13 +75,13 @@ public class NodeBase extends RootClass{
 					for( Entry<String, NodeUrl> e: defaultNodes.entrySet()) {
 						(new ThreadInit(e)).start();
 					}
-//						for( Entry<String, String> e: defaultNodes.entrySet()) {
-//						try {
-//							nodeMap.addNode(e.getValue(), e.getKey());
-//						} catch (Exception ex) {
-//							logger.error("Cannot init node " + e.getKey() + " served by " + e.getValue(), ex);
-//						}					
-//					}
+					//						for( Entry<String, String> e: defaultNodes.entrySet()) {
+					//						try {
+					//							nodeMap.addNode(e.getValue(), e.getKey());
+					//						} catch (Exception ex) {
+					//							logger.error("Cannot init node " + e.getKey() + " served by " + e.getValue(), ex);
+					//						}					
+					//					}
 				}
 			} catch (Exception e) {
 				logger.error("Cannot init node base", e);

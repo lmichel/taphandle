@@ -2,9 +2,12 @@ package servlet;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -78,7 +81,7 @@ public abstract class RootServlet extends HttpServlet {
 	 */
 	public void reportJsonError(HttpServletRequest request, HttpServletResponse response, String msg) {
 		try {
-			JsonUtils.teePrint(response.getOutputStream(), JsonUtils.getErrorMsg(accessMessage(request) + " " +msg));
+			JsonUtils.teePrint(response.getOutputStream(), JsonUtils.getErrorMsg(accessMessage(request) + "\n" +msg));
 		} catch (Exception e1) {
 			logger.error("Servlet exception", e1);
 		}
@@ -189,22 +192,32 @@ public abstract class RootServlet extends HttpServlet {
 	}
 
 	protected void dumpJsonFile(String urlPath, HttpServletResponse response) throws Exception {
+		String realPath = getServletContext().getRealPath(urlPath);
+		String length = Long.toString((new File(realPath)).length());
 		response.setContentType("text/json");
-		logger.debug("dump resource " + urlPath);
-		logger.debug("Real path  " + getServletContext().getRealPath(urlPath));
-		InputStream is = new FileInputStream(getServletContext().getRealPath(urlPath));
-		Scanner s = new Scanner(is);
+		response.setHeader("Content-Length"     , length);
+		response.setHeader("Pragma", "no-cache" );
+		response.setHeader("Cache-Control", "no-cache" );
+		response.setDateHeader( "Expires", 0 );		
+		logger.debug("dump resource " + urlPath + " " + length + "bytes");
+		logger.debug("Real path  " + realPath);
+		/*
+		 * Do nut use Reader/Writer because the transfert would truncated due to an inconsistency between
+		 * Content-Length and data really transfered
+		 */
+		BufferedInputStream is = new BufferedInputStream(new FileInputStream(realPath));
 		try {
-			PrintWriter out = response.getWriter();
-			int nbl = 0;
-			while (s.hasNextLine()){
-				String l = s.nextLine();
-				out.println(l);
+			OutputStream out = response.getOutputStream();
+			int nbl = 0, l=0, le;
+			   byte[] buf = new byte[1024];			
+			   while( (le = is.read(buf)) > 0  ){
+				out.write(buf);
 				nbl++;
+				l += le;
 			}
-			logger.debug("done " + nbl + " lines");
+			logger.debug("done " + nbl + " lines " + l + "bytes transfered");
 		} finally{
-			s.close();
+			is.close();
 		}
 	}
 	/**

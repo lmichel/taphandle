@@ -47,6 +47,8 @@ public class NodeUrl extends RootClass{
 	public String getAbsoluteURL(String path) throws MalformedURLException {
 		if( path == null || path.trim().length() == 0 || this.fullUrl.startsWith(path) ) {
 			return fullUrl;
+		} else if(path.matches("http[s]?://.*") ) {
+			return path;
 		} else if( path.startsWith("/") ) {
 			if( path.startsWith(this.appPath) ) {
 				return this.serverUrl + path;

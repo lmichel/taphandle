@@ -48,7 +48,7 @@ public class JoinKeysJob extends RootClass {
 			phase = TapAccess.getAsyncJobPhase(url, jobID,  baseFN + "phase.xml", nc);
 			Thread.sleep(1000);
 			if( (cpt--) <= 0 ) {
-				throw new Exception("Cannot get Join keys after 10'");
+				throw new TapException("Cannot get Join keys after 10'");
 			}
 
 		} while( phase.equals("EXECUTING") || phase.equals("PENDING"));

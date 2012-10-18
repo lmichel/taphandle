@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import session.UserSession;
 import session.UserTrap;
+import translator.JsonUtils;
 
 /**
  * Servlet implementation class JobStatus
@@ -38,7 +39,8 @@ public class JobSummary extends RootServlet implements Servlet {
 			}
 			UserSession session = UserTrap.getUserAccount(request);
 			session.getJobStatus(nodeKey, jobId);
-			response.getWriter().print(session.getJobSummary(nodeKey, jobId));
+			//response.getWriter().print(session.getJobSummary(nodeKey, jobId));
+			JsonUtils.teePrint(response, session.getJobSummary(nodeKey, jobId));
 			//dumpJsonFile(session.getJobSummaryUrlPath(nodeKey, jobId), response);
 		} catch (Exception e) {
 			this.reportJsonError(request, response, e);

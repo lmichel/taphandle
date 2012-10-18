@@ -29,6 +29,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import resources.RootClass;
+import tapaccess.TapException;
 import uk.ac.starlink.table.ColumnInfo;
 import uk.ac.starlink.table.StarTable;
 import uk.ac.starlink.table.StarTableFactory;
@@ -300,19 +301,20 @@ public class XmlToJson  extends RootClass {
 			 * some info about the issue
 			 */
 		} catch (Exception e) {
+			logger.error("Can't translate result file " + inputFile);
 			SavotPullParser  sp = new SavotPullParser(inputFile, SavotPullEngine.FULL);
 			SavotVOTable sv = sp.getVOTable(); 
-			long rc = sp.getResourceCount();
+			long rc =  sp.getResourceCount();
 			for (int l=0 ; l<rc ; l++) {		    	 
 				SavotResource currentResource = (SavotResource)(sv.getResources().getItemAt(l));
 				InfoSet is = currentResource.getInfos();
-				String msg = "";;
+				String msg = "Info returned by the server:\n";;
 				for( int i=0 ; i<is.getItemCount() ; i++ ) {
-					msg += ((SavotInfo)is.getItemAt(i)).getContent() + "\n";
+					msg += ((SavotInfo)is.getItemAt(i)).getValue() + "\n";
 				}
-				throw new Exception(msg);
+				throw new TapException(msg);
 			}         
-			throw new Exception("No resource in VOTable " + inputFile);
+			throw new TapException("No resource in VOTable " + inputFile);
 		}
 	}
 
@@ -335,7 +337,7 @@ public class XmlToJson  extends RootClass {
 			int nCol = table.getColumnCount();
 
 			if( nCol != 4 ) {
-				throw new Exception("Key join table must have 4 columns");				
+				throw new TapException("Key join table must have 4 columns");				
 			}
 			/*
 			 * Stores join links in a map 
@@ -392,7 +394,7 @@ public class XmlToJson  extends RootClass {
 					msg += ((SavotInfo)is.getItemAt(i)).getContent() + "\n";
 				}
 			}   
-			throw new Exception(msg);
+			throw new TapException(msg);
 		}
 	}
 

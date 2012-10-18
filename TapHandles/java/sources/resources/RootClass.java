@@ -13,6 +13,8 @@ import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 
+import tapaccess.TapException;
+
 /**
  * Super class of he project
  * Contains constants and regexp used by the project and some methods managing working directories
@@ -100,7 +102,7 @@ public class RootClass {
 
 
 	public static final long AVAILABILITY_CHECK_FREQUENCY=	10*60*1000;
-
+	public static final boolean INCLUDE_JOIN = true;
 
 	/**
 	 * Use working directories contained in contextPath
@@ -125,16 +127,16 @@ public class RootClass {
 		File f = new File(baseDirectory);
 		if( f.exists() ) {
 			if( !f.isDirectory() ) {
-				throw new Exception(baseDirectory + " is not a directory");
+				throw new TapException(baseDirectory + " is not a directory");
 			} else if( !f.canWrite() ) {
-				throw new Exception("Cannot write in directory " + baseDirectory );
+				throw new TapException("Cannot write in directory " + baseDirectory );
 			}
 			return;
 		} else {
 			if( !f.mkdir() ) {
-				throw new Exception("Cannot create  directory " + baseDirectory );				
+				throw new TapException("Cannot create  directory " + baseDirectory );				
 			} else if( !f.canWrite() ) {
-				throw new Exception("Cannot write in directory " + baseDirectory );
+				throw new TapException("Cannot write in directory " + baseDirectory );
 			}
 			return;
 		}
