@@ -7,6 +7,12 @@ function logMsg(message) {
 		console.log(message);
 	}
 }
+function traceMsg(message) {
+	if( DEBUG && (typeof console != 'undefined') ) {
+		console.trace();
+		console.log(message);
+	}
+}
 
 function setTitlePath(treepath) {
 	logMsg("title " + treepath);
@@ -24,7 +30,8 @@ function getQLimit() {
 
 function loggedAlert(message, title) {
 	logMsg("ALERT " + message);
-	jAlert(message, title);
+	openDialog((title== null || title == "" )? "Alert": title
+			, "<span class=alert>" + message.replace(/\n/g, "<BR>") + "</span>");
 }
 
 

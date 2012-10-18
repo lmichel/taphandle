@@ -1,31 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-         xmlns="http://java.sun.com/xml/ns/javaee" 
-         xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" 
-         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" 
-         id="WebApp_ID" version="2.5">
-
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" id="WebApp_ID" version="2.5">
   <display-name>TapHandles V1.1</display-name>
-
   <welcome-file-list>
     <welcome-file>index.html</welcome-file>
   </welcome-file-list>
-  
-  <!-- 
-  Class invoked at both starting and shutdown tile 
-  -->
   <listener>
     <listener-class>
 	servlet.InitBaseAtStart
 	</listener-class>
-  </listener>  
-  
+  </listener>
   <servlet>
     <description></description>
     <display-name>GetNode</display-name>
     <servlet-name>GetNode</servlet-name>
-    <servlet-class>servlet.GetNode</servlet-class> 
-    <!--  load-on-startup>1</load-on-startup -->
+    <servlet-class>servlet.GetNode</servlet-class>
   </servlet>
   <servlet-mapping>
     <servlet-name>GetNode</servlet-name>
@@ -160,5 +148,15 @@
   <servlet-mapping>
     <servlet-name>GetTableJoinKeys</servlet-name>
     <url-pattern>/gettablejoinkeys</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>DummyServlet</display-name>
+    <servlet-name>DummyServlet</servlet-name>
+    <servlet-class>servlet.DummyServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>DummyServlet</servlet-name>
+    <url-pattern>/dummyservlet</url-pattern>
   </servlet-mapping>
 </web-app>

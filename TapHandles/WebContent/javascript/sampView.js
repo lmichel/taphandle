@@ -81,16 +81,17 @@ jQuery.extend({
 			else {
 				loggedAlert('No active SAMP connnection', 'Error');
 			}
-		}
+		};
 		this.fireSendVOTableDownload= function(url){
 			if( that.isSampConnect() ) {
 				showSampMessageSent();
+				logMsg("Send SAMP URL:" + url);
 				WebSampConnector.sendMsg('table.load.votable','From TAP Result' ,'VOTable', url,'');
 			}
 			else {
 				loggedAlert('No active SAMP connnection', 'Error');
 			}
-		}
+		};
 		this.fireSendCSQuery= function(query){
 			if( that.isSampConnect() ) {
 				showSampMessageSent();
