@@ -110,8 +110,7 @@ function getDLView(node, columnName, url, tdNode) {
 			 */
 			if( (ce != null && (ce == 'gzip' || ce == 'zip')) || isFits ){
 				dl_tag = "<a class='" + dl_class + "' title='Download Data' href='javascript:void(0);' onclick='changeLocation(\"" + url + "\");'></a>";
-			}
-			else {
+			} else {
 				dl_tag = "<a class='" + dl_class + "' title='Download Data' href='javascript:void(0);' onclick='changeLocation(\"" + url + "\");' target=blank></a>";
 			}
 
