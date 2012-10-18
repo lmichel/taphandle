@@ -22,6 +22,7 @@ import org.json.simple.parser.JSONParser;
 
 import resources.RootClass;
 import tapaccess.JoinKeysJob;
+import tapaccess.TapException;
 import translator.JsonUtils;
 import translator.NameSpaceDefinition;
 import translator.XmlToJson;
@@ -121,8 +122,10 @@ public class TapNode  extends RootClass {
 		logger.debug("NS for capability " + capabilityNS.getNsName());
 		this.checkTables() ;
 		logger.debug("NS for tables " + tablesNS.getNsName());
-		logger.info("Service " + this.url + " seems to be working");			
-		this.setJoinKeys();
+		logger.info("Service " + this.url + " seems to be working");		
+		if( INCLUDE_JOIN ) {
+			this.setJoinKeys();
+		}
 	}
 
 	/**
@@ -338,7 +341,7 @@ public class TapNode  extends RootClass {
 			}
 			this.getServiceReponse("columns?query=" + noSchemaName, tablesNS);
 			if( ! (new File(this.baseDirectory + "columns?query=" + noSchemaName  +  ".xml")).renameTo(fn) ) {
-				throw new Exception("Cannot store columns of table  " + tableName +" in file " + this.baseDirectory + tableName  +  ".xml");
+				throw new TapException("Cannot store columns of table  " + tableName +" in file " + this.baseDirectory + tableName  +  ".xml");
 			}
 			XmlToJson.translateTableMetaData(this.baseDirectory, tableName, tablesNS);	
 			fn.delete();
@@ -388,7 +391,7 @@ public class TapNode  extends RootClass {
 			}
 			this.getServiceReponse("columns?query=" + noSchemaName, tablesNS);
 			if( ! (new File(this.baseDirectory + "columns?query=" + noSchemaName  +  ".xml")).renameTo(fn) ) {
-				throw new Exception("Cannot store columns of table  " + tableName +" in file " + this.baseDirectory + tableName  +  "_att.xml");
+				throw new TapException("Cannot store columns of table  " + tableName +" in file " + this.baseDirectory + tableName  +  "_att.xml");
 			}
 			XmlToJson.translateTableAttributes(this.baseDirectory, tableName, tablesNS);	
 			fn.delete();

@@ -6,10 +6,13 @@ import java.io.FileReader;
 import java.io.IOException;
 
 import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
+
+import tapaccess.TapException;
 
 /**
  * A few JSON utilities taken from {@link http://saada.u-strasbg.fr Saada} 
@@ -63,6 +66,16 @@ public abstract class JsonUtils {
 		if( STDOUT ) System.out.println(msg);
 		out.println(msg);
 	}
+	/**
+	 * Force the MIME type to JSON: avoid FF "badly formed" errors
+	 * @param response
+	 * @param msg
+	 * @throws IOException
+	 */
+	public static void teePrint(HttpServletResponse response, String msg) throws IOException {
+		response.setContentType("application/json");
+		teePrint(response.getOutputStream(),msg);
+	}
 	
 	/**
 	 * Returns the value of the field in the Json files. The field can be a doted path.
@@ -83,7 +96,7 @@ public abstract class JsonUtils {
 		in.close();
 		Object obj=JSONValue.parse(sb.toString());
 		if( obj == null ) {
-			throw new Exception("File " + jsonFile + " (" + (new File(jsonFile)).length() + " bytes) is not a JSON file");
+			throw new TapException("File " + jsonFile + " (" + (new File(jsonFile)).length() + " bytes) is not a JSON file");
 		}
 		for( String f: Fields) {
 			obj = ((JSONObject)obj).get(f);

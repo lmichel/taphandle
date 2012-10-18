@@ -1,6 +1,7 @@
 package resources;
 
 
+import tapaccess.TapException;
 import cds.astro.Astrocoo;
 import cds.astro.Astroframe;
 import cds.astro.Coo;
@@ -65,7 +66,7 @@ public class Coord extends RootClass {
 			return new Ecliptic();
 		}
 		else {
-			throw new Exception( "Unsupported coordinate system <" + sys + ">");
+			throw new TapException( "Unsupported coordinate system <" + sys + ">");
 		} 
 	}
 	

@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -16,6 +17,7 @@ import org.json.simple.JSONValue;
 
 import resources.RootClass;
 import tapaccess.TapAccess;
+import tapaccess.TapException;
 import translator.JsonUtils;
 
 /**
@@ -221,7 +223,7 @@ public class UserSession  extends RootClass {
 		NodeCookie nc = new NodeCookie();
 		nc.setCookie(jobStack.getJobCookie(nodeKey, jobID));
 		if( NodeBase.getNode(nodeKey) == null ) {
-			throw new Exception("Node " + nodeKey + " not referenced by the server");
+			throw new TapException("Node " + nodeKey + " not referenced by the server");
 		}
 		TapAccess.deleteAsyncJob(NodeBase.getNode(nodeKey).getUrl(), jobID, nc);
 		jobStack.removeJob(nodeKey, jobID);
@@ -253,8 +255,10 @@ public class UserSession  extends RootClass {
 			}
 		}
 		for( String r: resultURLs) {
-			logger.debug("Download " + NodeBase.getNode(nodeKey).getAbsoluteURL(r));
-			TapAccess.getAsyncJobResultFile(NodeBase.getNode(nodeKey).getAbsoluteURL(r)
+			String path =  URLDecoder.decode(r, "ISO-8859-1");
+			System.out.println("@@@@@@@@@@@@@@@@ " + path);
+			logger.debug("Download " + NodeBase.getNode(nodeKey).getAbsoluteURL(path));
+			TapAccess.getAsyncJobResultFile(NodeBase.getNode(nodeKey).getAbsoluteURL(path)
 					, this.getJobDir(nodeKey, jobID)
 					, "result.xml"
 					, nc);

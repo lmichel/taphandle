@@ -10,6 +10,8 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import tapaccess.TapException;
+
 import cds.astro.Astrocoo;
 import cds.astro.Astroframe;
 import cds.astro.FK5;
@@ -81,8 +83,7 @@ public class PositionParser extends RootClass {
 			this.format = DECIMAL;
 			if( this.dec > 0 ) {
 				this.position  = deux.format(ra) + " +" +  deux.format(this.dec);
-			}
-			else {
+			} else {
 				this.position  = deux.format(ra) + " " + deux.format(this.dec);
 			}
 			//System.out.println("==> " + this.position);
@@ -104,12 +105,11 @@ public class PositionParser extends RootClass {
 					this.dec = converted_coord[1];
 					this.position = new Astrocoo(this.astroframe, this.ra, this.dec).toString("s:");
 				}
-			}
-			else {
+			} else {
 				this.format = NOFORMAT;     
 				String msg = "<" + this.position + "> Can not be resolved";
 				this.position = "";
-				throw new Exception(msg);
+				throw new TapException(msg);
 			}
 		}
 
@@ -122,9 +122,8 @@ public class PositionParser extends RootClass {
 				//this.ra=converted_coord[0];
 				//this.dec=converted_coord[1];
 			}
-		}
-		else {
-			throw new Exception("'" + this.arg + "' Position format not recognized");
+		} else {
+			throw new TapException("'" + this.arg + "' Position format not recognized");
 		}		
 	}
 
@@ -161,8 +160,7 @@ public class PositionParser extends RootClass {
 
 			if (xml.indexOf("<jpos>")>0) {
 				return xml.substring(xml.indexOf("<jpos>")+6, xml.indexOf("</jpos>"));
-			}
-			else {
+			} else {
 				return  null;
 			}
 		}
