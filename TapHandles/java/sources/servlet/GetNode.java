@@ -32,7 +32,7 @@ public class GetNode extends RootServlet implements Servlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
 		printAccess(request, true);
-		response.setContentType("application/json");
+		response.setContentType("application/json; charset=UTF-8");
 
 		String node = this.getParameter(request, "node");
 		String filter = this.getParameter(request, "filter");
@@ -68,11 +68,11 @@ public class GetNode extends RootServlet implements Servlet {
 				response.getWriter().print(jso.toJSONString());				
 			} else if( tn.largeResource ){
 				JSONObject jso = tn.filterTableList(100);		
-				String jjs = jso.toJSONString();
-				logger.debug("Node " + key + " Seems to be too large to return all tables: apply a selection " + jjs.length() + " bytes returned");
-				response.setHeader("Content-Length"     , Long.toString(jjs.length()));
+				byte[] bytes  = (jso.toJSONString() + "\n              \n").getBytes();
+				logger.debug("Node " + key + " Seems to be too large to return all tables: apply a selection " + bytes.length + " bytes returned");
+				response.setContentLength(bytes.length);
 
-				response.getWriter().print(jjs);
+				response.getOutputStream().write(bytes);
 			} else {
 				dumpJsonFile("/" + RootClass.WEB_NODEBASE_DIR + "/" + key + "/tables.json", response);				
 			}

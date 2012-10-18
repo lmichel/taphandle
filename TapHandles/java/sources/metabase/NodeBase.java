@@ -25,7 +25,6 @@ public class NodeBase extends RootClass{
 	 */
 	private  final NodeMap nodeMap = new NodeMap();
 	private static NodeBase instance;
-	private static final boolean NOINIT = false;
 	private static final LinkedHashMap<String, NodeUrl> defaultNodes = new LinkedHashMap<String, NodeUrl>();
 
 	static {

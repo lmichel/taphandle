@@ -256,7 +256,6 @@ public class UserSession  extends RootClass {
 		}
 		for( String r: resultURLs) {
 			String path =  URLDecoder.decode(r, "ISO-8859-1");
-			System.out.println("@@@@@@@@@@@@@@@@ " + path);
 			logger.debug("Download " + NodeBase.getNode(nodeKey).getAbsoluteURL(path));
 			TapAccess.getAsyncJobResultFile(NodeBase.getNode(nodeKey).getAbsoluteURL(path)
 					, this.getJobDir(nodeKey, jobID)

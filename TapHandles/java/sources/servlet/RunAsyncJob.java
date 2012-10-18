@@ -30,7 +30,7 @@ public class RunAsyncJob extends RootServlet implements Servlet {
 			UserSession session = UserTrap.getUserAccount(request);
 			String node = this.getParameter(request, "NODE");
 			String nodeKey=null;;
-			response.setContentType("application/json");
+			response.setContentType("application/json; charset=UTF-8");
 			if( node == null || node.length() ==  0 ) {
 				reportJsonError(request, response, "runasyncjob: no node specified");
 				return;

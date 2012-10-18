@@ -38,7 +38,7 @@ public class DummyServlet extends RootServlet implements Servlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		printAccess(request, true);
 		try {
-			response.setContentType("application/json");
+			response.setContentType("application/json; charset=UTF-8");
 			response.setHeader("Content-Length"     , Long.toString((new File("/home/michel/Desktop/sdss8_att.json")).length()));
 			response.setHeader("Pragma", "no-cache" );
 			response.setHeader("Cache-Control", "no-cache" );

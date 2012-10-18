@@ -194,7 +194,7 @@ public abstract class RootServlet extends HttpServlet {
 	protected void dumpJsonFile(String urlPath, HttpServletResponse response) throws Exception {
 		String realPath = getServletContext().getRealPath(urlPath);
 		String length = Long.toString((new File(realPath)).length());
-		response.setContentType("text/json");
+		response.setContentType("application/json; charset=UTF-8");
 		response.setHeader("Content-Length"     , length);
 		response.setHeader("Pragma", "no-cache" );
 		response.setHeader("Cache-Control", "no-cache" );
@@ -211,7 +211,7 @@ public abstract class RootServlet extends HttpServlet {
 			int nbl = 0, l=0, le;
 			   byte[] buf = new byte[1024];			
 			   while( (le = is.read(buf)) > 0  ){
-				out.write(buf);
+				out.write(buf, 0, le);
 				nbl++;
 				l += le;
 			}

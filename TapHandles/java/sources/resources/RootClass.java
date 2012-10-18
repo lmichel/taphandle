@@ -102,7 +102,8 @@ public class RootClass {
 
 
 	public static final long AVAILABILITY_CHECK_FREQUENCY=	10*60*1000;
-	public static final boolean INCLUDE_JOIN = true;
+	public static final boolean INCLUDE_JOIN = false;
+	public static final boolean NOINIT = false;
 
 	/**
 	 * Use working directories contained in contextPath
