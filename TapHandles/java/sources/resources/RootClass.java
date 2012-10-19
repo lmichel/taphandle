@@ -6,9 +6,6 @@ package resources;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.util.Locale;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
@@ -102,7 +99,7 @@ public class RootClass {
 
 
 	public static final long AVAILABILITY_CHECK_FREQUENCY=	10*60*1000;
-	public static final boolean INCLUDE_JOIN = false;
+	public static final boolean INCLUDE_JOIN = true;
 	public static final boolean NOINIT = false;
 
 	/**
