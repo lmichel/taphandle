@@ -15,8 +15,6 @@ jQuery.extend({
 		this.addListener = function(list){
 			listeners.push(list);
 		}
-
-
 		this.sampInit = function(list){
 
 			$("#sampconnector").click(function() {				
@@ -43,7 +41,6 @@ jQuery.extend({
 				}
 			});
 		}
-
 		this.checkConnection = function() {
 			try {
 				if( WebSampConnector.isConnected() == false ) {				

@@ -175,3 +175,8 @@ function jsonAlert(jsdata, title) {
 	loggedAlert(retour, 'Json Object');
 }
 
+function downloadLocation(url){
+	logMsg("downloadLocation " + url);
+    iframe =$("#" + downloadIFrameID ).src = url;   
+}
+

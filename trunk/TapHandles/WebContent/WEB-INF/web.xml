@@ -159,4 +159,14 @@
     <servlet-name>DummyServlet</servlet-name>
     <url-pattern>/dummyservlet</url-pattern>
   </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>AvailableNodes</display-name>
+    <servlet-name>AvailableNodes</servlet-name>
+    <servlet-class>servlet.AvailableNodes</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>AvailableNodes</servlet-name>
+    <url-pattern>/availablenodes</url-pattern>
+  </servlet-mapping>
 </web-app>

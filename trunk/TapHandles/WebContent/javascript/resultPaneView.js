@@ -20,7 +20,7 @@ jQuery.extend({
 		this.fireGetProductInfo = function(url) {
 			showProcessingDialog("Waiting on product info");
 
-			$.getJSON("getproductinfo", {url: url}, function(jsdata) {
+			$.getJSON("getproductinfo", {jsessionid: sessionID, url: url}, function(jsdata) {
 				hideProcessingDialog();
 				if( processJsonError(jsdata, "Cannot get product info") ) {
 					return;
@@ -37,7 +37,7 @@ jQuery.extend({
 		this.fireGetDataLink = function(url) {
 			showProcessingDialog("Waiting on product info");
 
-			$.getJSON("getdatalink", {url: url}, function(jsdata) {
+			$.getJSON("getdatalink", {jsessionid: sessionID, url: url}, function(jsdata) {
 				hideProcessingDialog();
 				if( processJsonError(jsdata, "Cannot get datalink") ) {
 					return;
@@ -87,7 +87,7 @@ jQuery.extend({
 		this.fireDownloadProduct = function(url) {
 			showProcessingDialog("Waiting on product info");
 
-			$.getJSON("getproductinfo", {url: url}, function(jsdata) {
+			$.getJSON("getproductinfo", {jsessionid: sessionID, url: url}, function(jsdata) {
 				hideProcessingDialog();
 				if( jsdata == undefined || jsdata == null ) {
 					window.open(url);
@@ -118,7 +118,7 @@ jQuery.extend({
 		this.fireNewNodeEvent = function(nodekey) {
 			showProcessingDialog("Waiting on " + nodekey + " node description");
 
-			$.getJSON("getnode", {node: nodekey }, function(jsdata) {
+			$.getJSON("getnode", {jsessionid: sessionID, node: nodekey }, function(jsdata) {
 				hideProcessingDialog();
 				if( processJsonError(jsdata, "Cannot make data tree") ) {
 					return;
@@ -471,7 +471,7 @@ jQuery.extend({
 					"aaSorting" : [],
 					"bSort" : false,
 					"bFilter" : false,
-					"sAjaxSource" : "nextpage"
+					"sAjaxSource" : "nextpage?jsessionid=" + sessionID
 				});
 			}
 		};

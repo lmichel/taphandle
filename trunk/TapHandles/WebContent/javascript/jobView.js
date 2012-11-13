@@ -64,7 +64,7 @@ jQuery.extend({
 			$('#' + id + "_close").click(function() {
 				tapView.fireRemoveJob( id);
 				$.post("killjob"
-						, {NODE: nodekey, JOBID: id}
+						, {jsessionid: sessionID, NODE: nodekey, JOBID: id}
 						, function(jsondata, status) {	
 							// Nothing is returned when everything is OK
 							if( jsondata == undefined || jsondata == null ) {
