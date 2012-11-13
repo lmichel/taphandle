@@ -43,6 +43,8 @@ public class TapNode  extends RootClass {
 
 	private String baseDirectory;
 	private NodeUrl url;
+	private String uri="";
+	private String description="";
 	private String key;
 	private NameSpaceDefinition availabilityNS = new NameSpaceDefinition();
 	private NameSpaceDefinition capabilityNS   = new NameSpaceDefinition();
@@ -105,6 +107,32 @@ public class TapNode  extends RootClass {
 			this.largeResource = false;
 		}
 
+	}
+
+	
+	public String getUri() {
+		return uri;
+	}
+
+
+	public void setUri(String uri) {
+		if( uri != null && uri.startsWith("ivo://")) {
+			this.uri = uri;
+		} else {
+			logger.warn("Attempt to set a wrong URI in node " + key + ": " + uri);
+		}
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		if( description != null ) {
+			this.description = description;
+		} else {
+			logger.warn("Attempt to set a null description in node " + key );
+		}
 	}
 
 	/**
