@@ -49,7 +49,7 @@ public class JobResult extends RootServlet implements Servlet {
 				String resultfile =  "/" + RootClass.WEB_USERBASE_DIR 
 				                   + "/" + sessionId 
 				                   + "/" + nodeKey 
-				                   +  "/job_"  + jobId 
+				                   + "/job_"  + jobId 
 				                   + "/result.xml";
 				downloadProduct(request, response,  getServletContext().getRealPath(resultfile), jobId + ".xml");
 			}
