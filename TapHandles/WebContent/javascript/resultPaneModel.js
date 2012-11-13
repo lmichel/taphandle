@@ -32,7 +32,7 @@ jQuery.extend({
 		this.processShowRecord= function(oid){
 			var jsdata ="";
 			showProcessingDialog("Get object detail");
-			$.getJSON("getobject", {oid: oid }, function(data) {
+			$.getJSON("getobject", {jsessionid: sessionID, oid: oid }, function(data) {
 				hideProcessingDialog();
 				if( processJsonError(data, "") ) {
 					return;
@@ -47,7 +47,7 @@ jQuery.extend({
 
 		this.processShowMeta= function(){
 			showProcessingDialog("Get table description");
-			$.getJSON("gettable", {node: "aharray", name:tp }, function(data) {
+			$.getJSON("gettable", {jsessionid: sessionID, node: "aharray", name:tp }, function(data) {
 				hideProcessingDialog();
 				if( processJsonError(data, "get metadata") ) {
 					return;
@@ -60,7 +60,7 @@ jQuery.extend({
 
 		this.processShowMetaNode= function(treepath){
 			showProcessingDialog("Get table description");
-			$.getJSON("gettable", {node: treepath.nodekey, table:treepath.table }, function(data) {
+			$.getJSON("gettable", {jsessionid: sessionID, node: treepath.nodekey, table:treepath.table }, function(data) {
 				hideProcessingDialog();
 				if( processJsonError(data, "get attribute handlers") ) {
 					return;
@@ -91,7 +91,7 @@ jQuery.extend({
 		};
 		this.downloadFITS = function() {
 			var url = "getqueryreport?query=" + escape(current_query) + "&protocol=auto&format=fits";
-			window.open(url, 'DL FITS');
+			downloadLocation(url);
 		};
 		this.downloadZip = function() {
 			/*
@@ -100,10 +100,9 @@ jQuery.extend({
 			var titlepath = $('#titlepath').html().split('&gt;');
 			if( titlepath.length == 3 && titlepath[1] == 'Job' ) {
 				loggedAlert("Not implemented for TAP queries", 'Info');
-			}
-			else {
+			} else {
 				var url = "getqueryreport?query=" + escape(current_query) + "&protocol=noprotocol&format=zipball";
-				window.open(url, 'DL Zipball');
+				downloadLocation(url);
 			}
 		};
 		this.sampBroadcast = function() {

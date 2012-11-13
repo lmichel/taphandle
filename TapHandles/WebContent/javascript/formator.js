@@ -71,7 +71,7 @@ function formatValue(columnName, value, tdNode) {
 
 function getDLView(node, columnName, url, tdNode) {
 	hideProcessingDialog();
-	$.getJSON("getproductinfo", {url: url}, function(jsdata) {
+	$.getJSON("getproductinfo", {jsessionid: sessionID, url: url}, function(jsdata) {
 		if( processJsonError(jsdata, "Cannot connect data") ) {
 			tdNode.html("Error");
 		}

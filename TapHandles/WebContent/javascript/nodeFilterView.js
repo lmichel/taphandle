@@ -64,7 +64,7 @@ jQuery.extend({
 			});
 			$("#nodeFilter").keyup(function(event) {
 				if(event.keyCode == 13) {	            
-					$.getJSON("getnode", {node: node, filter: $("#nodeFilter").val()}, function(jsdata) {
+					$.getJSON("getnode", {jsessionid: sessionID, node: node, filter: $("#nodeFilter").val()}, function(jsdata) {
 						hideProcessingDialog();
 						if( processJsonError(jsdata, "Cannot get the node selection") ) {
 							return;

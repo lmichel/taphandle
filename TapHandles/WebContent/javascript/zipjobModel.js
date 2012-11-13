@@ -37,6 +37,7 @@ jQuery.extend({
 
 		this.kill = function() {
 			$.ajax({
+			    data: {jsessionid: sessionID},
 				type: 'DELETE',
 				url: "datapack/zipper/" + that.jobId,
 				success: function(xmljob, status) {
@@ -45,7 +46,6 @@ jQuery.extend({
 				}
 			});
 		};
-
 		this.refresh = function() {
 			$.get("datapack/zipper/" + that.jobId
 				, function(data) {that.init(data);}
@@ -54,10 +54,8 @@ jQuery.extend({
 		this.download = function() {
 			if( that.results.length >= 1 ) {
 				var url = that.results[0];
-				logMsg("download " + url);
-				changeLocation(url);
-			}
-			else {
+				downloadLocation(url);
+			} else {
 				loggedAlert("No ZIP archive available");
 			}
  		};

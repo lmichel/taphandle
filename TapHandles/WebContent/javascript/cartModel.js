@@ -137,7 +137,7 @@ jQuery.extend({
 			$.ajax({
 				type: 'POST',
 				url: "datapack/zipper",
-				data: {PHASE: 'RUN', FORMAT: 'json',CART: JSON.stringify(cartData) },
+				data: {jsessionid: sessionID, PHASE: 'RUN', FORMAT: 'json',CART: JSON.stringify(cartData) },
 				success: function(xmljob, status) {
 					zipJob = new $.ZipjobModel(xmljob);
 					setTimeout("cartView.fireCheckArchiveCompleted();", 1000);

@@ -23,7 +23,7 @@ jQuery.extend({
 			 * Ask for the new table list
 			 */
 			showProcessingDialog("Waiting on " + node + " filtered node description");
-			$.getJSON("getnode", {node: node , filter: $("#nodeFilter").val(), rejected:tr.join(',') }, function(jsdata) {
+			$.getJSON("getnode", {jsessionid: sessionID, node: node , filter: $("#nodeFilter").val(), rejected:tr.join(',') }, function(jsdata) {
 				hideProcessingDialog();
 				if( processJsonError(jsdata, "Cannot make data tree") ) {
 					return;

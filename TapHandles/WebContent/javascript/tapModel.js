@@ -43,7 +43,7 @@ jQuery.extend({
 		this.processTreeNodeEvent = function(treepath, andsubmit, default_query){
 			showProcessingDialog("Waiting on table description");
 			storedTreepath = treepath;
-			$.getJSON("gettableatt", {node: treepath.nodekey, table:treepath.table }, function(jsondata) {
+			$.getJSON("gettableatt", {jsessionid: sessionID, node: treepath.nodekey, table:treepath.table }, function(jsondata) {
 				hideProcessingDialog();
 				if( processJsonError(jsondata, "Cannot get meta data") ) {
 					return;
@@ -67,7 +67,7 @@ jQuery.extend({
 				that.lookForDeltaKeyword();
 				$(".table_filter").html("<option>" + table + "</option>");
 				showProcessingDialog("Waiting on join keys");
-				$.getJSON("gettablejoinkeys", {node: treepath.nodekey, table:treepath.table }, function(data) {
+				$.getJSON("gettablejoinkeys", {jsessionid: sessionID, node: treepath.nodekey, table:treepath.table }, function(data) {
 					hideProcessingDialog();
 					if( data == undefined || data == null || data.errormsg != undefined )  {
 						logMsg("Cannot get JoinKeys");
@@ -94,7 +94,7 @@ jQuery.extend({
 		this.changeTable = function(newTable) {		
 			table= newTable;
 			showProcessingDialog("Waiting on table description");
-			$.getJSON("gettableatt", {node: storedTreepath.nodekey, table:newTable }, function(jsondata) {
+			$.getJSON("gettableatt", {jsessionid: sessionID, node: storedTreepath.nodekey, table:newTable }, function(jsondata) {
 				hideProcessingDialog();
 				if( processJsonError(jsondata, "Cannot get meta data") ) {
 					return;
@@ -371,7 +371,7 @@ jQuery.extend({
 			$.ajax({type: 'POST'
 				, url:"runasyncjob"
 					, dataType: 'json'
-						, data: {NODE: storedTreepath.nodekey, TREEPATH: storedTreepath.nodekey + ";" + storedTreepath.schema + ";" + storedTreepath.table, REQUEST: "doQuery", LANG: 'ADQL', FORMAT: 'json', PHASE: 'RUN', MAXREC: limit,QUERY: ($('#adqltext').val()) }
+						, data: {jsessionid: sessionID, NODE: storedTreepath.nodekey, TREEPATH: storedTreepath.nodekey + ";" + storedTreepath.schema + ";" + storedTreepath.table, REQUEST: "doQuery", LANG: 'ADQL', FORMAT: 'json', PHASE: 'RUN', MAXREC: limit,QUERY: ($('#adqltext').val()) }
 			, success: function(jsondata) {
 				if( processJsonError(jsondata, "tap/async Cannot get job status") ) {
 					return;
@@ -448,7 +448,8 @@ jQuery.extend({
 
 		this.refreshJobList= function() {
 			showProcessingDialog("Refresh job list");
-			$.getJSON("joblist", {FORMAT: "json"}, function(jsondata) {
+			alert(sessionID);
+			$.getJSON("joblist", {jsessionid: sessionID, FORMAT: "json"}, function(jsondata) {
 				hideProcessingDialog();
 				if( processJsonError(jsondata, "Cannot get jobs list") ) {
 					return;
@@ -499,7 +500,7 @@ jQuery.extend({
 		};
 
 		this.showQuery = function(nodekey,jid) {
-			$.getJSON("jobsummary" , {NODE: nodekey, JOBID: jid}, function(jsondata) {
+			$.getJSON("jobsummary" , {jsessionid: sessionID, NODE: nodekey, JOBID: jid}, function(jsondata) {
 				if( processJsonError(jsondata, "Cannot get summary of job") ) {
 					return;
 				}
@@ -517,7 +518,7 @@ jQuery.extend({
 			});					
 		};
 		this.showSummary = function(nodekey, jid) {
-			$.getJSON("jobsummary" , {NODE: nodekey, JOBID: jid}, function(jsondata) {
+			$.getJSON("jobsummary" , {jsessionid: sessionID, NODE: nodekey, JOBID: jid}, function(jsondata) {
 				if( processJsonError(jsondata, "Cannot get summary of job "+ nodekey + '.' + jid) ) {
 					return;
 				}
@@ -551,7 +552,7 @@ jQuery.extend({
 		};
 		this.displayResult = function(nodekey, jid) {
 			showProcessingDialog("Get result of job " + jid);			
-			$.getJSON("jobresult" , {NODE: nodekey, JOBID: jid, FORMAT: 'json'}, function(jsondata) {
+			$.getJSON("jobresult;jsessionid="  + sessionID , {jsessionid: sessionID, NODE: nodekey, JOBID: jid, FORMAT: 'json'}, function(jsondata) {
 				hideProcessingDialog();
 				if( processJsonError(jsondata, "Cannot get result of job " + jid) ) {				
 					$('#resultpane').html();
@@ -570,7 +571,7 @@ jQuery.extend({
 		};
 		this.editQuery= function(nodekey,jid) {
 			showProcessingDialog("Get Job summary");			
-			$.getJSON("jobsummary" , {NODE: nodekey, JOBID: jid}, function(jsonsum) {
+			$.getJSON("jobsummary" , {id: sessionID, NODE: nodekey, JOBID: jid}, function(jsonsum) {
 				hideProcessingDialog();
 				if( processJsonError(jsonsum, "Cannot get summary of job") ) {
 					return;
@@ -590,7 +591,7 @@ jQuery.extend({
 
 		this.downloadVotable= function(nodekey,jid) {
 			var url = 'jobresult?NODE=' + nodekey.trim() + '&JOBID=' + jid.trim();
-			window.location = url;
+			downloadLocation(url);
 		};
 
 		this.sampBroadcast= function(nodekey,jid) {

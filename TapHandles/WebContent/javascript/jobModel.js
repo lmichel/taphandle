@@ -29,7 +29,7 @@ jQuery.extend({
 		};
 		
 		this.updateStatus = function() {
-			$.getJSON("jobsummary", {NODE: treepath.nodekey, JOBID: id}, function(jsondata) {
+			$.getJSON("jobsummary", {jsessionid: sessionID, NODE: treepath.nodekey, JOBID: id}, function(jsondata) {
 				if( processJsonError(jsondata, "Cannot get summary of job " + id) ) {
 					return;
 				}
