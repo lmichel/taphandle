@@ -177,7 +177,7 @@ public class NodeBase extends RootClass{
 	 * Return the Set of keys referenced nodes
 	 * @return
 	 */
-	public Set<String> keySet() {
+	public static Set<String> keySet() {
 		if( NodeBase.instance == null ) {
 			NodeBase.instance = new NodeBase();
 		}
