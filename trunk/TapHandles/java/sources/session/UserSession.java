@@ -37,7 +37,7 @@ public class UserSession  extends RootClass {
 	 * @throws Exception
 	 */
 	UserSession(String sessionID, String remoteAddress)  throws Exception {
-		logger.info("Init session " + sessionID);
+		logger.info("Init user session " + sessionID);
 		this.remoteAddress = remoteAddress;
 		this.sessionID = sessionID;
 		validWorkingDirectory(SessionBaseDir);
