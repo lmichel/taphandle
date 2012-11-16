@@ -34,6 +34,7 @@ function initFunctions () {
 	this.initNodeAccess = function() {
 		showProcessingDialog("Fetching available nodes");
 		nodeList = new Array();
+		$(".logo").attr("class", "logourbana");
 		$.ajax({
 			async: false,
 			type: 'GET',
@@ -43,7 +44,6 @@ function initFunctions () {
 			success: function(data) {
 				hideProcessingDialog();
 				sessionID = data.sessionID;
-				alert(sessionID);
 				for( var i=0 ; i<data.nodes.length ; i++) {
 					nodeList[nodeList.length] = {id:  data.nodes[i].key,  text: data.nodes[i].key};
 				}
@@ -52,6 +52,7 @@ function initFunctions () {
 							, minCharacters: 0
 							, onSelect: function(data){resultPaneView.fireNewNodeEvent($('#node_selector').val());}
 						});
+				setTimeout('$(".logourbana").attr("class", "logo")', 2000);
 			}
 		});
 
@@ -157,7 +158,7 @@ function initFunctions () {
 				resultPaneView.fireTreeNodeEvent(fTreePath);	
 			}
 		});
-		var rootUrl = "http://" + window.location.hostname +  (location.port?":"+location.port:"") + window.location.pathname;
+		rootUrl = "http://" + window.location.hostname +  (location.port?":"+location.port:"") + window.location.pathname;
 		/*
 		 * Connect the URL passed as parameter
 		 */

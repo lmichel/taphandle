@@ -8,14 +8,14 @@ jQuery.extend({
 		/*
 		 * Job description params
 		 */
-		var xmlRoot;
-		var jobId;
-		var phase;
-		var params;
-		var results;
+		var xmlRoot='';
+		var jobId='';
+		var phase='';
+		var params='';
+		var results='';
 
 		this.init = function(xmlSummary) {
-	        logMsg((new XMLSerializer()).serializeToString(xmlSummary));
+	       // logMsg((new XMLSerializer()).serializeToString(xmlSummary));
 	        /*
 	         * The pair Chrome 15 and after and Jquery 1.7 do not support NS in XML
 	         * parsing. We must feed the find() function selector including both NS an no NS filed names
@@ -39,17 +39,31 @@ jQuery.extend({
 			$.ajax({
 			    data: {jsessionid: sessionID},
 				type: 'DELETE',
+			    dataType: "xml",
 				url: "datapack/zipper/" + that.jobId,
 				success: function(xmljob, status) {
-					loggedAlert("Job killed");
-					that.refresh();
+					loggedAlert("Job " +  that.jobId + " killed");
+					//that.refresh();
+				},
+				error: function(xhr, ajaxOptions, thrownError) {
+					loggedAlert("Zipjob kill failed: Error " +  xhr.status + "\n" + xhr  + "\n" +ajaxOptions + "\n" + thrownError);
 				}
 			});
 		};
 		this.refresh = function() {
-			$.get("datapack/zipper/" + that.jobId
-				, function(data) {that.init(data);}
-			    , "xml") ;
+			$.ajax({
+			    data: {jsessionid: sessionID},
+			    dataType: "xml",
+				type: 'GET',
+				url: "datapack/zipper/" + that.jobId,
+				success: function(xmljob, status) {logMsg("refresh cart job success");that.init(xmljob);},
+				error: function(xhr, ajaxOptions, thrownError) {
+					loggedAlert("Zipjob refresh failed: Error " + xhr.status + "\n" + xhr  + "\n" +ajaxOptions + "\n" + thrownError);
+				}
+			});
+//			$.get("datapack/zipper/" + that.jobId
+//				, function(data) {that.init(data);}
+//			    , "xml") ;
 		};
 		this.download = function() {
 			if( that.results.length >= 1 ) {

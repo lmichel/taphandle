@@ -3,14 +3,12 @@
  * + Global variables declaration
  */
 var downloadIFrameID = 'downloadIFrameID';
-if ($("#" + downloadIFrameID) === null) {
-    $(document.body).append("<iframe id=" + downloadIFrameID + " style='display: none;'></iframe");
-}
 
 /*
  * The JEE session ID is used to keep session track through http params 
  */
 var sessionID;
+var rootUrl;
 /*
  * View associated with specific functionality
  */

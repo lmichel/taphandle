@@ -69,25 +69,40 @@ jQuery.extend({
 				showProcessingDialog("Waiting on join keys");
 				$.getJSON("gettablejoinkeys", {jsessionid: sessionID, node: treepath.nodekey, table:treepath.table }, function(data) {
 					hideProcessingDialog();
-					if( data == undefined || data == null || data.errormsg != undefined )  {
+					if( !(data == undefined || data == null || data.errormsg != undefined) )  {
+						joinKeys = data.targets;
+						for( var i=0 ; i<joinKeys.length ; i++ ) {
+							$(".table_filter").append("<option>" + joinKeys[i].target_table + "</option>");	
+						}
+					} else {
 						logMsg("Cannot get JoinKeys");
-						return;
 					}
-					joinKeys = data.targets;
-					for( var i=0 ; i<joinKeys.length ; i++ ) {
-						$(".table_filter").append("<option>" + joinKeys[i].target_table + "</option>");						
+
+					if( default_query == null || default_query == "") {
+						that.notifyQueryUpdated("SELECT TOP " + getQLimit() + " * \n FROM " + jsondata.table );
+					}
+					else {
+						that.notifyQueryUpdated(default_query);				
+					}
+
+					if( andsubmit ) {
+						that.submitQuery();
 					}
 				});
-				if( default_query == null || default_query == "") {
-					that.notifyQueryUpdated("SELECT TOP " + getQLimit() + " * \n FROM " + jsondata.table );
-				}
-				else {
-					that.notifyQueryUpdated(default_query);				
-				}
+//				if( default_query == null || default_query == "") {
+//				that.notifyQueryUpdated("SELECT TOP " + getQLimit() + " * \n FROM " + jsondata.table );
+//				}
+//				else {
+//				logMsg("@@@@@@@@@@1");
+//				that.notifyQueryUpdated(default_query);				
+//				logMsg("@@@@@@@@@@@@2");
+//				}
 
-				if( andsubmit ) {
-					that.submitQuery();
-				}
+//				if( andsubmit ) {
+//				logMsg("@@@@@@@@@@@3");
+//				that.submitQuery();
+//				logMsg("@@@@@@@@@@@@@4");
+//				}
 			});
 		};
 
@@ -448,7 +463,6 @@ jQuery.extend({
 
 		this.refreshJobList= function() {
 			showProcessingDialog("Refresh job list");
-			alert(sessionID);
 			$.getJSON("joblist", {jsessionid: sessionID, FORMAT: "json"}, function(jsondata) {
 				hideProcessingDialog();
 				if( processJsonError(jsondata, "Cannot get jobs list") ) {
@@ -473,7 +487,7 @@ jQuery.extend({
 
 		this.processJobAction= function(nodekey,jid, session) {
 			var val = $('#' + jid + "_actions").val(); 
-			logMsg("processJobAction" + val);
+			logMsg("Process job action: '" + val + "'");
 			$('#' + jid + "_actions").val('Actions'); 
 			if( val == 'Show Query') {	
 				that.showQuery(nodekey,jid);				
@@ -491,7 +505,7 @@ jQuery.extend({
 				cartView.fireAddJobResult(nodekey,jid);
 			}			
 			else if( val == 'Send to SAMP') {				
-				var url = rootUrl + 'jobresult?node=' + nodekey.trim() + '&jobid=' + jid.trim()+ '&session=' + session.trim();
+				var url = rootUrl + 'jobresult?node=' + nodekey.trim() + '&jobid=' + jid.trim()+ '&session=' + sessionID;
 				sampView.fireSendVOTableDownload(url);
 			}			
 			else if( val == 'Edit Query' ) {
@@ -508,11 +522,11 @@ jQuery.extend({
 				var pa = jsondata.status.job.parameters.parameter;
 				for( var i=0 ; i< pa.length ;i++ ) {
 					var p = pa[i];
-						if( p.id.toLowerCase() == "query" ) {
-							report =p.$.replace(/\\n/g,'\n            ')+ "\n";
-							loggedAlert(report, 'Query of job ' + nodekey + '.' + jid);
-							return;
-						}
+					if( p.id.toLowerCase() == "query" ) {
+						report =p.$.replace(/\\n/g,'\n            ')+ "\n";
+						loggedAlert(report, 'Query of job ' + nodekey + '.' + jid);
+						return;
+					}
 				}
 				loggedAlert(report, 'No queryfound in ' + jsondata);
 			});					
@@ -552,7 +566,7 @@ jQuery.extend({
 		};
 		this.displayResult = function(nodekey, jid) {
 			showProcessingDialog("Get result of job " + jid);			
-			$.getJSON("jobresult;jsessionid="  + sessionID , {jsessionid: sessionID, NODE: nodekey, JOBID: jid, FORMAT: 'json'}, function(jsondata) {
+			$.getJSON("jobresult" , {jsessionid: sessionID, NODE: nodekey, JOBID: jid, FORMAT: 'json'}, function(jsondata) {
 				hideProcessingDialog();
 				if( processJsonError(jsondata, "Cannot get result of job " + jid) ) {				
 					$('#resultpane').html();
@@ -571,7 +585,7 @@ jQuery.extend({
 		};
 		this.editQuery= function(nodekey,jid) {
 			showProcessingDialog("Get Job summary");			
-			$.getJSON("jobsummary" , {id: sessionID, NODE: nodekey, JOBID: jid}, function(jsonsum) {
+			$.getJSON("jobsummary" , {jsessionid: sessionID, NODE: nodekey, JOBID: jid}, function(jsonsum) {
 				hideProcessingDialog();
 				if( processJsonError(jsonsum, "Cannot get summary of job") ) {
 					return;
@@ -580,17 +594,17 @@ jQuery.extend({
 				var default_query = "";
 				for( var i=0 ; i< pa.length ;i++ ) {
 					var p = pa[i];
-						if( p.id.toLowerCase() == "query" ) {
-							default_query = p.$.replace(/\\n/g,'\n            ')+ "\n";
-							break;
-						}
+					if( p.id.toLowerCase() == "query" ) {
+						default_query = p.$.replace(/\\n/g,'\n            ')+ "\n";
+						break;
+					}
 				}
 				that.processTreeNodeEvent(jsonsum.treepath, false, default_query);
 			});					
 		};
 
 		this.downloadVotable= function(nodekey,jid) {
-			var url = 'jobresult?NODE=' + nodekey.trim() + '&JOBID=' + jid.trim();
+			var url = 'jobresult?NODE=' + nodekey.trim() + '&JOBID=' + jid.trim() + '&jsessionid='+ sessionID;
 			downloadLocation(url);
 		};
 
