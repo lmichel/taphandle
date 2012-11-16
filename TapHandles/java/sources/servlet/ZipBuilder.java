@@ -2,6 +2,8 @@ package servlet;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
@@ -48,19 +50,40 @@ public class ZipBuilder extends RootServlet implements Servlet {
 	@Override
 	public void service(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
 		try{
-			if( req.getRequestURI().endsWith("/download")) {
+//			Pattern datePatt = Pattern.compile(".*\\/download\\/([A-Z0-9])$");
+//			Matcher m = datePatt.matcher(req.getRequestURI());		
+//			if( m.matches() )
+			if( req.getRequestURI().matches(".*\\/download\\/jid[A-Z0-9]*$")) {
+				printAccess(req, false);
+				logger.info("Download ZIP");
 				downloadProduct(req
 						, res
 						, getServletContext().getRealPath(UserTrap.getUserAccount(req).getZipDownloadPath())
 						, "TaphandleCartContent.zip");
-			}
-			else {
+			} else {
 				System.setProperty("application.realpath", this.getServletContext().getRealPath("/"));
 				printAccess(req, false);
+				/*
+				 * JEE session cannot be used when cookies are disabled
+				 */
+				zipUWS.setUserIdentifier(new UserIdentifier() {
+					private static final long serialVersionUID = 1L;
+					@Override
+					public String extractUserId(UWSUrl arg0, HttpServletRequest request)
+							throws UWSException {
+						try {
+							logger.info("Take  " + UserTrap.getUserAccount(request).sessionID + " as user identifer");
+							return UserTrap.getUserAccount(request).sessionID;
+						} catch (Exception e) {
+							throw new UWSException(e.getMessage());
+						}
+					}
+				});
 				zipUWS.executeRequest(req, res);
-				logger.info(req.getSession().getId() + ": " + zipUWS.getJobList("zipper").getNbJobs()+" jobs");
+				logger.info(zipUWS.getUserIdentifier() + ": " + zipUWS.getJobList("zipper").getNbJobs()+" jobs");
 			}
 		}catch(Exception ex){
+			System.out.println("Exxxxxxxxxxxxxxxxxxxx");
 			this.reportJsonError(req, res, ex);
 		}
 	}}

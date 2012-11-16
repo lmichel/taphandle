@@ -69,9 +69,13 @@ public class ZipperJob extends AbstractJob {
 	@Override
 	protected void jobWork() throws UWSException, InterruptedException {
 		try{
+System.out.println("Ziiiiiiiiiiiiiiiiiiiiiiiiiip in " + this.reportDir + File.separator + "cart.zip");
 			zipMap.prepareDataFiles(this.baseDir, this.reportDir);
 			ZIPUtil.buildZipBall(zipMap, this.reportDir + File.separator + "cart.zip");
-			addResult(new Result("Result", "datapack/download" ));
+			/*
+			 * Put the session in the URL to make it working without cookies
+			 */
+			addResult(new Result("Result", "datapack/download/jid"+  sessionId));
 		}catch(Exception ex){
 			ex.printStackTrace();
 		throw new UWSException(UWSException.INTERNAL_SERVER_ERROR, ex);

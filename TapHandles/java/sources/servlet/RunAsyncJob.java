@@ -34,13 +34,11 @@ public class RunAsyncJob extends RootServlet implements Servlet {
 			if( node == null || node.length() ==  0 ) {
 				reportJsonError(request, response, "runasyncjob: no node specified");
 				return;
-			}
-			else if( "zipball".equals(node)) {
+			} else if( "zipball".equals(node)) {
 				RequestDispatcher dispatcher =  getServletContext().getRequestDispatcher("/zipbuilder");
 				dispatcher.forward( request, response );
 				return;
-			}
-			else if( node .startsWith("http://")) {
+			} else if( node .startsWith("http://")) {
 				try {
 					nodeKey = NodeBase.addNode(node);
 				} catch (Exception e) {
