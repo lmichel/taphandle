@@ -30,6 +30,12 @@ public class JobResult extends RootServlet implements Servlet {
 			String nodeKey = this.getParameter(request, "node");
 			String jobId = this.getParameter(request, "jobid");
 			String format = this.getParameter(request, "format");
+			/*
+			 * This parameter is used by SAMP connection. 
+			 * It is different of the jsessionid which is the current session managed
+			 * by the browser.
+			 * Samp clients have no JEE session
+			 */
 			String sessionId = this.getParameter(request, "session");
 			if( nodeKey == null || nodeKey.length() ==  0 ) {
 				reportJsonError(request, response, "jobstatus: no node specified");

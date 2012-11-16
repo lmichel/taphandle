@@ -35,7 +35,12 @@ public class NodeMap  extends RootClass {
 		}
 		else {
 			URL hurle = new URL(url);
-			return hurle.getHost().replaceAll("www.", "").replaceAll("[_\\.]", "") + "_" + hurle.getPath().split("\\/")[1].replaceAll("[_\\.]", "");
+			String retour = hurle.getHost().replaceAll("www.", "").replaceAll("[_\\.]", "");
+			String [] service =  hurle.getPath().split("\\/");
+			if( service.length > 1 ) {
+				retour += hurle.getPath().split("\\/")[1].replaceAll("[_\\.]", "");
+			}
+			return retour;
 		}
 	}
 	
