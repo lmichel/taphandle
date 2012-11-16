@@ -37,9 +37,12 @@ jQuery.extend({
 				},
 				controlChangeName: function(nodekey, dataType, rowNum, newName) {
 					model.changeName(nodekey, dataType, rowNum, newName);				
+				},
+				controlResetZipjob: function() {
+					model.resetZipjob();				
 				}
 
-		}
+		};
 		view.addListener(vlist);
 
 		var mlist = {
@@ -49,7 +52,7 @@ jQuery.extend({
 				isInit : function(cartData){
 					view.initForm(cartData);
 				}
-		}
+		};
 		model.addListener(mlist);
 
 	}

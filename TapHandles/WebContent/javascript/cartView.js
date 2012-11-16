@@ -19,29 +19,35 @@ jQuery.extend({
 		 */
 		this.addListener = function(list){
 			listeners.push(list);
-		}
+		};
 
 		this.fireAddJobResult = function(nodekey, jobid) {
-			loggedAlert("Result of job " + nodekey + "." + jobid + " added to the cart")
+			showProcessingDialog("Result of job " + nodekey + "." + jobid + " added to the cart");
 			$.each(listeners, function(i){
 				listeners[i].controlAddJobResult(nodekey, jobid);
 			});
-		};
+			this.resetJobControl();
+			setTimeout('hideProcessingDialog();', 1000);
+			};
 		this.fireRemoveJobResult = function(nodekey, jobid) {
 			$.each(listeners, function(i){
 				listeners[i].controlRemoveJobResult(nodekey, jobid);
 			});
+			this.resetJobControl();
 		};
 		this.fireAddUrl = function(nodekey, url) {
-			loggedAlert("Data returned by " + url + " added to the cart");
+			showProcessingDialog("Data returned by " + url + " added to the cart");
 			$.each(listeners, function(i){
 				listeners[i].controlAddUrl(nodekey, url);
 			});
+			setTimeout('hideProcessingDialog();', 1000);
+			this.resetJobControl();
 		};
 		this.fireRemoveUrl = function(nodekey, url) {
 			$.each(listeners, function(i){
 				listeners[i].controlRemoveUrl(nodekey, url);
 			});
+			this.resetJobControl();
 		};
 		this.fireRestrictedUrl = function(nodekey, url) {
 			openDialog("Restricted Access", "Shopping cart facility does not support URL with a restricted access.");
@@ -55,6 +61,7 @@ jQuery.extend({
 			$.each(listeners, function(i){
 				listeners[i].controleCleanCart(tokens);
 			});
+			this.resetJobControl();
 		};
 		this.fireStartArchiveBuilding = function() {
 			$.each(listeners, function(i){
@@ -83,7 +90,16 @@ jQuery.extend({
 				listeners[i].controlChangeName(nodekey, dataType, rowNum, newName);
 			});			
 		};
-
+		this.resetJobControl= function() {
+			logMsg("resetJobControl");
+			$.each(listeners, function(i){
+				listeners[i].controlResetZipjob();
+			});			
+			$('.zip').css("border", "0px");
+			$('#detaildiv_download').attr("disabled", true);
+			$('#detaildiv_submit').removeAttr("disabled");
+			};
+		
 		this.fireCheckArchiveCompleted = function() {
 			var phase = that.fireGetJobPhase();
 			var jobspan = $('#cartjob_phase');
@@ -98,6 +114,8 @@ jQuery.extend({
 			}
 			else if( phase == 'COMPLETED') {
 				$('.zip').css("border", "2px solid green");
+				$('#detaildiv_submit').attr("disabled", true);
+				$('#detaildiv_download').removeAttr("disabled");
 			}
 			else {
 				$('.zip').css("border", "2px solid red");
@@ -108,7 +126,7 @@ jQuery.extend({
 			$('#detaildiv').remove();
 			if ($('#detaildiv').length == 0) {
 				$(document.documentElement).append(
-				"<div id=detaildiv style='width: 99%; display: none;'></div>");
+				"<div id=detaildiv style='display: none;'></div>");
 			}
 			var empty = true;
 			for( var nodekey in cartData) {
@@ -121,22 +139,26 @@ jQuery.extend({
 			}
 
 			var table = '';
-			var phase = that.fireGetJobPhase();
+			//var phase = that.fireGetJobPhase();
 
 			table += '<h2><img src="images/groscaddy.png"> Shopping Cart</h2>';
 			table += '<div id=table_div></div>';
 			table += "<h4 id=\"cartjob\" class='detailhead'> <img src=\"images/tdown.png\">Processing status</h4>";
-			table += '<br><span>Current Job Status</span> <span id=cartjob_phase class="' + phase.toLowerCase() + '">' + phase + '</span><BR>';
+			//table += '<br><span>Current Job Status</span> <span id=cartjob_phase class="' + phase.toLowerCase() + '">' + phase + '</span><BR>';
+			table += '<br><span>Current Job Status</span> <span id=cartjob_phase class=""></span><BR>';
 			table += "<span>Manage Content</span> <input type=button id=detaildiv_clean value='Remove Unselected Items'>";			
 			table += "<input type=button id=detaildiv_cleanall value='Remove All Items'><br>";			
 			table += "<span>Manage Job</span> <input type=button id=detaildiv_submit value='Start Processing'>";			
 			table += "<input type=button id=detaildiv_abort value='Abort'><br>";			
-			table += "<span>Get the Result</span> <input type=button id=detaildiv_download value='Download Cart'>";			
+			table += "<span>Get the Result</span> <input type=button id=detaildiv_download value='Download Cart' disabled='disabled'>";			
 
 			$('#detaildiv').html(table);
-
 			var modalbox = $('#detaildiv').modal();
-			that.setTableDiv(cartData);
+			$("#simplemodal-container").css('height', 'auto'); 
+			$("#simplemodal-container").css('width', 'auto'); 
+			$(window).trigger('resize.simplemodal'); 
+
+			this.setTableDiv(cartData);
 
 			$('#detaildiv_clean').click( function() {
 				var tokenArray =new Array();
@@ -157,6 +179,7 @@ jQuery.extend({
 			} );
 			$('#detaildiv_abort').click( function() {
 				that.fireKillArchiveBuilding();
+				that.fireCheckArchiveCompleted();
 				return false;
 			} );
 
@@ -165,6 +188,7 @@ jQuery.extend({
 				$('.zip').css("border", "0px");
 				return false;
 			} );
+			this.fireCheckArchiveCompleted();
 		};
 		
 		this.setTableDiv= function(cartData) {

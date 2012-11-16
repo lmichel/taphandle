@@ -14,6 +14,7 @@ function traceMsg(message) {
 	}
 }
 
+
 function setTitlePath(treepath) {
 	logMsg("title " + treepath);
 	var job = (treepath.jobid == null)? "": '&gt;'+ treepath.jobid;
@@ -41,24 +42,32 @@ var simbadToBeOpen = false;
 function showProcessingDialog(message) {
 	logMsg("PROCESSSING " + message);
 	stillToBeOpen = true;
-	if( $('#saadaworking').length == 0){		
-		$('#resultpane').append('<div id="saadaworking" class="dataTables_processing" style="visibility: hidden; "></div>');
+	if( $('#saadaworking').length == 0){	
+		logMsg("ini");
+		$('#resultpane').append('<div id="saadaworking" style="padding: 5px; text-align: left; display: none;vertical-align:middle;"></div>');
 	}
-	$('#saadaworking').html(message);
+	$('#saadaworking').html("<img style='padding: 5px; vertical-align:middle' src=images/ajax-loader.gif></img><span class=help>" + message + "</span>");
 	/*
 	 * It is better to immediately show the process dialog in order to give a feed back to the user
 	 * It we dopn't, user could click several time on submit a get lost with what happens
 	 *
 	 * setTimeout("if( stillToBeOpen == true ) $('#saadaworking').css('visibility', 'visible');", 500);
 	 */
-	$('#saadaworking').css('visibility', 'visible');
+	//$('#saadaworking').css('visibility', 'visible');
+	$('#saadaworking').modal({close: false});
+	$("#simplemodal-container").css('height', 'auto'); 
+	$("#simplemodal-container").css('width', 'auto'); 
+	$(window).trigger('resize.simplemodal'); 
 }
 
 
 function hideProcessingDialog() {
 	stillToBeOpen = false;
 	if( $('#saadaworking').length != 0){
-		$('#saadaworking').css('visibility', 'hidden');	
+		logMsg("CLOSE PROCESSSING " + $("#saadaworking span").text());
+
+		//$('#saadaworking').css('visibility', 'hidden');	html img text align
+		$.modal.close();
 	}
 }
 
@@ -88,7 +97,7 @@ function openDialog(title, content) {
 	if( $('#diagdiv').length == 0){		
 		$(document.documentElement).append("<div id=diagdiv style='width: 50%; display: none; hight: auto;'></div>");
 	}
-	$('#diagdiv').html(content);
+	$('#diagdiv').html("<img style='padding: 5px; vertical-align:middle' src=images/info.gif></img><span class=help>" + content + "</span>");
 	$('#diagdiv').dialog({  maxWidth: '50%', title: title,  modal: true});
 }
 
@@ -96,7 +105,7 @@ function openConfirm(params) {
 	if( $('#confirmdiv').length == 0){		
 		$(document.documentElement).append("<div id=confirmdiv style='width: 50%; display: none; hight: auto;'></div>");
 	}
-	$('#confirmdiv').html(params.message);
+	$('#confirmdiv').html("<img style='padding: 5px; vertical-align:middle' src=images/info.gif></img><span class=help>" + params.message + "</span>");
 	$('#confirmdiv').dialog({  maxWidth: '50%'
 		, title: params.title
 		, modal: true			
@@ -144,6 +153,9 @@ function openModal(title, content) {
 	}
 	$('#detaildiv').html(content);
 	$('#detaildiv').modal();
+	$("#simplemodal-container").css('height', 'auto'); 
+	$("#simplemodal-container").css('width', 'auto'); 
+	$(window).trigger('resize.simplemodal'); 
 }
 
 function switchArrow(id) {
@@ -177,6 +189,10 @@ function jsonAlert(jsdata, title) {
 
 function downloadLocation(url){
 	logMsg("downloadLocation " + url);
-    iframe =$("#" + downloadIFrameID ).src = url;   
+	if ($("#" + downloadIFrameID).length == 0 ) {
+		logMsg("Creating IFrame " + downloadIFrameID);
+	    $(document.body).append("<iframe id=" + downloadIFrameID + " style='display: none;'></iframe");
+	}
+    iframe =$("#" + downloadIFrameID ).attr('src', url);   
 }
 

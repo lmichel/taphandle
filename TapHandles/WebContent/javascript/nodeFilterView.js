@@ -45,7 +45,9 @@ jQuery.extend({
 			+ "    </div>"
 			+ "    <hr><p class=help>The number of selected tables returned by the server is limited to 100 in any case.<p>"
 			+ "    <div id=nodeFilterList class='detaildata' style='border: 1px black solid; background-color: whitesmoke; width: 90%; height: 380px; overflow: auto;margin : auto;position:relative'></div>"
-			+ "    <p class=help>Unselect the tables you not want to access<br>"
+			+ "    <p class=help>Unselect the tables you not want to access"
+			+ "    (<a href='#' onclick=\"$('.attlist input').attr('checked', 'true');\">select</a> /"
+			+ "     <a href='#' onclick=\"$('.attlist input').removeAttr('checked');\">unselect</a> all)<br>"
 			+ "    Caution: You cannot refine your selection once it is accepted (Version 1.1)<p><hr>"
 			+ "    <input type=button value='accept' onclick='nodeFilterView.fireGetFilteredNodes(\"" + node + "\");' style='font-weight: bold;'>"
 			+ "    <span class=help>(Type [ESC] to close the window)</span>"
@@ -62,10 +64,14 @@ jQuery.extend({
 				$(dlg.container).css('height','auto').css('width','500px');
 				}
 			});
+			$("#simplemodal-container").css('height', 'auto'); 
+			$("#simplemodal-container").css('width', 'auto'); 
+			$(window).trigger('resize.simplemodal'); 
+			//showProcessingDialog("Filering meta data");
 			$("#nodeFilter").keyup(function(event) {
 				if(event.keyCode == 13) {	            
 					$.getJSON("getnode", {jsessionid: sessionID, node: node, filter: $("#nodeFilter").val()}, function(jsdata) {
-						hideProcessingDialog();
+						//hideProcessingDialog();
 						if( processJsonError(jsdata, "Cannot get the node selection") ) {
 							return;
 						} else {

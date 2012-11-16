@@ -22,12 +22,14 @@
 
 /* Container */
 #simplemodal-container {
-	height: 85%;
+/* 	height: 85%;
 	width: 85%;
+ */	height: 'auto';
+	width: 'auto';
 	color: black;
 	background-color: #333;
 	border: 2px solid #444;
-	padding: 4px;
+	padding: 1px;
 }
 
 #simplemodal-container .simplemodal-data {

@@ -6,13 +6,13 @@ jQuery.extend({
 		var that = this;
 
 		var cartData = {};
-		var zipJob;
+		var zipJob = null;
 		/**
 		 * add a listener to this view
 		 */
 		this.addListener = function(list){
 			listeners.push(list);
-		}
+		};
 		this.addJobResult = function(nodekey, jobid) {
 			var entry;
 			if( (entry = cartData[nodekey]) == undefined ) {
@@ -29,11 +29,11 @@ jQuery.extend({
 				}
 				cartData[nodekey].jobs[i] = {name: jobid, uri: jobid};			
 			}
-		}
+		};
 		this.removeJobResult = function(nodekey, jobid) {
 			var entry;
 			if( (entry = cartData[nodekey]) == undefined ) {
-				loggedAlert("Ther is no data associated with node " + nodekey + " in the cart", "input Error");
+				loggedAlert("There is no data associated with node " + nodekey + " in the cart", "input Error");
 			}
 			else {
 				var jobs = entry.jobs;
@@ -48,7 +48,7 @@ jQuery.extend({
 				}
 				loggedAlert("Job " + nodekey + "." + jobid+ " not found in from the cart", "input Error");
 			}			
-		}
+		};
 		this.addUrl = function(nodekey, url) {
 			var entry;
 //			var ch  = url.split("/");
@@ -68,11 +68,11 @@ jQuery.extend({
 				}
 				cartData[nodekey].urls[i] = {name: name, uri: url};			
 			}			
-		}
+		};
 		this.removeUrl = function(nodekey, url) {
 			var entry;
 			if( (entry = cartData[nodekey]) == undefined ) {
-				loggedAlert("There is no data associated with node " + nodekey + " in the cart", "input Error")
+				loggedAlert("There is no data associated with node " + nodekey + " in the cart", "input Error");
 			}
 			else {
 				var urls = entry.urls;
@@ -88,7 +88,7 @@ jQuery.extend({
 				}
 				loggedAlert("URL not found in from the cart", "input Error");
 			}						
-		}
+		};
 		this.cleanCart = function(tokenArray) {
 			var old_cartData = cartData;
 			cartData = {};
@@ -109,8 +109,8 @@ jQuery.extend({
 					}
 				}
 			}
-			that.notifyCartCleaned();
-		}
+			this.notifyCartCleaned();
+		};
 
 		this.changeName= function(nodekey, dataType, rowNum, newName) {
 			if( dataType.toLowerCase() == "job" ) {
@@ -119,18 +119,13 @@ jQuery.extend({
 			else {
 				cartData[nodekey].urls[rowNum].name = newName;
 			}
-			that.notifyCartCleaned();			
-		}
-		
-		this.notifyCartCleaned = function() {
-			$.each(listeners, function(i){
-				listeners[i].isCartCleaned(cartData);
-			});			
+			this.notifyCartCleaned();			
 		};
+
 		this.notifyCartOpen = function() {
 			$.each(listeners, function(i){
 				listeners[i].isInit(cartData);
-			});			
+			});                     
 		};
 
 		this.startArchiveBuilding = function() {
@@ -143,8 +138,8 @@ jQuery.extend({
 					setTimeout("cartView.fireCheckArchiveCompleted();", 1000);
 				},
 				dataType: "xml",
-				error: function(xmljob, textStatus, errorThrown) {
-					loggedAlert("Error: " + textStatus);
+				error: function(xhr, textStatus, errorThrown) {
+					loggedAlert("Archive building failed: Error " +  xhr.status  + "\n" +ajaxOptions + "\n" + thrownError);
 				}
 			});
 		};
@@ -155,10 +150,11 @@ jQuery.extend({
 			}
 			else {
 				zipJob.kill();
+				logMsg(zipJob.phase);
 				return zipJob.phase;
 			}
-		}
-		
+		};
+
 		this.getJobPhase= function() {
 			if( zipJob == null ) {
 				return "nojob";
@@ -167,7 +163,7 @@ jQuery.extend({
 				zipJob.refresh();
 				return zipJob.phase;
 			}
-		}
+		};
 
 		this.archiveDownload = function() {
 			if( zipJob == null ) {
@@ -176,6 +172,17 @@ jQuery.extend({
 			else {
 				zipJob.download();
 			}
-		}
+		};
+
+		this.notifyCartCleaned = function() {
+			$.each(listeners, function(i){
+				listeners[i].isCartCleaned(cartData);
+			});			
+		};
+		
+		this.resetZipjob = function() {
+			logMsg("Reste Zipjob");
+			zipJob = null ;
+		};
 	}
 });
