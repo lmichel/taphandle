@@ -92,6 +92,9 @@ jQuery.extend({
 			for( var i=0 ; i<actions.length ; i++ ) {
 				actionMenu.append('<option value="' + actions[i] + '">' +  actions[i] + '</option>');
 			}
+			if( phase == 'ERROR' ) {
+				loggedAlert("Job " + treepath.nodekey + ">"  + id + " failed. See the job summary to get more details.");
+			}
 		};
 	}
 });
