@@ -181,7 +181,7 @@ jQuery.extend({
 		};
 		
 		this.resetZipjob = function() {
-			logMsg("Reste Zipjob");
+			logMsg("Reset Zipjob");
 			zipJob = null ;
 		};
 	}

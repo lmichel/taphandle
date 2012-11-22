@@ -98,6 +98,9 @@ jQuery.extend({
 			$('.zip').css("border", "0px");
 			$('#detaildiv_download').attr("disabled", true);
 			$('#detaildiv_submit').removeAttr("disabled");
+			var jobspan = $('#cartjob_phase');
+			jobspan.attr('class', 'nojob');
+			jobspan.text('nojob');
 			};
 		
 		this.fireCheckArchiveCompleted = function() {
