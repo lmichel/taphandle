@@ -87,10 +87,10 @@ public class TapNode  extends RootClass {
 	 * @param key           key referencing the node
 	 * @throws Exception    Rise if something goes wrong
 	 */
-	public TapNode(String url, String baseDirectory, String key) throws Exception {
+	public TapNode(String url, String baseDirectory, String key, boolean supportJoins) throws Exception {
 		this.baseDirectory = baseDirectory;
 		this.key = key;
-		this.url = new NodeUrl(url);
+		this.url = new NodeUrl(url, supportJoins);
 		if( !this.baseDirectory.endsWith(File.separator) ) {
 			this.baseDirectory += File.separator;
 		}
@@ -151,7 +151,7 @@ public class TapNode  extends RootClass {
 		this.checkTables() ;
 		logger.debug("NS for tables " + tablesNS.getNsName());
 		logger.info("Service " + this.url + " seems to be working");		
-		if( INCLUDE_JOIN ) {
+		if( INCLUDE_JOIN && this.url.supportJoin() ) {
 			this.setJoinKeys();
 		}
 	}

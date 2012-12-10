@@ -22,7 +22,7 @@ public class TapVizier  extends RootClass {
 
 	public static void main(String[] args) throws Exception {
 		NodeMap.switchToContext(baseDir);
-		nodeMap.addNode("http://tapvizier.u-strasbg.fr/TAPVizieR/tap/", "vizier");
+		nodeMap.addNode("http://tapvizier.u-strasbg.fr/TAPVizieR/tap/", "vizier", true);
 		TapNode tn  = nodeMap.getNode("vizier");		
 
 		JSONParser parser = new JSONParser();
