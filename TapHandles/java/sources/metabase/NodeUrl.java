@@ -15,12 +15,14 @@ public class NodeUrl extends RootClass{
 	private final String fullUrl ;
 	private final String serverUrl;
 	private final String appPath;
+	private final boolean supportJoin;
 	
-	public NodeUrl(String fullUrl ) throws Exception{
+	public NodeUrl(String fullUrl, boolean supportJoin ) throws Exception{
 		this.fullUrl = fullUrl + ((!fullUrl.endsWith("?") && !fullUrl.endsWith("/"))? "/": "");
 		URL url = new URL(fullUrl);
 		this.serverUrl = url.getProtocol() + "://" + url.getAuthority();
 		this.appPath = url.getFile();
+		this.supportJoin = supportJoin;
 	}
 	
 	
@@ -36,7 +38,9 @@ public class NodeUrl extends RootClass{
 	public String toString() {
 		return this.fullUrl + ": server=" + this.serverUrl + " appl=" + this.appPath;
 	}
-	
+	public boolean supportJoin() {
+		return supportJoin;
+	}
 	/**
 	 * Attempt to make an absolute URL from path.
 	 * Does nothing if path looks like the full URL

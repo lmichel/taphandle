@@ -47,29 +47,31 @@ public class NodeMap  extends RootClass {
 	/**
 	 *  Add to the map node. The key is computed internally.
 	 * @param url        URL of the TAP service
+	 * @param supportJoins        support join set from TAP_SCHEMA
 	 * @return           Returns the node key
 	 * @throws Exception if the service is not valid or if another node is already
 	 *                   referenced by that key
 	 */
-	protected  String addNode(String url) throws Exception {
-		return this.addNode(url, this.computeKey(url));
+	protected  String addNode(String url, boolean supportJoins) throws Exception {
+		return this.addNode(url, this.computeKey(url), supportJoins);
 	}
 	
 	/**
 	 * Add to the map node.
 	 * @param url        URL of the TAP service
 	 * @param key        key referencing the node
+	 * @param supportJoins        support join set from TAP_SCHEMA
 	 * @return           Returns  the node key
 	 * @throws Exception if the service is not valid or if another node is already
 	 *                   referenced by that key
 	 */
-	public String addNode(String url, String key) throws Exception {
+	public String addNode(String url, String key, boolean supportJoins) throws Exception {
 		TapNode nm;
 		if( (nm = this.getNode(key)) != null ) {
 			throw new TapException("Node with \"" + key + "\" as key already exists (" + nm.getUrl() + ")");
 		} else {
 			logger.info("Create new Tap node " + url + " referenced with the key " + key);
-			nm = new TapNode(url, MetaBaseDir + key, key);
+			nm = new TapNode(url, MetaBaseDir + key, key, supportJoins);
 			nodeMap.put(key, nm);
 			return key;
 		}

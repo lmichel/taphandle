@@ -49,7 +49,7 @@ public class GetNode extends RootServlet implements Servlet {
 			} else if( (key = NodeBase.getKeyNodeByUrl(node) ) != null) {
 
 			} else if( node.startsWith("http://") || node.startsWith("https://") ){
-				key = NodeBase.addNode(node);			
+				key = NodeBase.addNode(node, true);			
 			} else {
 				reportJsonError(request, response, "Node " + node + " not referenced, enter its URL please");
 				return ;

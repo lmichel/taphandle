@@ -40,7 +40,7 @@ public class RunAsyncJob extends RootServlet implements Servlet {
 				return;
 			} else if( node .startsWith("http://")) {
 				try {
-					nodeKey = NodeBase.addNode(node);
+					nodeKey = NodeBase.addNode(node, true);
 				} catch (Exception e) {
 					reportJsonError(request, response, e);
 					return;

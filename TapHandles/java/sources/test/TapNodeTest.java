@@ -37,7 +37,7 @@ public class TapNodeTest  extends RootClass {
 				,*/ "http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap"};
 		for( String s: nodes) {
 
-			tn = new TapNode(s, "/home/michel/Desktop/meta", "simbad");
+			tn = new TapNode(s, "/home/michel/Desktop/meta", "simbad", false);
 
 			tn.buildJsonTableAttributes("ivoa.ObsCore");
 		}

@@ -29,12 +29,13 @@ public class NodeBase extends RootClass{
 
 	static {
 		try {
-			defaultNodes.put("vizier", new NodeUrl("http://tapvizier.u-strasbg.fr/TAPVizieR/tap/"));
-			defaultNodes.put("xcatdb", new NodeUrl("http://xcatdb.u-strasbg.fr/2xmmidr3/tap"));
-			defaultNodes.put("cadc"  , new NodeUrl("http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap"));
-			defaultNodes.put("gavo"  , new NodeUrl("http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap"));
-			defaultNodes.put("simbad", new NodeUrl("http://simbad.u-strasbg.fr/simbad/sim-tap"));
-			defaultNodes.put("heasarc-xamin", new NodeUrl("http://heasarc.gsfc.nasa.gov/xamin/vo/tap"));
+			defaultNodes.put("vizier", new NodeUrl("http://tapvizier.u-strasbg.fr/TAPVizieR/tap/", true));
+			defaultNodes.put("xcatdb", new NodeUrl("http://xcatdb.u-strasbg.fr/2xmmidr3/tap", false));
+			defaultNodes.put("cadc"  , new NodeUrl("http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap", true));
+			defaultNodes.put("gavo"  , new NodeUrl("http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap", true));
+			defaultNodes.put("simbad", new NodeUrl("http://simbad.u-strasbg.fr/simbad/sim-tap", true));
+			defaultNodes.put("simtest", new NodeUrl("http://simtest.u-strasbg.fr/simbad/sim-tap", false));
+			defaultNodes.put("heasarc-xamin", new NodeUrl("http://heasarc.gsfc.nasa.gov/xamin/vo/tap", true));
 		} catch (Exception e) {
 			logger.error(e);
 		}
@@ -43,18 +44,20 @@ public class NodeBase extends RootClass{
 	class ThreadInit extends Thread {
 		private String url;
 		private String key;
+		private boolean supportJoin;
 
 		ThreadInit(Entry<String, NodeUrl> node) {
 			try {
 				url = node.getValue().getAbsoluteURL("");
 				key = node.getKey();
+				supportJoin = node.getValue().supportJoin();
 			} catch (MalformedURLException e) {
 				logger.error(e);
 			}
 		}
 		public void run() {
 			try {
-				nodeMap.addNode(url, key);
+				nodeMap.addNode(url, key, supportJoin);
 			} catch (Exception ex) {
 				logger.error("Cannot init node " + key + " served by " + url, ex);
 			}	
@@ -123,29 +126,31 @@ public class NodeBase extends RootClass{
 	/**
 	 * Add a new node pointed by nodeURL.
 	 * The node key is computed from the nodeURL, it is not necessarily relevant!
+	 * @param supportJoins        support join set from TAP_SCHEMA
 	 * @param nodeURL
 	 * @return the key of the new node
 	 * @throws Exception if the node cannot be added or if it already exists
 	 */
-	public static String  addNode(String nodeURL) throws Exception{
+	public static String  addNode(String nodeURL, boolean supportJoin) throws Exception{
 		if( NodeBase.instance == null ) {
 			NodeBase.instance = new NodeBase();
 		}
-		return NodeBase.instance.nodeMap.addNode(nodeURL);
+		return NodeBase.instance.nodeMap.addNode(nodeURL, supportJoin);
 	}
 
 	/**
 	 * The node key is computed from the nodeURL, it is not necessarily relevant!
 	 * @param nodeURL
 	 * @param key
+	 * @param supportJoins        support join set from TAP_SCHEMA
 	 * @return the key of the new node
 	 * @throws Exception if the node cannot be added or if it already exists
 	 */
-	public static String  addNode(String nodeURL, String key) throws Exception{
+	public static String  addNode(String nodeURL, String key, boolean supportJoin) throws Exception{
 		if( NodeBase.instance == null ) {
 			NodeBase.instance = new NodeBase();
 		}
-		return NodeBase.instance.nodeMap.addNode(nodeURL, key);
+		return NodeBase.instance.nodeMap.addNode(nodeURL, key, supportJoin);
 	}
 
 	/**
