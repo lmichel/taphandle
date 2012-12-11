@@ -27,7 +27,7 @@ jQuery.extend({
 				listeners[i].controlAddJobResult(nodekey, jobid);
 			});
 			this.resetJobControl();
-			setTimeout('hideProcessingDialog();', 1000);
+			hideProcessingDialog();
 			};
 		this.fireRemoveJobResult = function(nodekey, jobid) {
 			$.each(listeners, function(i){
@@ -40,7 +40,7 @@ jQuery.extend({
 			$.each(listeners, function(i){
 				listeners[i].controlAddUrl(nodekey, url);
 			});
-			setTimeout('hideProcessingDialog();', 1000);
+			hideProcessingDialog();
 			this.resetJobControl();
 		};
 		this.fireRemoveUrl = function(nodekey, url) {
