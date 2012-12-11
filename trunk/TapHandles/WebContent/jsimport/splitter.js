@@ -164,7 +164,7 @@
 			initPos = splitter[0][opts.pxSplit] - splitter._PBA - B._init - bar._DA;
 		if ( opts.cookie ) {
 			if ( !$.cookie )
-				logged_alert('jQuery.splitter(): jQuery cookie plugin required');
+				loggedAlert('jQuery.splitter(): jQuery cookie plugin required');
 			var ckpos = parseInt($.cookie(opts.cookie));
 			if ( !isNaN(ckpos) )
 				initPos = ckpos;
