@@ -1,8 +1,6 @@
 jQuery.extend({
 
 	KWConstraintModel: function(first, tbl, ah, model, def_value){
-		var val1;
-		var val2;
 		var that = this;
 
 		var listeners = new Array();
@@ -18,9 +16,9 @@ jQuery.extend({
 		attributehandler.dataType = attributehandler.dataType.replace('adql:', '').toLowerCase();
 		var qlmodel = model;
 		var default_value = def_value;
-		var operator ;
-		var operand ;
-		var andor ;
+		var operator  = null;
+		var operand  = null;
+		var andor = null;
 		var presetValues = new Array();
 		presetValues["dataproduct_type"] = ["'image'", "'spectrum'", "'cube'",
 		                                    "'timeseries'", "'visibility'", "'eventlist'"];
@@ -192,14 +190,13 @@ jQuery.extend({
 		};
 
 		this.getADQL = function(attrQuoted) {	
-			var quote = "";
-			if( ah.name.startsWith('_') ) {
-				quote = '"';
+			var ahName = attributehandler.name;
+			if( !ah.name.match(/^[a-zA-Z0-9][a-zA-Z0-9_]*$/) ) {
+				ahName = '"' + ahName + '"';
 			}
 			if(  ah.name.startsWith('Qualifier ')) {
 				return 'Qualifier{ ' + ah.name.split(' ')[1] + operator + ' ' + operand + '}';
-			}
-			else if( operator.startsWith('CIRCLE') || operator.startsWith('BOX'))  {
+			} else if( operator.startsWith('CIRCLE') || operator.startsWith('BOX'))  {
 				//				CONTAINS(POINT('ICRS GEOCENTER', "_s_ra", "_s_dec"), BOX('ICRS GEOCENTER', 'dsa', 'dsad', 'dsa', 'dsad')) = 'true';
 				var coordkw = attributehandler.name.split(' ');
 				var bcomp = ( booleansupported )? "'true'" :  "1";
@@ -211,7 +208,7 @@ jQuery.extend({
 				+ operator + ") = " + bcomp;
 			}
 			else {
-				return andor + ' ' + quote + table + "." + attributehandler.name + quote + ' ' + operator + ' ' + operand;
+				return andor + ' ' + quoteTableName(table) + "." + ahName  + ' ' + operator + ' ' + operand;
 			}
 		};
 		this.getTable = function(attrQuoted) {	
