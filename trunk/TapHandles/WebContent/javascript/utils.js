@@ -196,3 +196,25 @@ function downloadLocation(url){
     iframe =$("#" + downloadIFrameID ).attr('src', url);   
 }
 
+
+function quoteTableName(tableName){
+	var regex = /([^.]*)\.(.*)/;
+	var results = regex.exec(tableName);
+	var table, schema;
+	if(!results){
+		table = tableName;
+		schema = "";
+	} else if( results.length == 2 ) {
+		table = results[1]; 
+		schema = "";
+
+	} else  {
+		table =  results[2];  
+		schema = results[1] + ".";
+	}
+	if( table.match(/^[a-zA-Z0-9][a-zA-Z0-9_]*$/ ) ){
+		return schema + table;
+	} else {
+		return schema + '"' + table +'"';
+	}
+}

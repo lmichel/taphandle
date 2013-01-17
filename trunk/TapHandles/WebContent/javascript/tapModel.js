@@ -25,7 +25,7 @@ jQuery.extend({
 		var orderby = null;
 
 		var const_key = 1;
-		var table ;
+		var table = null;
 		var storedTreepath = new Array();
 		var lastJob;
 		var pendingJobs = new Array();
@@ -79,7 +79,7 @@ jQuery.extend({
 					}
 
 					if( default_query == null || default_query == "") {
-						that.notifyQueryUpdated("SELECT TOP " + getQLimit() + " * \n FROM " + jsondata.table );
+						that.notifyQueryUpdated("SELECT TOP " + getQLimit() + " * \n FROM " + quoteTableName(jsondata.table) );
 					}
 					else {
 						that.notifyQueryUpdated(default_query);				
@@ -89,20 +89,6 @@ jQuery.extend({
 						that.submitQuery();
 					}
 				});
-//				if( default_query == null || default_query == "") {
-//				that.notifyQueryUpdated("SELECT TOP " + getQLimit() + " * \n FROM " + jsondata.table );
-//				}
-//				else {
-//				logMsg("@@@@@@@@@@1");
-//				that.notifyQueryUpdated(default_query);				
-//				logMsg("@@@@@@@@@@@@2");
-//				}
-
-//				if( andsubmit ) {
-//				logMsg("@@@@@@@@@@@3");
-//				that.submitQuery();
-//				logMsg("@@@@@@@@@@@@@4");
-//				}
 			});
 		};
 
@@ -314,6 +300,8 @@ jQuery.extend({
 		};
 
 		this.updateQuery = function() {
+			var tableName = quoteTableName(storedTreepath.table);
+			console.log(tableName + " " + storedTreepath.table)
 			var limit = getQLimit();
 			if( limit != '' ) {
 				limit = ' TOP ' + limit + ' ' ;
@@ -332,7 +320,7 @@ jQuery.extend({
 			} else {
 				query += '*';
 			}
-			query += "\nFROM " + storedTreepath.table;
+			query += "\nFROM " + tableName;
 			query += that.getJoin();
 			cq = "";
 			$("#tapconstraintlist div").each(function() {
@@ -345,7 +333,7 @@ jQuery.extend({
 
 			if( orderby != null ) {
 				query += "\nORDER BY " + orderby.getADQL(true);
-			}
+			}			
 			that.notifyQueryUpdated(query);
 		};
 
