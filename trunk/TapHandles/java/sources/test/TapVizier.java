@@ -18,17 +18,20 @@ import resources.RootClass;
  */
 public class TapVizier  extends RootClass {
 	private static final String baseDir = "/home/michel/Desktop/tapvizier/";
+	private static final String baseUrlO = "http://tapvizier.u-strasbg.fr/old/TAPVizieR/tap/";
+	private static final String baseUrlN = "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/";
 	private static final NodeMap nodeMap = new NodeMap();
 
 	public static void main(String[] args) throws Exception {
 		NodeMap.switchToContext(baseDir);
-		nodeMap.addNode("http://tapvizier.u-strasbg.fr/TAPVizieR/tap/", "vizier", true);
+		nodeMap.addNode(baseUrlN, "vizier", true);
 		TapNode tn  = nodeMap.getNode("vizier");		
 
 		JSONParser parser = new JSONParser();
 		Object obj = parser.parse(new FileReader(tn.getBaseDirectory() + "tables.json"));
 		JSONObject jsonObject = (JSONObject) obj;
 		JSONArray schemas = (JSONArray) jsonObject.get("schemas");
+		int gen = 0;
 		for(Object sn: schemas) {
 			JSONObject s = (JSONObject)sn;
 			System.out.println("*********** " + s.get("name"));
@@ -37,9 +40,10 @@ public class TapVizier  extends RootClass {
 			for( Object ts: tables) {
 				JSONObject t = (JSONObject)ts;
 				cpt++;
-				if( cpt < 5 ) {
-					System.out.println("    " + cpt + " " + t.get("name"));
-					//tn.buildJsonTableAttributes((String) t.get("name"));
+				gen++;
+				if( cpt < 5 || cpt >= 5) {
+					System.out.println("    " + cpt + "/" + gen + " " + t.get("name"));
+					tn.buildJsonTableAttributes((String)t.get("name"));
 				}
 			}
 		}	
