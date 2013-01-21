@@ -42,7 +42,7 @@ public class GetTableJoinKeys extends RootServlet implements Servlet {
 				return;
 			}
 			tn.buildJsonTableAttributes(table);
-			dumpJsonFile("/" + RootClass.WEB_NODEBASE_DIR + "/" + node + "/" + table + "_joinkeys.json", response);
+			dumpJsonFile("/" + RootClass.WEB_NODEBASE_DIR + "/" + node + "/" + RootClass.vizierNameToFileName(table) + "_joinkeys.json", response);
 		} catch (FileNotFoundException e) {
 			return;
 		} catch (Exception e) {

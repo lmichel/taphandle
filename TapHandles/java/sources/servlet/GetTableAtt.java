@@ -42,7 +42,7 @@ public class GetTableAtt extends RootServlet implements Servlet {
 				return;
 			}
 			tn.buildJsonTableAttributes(table);
-			dumpJsonFile("/" + RootClass.WEB_NODEBASE_DIR + "/" + node + "/" + table + "_att.json", response);
+			dumpJsonFile("/" + RootClass.WEB_NODEBASE_DIR + "/" + node + "/" + RootClass.vizierNameToFileName(table) + "_att.json", response);
 		} catch (Exception e) {
 			reportJsonError(request, response, e);
 			return;

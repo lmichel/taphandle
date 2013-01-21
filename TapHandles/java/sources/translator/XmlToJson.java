@@ -54,7 +54,6 @@ import cds.savot.pull.SavotPullParser;
  * 10/1012: Support per-table access for vizier
  */
 public class XmlToJson  extends RootClass {
-	public static final int MAX_ROWS = 10000;
 
 	/**
 	 * Replace in a style sheet the vosi name space with the name space given in parameter
@@ -202,13 +201,14 @@ public class XmlToJson  extends RootClass {
 		setVosiNS(baseDir, "table_att", nsDefinition);
 		String filename = baseDir + "table_att.xsl";
 		Scanner s = new Scanner(new File(filename));
-		PrintWriter fw = new PrintWriter(new File( baseDir + tableName + "_att.xsl"));
+		String tableFileName = RootClass.vizierNameToFileName(tableName);
+		PrintWriter fw = new PrintWriter(new File( baseDir + tableFileName + "_att.xsl"));
 		while( s.hasNextLine() ) {
 			fw.println(s.nextLine().replaceAll("TABLENAME", tableName));
 		}
 		s.close();
 		fw.close();
-		applyStyle(baseDir  + tablesFile + ".xml", baseDir + tableName + "_att.json", baseDir + tableName + "_att.xsl");
+		applyStyle(baseDir  + tablesFile + ".xml", baseDir + tableFileName + "_att.json", baseDir + tableFileName + "_att.xsl");
 	}
 
 	/**
@@ -223,13 +223,14 @@ public class XmlToJson  extends RootClass {
 		setVosiNS(baseDir, "table_att", nsDefinition);
 		String filename = baseDir + "table_att.xsl";
 		Scanner s = new Scanner(new File(filename));
-		PrintWriter fw = new PrintWriter(new File( baseDir + tableName + "_att.xsl"));
+		String tableFileName = RootClass.vizierNameToFileName(tableName);
+		PrintWriter fw = new PrintWriter(new File( baseDir + tableFileName + "_att.xsl"));
 		while( s.hasNextLine() ) {
 			fw.println(s.nextLine().replaceAll("TABLENAME", tableName));
 		}
 		s.close();
 		fw.close();
-		applyStyle(baseDir  + tableName + "_att.xml", baseDir + tableName + "_att.json", baseDir + tableName + "_att.xsl");
+		applyStyle(baseDir  + tableFileName + "_att.xml", baseDir + tableFileName + "_att.json", baseDir + tableFileName + "_att.xsl");
 	}
 
 	/**
@@ -372,7 +373,7 @@ public class XmlToJson  extends RootClass {
 				for( JSONObject target:targets) {
 					jsa.add(target);
 				}
-				String file = 	outputDir + File.separator + source_table + "_joinkeys.json"	;
+				String file = 	outputDir + File.separator + RootClass.vizierNameToFileName(source_table) + "_joinkeys.json"	;
 				logger.info("Write joinkey file " + file);
 				FileWriter fw = new FileWriter(file);
 				fw.write(jso.toJSONString());

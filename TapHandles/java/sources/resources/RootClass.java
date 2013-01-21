@@ -101,6 +101,10 @@ public class RootClass {
 	public static final long AVAILABILITY_CHECK_FREQUENCY=	10*60*1000;
 	public static final boolean INCLUDE_JOIN = true;
 	public static final boolean NOINIT = false;
+	/*
+	 * Max number of rows in a result table
+	 */
+	public static final int MAX_ROWS = 10000;
 
 	/**
 	 * Use working directories contained in contextPath
@@ -187,4 +191,20 @@ public class RootClass {
 		}		
 	}
 
+	/**
+	 * Convert a Vizier table name to something acceptable for a filenamz
+	 * @param vizierName
+	 * @return
+	 */
+	public static String vizierNameToFileName(String vizierName) {
+		return vizierName.replaceAll("/", "v_v");
+	}
+	/**
+	 * Convert a filename to the Vizier table table name it comes from
+	 * @param fileName
+	 * @return
+	 */
+	public static String fileNameToVizierName(String fileName) {
+		return fileName.replaceAll("v_v", "/");
+	}
 }

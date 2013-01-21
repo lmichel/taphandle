@@ -269,7 +269,7 @@ public class TapNode  extends RootClass {
 	 * @param nsDefinition {@link NameSpaceDefinition} modeling the name space
 	 * @throws Exception If something goes wrong
 	 */
-	private void getServiceReponse(String service, NameSpaceDefinition nsDefinition) throws Exception {
+	private String getServiceReponse(String service, NameSpaceDefinition nsDefinition) throws Exception {
 		//Pattern pattern  = Pattern.compile("(?i)(?:.*(xmlns(?:\\:\\w+)?=\\\"http\\:\\/\\/www\\.ivoa\\.net\\/.*" + service + "[^\\\"]*\\\").*)");
 		Pattern pattern  = Pattern.compile(".*xmlns(?::\\w+)?=(\"[^\"]*(?i)(?:" + service + ")[^\"]*\").*");
 		logger.debug("read " + this.url + service);
@@ -278,7 +278,8 @@ public class TapNode  extends RootClass {
 						(new URL(this.url.getAbsoluteURL(null) + service)).openStream()));
 
 		String inputLine;
-		BufferedWriter bfw = new BufferedWriter(new FileWriter(this.baseDirectory + service + ".xml"));
+		String outputFileName = this.baseDirectory + RootClass.vizierNameToFileName(service) + ".xml";
+		BufferedWriter bfw = new BufferedWriter(new FileWriter(outputFileName));
 		boolean found = false;
 		while ((inputLine = in.readLine()) != null) {
 			if( !found ) {
@@ -292,6 +293,7 @@ public class TapNode  extends RootClass {
 		}
 		in.close();
 		bfw.close();
+		return outputFileName;
 	}
 
 	/**
@@ -400,30 +402,31 @@ public class TapNode  extends RootClass {
 	 * @throws Exception If something goes wrong
 	 */
 	public void buildJsonTableAttributes(String tableName) throws Exception {
-		String productName = this.baseDirectory + tableName + "_att";
-		if( new File(productName + ".json").exists()) {
+		String tableFileName = RootClass.vizierNameToFileName(tableName);
+		String productName = this.baseDirectory + tableFileName + "_att";
+		if( new File(tableFileName + ".json").exists()) {
 			return;
 		}
-		logger.debug("JSON file " + tableName + ".json not found: build it");
+		logger.debug("JSON file " + tableFileName + ".json not found: build it");
 		XmlToJson.translateTableAttributes(this.baseDirectory, "tables", tableName, tablesNS);		
 		/*
 		 * If there is no attribute in the JSON table description, the service delivers it likley table by table
 		 */
 		if( !isThereJsonTableAtt(tableName) ) {
-			logger.debug("No colmuns found in " + tableName + ": make a per table query");
+			logger.debug("No colmuns found in " + tableFileName + ": make a per table query");
 			File fn = new File(productName  +  ".xml");
 			String noSchemaName = tableName;
 			int pos = noSchemaName.indexOf('.');
 			if( pos > 0 ) {
 				noSchemaName = noSchemaName.substring(pos + 1);
 			}
-			this.getServiceReponse("columns?query=" + noSchemaName, tablesNS);
-			if( ! (new File(this.baseDirectory + "columns?query=" + noSchemaName  +  ".xml")).renameTo(fn) ) {
-				throw new TapException("Cannot store columns of table  " + tableName +" in file " + this.baseDirectory + tableName  +  "_att.xml");
+			String outputFilename = this.getServiceReponse("tables/" + noSchemaName, tablesNS);
+			if( ! (new File(outputFilename)).renameTo(fn) ) {
+				throw new TapException("Cannot store columns of table  " + tableName +" in file " + this.baseDirectory + tableFileName  +  "_att.xml");
 			}
 			XmlToJson.translateTableAttributes(this.baseDirectory, tableName, tablesNS);	
 			fn.delete();
-			(new File(this.baseDirectory + tableName  +  "_att.xsl")).delete();
+			(new File(this.baseDirectory + tableFileName  +  "_att.xsl")).delete();
 		}
 	}		
 
@@ -436,7 +439,7 @@ public class TapNode  extends RootClass {
 	 */
 	private boolean isThereJsonTableAtt(String tableName) throws Exception{
 		JSONParser parser = new JSONParser();
-		Object obj = parser.parse(new FileReader(this.baseDirectory + tableName + "_att.json"));
+		Object obj = parser.parse(new FileReader(this.baseDirectory + RootClass.vizierNameToFileName(tableName) + "_att.json"));
 		JSONObject jsonObject = (JSONObject) obj;
 		return (((JSONArray) jsonObject.get("attributes")).size() > 0)? true: false;
 	}
