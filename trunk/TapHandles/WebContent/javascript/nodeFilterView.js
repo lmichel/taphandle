@@ -67,12 +67,12 @@ jQuery.extend({
 			$("#simplemodal-container").css('height', 'auto'); 
 			$("#simplemodal-container").css('width', 'auto'); 
 			$(window).trigger('resize.simplemodal'); 
-			//showProcessingDialog("Filering meta data");
+			//Processing.show("Filering meta data");
 			$("#nodeFilter").keyup(function(event) {
 				if(event.keyCode == 13) {	            
 					$.getJSON("getnode", {jsessionid: sessionID, node: node, filter: $("#nodeFilter").val()}, function(jsdata) {
-						//hideProcessingDialog();
-						if( processJsonError(jsdata, "Cannot get the node selection") ) {
+						//Processing.hide();
+						if( Processing.jsonError(jsdata, "Cannot get the node selection") ) {
 							return;
 						} else {
 							that.fireShowNodeSelection($("#nodeFilterList"), jsdata);

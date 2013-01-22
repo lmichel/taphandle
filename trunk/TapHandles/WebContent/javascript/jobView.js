@@ -47,7 +47,7 @@ jQuery.extend({
 		};
 
 		this.initForm = function(treepath, id, session, phase, actions, attributesHandlers){
-			logMsg("init job form " + JSON.stringify(treepath) + " "  + session);
+			Out.info("init job form " + JSON.stringify(treepath) + " "  + session);
 			var nodekey  = treepath.nodekey;
 			$('#' + that.containerID).prepend("<div id=" + id + " style='float: none;'></div>");
 			$('#' + id).data("AttributeHandlers", attributesHandlers);
@@ -70,7 +70,7 @@ jQuery.extend({
 							if( jsondata == undefined || jsondata == null ) {
 								$('#' +  id).remove();		
 								return;
-							} else if( processJsonError(jsondata, "Cannot delete job: " +id) ) {
+							} else if( Processing.jsonError(jsondata, "Cannot delete job: " +id) ) {
 								return;
 							} else {
 								$('#' +  id).remove();		
@@ -83,7 +83,7 @@ jQuery.extend({
 		};
 
 		this.updateForm = function(treepath, id, phase, actions){
-			logMsg("update form " + treepath );
+			Out.info("update form " + treepath );
 			var status = $('#' + id + '_phase');
 			status.attr("class", phase.toLowerCase());
 			status.text(phase);
@@ -93,7 +93,7 @@ jQuery.extend({
 				actionMenu.append('<option value="' + actions[i] + '">' +  actions[i] + '</option>');
 			}
 			if( phase == 'ERROR' ) {
-				loggedAlert("Job " + treepath.nodekey + ">"  + id + " failed. See the job summary to get more details.");
+				Modalinfo.info("Job " + treepath.nodekey + ">"  + id + " failed. See the job summary to get more details.");
 			}
 		};
 	}

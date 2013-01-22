@@ -22,12 +22,12 @@ jQuery.extend({
 		};
 
 		this.fireAddJobResult = function(nodekey, jobid) {
-			showProcessingDialog("Result of job " + nodekey + "." + jobid + " added to the cart");
+			Processing.show("Result of job " + nodekey + "." + jobid + " added to the cart");
 			$.each(listeners, function(i){
 				listeners[i].controlAddJobResult(nodekey, jobid);
 			});
 			this.resetJobControl();
-			hideProcessingDialog();
+			Processing.hide();
 			};
 		this.fireRemoveJobResult = function(nodekey, jobid) {
 			$.each(listeners, function(i){
@@ -36,11 +36,11 @@ jQuery.extend({
 			this.resetJobControl();
 		};
 		this.fireAddUrl = function(nodekey, url) {
-			showProcessingDialog("Data returned by " + url + " added to the cart");
+			Processing.show("Data returned by " + url + " added to the cart");
 			$.each(listeners, function(i){
 				listeners[i].controlAddUrl(nodekey, url);
 			});
-			hideProcessingDialog();
+			Processing.hide();
 			this.resetJobControl();
 		};
 		this.fireRemoveUrl = function(nodekey, url) {
@@ -50,7 +50,7 @@ jQuery.extend({
 			this.resetJobControl();
 		};
 		this.fireRestrictedUrl = function(nodekey, url) {
-			openDialog("Restricted Access", "Shopping cart facility does not support URL with a restricted access.");
+			ModalInfo.info("Restricted Access", "Shopping cart facility does not support URL with a restricted access.");
 		};
 		this.fireOpenCart = function() {			
 			$.each(listeners, function(i){
@@ -91,7 +91,7 @@ jQuery.extend({
 			});			
 		};
 		this.resetJobControl= function() {
-			logMsg("resetJobControl");
+			Out.info("resetJobControl");
 			$.each(listeners, function(i){
 				listeners[i].controlResetZipjob();
 			});			
@@ -137,7 +137,7 @@ jQuery.extend({
 				break;
 			}			
 			if( empty ) {
-				loggedAlert("Empty Shopping Cart");
+				Modalinfo.info("Empty Shopping Cart");
 				return;
 			}
 
@@ -203,7 +203,7 @@ jQuery.extend({
 				break;
 			}			
 			if( empty ) {
-				loggedAlert("Empty Shopping Cart");
+				Modalinfo.info("Empty Shopping Cart");
 				$.modal.close();
 				return;
 			}

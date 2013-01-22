@@ -18,11 +18,11 @@ jQuery.extend({
 		};
 
 		this.fireGetProductInfo = function(url) {
-			showProcessingDialog("Waiting on product info");
+			Processing.show("Waiting on product info");
 
 			$.getJSON("getproductinfo", {jsessionid: sessionID, url: url}, function(jsdata) {
-				hideProcessingDialog();
-				if( processJsonError(jsdata, "Cannot get product info") ) {
+				Processing.hide();
+				if( Processing.jsonError(jsdata, "Cannot get product info") ) {
 					return;
 				}
 				else {
@@ -30,16 +30,46 @@ jQuery.extend({
 					$.each(jsdata, function(k, v) {
 						retour += k + ": " + v  + "\n";
 					});
-					loggedAlert(retour, "Product Info");
+					Modalinfo.info(retour, "Product Info");
 				}
 			});
 		}	;	
+		this.fireSendVoreportWithInfo = function (url){
+			Processing.show("Waiting on product info");
+
+			$.getJSON("getproductinfo", {jsessionid: sessionID, url: url}, function(jsdata) {
+				Processing.hide();
+				if( Processing.jsonError(jsdata, "Cannot get product info") ) {
+					return;
+				}
+				else {
+					var mtype=null, name=null;
+					$.each(jsdata, function(k, v) {
+						if( k.match(/contenttype/i) ) {
+							if( v.match(/fits$/) ) {
+								mtype = "table.load.fits";
+							} else {
+								mtype = "table.load.votable"
+							}
+						} else if( k.match(/contentdisposition/i) ) {
+							var regex = new RegExp(/filename=(.*)$/) ;
+							var results = regex.exec(v);
+							if(results){
+								name = results[1];
+							}
+						}
+					});
+					WebSamp_mVc.fireSendVoreport(url, mtype, name);
+				}
+			});
+		}	;	
+
 		this.fireGetDataLink = function(url) {
-			showProcessingDialog("Waiting on product info");
+			Processing.show("Waiting on product info");
 
 			$.getJSON("getdatalink", {jsessionid: sessionID, url: url}, function(jsdata) {
-				hideProcessingDialog();
-				if( processJsonError(jsdata, "Cannot get datalink") ) {
+				Processing.hide();
+				if( Processing.jsonError(jsdata, "Cannot get datalink") ) {
 					return;
 				}
 				else {
@@ -85,10 +115,10 @@ jQuery.extend({
 			});
 		}	;	
 		this.fireDownloadProduct = function(url) {
-			showProcessingDialog("Waiting on product info");
+			Processing.show("Waiting on product info");
 
 			$.getJSON("getproductinfo", {jsessionid: sessionID, url: url}, function(jsdata) {
-				hideProcessingDialog();
+				Processing.hide();
 				if( jsdata == undefined || jsdata == null ) {
 					window.open(url);
 					return;
@@ -116,11 +146,11 @@ jQuery.extend({
 		};
 
 		this.fireNewNodeEvent = function(nodekey) {
-			showProcessingDialog("Waiting on " + nodekey + " node description");
+			Processing.show("Waiting on " + nodekey + " node description");
 
 			$.getJSON("getnode", {jsessionid: sessionID, node: nodekey }, function(jsdata) {
-				hideProcessingDialog();
-				if( processJsonError(jsdata, "Cannot make data tree") ) {
+				Processing.hide();
+				if( Processing.jsonError(jsdata, "Cannot make data tree") ) {
 					return;
 				}
 				else {
@@ -147,15 +177,26 @@ jQuery.extend({
 			 * Create first the first level tree (schemas)
 			 */
 			for( var i=0 ; i<jsdata.schemas.length ; i++ ) {
-				id_schema = jsdata.nodekey + "X" + jsdata.schemas[i].name;
+				var id_schema = jsdata.nodekey + "X" + jsdata.schemas[i].name;
 				var description = jsdata.schemas[i].description;
-				if( description == "") {
-					description = "No Description Available";
+
+				var schemaName = jsdata.schemas[i].name;				
+				if(schemaName.match(/TAP_SCHEMA/i) ) {
+					icon = "images/Redcube.png";
+					description = "Schema containing the description of the published tables";
+				} else if(schemaName.match(/ivoa/i) ) {
+					icon =  "images/Greencube.png";
+					description = "Tables matching IVOA data models (e.g. ObsCore)";
+				} else {
+					icon =  "images/Bluecube.png";
+					if( description == "") {
+						description = "No Description Available";
+					}
 				}
 				$("div#treedisp").jstree("create"
 						, $("#" + jsdata.nodekey)
 						, false
-						, {"data" : {"icon": "images/Bluecube.png", "attr":{"id": id_schema, "title": description}, "title" : jsdata.schemas[i].name},
+						, {"data" : {"icon": icon, "attr":{"id": id_schema, "title": description}, "title" : jsdata.schemas[i].name},
 							"state": "closed",
 							"attr" :{"id": id_schema}}
 						,false
@@ -201,10 +242,10 @@ jQuery.extend({
 				msg += "\nTRUNCATED SCHEMA: The table list of following schemas [" + trunc.join(",") + "] have been truncated to 20 items";
 			}
 			if( msg != "" ) {
-				loggedAlert(msg + "\n\nDouble click on the '" + jsdata.nodekey + "' node to make you own selection");
+				Modalinfo.info(msg + "\n\nDouble click on the '" + jsdata.nodekey + "' node to make you own selection");
 			}
 		};
-		
+
 		this.fireTreeNodeEvent = function(treepath) {
 			runTAP = true;
 			tapView.fireTreeNodeEvent(treepath, runTAP);
@@ -277,12 +318,12 @@ jQuery.extend({
 			});
 		};
 		this.fireShowVignette = function(oid, title) {
-			openDialog('Preview of ' + title,
+			ModalInfo.info('Preview of ' + title,
 					"<img class=vignette src='getvignette?oid=" + oid
 					+ "'>");
 		};
 		this.fireShowPreview = function(preview_url, title) {
-			openDialog('Preview of ' + title,
+			ModalInfo.info('Preview of ' + title,
 					"<img class=vignette src='" + preview_url + "'>");
 		};
 
@@ -304,20 +345,20 @@ jQuery.extend({
 		};
 		this.fireRemoveAllJobs= function() {
 			openConfirm({title: "Removing Jobs"
-					   , message: "Do you really want to remove all jobs?"
-					   , handler: function(){$("#tapjobs a").click();}
+				, message: "Do you really want to remove all jobs?"
+					, handler: function(){$("#tapjobs a").click();}
 			});
 		};
 		this.showProgressStatus = function() {
-			loggedAlert("Job in progress", 'Info');
+			Modalinfo.info("Job in progress", 'Info');
 		};
 		this.showFailure = function(textStatus) {
-			loggedAlert("view: " + textStatus, 'Failutr');
+			Modalinfo.info("view: " + textStatus, 'Failutr');
 		};
 
 		this.showMeta = function(jsdata) {
 			if (jsdata.errormsg != null) {
-				loggedAlert("FATAL ERROR: Cannot show object detail: "
+				Modalinfo.info("FATAL ERROR: Cannot show object detail: "
 						+ jsdata.errormsg, 'Server Error');
 				return;
 			}
@@ -438,7 +479,7 @@ jQuery.extend({
 		};
 
 		this.initTable = function(dataJSONObject, query) {
-			if( processJsonError(dataJSONObject, "") ) {
+			if( Processing.jsonError(dataJSONObject, "") ) {
 				return;
 			}
 			else {

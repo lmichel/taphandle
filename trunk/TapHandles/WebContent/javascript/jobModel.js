@@ -30,7 +30,7 @@ jQuery.extend({
 		
 		this.updateStatus = function() {
 			$.getJSON("jobsummary", {jsessionid: sessionID, NODE: treepath.nodekey, JOBID: id}, function(jsondata) {
-				if( processJsonError(jsondata, "Cannot get summary of job " + id) ) {
+				if( Processing.jsonError(jsondata, "Cannot get summary of job " + id) ) {
 					return;
 				}
 				phase = jsondata.status.job.phase;
