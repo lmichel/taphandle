@@ -99,12 +99,30 @@ public class RootClass {
 
 
 	public static final long AVAILABILITY_CHECK_FREQUENCY=	10*60*1000;
+	/*
+	 * Initialization directives
+	 */
 	public static final boolean INCLUDE_JOIN = true;
 	public static final boolean NOINIT = false;
 	/*
 	 * Max number of rows in a result table
 	 */
-	public static final int MAX_ROWS = 10000;
+	public static final int MAX_ROWS = 10000;	
+	/*
+	 * Max number of table sent to a client
+	 */
+	public static final int MAXTABLES = 100; // Max number of tables sent back to the client
+
+	/*
+	 * Socket timeout used by URLConnection instance in ms
+	 * a shorter SOCKET_READ_TIMEOUT doen not act anymore!
+	 */
+	public static final int SOCKET_CONNECT_TIMEOUT = 5000;
+	public static final int  SOCKET_READ_TIMEOUT = 10000;					
+	
+	public static int JOINKEY_PERIOD = 5*60*1000;
+	public static int JOINKEY_MAX_ATTEMPTS = 10;
+
 
 	/**
 	 * Use working directories contained in contextPath

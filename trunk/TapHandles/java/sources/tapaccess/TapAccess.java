@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -30,6 +31,17 @@ import translator.XmlToJson;
 public class TapAccess  extends RootClass {
 	private final static String  RUNID = "TapHandle-Proxy";
 
+	/**
+	 * Set global timeout for URLConnection conn
+	 * @param conn
+	 * @throws IOException 
+	 */
+	private static final URLConnection getUrlConnection(URL url) throws IOException{
+		URLConnection conn = url.openConnection();
+		conn.setConnectTimeout(SOCKET_CONNECT_TIMEOUT);		
+		conn.setReadTimeout(SOCKET_READ_TIMEOUT);
+		return conn;
+	}
 
 	/**
 	 * @param endpoint
@@ -44,7 +56,7 @@ public class TapAccess  extends RootClass {
 		// Send the request
 		URL url = new URL(endpoint);  
 		cookie.addCookieToUrl(url);   
-		URLConnection conn = url.openConnection();
+		URLConnection conn = getUrlConnection(url);
 		((HttpURLConnection)conn).setRequestMethod("POST");		
 		conn.setDoOutput(true);
 		if( data != null ) {
@@ -56,6 +68,7 @@ public class TapAccess  extends RootClass {
 		}
 
 		// Get the response
+		conn.setConnectTimeout(200);
 		BufferedWriter bw ;
 		bw = new BufferedWriter(new FileWriter(outputfile));
 		InputStream is = conn.getInputStream();
@@ -73,6 +86,7 @@ public class TapAccess  extends RootClass {
 			}
 			return ;
 		} */
+		
 		BufferedReader reader = new BufferedReader(new InputStreamReader(is));
 		String line;
 		while ((line = reader.readLine()) != null) {
@@ -102,7 +116,7 @@ public class TapAccess  extends RootClass {
 		URL url = new URL(endpoint);  
 		cookie.addCookieToUrl(url);   
 
-		URLConnection conn = url.openConnection();
+		URLConnection conn = getUrlConnection(url);
 		((HttpURLConnection)conn).setRequestMethod("GET");		
 
 		// Get the response
@@ -138,7 +152,7 @@ public class TapAccess  extends RootClass {
 		//		s'il y a des & dans l'URL....et dans ce cas, ça ne plaît pas du tout au navigateur Web (quelqu'il soit) ! 
 		URL url = new URL(URLDecoder.decode(endpoint, "ISO-8859-1"));
 		cookie.addCookieToUrl(url);   
-		URLConnection conn = url.openConnection();
+		URLConnection conn = getUrlConnection(url);
 		//((HttpURLConnection)conn).setRequestMethod("POST");		
 		conn.setDoOutput(true);
 
@@ -175,13 +189,23 @@ public class TapAccess  extends RootClass {
 	private static void sendDeleteRequest(String endpoint, NodeCookie cookie) throws Exception {
 		URL url = new URL(endpoint);
 		cookie.addCookieToUrl(url);   
-		HttpURLConnection httpCon = (HttpURLConnection) url.openConnection();
+		HttpURLConnection httpCon = (HttpURLConnection) getUrlConnection(url);
 		httpCon.setDoOutput(true);
 		httpCon.setRequestProperty(
 				"Content-Type", "application/x-www-form-urlencoded" );
 		httpCon.setRequestMethod("DELETE");
 		httpCon.connect();
 		cookie.storeCookie();
+	}
+	
+	public static String runSyncJob(String endpoint, String query, String outputfile, NodeCookie cookie, String remoteAddress) throws Exception {
+		String runId = (remoteAddress == null )? RUNID: "TapHandle-" + remoteAddress;
+		sendPostRequest(endpoint + "sync"
+				, "RUNID=" + runId + "&REQUEST=doQuery&LANG=ADQL&QUERY=" + URLEncoder.encode(query, "ISO-8859-1")
+				, outputfile
+				, cookie);
+		return outputfile.replaceAll("xml", "json");
+		//return  JsonUtils.getValue (outputfile.replaceAll("xml", "json"), "job.jobId");
 	}
 	
 	/**
