@@ -1,4 +1,4 @@
-package metabase;
+package registry;
 
 import java.util.Set;
 
