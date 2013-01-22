@@ -15,6 +15,9 @@
 <link rel="stylesheet" type="text/css" href="styleimport/jquery.tooltip.css" />
 <link type="text/css" rel="stylesheet" href="styleimport/layout-default-latest.css" />
 
+<link rel="stylesheet" type="text/css" href="http://saada.unistra.fr/jsresources/saadajsbasics/styles/basics.css" />
+<link rel="stylesheet" type="text/css" href="http://saada.unistra.fr/jsresources/saadajsbasics/styles/domain.css" />
+
 
 <script type="text/javascript" src="jsimport/jquery-1.7.2.js"></script>
 <script type="text/javascript" src="jsimport/jquery-ui-latest.js"></script>
@@ -38,6 +41,20 @@
 <script type="text/javascript" src="jsimport/json2.js"></script>
 <script type="text/javascript" src="javascript/websampconnector.js"></script>
 
+<script type="text/javascript" src="http://saada.unistra.fr/jsresources/saadajsbasics/javascript/basics.js"></script>
+<!-- 
+<script type="text/javascript" src="http://saada.unistra.fr/jsresources/saadajsbasics/javascript/ConstQEditor_mVc.js"></script>
+<script type="text/javascript" src="http://saada.unistra.fr/jsresources/saadajsbasics/javascript/ConstQEditor_Mvc.js"></script>
+<script type="text/javascript" src="http://saada.unistra.fr/jsresources/saadajsbasics/javascript/ConstQEditor_mvC.js"></script>
+<script type="text/javascript" src="http://saada.unistra.fr/jsresources/saadajsbasics/javascript/KWConstraint_mVc.js"></script>
+<script type="text/javascript" src="http://saada.unistra.fr/jsresources/saadajsbasics/javascript/KWConstraint_Mvc.js"></script>
+<script type="text/javascript" src="http://saada.unistra.fr/jsresources/saadajsbasics/javascript/KWConstraint_mvC.js"></script>
+ -->
+<script type="text/javascript" src="http://saada.unistra.fr/jsresources/saadajsbasics/javascript/WebSamp_mVc.js"></script>
+<script type="text/javascript" src="http://saada.unistra.fr/jsresources/saadajsbasics/javascript/WebSamp_Mvc.js"></script>
+<script type="text/javascript" src="http://saada.unistra.fr/jsresources/saadajsbasics/javascript/WebSamp_mvC.js"></script>
+<script type="text/javascript" src="http://saada.unistra.fr/jsresources/saadajsbasics/javascript/domain.js"></script>
+
 <script type="text/javascript" src="javascript/formator.js"></script>
 <script type="text/javascript" src="javascript/resultPaneModel.js"></script>
 <script type="text/javascript" src="javascript/resultPaneView.js"></script>
@@ -51,9 +68,11 @@
 <script type="text/javascript" src="javascript/tapModel.js"></script>
 <script type="text/javascript" src="javascript/tapView.js"></script>
 <script type="text/javascript" src="javascript/tapControler.js"></script>
+<!-- 
 <script type="text/javascript" src="javascript/sampModel.js"></script>
 <script type="text/javascript" src="javascript/sampView.js"></script>
 <script type="text/javascript" src="javascript/sampControler.js"></script>
+ -->
 <script type="text/javascript" src="javascript/jobModel.js"></script>
 <script type="text/javascript" src="javascript/jobView.js"></script>
 <script type="text/javascript" src="javascript/jobControler.js"></script>
@@ -88,10 +107,11 @@
 				class=votable onclick='resultPaneView.fireDownloadVOTable();'></a> 		
 				<a href="javascript:void(0);" title='Open the shopping cart'
 				class=zip onclick='cartView.fireOpenCart();' id=zipbutton></a> 		
-				<a href="javascript:void(0);" title='Connect a SAMP hub. (The SAMP hub must be started first e.g. by starting Aladin)' 
+<!-- 				<a href="javascript:void(0);" title='Connect a SAMP hub. (The SAMP hub must be started first e.g. by starting Aladin)' 
 				class=samp id=sampconnector ></a> 
 				<a href="javascript:void(0);" title='Send the data selection to SAMP clients' 
-				class=ivoa  style='visibility: hidden;'></a>
+				class=ivoa  style='visibility: hidden;'></a> -->
+				<a id="sampIndicator" onclick="WebSamp_mVc.fireJustConnect();" class="sampOff" href="#" title="SampStatus"></a>
 				<span class=pagetitlepath id=titlepath></span>
 			</div>
 			

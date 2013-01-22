@@ -13,7 +13,6 @@ var rootUrl;
  * View associated with specific functionality
  */
 var resultPaneView;
-var sampView ;
 var tapView ;
 var cartView ;
 /*

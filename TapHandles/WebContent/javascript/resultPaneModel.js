@@ -31,10 +31,10 @@ jQuery.extend({
 
 		this.processShowRecord= function(oid){
 			var jsdata ="";
-			showProcessingDialog("Get object detail");
+			Processing.show("Get object detail");
 			$.getJSON("getobject", {jsessionid: sessionID, oid: oid }, function(data) {
-				hideProcessingDialog();
-				if( processJsonError(data, "") ) {
+				Processing.hide();
+				if( Processing.jsonError(data, "") ) {
 					return;
 				}
 
@@ -46,10 +46,10 @@ jQuery.extend({
 		};
 
 		this.processShowMeta= function(){
-			showProcessingDialog("Get table description");
+			Processing.show("Get table description");
 			$.getJSON("gettable", {jsessionid: sessionID, node: "aharray", name:tp }, function(data) {
-				hideProcessingDialog();
-				if( processJsonError(data, "get metadata") ) {
+				Processing.hide();
+				if( Processing.jsonError(data, "get metadata") ) {
 					return;
 				}
 				else {
@@ -59,10 +59,10 @@ jQuery.extend({
 		};
 
 		this.processShowMetaNode= function(treepath){
-			showProcessingDialog("Get table description");
+			Processing.show("Get table description");
 			$.getJSON("gettable", {jsessionid: sessionID, node: treepath.nodekey, table:treepath.table }, function(data) {
-				hideProcessingDialog();
-				if( processJsonError(data, "get attribute handlers") ) {
+				Processing.hide();
+				if( Processing.jsonError(data, "get attribute handlers") ) {
 					return;
 				}
 				else {
@@ -86,7 +86,7 @@ jQuery.extend({
 				tapView.fireDownloadVotable(titlepath[0], titlepath[3].replace('job ', ''));
 			}
 			else {
-				loggedAlert("Cannot identify the current JOB", 'Error');	
+				Modalinfo.info("Cannot identify the current JOB", 'Error');	
 			}
 		};
 		this.downloadFITS = function() {
@@ -99,7 +99,7 @@ jQuery.extend({
 			 */
 			var titlepath = $('#titlepath').html().split('&gt;');
 			if( titlepath.length == 3 && titlepath[1] == 'Job' ) {
-				loggedAlert("Not implemented for TAP queries", 'Info');
+				Modalinfo.info("Not implemented for TAP queries", 'Info');
 			} else {
 				var url = "getqueryreport?query=" + escape(current_query) + "&protocol=noprotocol&format=zipball";
 				downloadLocation(url);
@@ -114,7 +114,7 @@ jQuery.extend({
 					tapView.fireDownloadVotable(titlepath[0], titlepath[3].replace('job ', ''));
 			}
 			else {
-				loggedAlert("Cannot identify the current JOB", 'Error');	
+				Modalinfo.info("Cannot identify the current JOB", 'Error');	
 			}
 
 //			var url = "getqueryreport?query=" + escape(current_query) + "&protocol=auto&format=fits";

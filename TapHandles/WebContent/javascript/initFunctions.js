@@ -4,10 +4,6 @@ function initFunctions () {
 		resultPaneView           = new $.ResultPaneView();
 		new $.ResultPaneController(resultPaneModel, resultPaneView);
 
-		var sampModel       = new $.SampModel();
-		sampView            = new $.SampView();
-		new $.SampController(sampModel, sampView);
-
 		var tapModel       = new $.TapModel();
 		tapView            = new $.TapView();
 		new $.TapController(tapModel, tapView);
@@ -32,7 +28,7 @@ function initFunctions () {
 	};
 
 	this.initNodeAccess = function() {
-		showProcessingDialog("Fetching available nodes");
+		Processing.show("Fetching available nodes");
 		nodeList = new Array();
 		$(".logo").attr("class", "logourbana");
 		$.ajax({
@@ -40,9 +36,9 @@ function initFunctions () {
 			type: 'GET',
 			dataType: 'json',
 			url: "availablenodes",
-			error: function() {hideProcessingDialog();loggedAlert("availablenodes failure") ;},
+			error: function() {Processing.hide();Modalinfo.info("availablenodes failure") ;},
 			success: function(data) {
-				hideProcessingDialog();
+				Processing.hide();
 				sessionID = data.sessionID;
 				for( var i=0 ; i<data.nodes.length ; i++) {
 					nodeList[nodeList.length] = {id:  data.nodes[i].key,  text: data.nodes[i].key};
@@ -59,8 +55,8 @@ function initFunctions () {
 		
 		
 //		$.getJSON("availablenodes", {}, function(data) {
-//			hideProcessingDialog();
-//			if( processJsonError(data, "availablenodes failure") ) {
+//			Processing.hide();
+//			if( Processing.jsonError(data, "availablenodes failure") ) {
 //				return;
 //			}
 //			else {
@@ -110,7 +106,7 @@ function initFunctions () {
 						var parent = data.r;
 						var streepath = data.o.attr("id").split(';');
 						if( streepath.length < 3 ) {
-							loggedAlert("Query can only be applied on one data category or one data class: ("  +  streepath + ")", 'User Input Error');
+							Modalinfo.info("Query can only be applied on one data category or one data class: ("  +  streepath + ")", 'User Input Error');
 						}
 						else {
 							var treePath = {nodekey: streepath[0], schema: streepath[1], table: streepath[2]};
@@ -150,7 +146,7 @@ function initFunctions () {
 					nodeFilterView.fireOpenSelectorWindow(nm);
 				}
 			} else if( treePath.length < 3 ) {
-				loggedAlert("Query can only be applied on one data category or one data class: ("  +  treePath + ")", 'User Input Error');
+				Modalinfo.info("Query can only be applied on one data category or one data class: ("  +  treePath + ")", 'User Input Error');
 			} else {
 				var fTreePath = {nodekey: treePath[0], schema: treePath[1], table: treePath[2]};
 				resultPaneView.fireSetTreePath(fTreePath);	
@@ -179,7 +175,7 @@ function initFunctions () {
 			if( $("#qlimit").val() == '' || $("#qlimit").val().match(/^[0-9]+$/) ) {
 				tapView.fireUpdateQueryEvent();			
 			} else {
-				loggedAlert('The result limit must be a positive integer value' , "User Input Error");
+				Modalinfo.info('The result limit must be a positive integer value' , "User Input Error");
 				$("#qlimit").val(100);
 				tapView.fireUpdateQueryEvent();			
 				return false;
@@ -232,13 +228,12 @@ function initFunctions () {
 		 */
 		$(".sesame").click(function() {
 			var inputfield = $(this).parents('div').find(".coordinputvalue");
-			showProcessingDialog("Waiting on SESAME response");
+			Processing.show("Waiting on SESAME response");
 			$.getJSON("sesame", {object: inputfield.val() }, function(data) {
-				hideProcessingDialog();
-				if( processJsonError(data, "Sesame failure") ) {
+				Processing.hide();
+				if( Processing.jsonError(data, "Sesame failure") ) {
 					return;
-				}
-				else {
+				} else {
 					inputfield.val(data.alpha + ' ' + data.delta);
 				}
 			});
@@ -247,11 +242,13 @@ function initFunctions () {
 		 * This callback can be changed changed at everytime: do not use the "onclick" HTML  
 		 * attribute which is not overriden by JQuery "click" callback
 		 */
-		$('#showquerymeta').click(function(){loggedAlert("No meta data available yet", 'Application not Ready');});
+		$('#showquerymeta').click(function(){Modalinfo.info("No meta data available yet", 'Application not Ready');});
 		tapView.fireRefreshJobList();
 	}
 	this.initSamp = function() {
-		sampView.fireSampInit();
+		WebSamp_mVc.init("TAPHandle"
+				, "http://saada.u-strasbg.fr/taphandle/images/tap64.png"
+				, "Universal TAP service browser");
 	}
 };
 

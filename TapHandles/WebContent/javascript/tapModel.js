@@ -41,11 +41,11 @@ jQuery.extend({
 		 * Event processing
 		 */
 		this.processTreeNodeEvent = function(treepath, andsubmit, default_query){
-			showProcessingDialog("Waiting on table description");
+			Processing.show("Waiting on table description");
 			storedTreepath = treepath;
 			$.getJSON("gettableatt", {jsessionid: sessionID, node: treepath.nodekey, table:treepath.table }, function(jsondata) {
-				hideProcessingDialog();
-				if( processJsonError(jsondata, "Cannot get meta data") ) {
+				Processing.hide();
+				if( Processing.jsonError(jsondata, "Cannot get meta data") ) {
 					return;
 				}
 				editors = new Array();
@@ -66,16 +66,16 @@ jQuery.extend({
 				that.lookForAlphaKeyword();
 				that.lookForDeltaKeyword();
 				$(".table_filter").html("<option>" + table + "</option>");
-				showProcessingDialog("Waiting on join keys");
+				Processing.show("Waiting on join keys");
 				$.getJSON("gettablejoinkeys", {jsessionid: sessionID, node: treepath.nodekey, table:treepath.table }, function(data) {
-					hideProcessingDialog();
+					Processing.hide();
 					if( !(data == undefined || data == null || data.errormsg != undefined) )  {
 						joinKeys = data.targets;
 						for( var i=0 ; i<joinKeys.length ; i++ ) {
 							$(".table_filter").append("<option>" + joinKeys[i].target_table + "</option>");	
 						}
 					} else {
-						logMsg("Cannot get JoinKeys");
+						Out.info("Cannot get JoinKeys");
 					}
 
 					if( default_query == null || default_query == "") {
@@ -94,10 +94,10 @@ jQuery.extend({
 
 		this.changeTable = function(newTable) {		
 			table= newTable;
-			showProcessingDialog("Waiting on table description");
+			Processing.show("Waiting on table description");
 			$.getJSON("gettableatt", {jsessionid: sessionID, node: storedTreepath.nodekey, table:newTable }, function(jsondata) {
-				hideProcessingDialog();
-				if( processJsonError(jsondata, "Cannot get meta data") ) {
+				Processing.hide();
+				if( Processing.jsonError(jsondata, "Cannot get meta data") ) {
 					return;
 				}
 //				editors = new Array();
@@ -179,17 +179,17 @@ jQuery.extend({
 			var alphaname = $('#kwalpha_name').html();
 			var deltaname = $('#kwdelta_name').html();
 			if( alphaname == "" || deltaname.length == "" ) {
-				loggedAlert('Give one KW for both alpha and delta', 'Info');
+				Modalinfo.info('Give one KW for both alpha and delta', 'Info');
 				return;
 			}
 			var coords = $('#tapcoordval').val().split(' ');
 			if( coords.length != 2 || isNaN(coords[0]) || isNaN(coords[1])) {
-				loggedAlert('Both coordinates must be given in degrees', 'Info');
+				Modalinfo.info('Both coordinates must be given in degrees', 'Info');
 				return;				
 			}
 			var rs = $('#tapradiusval').val();
 			if( isNaN(rs) ){
-				loggedAlert('Radius/Size must be given in degrees', 'Info');
+				Modalinfo.info('Radius/Size must be given in degrees', 'Info');
 				return;								
 			}
 			var box_summary = coords[0] + "," + coords[1] + "," + rs;
@@ -359,8 +359,8 @@ jQuery.extend({
 				for( var i=0 ; i<joinKeys.length ; i++ ) {
 					if( joinKeys[i].target_table == jt ) {
 						if( retour == "" ) retour = "\n";
-						retour += "JOIN " + jt + " ON " + storedTreepath.table + "." + joinKeys[i].source_column 
-						+ " = " + joinKeys[i].target_table + "." + joinKeys[i].target_column  + "\n";		
+						retour += "JOIN " + quoteTableName(jt) + " ON " + quoteTableName(storedTreepath.table) + "." +  quoteTableName(joinKeys[i].source_column )
+						+ " = " +  quoteTableName(joinKeys[i].target_table) + "." + quoteTableName( joinKeys[i].target_column)  + "\n";		
 						break;
 					}
 				}
@@ -369,14 +369,14 @@ jQuery.extend({
 		};
 
 		this.submitQuery = function(){
-			showProcessingDialog("Run job");
+			Processing.show("Run job");
 			var limit = getQLimit();
 			$.ajax({type: 'POST'
 				, url:"runasyncjob"
 					, dataType: 'json'
 						, data: {jsessionid: sessionID, NODE: storedTreepath.nodekey, TREEPATH: storedTreepath.nodekey + ";" + storedTreepath.schema + ";" + storedTreepath.table, REQUEST: "doQuery", LANG: 'ADQL', FORMAT: 'json', PHASE: 'RUN', MAXREC: limit,QUERY: ($('#adqltext').val()) }
 			, success: function(jsondata) {
-				if( processJsonError(jsondata, "tap/async Cannot get job status") ) {
+				if( Processing.jsonError(jsondata, "tap/async Cannot get job status") ) {
 					return;
 				} else {
 					jv  = new $.JobView(jsondata.status.job.jobId);
@@ -399,8 +399,8 @@ jQuery.extend({
 				that.displayResult(nodeKey, jid);	
 			}
 			else if( counter < 0 ) {
-				hideProcessingDialog();
-				loggedAlert("Job " + jid + " not completed: processed asynchronously", 'Info');
+				Processing.hide();
+				Modalinfo.info("Job " + jid + " not completed: processed asynchronously", 'Info');
 				pendingJobs[jid] = lastJob;
 				if( Object.keys(pendingJobs).length == 1 ) {
 					listTimer = setTimeout("tapView.fireUpdateRunningJobList();", 5000);	
@@ -408,12 +408,12 @@ jQuery.extend({
 			}
 			else  if( lastJob.fireGetPhase() == 'EXECUTING' || lastJob.fireGetPhase() == 'QUEUED'
 				|| lastJob.fireGetPhase() == 'PENDED'){
-				showProcessingDialog("Run job " + counter );
+				Processing.show("Run job " + counter );
 				lastJob.fireUpdateStatus();
 				lastTimer = setTimeout("tapView.fireCheckJobCompleted(\"" + nodeKey + "\", \"" + jid + "\", \"" + (counter-1) + "\");", 1000);
 			}				
 			else {
-				hideProcessingDialog();
+				Processing.hide();
 			}
 
 		};
@@ -437,10 +437,10 @@ jQuery.extend({
 		};
 
 		this.removeJob = function(id) {
-			logMsg("remove job " + id);
+			Out.info("remove job " + id);
 			if( lastTimer != null && lastJob != null && id == lastJob.getId()) {
 				clearTimeout(lastTimer);
-				logMsg("Remove last job");
+				Out.info("Remove last job");
 				lastJob = null;
 			}
 			var timerOn = false;
@@ -450,13 +450,13 @@ jQuery.extend({
 		};
 
 		this.refreshJobList= function() {
-			showProcessingDialog("Refresh job list");
+			Processing.show("Refresh job list");
 			$.getJSON("joblist", {jsessionid: sessionID, FORMAT: "json"}, function(jsondata) {
-				hideProcessingDialog();
-				if( processJsonError(jsondata, "Cannot get jobs list") ) {
+				Processing.hide();
+				if( Processing.jsonError(jsondata, "Cannot get jobs list") ) {
 					return;
 				}
-				showProcessingDialog("Update Job Status");
+				Processing.show("Update Job Status");
 				for( var i=0 ; i<jsondata.length ; i++) {
 					var job = jsondata[i];
 					jv  = new $.JobView(job.jobid);
@@ -469,13 +469,13 @@ jQuery.extend({
 					}
 					listTimer = setTimeout("tapView.fireUpdateRunningJobList();", 5000);	
 				}
-				hideProcessingDialog();
+				Processing.hide();
 			});		
 		};
 
 		this.processJobAction= function(nodekey,jid, session) {
 			var val = $('#' + jid + "_actions").val(); 
-			logMsg("Process job action: '" + val + "'");
+			Out.info("Process job action: '" + val + "'");
 			$('#' + jid + "_actions").val('Actions'); 
 			if( val == 'Show Query') {	
 				that.showQuery(nodekey,jid);				
@@ -494,7 +494,7 @@ jQuery.extend({
 			}			
 			else if( val == 'Send to SAMP') {				
 				var url = rootUrl + 'jobresult?node=' + nodekey.trim() + '&jobid=' + jid.trim()+ '&session=' + sessionID;
-				sampView.fireSendVOTableDownload(url);
+				WebSamp_mVc.fireSendVoreport(url, "table.load.votable", nodekey.trim() + "/job_" + jid.trim());
 			}			
 			else if( val == 'Edit Query' ) {
 				that.editQuery(nodekey,jid);
@@ -503,7 +503,7 @@ jQuery.extend({
 
 		this.showQuery = function(nodekey,jid) {
 			$.getJSON("jobsummary" , {jsessionid: sessionID, NODE: nodekey, JOBID: jid}, function(jsondata) {
-				if( processJsonError(jsondata, "Cannot get summary of job") ) {
+				if( Processing.jsonError(jsondata, "Cannot get summary of job") ) {
 					return;
 				}
 				var report  = "";
@@ -512,16 +512,16 @@ jQuery.extend({
 					var p = pa[i];
 					if( p.id.toLowerCase() == "query" ) {
 						report =p.$.replace(/\\n/g,'\n            ')+ "\n";
-						loggedAlert(report, 'Query of job ' + nodekey + '.' + jid);
+						Modalinfo.info(report, 'Query of job ' + nodekey + '.' + jid);
 						return;
 					}
 				}
-				loggedAlert(report, 'No queryfound in ' + jsondata);
+				Modalinfo.info(report, 'No queryfound in ' + jsondata);
 			});					
 		};
 		this.showSummary = function(nodekey, jid) {
 			$.getJSON("jobsummary" , {jsessionid: sessionID, NODE: nodekey, JOBID: jid}, function(jsondata) {
-				if( processJsonError(jsondata, "Cannot get summary of job "+ nodekey + '.' + jid) ) {
+				if( Processing.jsonError(jsondata, "Cannot get summary of job "+ nodekey + '.' + jid) ) {
 					return;
 				}
 				var report  = "";
@@ -548,15 +548,15 @@ jQuery.extend({
 				if( jsondata.status.job.errorSummary != null ) {
 					report += "error: " + jsondata.status.job.errorSummary.message+ "\n";					
 				}
-				loggedAlert(report,  "Summary of job "+ nodekey + '.' + jid);
+				Modalinfo.info(report,  "Summary of job "+ nodekey + '.' + jid);
 
 			});					
 		};
 		this.displayResult = function(nodekey, jid) {
-			showProcessingDialog("Get result of job " + jid);			
+			Processing.show("Get result of job " + jid);			
 			$.getJSON("jobresult" , {jsessionid: sessionID, NODE: nodekey, JOBID: jid, FORMAT: 'json'}, function(jsondata) {
-				hideProcessingDialog();
-				if( processJsonError(jsondata, "Cannot get result of job " + jid) ) {				
+				Processing.hide();
+				if( Processing.jsonError(jsondata, "Cannot get result of job " + jid) ) {				
 					$('#resultpane').html();
 					if( lastJob != null ) {
 						lastJob.fireSetOnError();
@@ -572,10 +572,10 @@ jQuery.extend({
 			});					
 		};
 		this.editQuery= function(nodekey,jid) {
-			showProcessingDialog("Get Job summary");			
+			Processing.show("Get Job summary");			
 			$.getJSON("jobsummary" , {jsessionid: sessionID, NODE: nodekey, JOBID: jid}, function(jsonsum) {
-				hideProcessingDialog();
-				if( processJsonError(jsonsum, "Cannot get summary of job") ) {
+				Processing.hide();
+				if( Processing.jsonError(jsonsum, "Cannot get summary of job") ) {
 					return;
 				}
 				var pa = jsonsum.status.job.parameters.parameter;
@@ -598,17 +598,17 @@ jQuery.extend({
 
 		this.sampBroadcast= function(nodekey,jid) {
 			$.getJSON("tap/async/" + jid , function(jsondata) {
-				if( processJsonError(jsondata, "Cannot get summary of job " + jid) ) {
+				if( Processing.jsonError(jsondata, "Cannot get summary of job " + jid) ) {
 					return;
 				}
 				for( var i=0 ; i<jsondata.results.length ; i++ ) {
 					var url = jsondata.results[i].href;
 					if( url.endsWith("xml")) {
-						sampView.fireSendTapDownload(url);;
+						WebSamp_mVc.fireSendVoreport(url);;
 						return;
 					}
 				}
-				loggedAlert("No result file looking like a VOTable, sorry.", 'Error');
+				Modalinfo.info("No result file looking like a VOTable, sorry.", 'Error');
 			});					
 
 		};

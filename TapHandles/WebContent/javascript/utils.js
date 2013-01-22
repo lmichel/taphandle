@@ -1,22 +1,9 @@
 /*
  * Various utility routines standing out of any MVC 
  */
-var DEBUG = true;
-function logMsg(message) {
-	if( DEBUG && (typeof console != 'undefined') ) {
-		console.log(message);
-	}
-}
-function traceMsg(message) {
-	if( DEBUG && (typeof console != 'undefined') ) {
-		console.trace();
-		console.log(message);
-	}
-}
-
 
 function setTitlePath(treepath) {
-	logMsg("title " + treepath);
+	Out.info("title " + treepath);
 	var job = (treepath.jobid == null)? "": '&gt;'+ treepath.jobid;
 	$('#titlepath').html('<i>' + treepath.nodekey + '&gt;' + treepath.schema + '&gt;'+ treepath.table+ job);
 }
@@ -29,135 +16,6 @@ function getQLimit() {
 	return limit;
 }
 
-function loggedAlert(message, title) {
-	logMsg("ALERT " + message);
-	openDialog((title== null || title == "" )? "Alert": title
-			, "<span class=alert>" + message.replace(/\n/g, "<BR>") + "</span>");
-}
-
-
-var stillToBeOpen = false;
-var simbadToBeOpen = false;
-
-function showProcessingDialog(message) {
-	logMsg("PROCESSSING " + message);
-	stillToBeOpen = true;
-	if( $('#saadaworking').length == 0){	
-		logMsg("ini");
-		$('#resultpane').append('<div id="saadaworking" style="padding: 5px; text-align: left; display: none;vertical-align:middle;"></div>');
-	}
-	$('#saadaworking').html("<img style='padding: 5px; vertical-align:middle' src=images/ajax-loader.gif></img><span class=help>" + message + "</span>");
-	/*
-	 * It is better to immediately show the process dialog in order to give a feed back to the user
-	 * It we dopn't, user could click several time on submit a get lost with what happens
-	 *
-	 * setTimeout("if( stillToBeOpen == true ) $('#saadaworking').css('visibility', 'visible');", 500);
-	 */
-	//$('#saadaworking').css('visibility', 'visible');
-	$('#saadaworking').modal({close: false});
-	$("#simplemodal-container").css('height', 'auto'); 
-	$("#simplemodal-container").css('width', 'auto'); 
-	$(window).trigger('resize.simplemodal'); 
-}
-
-
-function hideProcessingDialog() {
-	stillToBeOpen = false;
-	if( $('#saadaworking').length != 0){
-		logMsg("CLOSE PROCESSSING " + $("#saadaworking span").text());
-
-		//$('#saadaworking').css('visibility', 'hidden');	html img text align
-		$.modal.close();
-	}
-}
-
-function showSampMessageSent() {
-	stillToBeOpen = true;
-	if( $('#saadaworking').length == 0){		
-		$('#resultpane').append('<div id="saadaworking" class="dataTables_processing" style="visibility: hidden; "></div>');
-	}
-	$('#saadaworking').html("SAMP message sent");
-	$('#saadaworking').css('visibility', 'visible');
-	setTimeout(" $('#saadaworking').css('visibility', 'hidden');", 2000);
-
-}
-
-//function showQuerySent() {
-//stillToBeOpen = true;
-//if( $('#saadaworking').length == 0){		
-//$('#resultpane').append('<div id="saadaworking" class="dataTables_processing" style="visibility: hidden; "></div>');
-//}
-//$('#saadaworking').html("Query submitted");
-//$('#saadaworking').css('visibility', 'visible');
-//setTimeout(" $('#saadaworking').css('visibility', 'hidden');", 2000);
-//}
-
-
-function openDialog(title, content) {
-	if( $('#diagdiv').length == 0){		
-		$(document.documentElement).append("<div id=diagdiv style='width: 50%; display: none; hight: auto;'></div>");
-	}
-	$('#diagdiv').html("<img style='padding: 5px; vertical-align:middle' src=images/info.gif></img><span class=help>" + content + "</span>");
-	$('#diagdiv').dialog({  maxWidth: '50%', title: title,  modal: true});
-}
-
-function openConfirm(params) {
-	if( $('#confirmdiv').length == 0){		
-		$(document.documentElement).append("<div id=confirmdiv style='width: 50%; display: none; hight: auto;'></div>");
-	}
-	$('#confirmdiv').html("<img style='padding: 5px; vertical-align:middle' src=images/info.gif></img><span class=help>" + params.message + "</span>");
-	$('#confirmdiv').dialog({  maxWidth: '50%'
-		, title: params.title
-		, modal: true			
-		, buttons: {"OK": function() {$( this ).dialog( "close" );params.handler();}
-	              , Cancel: function() {$( this ).dialog( "close" );}
-				}
-		});
-}
-
-function openSimbadDialog(pos) {
-	if( $('#diagdiv').length == 0){		
-		$(document.documentElement).append("<div id=diagdiv style='display: none; width: auto; hight: auto;'></div>");
-	}
-	var table = "<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\"  id=\"simbadtable\" class=\"display\"></table>";
-	$('#diagdiv').html(table);
-
-	$.getJSON("simbadtooltip", {pos: pos}, function(jsdata) {
-		hideProcessingDialog();
-		if( processJsonError(jsdata, "Simbad Tooltip Failure") ) {
-			return;
-		}
-		else {
-			$('#simbadtable').dataTable({
-				"aoColumns" : jsdata.aoColumns,
-				"aaData" : jsdata.aaData,
-				"sDom" : '<"top">rt<"bottom">',
-				"bPaginate" : false,
-				"aaSorting" : [],
-				"bSort" : false,
-				"bFilter" : true,
-				"bAutoWidth" : true,
-				"bDestroy" : true
-			});
-
-			var simbadpage = "<a class=simbad target=blank href=\"http://simbad.u-strasbg.fr/simbad/sim-coo?Radius=1&Coord=" + escape(pos) + "\"></a>";
-			$('#diagdiv').dialog({  width: 'auto', title: "Simbad Summary for Position " + pos + simbadpage});
-			sampView.firePointatSky(pos);
-		}
-	});
-}
-
-function openModal(title, content) {
-	if( $('#detaildiv').length == 0){		
-		$(document.documentElement).append("<div id=detaildiv style='width: 99%; display: none;'></div>");
-	}
-	$('#detaildiv').html(content);
-	$('#detaildiv').modal();
-	$("#simplemodal-container").css('height', 'auto'); 
-	$("#simplemodal-container").css('width', 'auto'); 
-	$(window).trigger('resize.simplemodal'); 
-}
-
 function switchArrow(id) {
 	var image = $('#'+id+'').find('img').attr('src');
 	if (image == 'images/tdown.png') {
@@ -166,36 +24,6 @@ function switchArrow(id) {
 		$('#'+id+'').find('img').attr('src', 'images/tdown.png');
 	}
 }
-
-function processJsonError(jsondata, msg) {
-	if( jsondata == undefined || jsondata == null ) {
-		loggedAlert("JSON ERROR: " + msg + ": no data returned", 'Server Error');
-		return true;
-	}
-	else if( jsondata.errormsg != undefined  ){
-		loggedAlert("JSON ERROR: " + msg + ": "  + jsondata.errormsg, 'Server Error');
-		return true;
-	}	
-	return false;
-}
-
-function jsonAlert(jsdata, title) {
-	var retour='';
-	$.each(jsdata, function(k, v) {
-		retour += k + ": " + v  + "\n";
-	});
-	loggedAlert(retour, 'Json Object');
-}
-
-function downloadLocation(url){
-	logMsg("downloadLocation " + url);
-	if ($("#" + downloadIFrameID).length == 0 ) {
-		logMsg("Creating IFrame " + downloadIFrameID);
-	    $(document.body).append("<iframe id=" + downloadIFrameID + " style='display: none;'></iframe");
-	}
-    iframe =$("#" + downloadIFrameID ).attr('src', url);   
-}
-
 
 function quoteTableName(tableName){
 	var regex = /([^.]*)\.(.*)/;

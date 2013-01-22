@@ -47,35 +47,28 @@ function formatValue(columnName, value, tdNode) {
 	//	var url = 'getdatalink?url=' + escape(value);
 		tdNode.html("<a class='dl_datalink' title='Get LinkedData'   href='#' onclick='resultPaneView.fireGetDataLink(\"" + value + "\"); return false;'/></a>");
 			
-	}
-	else if( value.startsWith("http://") ||  value.startsWith("https://") ) {
+	} else if( value.startsWith("http://") ||  value.startsWith("https://") ) {
 		var titlepath = $('#titlepath').text().split('>');
 		getDLView(titlepath[0], columnName, value, tdNode);	
-	}
-	else if( value.match(/^((position)|(region)|(polygon))/i) ) {
-		tdNode.html("<a title='STC Region (click to expand)' class='dl_stc' href='#'  onclick='openDialog(\"STC Region\", \"" + value + "\");'></a>");
-	}
-	else if( value.startsWith("Array") ) {
-		tdNode.html("<a title='Data array(click to expand)' class='dl_dataarray' href='#'  onclick='openDialog(\"Data Array\", \"" + value + "\");'></a>");
-	}
-	else if( decimaleRegexp.test(value)){
+	} else if( value.match(/^((position)|(region)|(polygon))/i) ) {
+		tdNode.html("<a title='STC Region (click to expand)' class='dl_stc' href='#'  onclick='ModalInfo.info(\"STC Region\", \"" + value + "\");'></a>");
+	} else if( value.startsWith("Array") ) {
+		tdNode.html("<a title='Data array(click to expand)' class='dl_dataarray' href='#'  onclick='ModalInfo.info(\"Data Array\", \"" + value + "\");'></a>");
+	} else if( decimaleRegexp.test(value)){
 		tdNode.html((new Number(value)).toPrecision(8));
-	}
-	else if( bibcodeRegexp.test(value)){
+	} else if( bibcodeRegexp.test(value)){
 		tdNode.html("<a title=\"bibcode\" HREF=\http://cdsads.u-strasbg.fr/cgi-bin/nph-bib_query?" + value + "\" target=blank>" + value + "</A>");
-	}
-	else {
+	} else {
 		tdNode.html(value);
 	}
 }
 
 function getDLView(node, columnName, url, tdNode) {
-	hideProcessingDialog();
+	Processing.hide();
 	$.getJSON("getproductinfo", {jsessionid: sessionID, url: url}, function(jsdata) {
-		if( processJsonError(jsdata, "Cannot connect data") ) {
+		if( Processing.jsonError(jsdata, "Cannot connect data") ) {
 			tdNode.html("Error");
-		}
-		else {
+		} else {
 			var cd=null, ct=null, ce=null;
 			var dl_class = 'dl_download';
 			var dl_cart_tag  = "<a class='dl_cart' title='Add to cart' href='#' onclick='cartView.fireAddUrl(\"" + node + "\", \"" + url + "\"); return false;'/></a>";
@@ -96,13 +89,15 @@ function getDLView(node, columnName, url, tdNode) {
 			var samp_tag = "";
 			if( (ct != null && (ct.match(/\.fit/i) || ct.match(/fits/))) ||
 				(cd != null && (cd.match(/\.fit/i) || cd.match(/fits/)))	){
-				samp_tag = "<a class='dl_samp'     title='Broadcast to SAMP'   href='#' onclick='sampView.fireSendFitsDownload(\"" + url + "\"); return false;'/></a>";
+				//samp_tag = "<a class='dl_samp'     title='Broadcast to SAMP'   href='#' onclick='WebSamp_mVc.fireSendVoreport(\"" + url + "\"); return false;'/></a>";
+				samp_tag = "<a class='dl_samp'     title='Broadcast to SAMP'   href='#' onclick='resultPaneView.fireSendVoreportWithInfo(\"" + url + "\"); return false;'/></a>";
+				
 				isFits = true;
 			}
 			else if( (ct != null && (ct.match(/\.xml/i) || ct.match(/\.voty/)|| ct.match(/\.votable/))) ||
 					 (cd != null && (cd.match(/\.xml/i) || cd.match(/\.voty/)|| cd.match(/\.votable/)))){
 				isVotable = true;
-				samp_tag = "<a class='dl_samp'     title='Broadcast to SAMP'   href='#' onclick='sampView.fireSendVOTableDownload(\"" + url + "\"); return false;'/></a>";
+				samp_tag = "<a class='dl_samp'     title='Broadcast to SAMP'   href='#' onclick='WebSamp_mVc.fireSendVoreport(\"" + url + "\"); return false;'/></a>";
 			}
 			var dl_tag = "";
 			/*

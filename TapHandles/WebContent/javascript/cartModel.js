@@ -23,7 +23,7 @@ jQuery.extend({
 				var jobs = entry.jobs;
 				for( var i=0 ; i<jobs.length ; i++ ) {
 					if( jobs[i].uri == jobid ) {
-						loggedAlert("Result of job " + nodekey + "." + jobid + " already in the cart", "input Error");
+						Modalinfo.info("Result of job " + nodekey + "." + jobid + " already in the cart", "input Error");
 						return;
 					}
 				}
@@ -33,7 +33,7 @@ jQuery.extend({
 		this.removeJobResult = function(nodekey, jobid) {
 			var entry;
 			if( (entry = cartData[nodekey]) == undefined ) {
-				loggedAlert("There is no data associated with node " + nodekey + " in the cart", "input Error");
+				Modalinfo.info("There is no data associated with node " + nodekey + " in the cart", "input Error");
 			}
 			else {
 				var jobs = entry.jobs;
@@ -46,7 +46,7 @@ jQuery.extend({
 						return;
 					}
 				}
-				loggedAlert("Job " + nodekey + "." + jobid+ " not found in from the cart", "input Error");
+				Modalinfo.info("Job " + nodekey + "." + jobid+ " not found in from the cart", "input Error");
 			}			
 		};
 		this.addUrl = function(nodekey, url) {
@@ -62,7 +62,7 @@ jQuery.extend({
 				var urls = entry.urls;
 				for( var i=0 ; i<urls.length ; i++ ) {
 					if( urls[i].uri == url ) {
-						loggedAlert("This url of node " + nodekey  + " is already in the cart", "input Error");
+						Modalinfo.info("This url of node " + nodekey  + " is already in the cart", "input Error");
 						return;
 					}
 				}
@@ -72,7 +72,7 @@ jQuery.extend({
 		this.removeUrl = function(nodekey, url) {
 			var entry;
 			if( (entry = cartData[nodekey]) == undefined ) {
-				loggedAlert("There is no data associated with node " + nodekey + " in the cart", "input Error");
+				Modalinfo.info("There is no data associated with node " + nodekey + " in the cart", "input Error");
 			}
 			else {
 				var urls = entry.urls;
@@ -86,7 +86,7 @@ jQuery.extend({
 						return;
 					}
 				}
-				loggedAlert("URL not found in from the cart", "input Error");
+				Modalinfo.info("URL not found in from the cart", "input Error");
 			}						
 		};
 		this.cleanCart = function(tokenArray) {
@@ -139,7 +139,7 @@ jQuery.extend({
 				},
 				dataType: "xml",
 				error: function(xhr, textStatus, errorThrown) {
-					loggedAlert("Archive building failed: Error " +  xhr.status  + "\n" +ajaxOptions + "\n" + thrownError);
+					Modalinfo.info("Archive building failed: Error " +  xhr.status  + "\n" +ajaxOptions + "\n" + thrownError);
 				}
 			});
 		};
@@ -150,7 +150,7 @@ jQuery.extend({
 			}
 			else {
 				zipJob.kill();
-				logMsg(zipJob.phase);
+				Out.info(zipJob.phase);
 				return zipJob.phase;
 			}
 		};
@@ -167,7 +167,7 @@ jQuery.extend({
 
 		this.archiveDownload = function() {
 			if( zipJob == null ) {
-				loggedAlert("There is no active ZIP builder");
+				Modalinfo.info("There is no active ZIP builder");
 			}
 			else {
 				zipJob.download();
@@ -181,7 +181,7 @@ jQuery.extend({
 		};
 		
 		this.resetZipjob = function() {
-			logMsg("Reset Zipjob");
+			Out.info("Reset Zipjob");
 			zipJob = null ;
 		};
 	}

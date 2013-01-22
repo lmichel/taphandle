@@ -22,10 +22,10 @@ jQuery.extend({
 			/*
 			 * Ask for the new table list
 			 */
-			showProcessingDialog("Waiting on " + node + " filtered node description");
+			Processing.show("Waiting on " + node + " filtered node description");
 			$.getJSON("getnode", {jsessionid: sessionID, node: node , filter: $("#nodeFilter").val(), rejected:tr.join(',') }, function(jsdata) {
-				hideProcessingDialog();
-				if( processJsonError(jsdata, "Cannot make data tree") ) {
+				Processing.hide();
+				if( Processing.jsonError(jsdata, "Cannot make data tree") ) {
 					return;
 				} else {
 					resultPaneView.fireBuildTree(jsdata);
