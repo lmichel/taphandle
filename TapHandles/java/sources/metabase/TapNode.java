@@ -50,35 +50,14 @@ public class TapNode  extends RootClass {
 	private NameSpaceDefinition capabilityNS   = new NameSpaceDefinition();
 	private NameSpaceDefinition tablesNS       = new NameSpaceDefinition();
 	private long last_availability_check = -1;
-	public final boolean largeResource;
-	public static final int MAXTABLES = 100; // Max number of tables sent back to the client
-
-
-	/**
-	 * @return Returns he node directory (ended with a file separator)
-	 */
-	public String getBaseDirectory() {
-		return baseDirectory;
-	}
-
-
-	/**
-	 * @return Return the TAP node URL
-	 * @throws MalformedURLException 
-	 */
-	public String getUrl() throws MalformedURLException {
-		return url.getAbsoluteURL(null);
-	}
 	
-	/**
-	 * Returns a valid absolute URL containing the path
-	 * @param path
-	 * @return
-	 * @throws MalformedURLException
+	public final boolean largeResource;	
+	/*
+	 * true if a query on the tap schema building possible joins succeeded 
+	 * Not really used yet
 	 */
-	public String getAbsoluteURL(String path) throws MalformedURLException {
-		return url.getAbsoluteURL(path);
-	}
+	private boolean supportTapSchemaJoin = false;
+	private boolean supportAsync;
 
 	/**
 	 * Creator
@@ -109,6 +88,35 @@ public class TapNode  extends RootClass {
 
 	}
 
+
+	/**
+	 * @return Returns he node directory (ended with a file separator)
+	 */
+	public String getBaseDirectory() {
+		return baseDirectory;
+	}
+
+	public boolean supportTapSchemaJoin(){
+		return supportTapSchemaJoin;
+	}
+
+	/**
+	 * @return Return the TAP node URL
+	 * @throws MalformedURLException 
+	 */
+	public String getUrl() throws MalformedURLException {
+		return url.getAbsoluteURL(null);
+	}
+	
+	/**
+	 * Returns a valid absolute URL containing the path
+	 * @param path
+	 * @return
+	 * @throws MalformedURLException
+	 */
+	public String getAbsoluteURL(String path) throws MalformedURLException {
+		return url.getAbsoluteURL(path);
+	}
 	
 	public String getUri() {
 		return uri;
@@ -161,25 +169,29 @@ public class TapNode  extends RootClass {
 	 */
 	public void setJoinKeys() {
 		try {
+			logger.info("Attempt to get join keys from  " + TapNode.this.url );
 			JoinKeysJob.getJoinKeys(this.url.getAbsoluteURL(null), this.baseDirectory);
+			this.supportTapSchemaJoin = true;
+			logger.info("Sucessed");
 		} catch (Exception e) {
 			logger.warn("Can't get join keys for node: continue in background " + this.url + " " + e.getMessage());
 			Runnable r = new Runnable() {
 				public void run() {
-					int DELAY = 5; // Delay in minutes
-					int attempts = 0;
+					int attempts = 2;
+					TapNode.this.supportTapSchemaJoin = false;
 					while( true ) {
 						try {
-							Thread.sleep(DELAY*60*1000);
-							logger.info("Attempt to get join keys from  " + TapNode.this.url );
+							Thread.sleep(JOINKEY_PERIOD);
+							logger.info("Attempt # " + attempts + " to get join keys from  " + TapNode.this.url );
 							JoinKeysJob.getJoinKeys(TapNode.this.url.getAbsoluteURL(null), TapNode.this.baseDirectory);
+							TapNode.this.supportTapSchemaJoin = true;
 							logger.info("Sucessed");
 							return;
 						} catch (Exception e) {
-							logger.info("Failed (" + e.getMessage() + "), try again in " + DELAY + "'");	
+							logger.info("Failed (" + e.getMessage() + "), try again in " + JOINKEY_PERIOD/1000 + "\"'");	
 							attempts++;
-							if( attempts > 10 ){
-								logger.warn("Cannot get join keys from  " + TapNode.this.url + " after 10 attempts, stop to try.");
+							if( attempts > JOINKEY_MAX_ATTEMPTS ){
+								logger.warn("Cannot get join keys from  " + TapNode.this.url + " after " + JOINKEY_MAX_ATTEMPTS + " attempts, stop to try.");
 								return;
 							}
 						}
@@ -259,8 +271,6 @@ public class TapNode  extends RootClass {
 		this.getServiceReponse("tables", tablesNS);
 		this.translateServiceReponse("tables", tablesNS);
 		this.setNodekeyInJsonResponse("tables");
-		logger.debug(this.url + " tables is available");
-
 	}
 
 	/**
@@ -272,7 +282,7 @@ public class TapNode  extends RootClass {
 	private String getServiceReponse(String service, NameSpaceDefinition nsDefinition) throws Exception {
 		//Pattern pattern  = Pattern.compile("(?i)(?:.*(xmlns(?:\\:\\w+)?=\\\"http\\:\\/\\/www\\.ivoa\\.net\\/.*" + service + "[^\\\"]*\\\").*)");
 		Pattern pattern  = Pattern.compile(".*xmlns(?::\\w+)?=(\"[^\"]*(?i)(?:" + service + ")[^\"]*\").*");
-		logger.debug("read " + this.url + service);
+
 		BufferedReader in = new BufferedReader(
 				new InputStreamReader(
 						(new URL(this.url.getAbsoluteURL(null) + service)).openStream()));

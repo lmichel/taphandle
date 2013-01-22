@@ -99,9 +99,11 @@ public abstract class JsonUtils {
 			throw new TapException("File " + jsonFile + " (" + (new File(jsonFile)).length() + " bytes) is not a JSON file");
 		}
 		for( String f: Fields) {
-			obj = ((JSONObject)obj).get(f);
+			if( obj != null ) {
+				obj = ((JSONObject)obj).get(f);
+			}
 		}
-		return  obj.toString();
+		return  (obj != null )? obj.toString(): null;
 	}
 
 	/**

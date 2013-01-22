@@ -36,12 +36,6 @@ public class GetTableJoinKeys extends RootServlet implements Servlet {
 			return;
 		}
 		try {
-			TapNode tn;
-			if(  (tn = NodeBase.getNode(node)) == null ) {				
-				reportJsonError(request, response, "Node " + node + " does not exist");
-				return;
-			}
-			tn.buildJsonTableAttributes(table);
 			dumpJsonFile("/" + RootClass.WEB_NODEBASE_DIR + "/" + node + "/" + RootClass.vizierNameToFileName(table) + "_joinkeys.json", response);
 		} catch (FileNotFoundException e) {
 			return;

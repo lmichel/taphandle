@@ -6,7 +6,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
- * Simple class managing both serv part and application part of a node URL
+ * Simple class managing both server part and application part of a node URL
  * It is used to reconstruct an URL from a relative path as it can be returned by a server
  * @author michel
  *
@@ -22,7 +22,7 @@ public class NodeUrl extends RootClass{
 		URL url = new URL(fullUrl);
 		this.serverUrl = url.getProtocol() + "://" + url.getAuthority();
 		this.appPath = url.getFile();
-		this.supportJoin = supportJoin;
+		this.supportJoin = supportJoin; // joins based on TAP_SCHEMA must be checked at init time
 	}
 	
 	
