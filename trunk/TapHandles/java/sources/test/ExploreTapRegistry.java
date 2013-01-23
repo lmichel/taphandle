@@ -2,13 +2,18 @@ package test;
 
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
+import java.util.ArrayList;
 import java.util.Map;
+
+import metabase.TapNode;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import registry.ShortNameBuilder;
 import resources.RootClass;
 import session.NodeCookie;
 import tapaccess.TapAccess;
@@ -48,16 +53,31 @@ public class ExploreTapRegistry  extends RootClass {
 		JSONParser p = new JSONParser();
 		JSONObject jsonObject = (JSONObject) p.parse(br);
 		JSONArray array = (JSONArray) jsonObject.get("aaData");
+		ArrayList<String> results = new ArrayList<String>();
 		for( int i=0 ; i<array.size() ; i++) {
 			JSONArray sa = (JSONArray) array.get(i);
 			System.out.println("");
-			for( int j=0 ; j<sa.size() ; j++) {
-				if( j == 0 ) {
-					String[] pe =  ((String)(sa.get(j))).split("/");
-					System.out.print(pe[2] + "/-/" + pe[pe.length - 1]+ "\t");
-				}
-				System.out.print(sa.get(j) + "\t");
+			String ivoid = (String)sa.get(0);
+			String url = (String)sa.get(1);
+			String key = ShortNameBuilder.getShortName(ivoid, url);
+			System.out.print(key + "\t"+ url );
+			String description = (String)sa.get(2);
+			TapNode tn=null;
+			try {
+				String result = url;
+				tn = new TapNode(url, MetaBaseDir + key, key, false);
+				result +=  (tn.supportSyncMode())? "   SYNC  ": "   NOSYNC";
+				result +=  (tn.supportAsyncMode())? "   ASYNC  ": "   NOASYNC";
+				results.add(result);
+			} catch (Exception e) {
+				e.printStackTrace();		
+				delete(new File( MetaBaseDir + key));
+
 			}
+			
+		}
+		for( String s: results) {
+			System.out.println(s);
 		}
 
 	}

@@ -63,7 +63,6 @@ public class XmlToJson  extends RootClass {
 	 * @throws Exception   If something goes wrong
 	 */
 	public static void setVosiNS(String baseDir , String service, NameSpaceDefinition nsDefinition) throws Exception {
-
 		BufferedReader in = new BufferedReader(new FileReader(StyleDir + service + ".xsl"));
 		BufferedWriter out = new BufferedWriter(new FileWriter(baseDir + service + ".xsl"));
 		String str;

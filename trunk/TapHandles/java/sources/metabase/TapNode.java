@@ -11,6 +11,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -19,9 +20,13 @@ import java.util.regex.Pattern;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import resources.RootClass;
+import session.NodeCookie;
 import tapaccess.JoinKeysJob;
+import tapaccess.QueryModeChecker;
+import tapaccess.TapAccess;
 import tapaccess.TapException;
 import translator.JsonUtils;
 import translator.NameSpaceDefinition;
@@ -57,7 +62,8 @@ public class TapNode  extends RootClass {
 	 * Not really used yet
 	 */
 	private boolean supportTapSchemaJoin = false;
-	private boolean supportAsync;
+	private boolean supportAsyncMode;
+	private boolean supportSyncMode;
 
 	/**
 	 * Creator
@@ -88,6 +94,18 @@ public class TapNode  extends RootClass {
 
 	}
 
+	/**
+	 * @return
+	 */
+	public boolean supportSyncMode() {
+		return supportSyncMode;
+	}
+	/**
+	 * @return
+	 */
+	public boolean supportAsyncMode() {
+		return supportAsyncMode;
+	}
 
 	/**
 	 * @return Returns he node directory (ended with a file separator)
@@ -158,6 +176,8 @@ public class TapNode  extends RootClass {
 		logger.debug("NS for capability " + capabilityNS.getNsName());
 		this.checkTables() ;
 		logger.debug("NS for tables " + tablesNS.getNsName());
+		
+		this.checkAsyncMode() ;
 		logger.info("Service " + this.url + " seems to be working");		
 		if( INCLUDE_JOIN && this.url.supportJoin() ) {
 			this.setJoinKeys();
@@ -270,9 +290,43 @@ public class TapNode  extends RootClass {
 		logger.debug("check tables");
 		this.getServiceReponse("tables", tablesNS);
 		this.translateServiceReponse("tables", tablesNS);
+		if( (new File(this.baseDirectory + "tables.json")).length() == 0 ) {
+			throw new Exception("No tables in tables.xml, is that file compliant with the schema?");
+		}
 		this.setNodekeyInJsonResponse("tables");
 	}
 
+	/**
+	 * @throws Exception
+	 */
+	private void checkAsyncMode() throws Exception {
+		String query = "SELECT TOP 1 * FROM " + getFirstTableName();
+		System.out.println(query);
+		QueryModeChecker qmc = new QueryModeChecker(this.url.getFullUrl(), query, this.baseDirectory);
+		this.supportSyncMode = qmc.supportSyncMode();
+		this.supportAsyncMode = qmc.supportAsyncMode();
+	}
+	
+	/**
+	 * Return the first table name found in /tables query result. Could be used to check the service 
+	 * @return
+	 * @throws Exception
+	 */
+	private String getFirstTableName() throws Exception {
+		JSONParser parser = new JSONParser();
+		JSONObject jso = (JSONObject) parser.parse(new FileReader(this.baseDirectory + "tables.json"));
+		JSONArray jsa = (JSONArray)(jso.get("schemas"));
+		if( jsa.size() == 0 ) {
+			throw new Exception("No schema in tables.json");
+		}
+		for( int i=0 ; i<jsa.size() ; i++) {
+			JSONArray tbls = (JSONArray) ((JSONObject)(jsa.get(i))).get("tables");
+			for( int t=0 ; t<jsa.size() ; t++) {
+				return  (String) ((JSONObject)(tbls.get(i))).get("name");
+			}
+		}
+		return null;
+	}
 	/**
 	 * Invokes a service of the node, extract its name space which will be used by XLST 
 	 * @param service either availability, capabilities or tables
