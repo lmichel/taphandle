@@ -41,7 +41,7 @@ function initFunctions () {
 				Processing.hide();
 				sessionID = data.sessionID;
 				for( var i=0 ; i<data.nodes.length ; i++) {
-					nodeList[nodeList.length] = {id:  data.nodes[i].key,  text: data.nodes[i].key};
+					nodeList[nodeList.length] = {id:  data.nodes[i].key,  text: data.nodes[i].key  , extra: "&nbsp;&nbsp;" + data.nodes[i].extra};
 				}
 				$('input#node_selector').jsonSuggest(
 						{data: nodeList
@@ -52,6 +52,14 @@ function initFunctions () {
 			}
 		});
 
+//		for( var i=0 ; i<1 ; i++) {
+//			nodeList[nodeList.length] = {id:  "data.nodes[i].key",  text: "data.nodes[i].key", extra: "data.nodes[i].key"};
+//		}
+//		$('input#node_selector').jsonSuggest(
+//				{data: nodeList
+//					, minCharacters: 0
+//					, onSelect: function(data){resultPaneView.fireNewNodeEvent($('#node_selector').val());}
+//				});
 		
 		
 //		$.getJSON("availablenodes", {}, function(data) {
