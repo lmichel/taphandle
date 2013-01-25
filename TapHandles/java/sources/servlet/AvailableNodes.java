@@ -52,6 +52,7 @@ public class AvailableNodes extends RootServlet implements Servlet {
 				TapNode tn = NodeBase.getNode(n);
 				JSONObject jsonNode = new JSONObject();
 				jsonNode.put("key", n);
+				jsonNode.put("extra", tn.getDescription());
 				jsonNode.put("descripton", tn.getDescription());
 				jsonNode.put("url",  tn.getUrl());
 				jsonNode.put("uri",  tn.getUri());

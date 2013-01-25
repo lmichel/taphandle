@@ -310,7 +310,7 @@ public class XmlToJson  extends RootClass {
 				InfoSet is = currentResource.getInfos();
 				String msg = "Info returned by the server:\n";;
 				for( int i=0 ; i<is.getItemCount() ; i++ ) {
-					msg += ((SavotInfo)is.getItemAt(i)).getValue() + "\n";
+					msg += ((SavotInfo)is.getItemAt(i)).getValue() + " " + ((SavotInfo)is.getItemAt(i)).getContent() + "\n";
 				}
 				throw new TapException(msg);
 			}         

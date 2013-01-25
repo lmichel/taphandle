@@ -5,7 +5,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
-import java.util.Map;
 
 import metabase.TapNode;
 
@@ -64,17 +63,17 @@ public class ExploreTapRegistry  extends RootClass {
 			String description = (String)sa.get(2);
 			TapNode tn=null;
 			try {
-				String result = url;
+				String result = url + " " + ivoid + " (" + key + ") ";
 				tn = new TapNode(url, MetaBaseDir + key, key, false);
 				result +=  (tn.supportSyncMode())? "   SYNC  ": "   NOSYNC";
 				result +=  (tn.supportAsyncMode())? "   ASYNC  ": "   NOASYNC";
+				result += description;
 				results.add(result);
 			} catch (Exception e) {
 				e.printStackTrace();		
 				delete(new File( MetaBaseDir + key));
 
 			}
-			
 		}
 		for( String s: results) {
 			System.out.println(s);
