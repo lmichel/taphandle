@@ -9,9 +9,9 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -20,10 +20,9 @@ import java.util.regex.Pattern;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
+import registry.RegistryMark;
 import resources.RootClass;
-import session.NodeCookie;
 import tapaccess.JoinKeysJob;
 import tapaccess.QueryModeChecker;
 import tapaccess.TapAccess;
@@ -47,10 +46,8 @@ import translator.XmlToJson;
 public class TapNode  extends RootClass {
 
 	private String baseDirectory;
-	private NodeUrl url;
-	private String uri="";
-	private String description="";
-	private String key;
+	private RegistryMark regMark;
+
 	private NameSpaceDefinition availabilityNS = new NameSpaceDefinition();
 	private NameSpaceDefinition capabilityNS   = new NameSpaceDefinition();
 	private NameSpaceDefinition tablesNS       = new NameSpaceDefinition();
@@ -62,8 +59,8 @@ public class TapNode  extends RootClass {
 	 * Not really used yet
 	 */
 	private boolean supportTapSchemaJoin = false;
-	private boolean supportAsyncMode;
-	private boolean supportSyncMode;
+	private boolean supportAsyncMode = true;
+	private boolean supportSyncMode = true;
 
 	/**
 	 * Creator
@@ -72,10 +69,10 @@ public class TapNode  extends RootClass {
 	 * @param key           key referencing the node
 	 * @throws Exception    Rise if something goes wrong
 	 */
-	public TapNode(String url, String baseDirectory, String key, boolean supportJoins) throws Exception {
+	public TapNode(RegistryMark regMark, String baseDirectory) throws Exception {
 		this.baseDirectory = baseDirectory;
-		this.key = key;
-		this.url = new NodeUrl(url, supportJoins);
+		this.regMark = regMark;
+
 		if( !this.baseDirectory.endsWith(File.separator) ) {
 			this.baseDirectory += File.separator;
 		}
@@ -91,7 +88,6 @@ public class TapNode  extends RootClass {
 		} else {
 			this.largeResource = false;
 		}
-
 	}
 
 	/**
@@ -123,7 +119,7 @@ public class TapNode  extends RootClass {
 	 * @throws MalformedURLException 
 	 */
 	public String getUrl() throws MalformedURLException {
-		return url.getAbsoluteURL(null);
+		return regMark.getAbsoluteURL(null);
 	}
 	
 	/**
@@ -133,32 +129,16 @@ public class TapNode  extends RootClass {
 	 * @throws MalformedURLException
 	 */
 	public String getAbsoluteURL(String path) throws MalformedURLException {
-		return url.getAbsoluteURL(path);
+		return regMark.getAbsoluteURL(path);
 	}
 	
 	public String getUri() {
-		return uri;
+		return this.regMark.getIvoid();
 	}
 
-
-	public void setUri(String uri) {
-		if( uri != null && uri.startsWith("ivo://")) {
-			this.uri = uri;
-		} else {
-			logger.warn("Attempt to set a wrong URI in node " + key + ": " + uri);
-		}
-	}
 
 	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		if( description != null ) {
-			this.description = description;
-		} else {
-			logger.warn("Attempt to set a null description in node " + key );
-		}
+		return this.regMark.getDecsription();
 	}
 
 	/**
@@ -178,8 +158,8 @@ public class TapNode  extends RootClass {
 		logger.debug("NS for tables " + tablesNS.getNsName());
 		
 		this.checkAsyncMode() ;
-		logger.info("Service " + this.url + " seems to be working");		
-		if( INCLUDE_JOIN && this.url.supportJoin() ) {
+		logger.info("Service " + this.regMark + " seems to be working");		
+		if( INCLUDE_JOIN && this.regMark.supportJoin() ) {
 			this.setJoinKeys();
 		}
 	}
@@ -189,12 +169,12 @@ public class TapNode  extends RootClass {
 	 */
 	public void setJoinKeys() {
 		try {
-			logger.info("Attempt to get join keys from  " + TapNode.this.url );
-			JoinKeysJob.getJoinKeys(this.url.getAbsoluteURL(null), this.baseDirectory);
+			logger.info("Attempt to get join keys from  " + TapNode.this.regMark );
+			JoinKeysJob.getJoinKeys(this.regMark.getAbsoluteURL(null), this.baseDirectory);
 			this.supportTapSchemaJoin = true;
 			logger.info("Sucessed");
 		} catch (Exception e) {
-			logger.warn("Can't get join keys for node: continue in background " + this.url + " " + e.getMessage());
+			logger.warn("Can't get join keys for node: continue in background " + this.regMark + " " + e.getMessage());
 			Runnable r = new Runnable() {
 				public void run() {
 					int attempts = 2;
@@ -202,8 +182,8 @@ public class TapNode  extends RootClass {
 					while( true ) {
 						try {
 							Thread.sleep(JOINKEY_PERIOD);
-							logger.info("Attempt # " + attempts + " to get join keys from  " + TapNode.this.url );
-							JoinKeysJob.getJoinKeys(TapNode.this.url.getAbsoluteURL(null), TapNode.this.baseDirectory);
+							logger.info("Attempt # " + attempts + " to get join keys from  " + TapNode.this.regMark );
+							JoinKeysJob.getJoinKeys(TapNode.this.regMark.getAbsoluteURL(null), TapNode.this.baseDirectory);
 							TapNode.this.supportTapSchemaJoin = true;
 							logger.info("Sucessed");
 							return;
@@ -211,7 +191,7 @@ public class TapNode  extends RootClass {
 							logger.info("Failed (" + e.getMessage() + "), try again in " + JOINKEY_PERIOD/1000 + "\"'");	
 							attempts++;
 							if( attempts > JOINKEY_MAX_ATTEMPTS ){
-								logger.warn("Cannot get join keys from  " + TapNode.this.url + " after " + JOINKEY_MAX_ATTEMPTS + " attempts, stop to try.");
+								logger.warn("Cannot get join keys from  " + TapNode.this.regMark + " after " + JOINKEY_MAX_ATTEMPTS + " attempts, stop to try.");
 								return;
 							}
 						}
@@ -245,10 +225,10 @@ public class TapNode  extends RootClass {
 
 		String av = JsonUtils.getValue (this.baseDirectory + "availability.json", "available");
 		if( "1".equals(av) || "true".equalsIgnoreCase(av)) {
-			logger.debug("Service " + this.url + " is available");
+			logger.debug("Service " + this.regMark + " is available");
 		}
 		else {
-			logger.debug("Service " + this.url + " is unavailable");
+			logger.debug("Service " + this.regMark + " is unavailable");
 		}
 	}
 
@@ -269,7 +249,7 @@ public class TapNode  extends RootClass {
 		logger.debug("check capabilities");
 		this.getServiceReponse("capabilities", capabilityNS);
 		this.translateServiceReponse("capabilities", capabilityNS);
-		logger.debug(this.url + " Capabilities is available");
+		logger.debug(this.regMark + " Capabilities is available");
 	}
 
 	/**
@@ -297,14 +277,18 @@ public class TapNode  extends RootClass {
 	}
 
 	/**
-	 * @throws Exception
+	 * Check if either syn or async query mode is available
+	 * @throws TapException If no query succeed
 	 */
 	private void checkAsyncMode() throws Exception {
-		String query = "SELECT TOP 1 * FROM " + getFirstTableName();
-		System.out.println(query);
-		QueryModeChecker qmc = new QueryModeChecker(this.url.getFullUrl(), query, this.baseDirectory);
+		String query = "SELECT TOP 1 * FROM " + quoteTableName(getFirstTableName());
+		logger.debug("Test query " + query);
+		QueryModeChecker qmc = new QueryModeChecker(this.regMark.getFullUrl(), query, this.baseDirectory);
 		this.supportSyncMode = qmc.supportSyncMode();
 		this.supportAsyncMode = qmc.supportAsyncMode();
+		if( !this.supportSyncMode && !this.supportSyncMode ){
+			throw new TapException("No query mode supported (neither sync nor async");
+		}
 	}
 	
 	/**
@@ -337,9 +321,11 @@ public class TapNode  extends RootClass {
 		//Pattern pattern  = Pattern.compile("(?i)(?:.*(xmlns(?:\\:\\w+)?=\\\"http\\:\\/\\/www\\.ivoa\\.net\\/.*" + service + "[^\\\"]*\\\").*)");
 		Pattern pattern  = Pattern.compile(".*xmlns(?::\\w+)?=(\"[^\"]*(?i)(?:" + service + ")[^\"]*\").*");
 
+		URLConnection conn = TapAccess.getUrlConnection(new URL(this.regMark.getAbsoluteURL(null) + service));
+		//conn.getInputStream();
 		BufferedReader in = new BufferedReader(
 				new InputStreamReader(
-						(new URL(this.url.getAbsoluteURL(null) + service)).openStream()));
+						conn.getInputStream()));
 
 		String inputLine;
 		String outputFileName = this.baseDirectory + RootClass.vizierNameToFileName(service) + ".xml";
@@ -402,7 +388,7 @@ public class TapNode  extends RootClass {
 		Scanner s = new Scanner(new File(filename));
 		PrintWriter fw = new PrintWriter(new File(filename + ".new"));
 		while( s.hasNextLine() ) {
-			fw.println(s.nextLine().replaceAll("NODEKEY", this.key).replaceAll("NODEURL", this.url.getAbsoluteURL(null)));
+			fw.println(s.nextLine().replaceAll("NODEKEY", this.regMark.getNodeKey()).replaceAll("NODEURL", this.regMark.getAbsoluteURL(null)));
 		}
 		s.close();
 		fw.close();

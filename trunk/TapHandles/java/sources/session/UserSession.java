@@ -5,17 +5,21 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 
 import metabase.NodeBase;
+import metabase.TapNode;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
 import resources.RootClass;
+import tapaccess.JobUtils;
 import tapaccess.TapAccess;
 import tapaccess.TapException;
 import translator.JsonUtils;
@@ -94,6 +98,49 @@ public class UserSession  extends RootClass {
 	}
 
 	/**
+	 * Starts a job attached to a node.
+	 * If the node supports async mode, this mode is used.
+	 * The job is in sync mode otherwise (e.g.
+	 * @param nodeKey  : key of the node running the query
+	 * @param query    : ADQ query
+	 * @param treepath : Job treepath given by the client
+	 * @return         : The job id
+	 * @throws Exception
+	 */
+	public String startJob(String nodeKey, String query, String treepath) throws Exception {
+		TapNode node =  NodeBase.getNode(nodeKey);
+		/*
+		 * Asynchronous job
+		 */
+		if( node.supportAsyncMode() ) {
+			String jobId = this.createJob(nodeKey, query, treepath);
+			startAsyncJob(nodeKey, jobId);
+			return jobId;
+			/*
+			 * synchronous job
+			 */
+		} else {
+			String jobID = "";
+			do {
+				jobID = Integer.toString((int)(Math.random() *1000));
+			} while( jobStack.getJobCookie(nodeKey, jobID) != null ) ;
+			String statusFileName = this.baseDirectory + nodeKey + File.separator + "status.xml";
+			String outputDir = JobUtils.setupJobDir(nodeKey, this.getJobDir(nodeKey, jobID), statusFileName, treepath);
+			NodeCookie nodeCookie = new NodeCookie();
+			nodeCookie.saveCookie(outputDir);
+			jobStack.pushJob(nodeKey, jobID, new JobTreePath(treepath), nodeCookie);
+			Date startTime = new Date();
+			try {
+				TapAccess.runSyncJob(node.getUrl(), query, outputDir + "result.xml", nodeCookie, treepath);
+				JobUtils.writeSyncJobStatus(nodeKey, outputDir, jobID, startTime, query);
+			} catch(Exception e){
+				JobUtils.writeSyncJobError(nodeKey, outputDir, jobID, startTime, query, e.getMessage());
+			}
+			return jobID;
+		}
+	}
+
+	/**
 	 * @param nodeKey
 	 * @param query
 	 * @param treepath
@@ -108,20 +155,8 @@ public class UserSession  extends RootClass {
 				, statusFileName
 				, nodeCookie
 				, this.remoteAddress);
-		String finalDir = this.getJobDir(nodeKey, jobID);
-		validWorkingDirectory(finalDir);
-		(new File(statusFileName)).renameTo(new File(finalDir +  "status.xml"));
-		(new File(statusFileName.replaceAll("xml", "json"))).renameTo(new File(finalDir +  "status.json"));
-
-		logger.debug("Create file treepath.json");
-		FileWriter fw = new FileWriter(finalDir + "treepath.json");
-		fw.write(JsonUtils.convertTreeNode(treepath));
-		fw.close();
-
-		nodeCookie.saveCookie(finalDir);
-		JobTreePath jtp = new JobTreePath(treepath);
-		jobStack.pushJob(nodeKey, jobID, jtp, nodeCookie);
-
+		nodeCookie.saveCookie(JobUtils.setupJobDir(nodeKey, this.getJobDir(nodeKey, jobID), statusFileName, treepath));
+		jobStack.pushJob(nodeKey, jobID, new JobTreePath(treepath), nodeCookie);
 		return jobID;
 	}
 
@@ -131,7 +166,7 @@ public class UserSession  extends RootClass {
 	 * @return
 	 * @throws Exception
 	 */
-	public  String startJob(String nodeKey, String jobID) throws Exception {
+	public  String startAsyncJob(String nodeKey, String jobID) throws Exception {
 		NodeCookie nc = new NodeCookie();
 		nc.setCookie(jobStack.getJobCookie(nodeKey, jobID));
 		String status = TapAccess.runAsyncJob(NodeBase.getNode(nodeKey).getUrl()
@@ -148,13 +183,16 @@ public class UserSession  extends RootClass {
 	 */
 	public  String getJobStatus(String nodeKey, String jobID) throws Exception {
 		try {
-			NodeCookie nc = new NodeCookie();
-			nc.setCookie(jobStack.getJobCookie(nodeKey, jobID));
-			String status = TapAccess.getAsyncJobPhase(NodeBase.getNode(nodeKey).getUrl()
-					, jobID
-					, this.getJobDir(nodeKey, jobID) + "status.xml"
-					, nc);
-			return status;
+			if( NodeBase.getNode(nodeKey).supportAsyncMode() ) {
+				NodeCookie nc = new NodeCookie();
+				nc.setCookie(jobStack.getJobCookie(nodeKey, jobID));
+				String status = TapAccess.getAsyncJobPhase(NodeBase.getNode(nodeKey).getUrl()
+						, jobID
+						, this.getJobDir(nodeKey, jobID) + "status.xml"
+						, nc);
+				return status;
+			}
+			return "SYNCMODE";
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 			this.deleteJobDir(nodeKey,  jobID);

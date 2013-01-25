@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLDecoder;
@@ -29,14 +30,13 @@ import translator.XmlToJson;
  * 10/2012: Add client address to createAsyncJob in order to transmit the real client address to TAP services
  */
 public class TapAccess  extends RootClass {
-	private final static String  RUNID = "TapHandle-Proxy";
 
 	/**
 	 * Set global timeout for URLConnection conn
 	 * @param conn
 	 * @throws IOException 
 	 */
-	private static final URLConnection getUrlConnection(URL url) throws IOException{
+	public static final URLConnection getUrlConnection(URL url) throws IOException{
 		URLConnection conn = url.openConnection();
 		conn.setConnectTimeout(SOCKET_CONNECT_TIMEOUT);		
 		conn.setReadTimeout(SOCKET_READ_TIMEOUT);
@@ -68,11 +68,27 @@ public class TapAccess  extends RootClass {
 		}
 
 		// Get the response
-		conn.setConnectTimeout(200);
 		BufferedWriter bw ;
 		bw = new BufferedWriter(new FileWriter(outputfile));
-		InputStream is = conn.getInputStream();
+		InputStream is = null;
+		try {
+			is = conn.getInputStream();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+			String line;
+			while ((line = reader.readLine()) != null) {
+				bw.write(line + "\n");
+			}
+			bw.close();
+			reader.close();
+			cookie.storeCookie();	        
+			XmlToJson.applyStyle(outputfile, outputfile.replaceAll("xml", "json")
+					, StyleDir + "asyncjob.xsl");
 
+		} catch(SocketTimeoutException e){
+			logger.warn("Socket on " + endpoint + " closed on client timeout (" + (RootClass.SOCKET_READ_TIMEOUT/1000) + "\")");
+			((HttpURLConnection)conn).disconnect();
+			throw new SocketTimeoutException("Socket Closed on client timeout (" + (RootClass.SOCKET_READ_TIMEOUT/1000) + "\")");
+		}
 		/*
 		 * Put the error page in the result file
 		 *
@@ -87,18 +103,6 @@ public class TapAccess  extends RootClass {
 			return ;
 		} */
 		
-		BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-		String line;
-		while ((line = reader.readLine()) != null) {
-			bw.write(line + "\n");
-		}
-		bw.close();
-		reader.close();
-
-		cookie.storeCookie();	        
-	        
-		XmlToJson.applyStyle(outputfile, outputfile.replaceAll("xml", "json")
-				, StyleDir + "asyncjob.xsl");
 
 	}
 
@@ -204,6 +208,7 @@ public class TapAccess  extends RootClass {
 				, "RUNID=" + runId + "&REQUEST=doQuery&LANG=ADQL&QUERY=" + URLEncoder.encode(query, "ISO-8859-1")
 				, outputfile
 				, cookie);
+		XmlToJson.translateResultTable(outputfile, outputfile.replaceAll("xml", "json"));
 		return outputfile.replaceAll("xml", "json");
 		//return  JsonUtils.getValue (outputfile.replaceAll("xml", "json"), "job.jobId");
 	}

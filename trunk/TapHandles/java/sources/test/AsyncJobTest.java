@@ -1,8 +1,13 @@
 package test;
 
 
+import java.io.File;
+
+import metabase.NodeBase;
+
 import resources.RootClass;
 import session.NodeCookie;
+import tapaccess.JobUtils;
 import tapaccess.TapAccess;
 
 /**
@@ -22,32 +27,54 @@ public class AsyncJobTest  extends RootClass {
 	 * @throws Exception 
 	 */
 	public static void main(String[] args) throws Exception {
-		if( args.length != 2 ) {
+		if( args.length != 3 ) {
 			usage();
 		}
+		
+		String url = args[0];
+		String nodeKey = args[1];
+		String query = args[2];
+		String baseDirectory = "/home/michel/Desktop/tapbase/";
+		String treepath = "tapvizieru-strasbgfrTAPVizieR>vizls>vizls.II/306/sdss8";
+		String statusFileName = baseDirectory + nodeKey + File.separator + "status.xml";
+		validWorkingDirectory(baseDirectory + nodeKey);
+		
+		
 		NodeCookie cookie=new NodeCookie();
-		String jobID = TapAccess.createAsyncJob(args[0], args[1], "/home/michel/Desktop/tapbase/job.xml", cookie, null);
+		
+		
+		NodeCookie nodeCookie = new NodeCookie();
+		String jobID = TapAccess.createAsyncJob(url
+				, query
+				, statusFileName
+				, nodeCookie
+				, null);
+		String outputDir = JobUtils.setupJobDir(nodeKey
+				, baseDirectory + nodeKey + File.separator + "job_" + jobID + File.separator
+		        , statusFileName, treepath);		
+		nodeCookie.saveCookie(JobUtils.setupJobDir(nodeKey, outputDir, statusFileName, treepath));
+	
+		
+		
 		System.out.println("Create: " + jobID + " " + cookie);
-		System.out.println("Run: " + TapAccess.runAsyncJob(args[0], jobID,  "/home/michel/Desktop/tapbase/status.xml", cookie)+ " " + cookie);
+		System.out.println("Run: " + TapAccess.runAsyncJob(args[0], jobID,  outputDir + "status.xml", cookie)+ " " + cookie);
 		String phase = "";
 		do {
-			phase = TapAccess.getAsyncJobPhase(args[0], jobID,  "/home/michel/Desktop/tapbase/phase.xml", cookie);
+			phase = TapAccess.getAsyncJobPhase(args[0], jobID,  outputDir + "phase.xml", cookie);
 			Thread.sleep(1000);
 			
 		} while( phase.equals("EXECUTING"));
-		System.out.println("Pahse: " + phase+ " " + cookie);
+		System.out.println("Phase: " + phase+ " " + cookie);
 		String[] resultURLs = TapAccess.getAsyncJobResults(args[0]
 				, jobID
-				, "/home/michel/Desktop/status.xml"
+				, outputDir + "status.xml"
 				, cookie);
 		for( String r: resultURLs) {
-			if( r.matches(".*\\.xml.*") ) {
 				logger.debug("Download " + r);
 				TapAccess.getAsyncJobResultFile(r
-						, "/home/michel/Desktop/"
+						, outputDir
 						, "result.xml"
 						, cookie);
-			}
 		}
 
 	}

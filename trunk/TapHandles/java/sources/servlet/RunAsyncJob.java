@@ -38,7 +38,7 @@ public class RunAsyncJob extends RootServlet implements Servlet {
 				RequestDispatcher dispatcher =  getServletContext().getRequestDispatcher("/zipbuilder");
 				dispatcher.forward( request, response );
 				return;
-			} else if( node .startsWith("http://")) {
+			} else if( node.startsWith("http://")) {
 				try {
 					nodeKey = NodeBase.addNode(node, true);
 				} catch (Exception e) {
@@ -61,10 +61,10 @@ public class RunAsyncJob extends RootServlet implements Servlet {
 				return;
 			}
 			session.connectNode(nodeKey);
-			String jobId = session.createJob(nodeKey, query, treenode);
-			session.startJob(nodeKey, jobId);
+//			String jobId = session.createJob(nodeKey, query, treenode);
+//			session.startAsyncJob(nodeKey, jobId);
+			String jobId = session.startJob(nodeKey, query, treenode);
 			response.getWriter().print(session.getJobSummary(nodeKey, jobId));
-			//dumpJsonFile(session.getJobSummaryUrlPath(nodeKey, jobID), response);
 
 		} catch (Exception e) {
 			this.reportJsonError(request, response, e);

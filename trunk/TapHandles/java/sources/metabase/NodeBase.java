@@ -6,6 +6,9 @@ import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import registry.RegistryExplorer;
+import registry.RegistryMark;
+import registry.ShortNameBuilder;
 import resources.RootClass;
 
 
@@ -25,39 +28,19 @@ public class NodeBase extends RootClass{
 	 */
 	private  final NodeMap nodeMap = new NodeMap();
 	private static NodeBase instance;
-	private static final LinkedHashMap<String, NodeUrl> defaultNodes = new LinkedHashMap<String, NodeUrl>();
-
-	static {
-		try {
-			defaultNodes.put("vizier", new NodeUrl("http://tapvizier.u-strasbg.fr/TAPVizieR/tap/", true));
-			defaultNodes.put("xcatdb", new NodeUrl("http://xcatdb.u-strasbg.fr/2xmmidr3/tap", false));
-			defaultNodes.put("cadc"  , new NodeUrl("http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap", true));
-			defaultNodes.put("gavo"  , new NodeUrl("http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap", true));
-			defaultNodes.put("simbad", new NodeUrl("http://simbad.u-strasbg.fr/simbad/sim-tap", true));
-			defaultNodes.put("simtest", new NodeUrl("http://simtest.u-strasbg.fr/simbad/sim-tap", false));
-			defaultNodes.put("heasarc-xamin", new NodeUrl("http://heasarc.gsfc.nasa.gov/xamin/vo/tap", true));
-		} catch (Exception e) {
-			logger.error(e);
-		}
-	}
 
 	class ThreadInit extends Thread {
 		private String url;
 		private String key;
 		private boolean supportJoin;
 
-		ThreadInit(Entry<String, NodeUrl> node) {
-			try {
-				url = node.getValue().getAbsoluteURL("");
-				key = node.getKey();
-				supportJoin = node.getValue().supportJoin();
-			} catch (MalformedURLException e) {
-				logger.error(e);
-			}
+		ThreadInit(RegistryMark node) {
+			url = node.getFullUrl();
+			supportJoin = node.supportJoin();
 		}
 		public void run() {
 			try {
-				nodeMap.addNode(url, key, supportJoin);
+				nodeMap.addNode(url, supportJoin);
 			} catch (Exception ex) {
 				logger.error("Cannot init node " + key + " served by " + url, ex);
 			}	
@@ -70,20 +53,17 @@ public class NodeBase extends RootClass{
 		synchronized (this) {
 
 			try {
+				RegistryExplorer.readRegistries();
 				validWorkingDirectory(MetaBaseDir);
 				emptyDirectory(new File(MetaBaseDir));
 				emptyDirectory(new File(SessionBaseDir));
 				if( !NOINIT){
-					for( Entry<String, NodeUrl> e: defaultNodes.entrySet()) {
-						(new ThreadInit(e)).start();
+					for( RegistryMark r: RegistryExplorer.registryMarks.values()) {
+						if(r.mustBeInitAtStart() ){
+							logger.info("load node " + r.getNodeKey());
+							(new ThreadInit(r)).start();
+						}
 					}
-					//						for( Entry<String, String> e: defaultNodes.entrySet()) {
-					//						try {
-					//							nodeMap.addNode(e.getValue(), e.getKey());
-					//						} catch (Exception ex) {
-					//							logger.error("Cannot init node " + e.getKey() + " served by " + e.getValue(), ex);
-					//						}					
-					//					}
 				}
 			} catch (Exception e) {
 				logger.error("Cannot init node base", e);
@@ -128,30 +108,13 @@ public class NodeBase extends RootClass{
 	 * The node key is computed from the nodeURL, it is not necessarily relevant!
 	 * @param supportJoins        support join set from TAP_SCHEMA
 	 * @param nodeURL
-	 * @return the key of the new node
 	 * @throws Exception if the node cannot be added or if it already exists
 	 */
 	public static String  addNode(String nodeURL, boolean supportJoin) throws Exception{
-		if( NodeBase.instance == null ) {
-			NodeBase.instance = new NodeBase();
-		}
-		return NodeBase.instance.nodeMap.addNode(nodeURL, supportJoin);
+		return NodeBase.instance.nodeMap.addNode(nodeURL, supportJoin);		
+
 	}
 
-	/**
-	 * The node key is computed from the nodeURL, it is not necessarily relevant!
-	 * @param nodeURL
-	 * @param key
-	 * @param supportJoins        support join set from TAP_SCHEMA
-	 * @return the key of the new node
-	 * @throws Exception if the node cannot be added or if it already exists
-	 */
-	public static String  addNode(String nodeURL, String key, boolean supportJoin) throws Exception{
-		if( NodeBase.instance == null ) {
-			NodeBase.instance = new NodeBase();
-		}
-		return NodeBase.instance.nodeMap.addNode(nodeURL, key, supportJoin);
-	}
 
 	/**
 	 * Returns true if a node with key as key exists
@@ -200,7 +163,7 @@ public class NodeBase extends RootClass{
 		if( NodeBase.instance == null ) {
 			NodeBase.instance = new NodeBase();
 		}
-		return NodeBase.instance.nodeMap.computeKey(url);
+		return ShortNameBuilder.getShortName("", url); 
 	}
 
 	/**

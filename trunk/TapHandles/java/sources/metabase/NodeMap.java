@@ -6,6 +6,9 @@ import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import registry.RegistryExplorer;
+import registry.RegistryMark;
+import registry.ShortNameBuilder;
 import resources.RootClass;
 import tapaccess.TapException;
 
@@ -22,27 +25,6 @@ public class NodeMap  extends RootClass {
 	 */
 	private LinkedHashMap<String , TapNode> nodeMap = new LinkedHashMap<String , TapNode>();
 
-	/**
-	 * Attempt to extract a key from a node URL. 
-	 * The key is built from the host name and from application name 
-	 * @param  url
-	 * @return Returns the key
-	 * @throws MalformedURLException
-	 */
-	protected String computeKey(String url) throws MalformedURLException {
-		if( !url.startsWith("http://") ) {
-			return url;
-		}
-		else {
-			URL hurle = new URL(url);
-			String retour = hurle.getHost().replaceAll("www.", "").replaceAll("[_\\.]", "");
-			String [] service =  hurle.getPath().split("\\/");
-			if( service.length > 1 ) {
-				retour += hurle.getPath().split("\\/")[1].replaceAll("[_\\.]", "");
-			}
-			return retour;
-		}
-	}
 	
 	/**
 	 *  Add to the map node. The key is computed internally.
@@ -53,28 +35,19 @@ public class NodeMap  extends RootClass {
 	 *                   referenced by that key
 	 */
 	protected  String addNode(String url, boolean supportJoins) throws Exception {
-		return this.addNode(url, this.computeKey(url), supportJoins);
-	}
-	
-	/**
-	 * Add to the map node.
-	 * @param url        URL of the TAP service
-	 * @param key        key referencing the node
-	 * @param supportJoins        support join set from TAP_SCHEMA
-	 * @return           Returns  the node key
-	 * @throws Exception if the service is not valid or if another node is already
-	 *                   referenced by that key
-	 */
-	public String addNode(String url, String key, boolean supportJoins) throws Exception {
-		TapNode nm;
-		if( (nm = this.getNode(key)) != null ) {
-			throw new TapException("Node with \"" + key + "\" as key already exists (" + nm.getUrl() + ")");
-		} else {
-			logger.info("Create new Tap node " + url + " referenced with the key " + key);
-			nm = new TapNode(url, MetaBaseDir + key, key, supportJoins);
-			nodeMap.put(key, nm);
-			return key;
+		RegistryMark rm;
+		String key;
+		if( (key = this.getKeyNodeByUrl(url)) != null) {
+			logger.warn("URL " + url + " already in the node base ");
+		} if( (rm = RegistryExplorer.getregistryMarkByUrl(url)) != null){
+			key = rm.getNodeKey();
+			nodeMap.put(key, new TapNode(rm, MetaBaseDir + key));	
+		} else  {
+			key = ShortNameBuilder.getShortName(null, url);
+			rm = new RegistryMark(key, "", url, "TAP NOde added by a user", false, supportJoins);
+			nodeMap.put(key, new TapNode(new RegistryMark(key, "", url, "TAP NOde added by a user", false, supportJoins), MetaBaseDir + key));
 		}
+		return key;
 	}
 	
 	/**
@@ -98,7 +71,19 @@ public class NodeMap  extends RootClass {
 	 * @throws Exception If the node cannot be found
 	 */
 	public TapNode getNode(String key)  throws Exception{
-		return  nodeMap.get(key);
+		TapNode tn;
+		RegistryMark rm;
+		if( (tn = nodeMap.get(key)) != null) {
+			return tn;
+		} else if( (rm = RegistryExplorer.registryMarks.get(key)) != null ){
+			logger.info( "adding node " + rm);
+			key = rm.getNodeKey();
+			tn = new TapNode(rm, MetaBaseDir + key);
+			nodeMap.put(key, tn);	
+		} else {
+			throw new TapException("There is registry marks referenced by the key " + key);
+		}
+		return tn;
 	}
 	
 	/**

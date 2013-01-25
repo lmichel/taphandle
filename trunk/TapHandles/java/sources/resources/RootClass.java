@@ -6,6 +6,7 @@ package resources;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
@@ -49,36 +50,36 @@ public class RootClass {
 	public static final String FITS_FLOAT_NDN    = "(?:[0-9]+\\.[0-9]+)";
 	public static final String FITS_FLOAT_DN     = "(?:\\.[0-9]+)";
 	public static final String FITS_FLOAT_ND     = "(?:[0-9]+\\.)";
-    /**
-     * Float regex must be classed from the most complex to the simplest in order
-     * not to loose part of the number with capturing groups
-     */
+	/**
+	 * Float regex must be classed from the most complex to the simplest in order
+	 * not to loose part of the number with capturing groups
+	 */
 	public static final String FITS_FLOAT_VAL = "[+\\-]?(?:" + FITS_FLOAT_NDNEXP + "|" 
-                                                             + FITS_FLOAT_DNEXP  + "|" 
-                                                             + FITS_FLOAT_NDEXP  + "|" 
-                                                             + FITS_FLOAT_NEXP   + "|" 
-                                                             + FITS_FLOAT_NDN    + "|" 
-                                                             + FITS_FLOAT_DN     + "|" 
-                                                             + FITS_FLOAT_ND     + ")";
+	+ FITS_FLOAT_DNEXP  + "|" 
+	+ FITS_FLOAT_NDEXP  + "|" 
+	+ FITS_FLOAT_NEXP   + "|" 
+	+ FITS_FLOAT_NDN    + "|" 
+	+ FITS_FLOAT_DN     + "|" 
+	+ FITS_FLOAT_ND     + ")";
 	public static final String NUMERIC = "[+\\-]?(?:" + FITS_FLOAT_NDNEXP + "|" 
-    + FITS_FLOAT_DNEXP  + "|" 
-    + FITS_FLOAT_NDEXP  + "|" 
-    + FITS_FLOAT_NEXP   + "|" 
-    + FITS_FLOAT_NDN    + "|" 
-    + FITS_FLOAT_DN     + "|" 
-    + FITS_FLOAT_ND     + "|"
-    + "[0-9]+)";
-	
+	+ FITS_FLOAT_DNEXP  + "|" 
+	+ FITS_FLOAT_NDEXP  + "|" 
+	+ FITS_FLOAT_NEXP   + "|" 
+	+ FITS_FLOAT_NDN    + "|" 
+	+ FITS_FLOAT_DN     + "|" 
+	+ FITS_FLOAT_ND     + "|"
+	+ "[0-9]+)";
+
 	public static final String ONE_COORDINATE = "[+-]?(?:(?:\\.[0-9]+)|(?:[0-9]+\\.?[0-9]*))(?:[eE][+-]?[0-9]+)?";
 	public static final String POSITION_COORDINATE = "^(" + ONE_COORDINATE + ")((?:[+-]|(?:[,:;\\s]+[+-]?))" +  ONE_COORDINATE + ")$";
-	
+
 	/*
 	 * 
 	 */
 	public static final String URL = "(http|https)://[\\w-]+(\\.[\\w-]+)+([\\w.,@?^=%&amp;:/~+#-]*[\\w@?^=%&amp;/~+#-])?";
 
-		
-		
+
+
 	/*
 	 * Working directories pathes used in standalone mode (in dev e.g.). In production mode these directories
 	 * are replaced with Tomcat subdirs.
@@ -93,6 +94,7 @@ public class RootClass {
 	public static final String WEB_XSL_DIR      =  "styles";   // Style sheets dir
 	public static final String WEB_NODEBASE_DIR =  "nodebase"; // meta data repository
 	public static final String WEB_USERBASE_DIR =  "userbase"; // session data repository
+	public final static String RUNID = "TapHandle-Proxy";
 	/*
 	 * Max time period (ms) between service availability checking
 	 */
@@ -115,11 +117,11 @@ public class RootClass {
 
 	/*
 	 * Socket timeout used by URLConnection instance in ms
-	 * a shorter SOCKET_READ_TIMEOUT doen not act anymore!
+	 * a shorter SOCKET_READ_TIMEOUT do not act anymore!
 	 */
 	public static final int SOCKET_CONNECT_TIMEOUT = 5000;
 	public static final int  SOCKET_READ_TIMEOUT = 10000;					
-	
+
 	public static int JOINKEY_PERIOD = 5*60*1000;
 	public static int JOINKEY_MAX_ATTEMPTS = 10;
 
@@ -181,7 +183,7 @@ public class RootClass {
 			return false;
 		}
 	}
-	
+
 	/**
 	 * Delete recursively the content of the file f
 	 * @param f file (or directory) to delete
@@ -225,4 +227,35 @@ public class RootClass {
 	public static String fileNameToVizierName(String fileName) {
 		return fileName.replaceAll("v_v", "/");
 	}
+
+	/**
+	 * Quote tableName is required (used for test query)
+	 * @param tableName
+	 * @return
+	 */
+	public static String  quoteTableName(String tableName){
+		Pattern pattern = Pattern.compile("([^.]*)\\.(.*)");
+		Matcher m = pattern.matcher(tableName);
+		String table, schema;
+		if (m.matches()) {
+			if( m.groupCount() != 2) {
+				System.out.println("2");
+				table = m.group(1);
+				schema = "";
+			} else {
+				System.out.println("3");
+				table =  m.group(2);  
+				schema = m.group(1) + ".";
+			}
+		} else {
+			table = tableName;
+			schema = "";
+		}
+		if( table.matches("^[a-zA-Z0-9][a-zA-Z0-9_]*$" ) ){
+			return schema + table;
+		} else {
+			return schema + '"' + table +'"';
+		}
+	}
+
 }
