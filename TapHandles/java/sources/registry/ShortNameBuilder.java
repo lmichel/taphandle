@@ -6,10 +6,6 @@ import java.util.Map.Entry;
 import resources.RootClass;
 
 /**
- * 
- */
-
-/**
  * @author michel
  *
  */
