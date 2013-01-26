@@ -19,7 +19,7 @@ import tapaccess.TapException;
  * @author laurent
  * @version $Id$
  */
-public class NodeMap  extends RootClass {
+class NodeMap  extends RootClass {
 	/**
 	 * {@link TapNode} map. Created at loading time
 	 */
@@ -34,7 +34,7 @@ public class NodeMap  extends RootClass {
 	 * @throws Exception if the service is not valid or if another node is already
 	 *                   referenced by that key
 	 */
-	protected  String addNode(String url, boolean supportJoins) throws Exception {
+	public  String addNode(String url, boolean supportJoins) throws Exception {
 		RegistryMark rm;
 		String key;
 		if( (key = this.getKeyNodeByUrl(url)) != null) {

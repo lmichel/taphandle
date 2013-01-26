@@ -12,6 +12,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import registry.RegistryMark;
 import registry.ShortNameBuilder;
 import resources.RootClass;
 import session.NodeCookie;
@@ -35,7 +36,8 @@ public class ExploreTapRegistry  extends RootClass {
 	 * @throws Exception 
 	 */
 	public static void main(String[] args) throws Exception {
-
+		String xml = System.getProperty("java.io.tmpdir") + "/job.xml";
+		String json = System.getProperty("java.io.tmpdir") + "/job.json";
 		String node = "http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap/";
 		String query = "SELECT ivoid, access_url, res_title\n"
 		+ "FROM rr.capability \n"
@@ -45,10 +47,10 @@ public class ExploreTapRegistry  extends RootClass {
 //		+ "  NATURAL JOIN rr.res_table\n"
 		+ "WHERE standard_id='ivo://ivoa.net/std/tap' AND intf_type = 'vs:paramhttp' ";
 			NodeCookie cookie=new NodeCookie();
-		String outFile = TapAccess.runSyncJob(node, query, "/home/michel/Desktop/job.xml", cookie, null);
-		XmlToJson.translateResultTable("/home/michel/Desktop/job.xml", "/home/michel/Desktop/job.json");
+		String outFile = TapAccess.runSyncJob(node, query, xml, cookie, null);
+		XmlToJson.translateResultTable(xml, json);
 		
-		BufferedReader br = new BufferedReader(new FileReader("/home/michel/Desktop/job.json"));
+		BufferedReader br = new BufferedReader(new FileReader(json));
 		JSONParser p = new JSONParser();
 		JSONObject jsonObject = (JSONObject) p.parse(br);
 		JSONArray array = (JSONArray) jsonObject.get("aaData");
@@ -64,15 +66,15 @@ public class ExploreTapRegistry  extends RootClass {
 			TapNode tn=null;
 			try {
 				String result = url + " " + ivoid + " (" + key + ") ";
-				tn = new TapNode(url, MetaBaseDir + key, key, false);
+				RegistryMark rm = new RegistryMark(key, ivoid, url, description, false, true);
+				tn = new TapNode(rm, "/tmp/meta");
 				result +=  (tn.supportSyncMode())? "   SYNC  ": "   NOSYNC";
 				result +=  (tn.supportAsyncMode())? "   ASYNC  ": "   NOASYNC";
 				result += description;
 				results.add(result);
 			} catch (Exception e) {
 				e.printStackTrace();		
-				delete(new File( MetaBaseDir + key));
-
+				//delete(new File( MetaBaseDir + key));
 			}
 		}
 		for( String s: results) {

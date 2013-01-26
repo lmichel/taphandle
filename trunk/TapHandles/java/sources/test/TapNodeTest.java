@@ -2,6 +2,7 @@ package test;
 
 import java.net.URLDecoder;
 
+import registry.RegistryMark;
 import resources.RootClass;
 import metabase.TapNode;
 
@@ -21,25 +22,17 @@ public class TapNodeTest  extends RootClass {
 	 * @throws Exception 
 	 */
 	public static void main(String[] args) throws Exception {
-		if( args.length != 2 ) {
-			usage();
-		}
-		String url = "http%3A%2F%2Fcds-dev-gm%3A8080%2Fsimbad%2Fsim-tap%2Fasync%2F1316098309553A%2Fresults%2Fresult";
-		url = URLDecoder.decode(url, "ISO-8859-1");
-		System.out.println(url);
-		url = URLDecoder.decode(url, "ISO-8859-1");
-		System.out.println(url);
-		System.exit(1);
 		TapNode tn;
+		System.out.println(System.getProperty("user.dir"));
 		String[] nodes = {/*"http://cds-dev-gm:8080/simbad/sim-tap"
 				, "http://xcatdb.u-strasbg.fr/xidresult/tap"
 				, "http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/caom/"
 				,*/ "http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap"};
 		for( String s: nodes) {
+			RegistryMark rm = new RegistryMark("gavo", "ivo", s, "test", false, true);
+			tn = new TapNode(rm, "/tmp/meta");
 
-			tn = new TapNode(s, "/home/michel/Desktop/meta", "simbad", false);
-
-			tn.buildJsonTableAttributes("ivoa.ObsCore");
+			tn.buildJsonTableAttributes("ivoa.obscore");
 		}
 		logger.info("Test passed");
 	}
