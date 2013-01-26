@@ -2,13 +2,13 @@ package test;
 
 import java.io.FileReader;
 
-import metabase.NodeMap;
 import metabase.TapNode;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import registry.RegistryMark;
 import resources.RootClass;
 
 /**
@@ -17,15 +17,15 @@ import resources.RootClass;
  *
  */
 public class TapVizier  extends RootClass {
-	private static final String baseDir = "/home/michel/Desktop/tapvizier/";
-	private static final String baseUrlO = "http://tapvizier.u-strasbg.fr/old/TAPVizieR/tap/";
+	private static final String baseDir = System.getProperty("java.io.tmpdir") ;
 	private static final String baseUrlN = "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/";
-	private static final NodeMap nodeMap = new NodeMap();
 
 	public static void main(String[] args) throws Exception {
-		NodeMap.switchToContext(baseDir);
-		nodeMap.addNode(baseUrlN, "vizier", true);
-		TapNode tn  = nodeMap.getNode("vizier");		
+		validWorkingDirectory(baseDir + "/nodebase");
+
+		
+		RegistryMark rm = new RegistryMark("vizier", " ", baseUrlN, "test", false, true);
+		TapNode tn = new TapNode(rm, "/tmp/meta");
 
 		JSONParser parser = new JSONParser();
 		Object obj = parser.parse(new FileReader(tn.getBaseDirectory() + "tables.json"));

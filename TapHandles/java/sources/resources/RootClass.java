@@ -85,9 +85,9 @@ public class RootClass {
 	 * are replaced with Tomcat subdirs.
 	 * Could be initialized with properties
 	 */
-	protected static  String StyleDir       = "/home/michel/workspace/TapHandles/WebContent/styles/";
-	protected static  String MetaBaseDir    = "/home/michel/Desktop/tapbase/meta/";
-	protected static  String SessionBaseDir = "/home/michel/Desktop/tapbase/sessions/";
+	protected static  String StyleDir       = System.getProperty("user.dir") + "/WebContent/styles/";
+	protected static  String MetaBaseDir    = System.getProperty("java.io.tmpdir") + "/meta/";
+	protected static  String SessionBaseDir = System.getProperty("java.io.tmpdir") + "/sessions/";
 	/*
 	 * Working directory name: cannot be changed
 	 */
@@ -98,8 +98,6 @@ public class RootClass {
 	/*
 	 * Max time period (ms) between service availability checking
 	 */
-
-
 	public static final long AVAILABILITY_CHECK_FREQUENCY=	10*60*1000;
 	/*
 	 * Initialization directives
