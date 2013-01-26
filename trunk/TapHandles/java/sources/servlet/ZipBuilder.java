@@ -68,7 +68,6 @@ public class ZipBuilder extends RootServlet implements Servlet {
 				 */
 				zipUWS.setUserIdentifier(new UserIdentifier() {
 					private static final long serialVersionUID = 1L;
-					@Override
 					public String extractUserId(UWSUrl arg0, HttpServletRequest request)
 							throws UWSException {
 						try {
