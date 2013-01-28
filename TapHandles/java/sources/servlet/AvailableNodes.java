@@ -12,6 +12,8 @@ import metabase.TapNode;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import registry.RegistryExplorer;
+import registry.RegistryMark;
 import session.UserSession;
 import session.UserTrap;
 import translator.JsonUtils;
@@ -48,14 +50,14 @@ public class AvailableNodes extends RootServlet implements Servlet {
 
 			retour.put("sessionID", session.sessionID);
 			JSONArray nodes = new JSONArray();
-			for( String n : NodeBase.keySet()) {
-				TapNode tn = NodeBase.getNode(n);
+			for( RegistryMark rm: RegistryExplorer.registryMarks.values() ) {
+			//for( String n : NodeBase.keySet()) {
+				//TapNode tn = NodeBase.getNode(n);
 				JSONObject jsonNode = new JSONObject();
-				jsonNode.put("key", n);
-				jsonNode.put("extra", tn.getDescription());
-				jsonNode.put("descripton", tn.getDescription());
-				jsonNode.put("url",  tn.getUrl());
-				jsonNode.put("uri",  tn.getUri());
+				jsonNode.put("key", rm.getNodeKey());
+				jsonNode.put("description", rm.getDescription());
+				jsonNode.put("url",  rm.getUrl());
+				jsonNode.put("ivoid",  rm.getIvoid());
 				nodes.add(jsonNode);
 			}
 			retour.put("nodes", nodes);

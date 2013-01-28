@@ -6,6 +6,8 @@ package resources;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -112,25 +114,24 @@ public class RootClass {
 	 * Max number of table sent to a client
 	 */
 	public static final int MAXTABLES = 100; // Max number of tables sent back to the client
-
 	/*
 	 * Socket timeout used by URLConnection instance in ms
 	 * a shorter SOCKET_READ_TIMEOUT do not act anymore!
 	 */
 	public static final int SOCKET_CONNECT_TIMEOUT = 5000;
-	public static final int  SOCKET_READ_TIMEOUT = 10000;					
+	public static final int  SOCKET_READ_TIMEOUT   = 60000;					
 
 	public static int JOINKEY_PERIOD = 5*60*1000;
-	public static int JOINKEY_MAX_ATTEMPTS = 10;
-
+	public static int JOINKEY_MAX_ATTEMPTS = 1;
 
 	/**
 	 * Use working directories contained in contextPath
 	 * MetaBaseDir and SessionBaseDir are set in system properties.
-	 * @param contextPath   Low level function, no param validation
+	 * @param contextPath   Low level function: no param validation
+	 * @throws Exception 
 	 */
-	public static void switchToContext(String contextPath){
-		logger.info("Switch contexte to " + contextPath);
+	public static void switchToContext(String contextPath) {
+		logger.info("Switch context to " + contextPath);
 		StyleDir       = contextPath + File.separator + WEB_XSL_DIR      + File.separator;
 		MetaBaseDir    = contextPath + File.separator + WEB_NODEBASE_DIR + File.separator;
 		SessionBaseDir = contextPath + File.separator + WEB_USERBASE_DIR + File.separator;
