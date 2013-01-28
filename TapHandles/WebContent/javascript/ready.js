@@ -19,7 +19,7 @@ var cartView ;
  * default node list
  * The nodes given here must be initialized in Nodebase.java
  */
-var nodeList ;
+var nodeList = new Array;
 /*
  * Using a Jquery bind() here has a strange behaviour...
  * http://stackoverflow.com/questions/4458630/unable-to-unbind-the-window-beforeunload-event-in-jquery
