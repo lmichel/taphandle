@@ -6,6 +6,7 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -34,18 +35,24 @@ public class RegistryExplorer extends RootClass {
 	 */
 	static {
 		try {
-			offRegistryMarks.put("xcatdb"       , new RegistryMark("xcatdb", "", "http://xcatdb.u-strasbg.fr/2xmmidr3/tap"
-						, "SSC interface of the XMM-Newton catalogue", true, false));
-		offRegistryMarks.put("vizier"       , new RegistryMark("vizier", "", "http://xcatdb.u-strasbg.fr/2xmmidr3/tap"
-				, "CDS Vizier TAP query engine", true, true));
-		offRegistryMarks.put("simbad"       , new RegistryMark("simbad", "ivo://cds.simbad/tap"
-				, "http://simbad.u-strasbg.fr/simbad/sim-tap", "CDS Simbad TAP query engine", true, true));
-		offRegistryMarks.put("cadc"         , new RegistryMark("cadc"  , "ivo://cadc.nrc.ca/tap"
-				, "http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap", "CADC Table Query (TAP) Service", true, true));
-		offRegistryMarks.put("gavo"         , new RegistryMark("gavo"  , "ivo://org.gavo.dc/__system__/tap/run"
-				, "http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap", "GAVO data center TAP service", true, true));
-		offRegistryMarks.put("heasarc-xamin", new RegistryMark("heasarc-xamin", ""
-				, "http://heasarc.gsfc.nasa.gov/xamin/vo/tap", "HEASARCH Table Query (TAP) Service", true, true));
+			offRegistryMarks.put("xcatdb"       , new RegistryMark("xcatdb", ""
+					, "http://xcatdb.u-strasbg.fr/2xmmidr3/tap"
+					, "SSC interface of the XMM-Newton catalogue", true, false));
+			offRegistryMarks.put("vizier"       , new RegistryMark("vizier", ""
+					, "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/"
+					, "CDS Vizier TAP query engine", true, true));
+			offRegistryMarks.put("simbad"       , new RegistryMark("simbad", "ivo://cds.simbad/tap"
+					, "http://simbad.u-strasbg.fr/simbad/sim-tap"
+					, "CDS Simbad TAP query engine", true, true));
+			offRegistryMarks.put("cadc"         , new RegistryMark("cadc"  , "ivo://cadc.nrc.ca/tap"
+					, "http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap"
+					, "CADC Table Query (TAP) Service", true, true));
+			offRegistryMarks.put("gavo"         , new RegistryMark("gavo"  , "ivo://org.gavo.dc/__system__/tap/run"
+					, "http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap"
+					, "GAVO data center TAP service", true, true));
+			offRegistryMarks.put("heasarc-xamin", new RegistryMark("heasarc-xamin", ""
+					, "http://heasarc.gsfc.nasa.gov/xamin/vo/tap"
+					, "HEASARCH Table Query (TAP) Service", true, true));
 		} catch (MalformedURLException e) {
 			logger.equals(e);
 		}
@@ -79,6 +86,15 @@ public class RegistryExplorer extends RootClass {
 		for( String r: registryServers) {
 			readRegistry(r);
 		}
+		/*
+		 * Add hardcoded entries which have not been found in the registry
+		 */
+		for( Entry<String,RegistryMark>  k: offRegistryMarks.entrySet()) {
+			if( registryMarks.get(k.getKey()) == null ){
+				logger.info("add entry " + k.getKey() + " to the registry entry set (hardcoded)");
+				registryMarks.put(k.getKey(), k.getValue());
+			}
+		}
 	}
 	/**
 	 * Extract all tap marks from the registry regUrl
@@ -88,6 +104,10 @@ public class RegistryExplorer extends RootClass {
 	 * @throws Exception
 	 */
 	private static final void readRegistry(String regUrl) throws Exception{
+		logger.info("Read TAP registry " + regUrl);
+		/*
+		 * Connect the TAP registry
+		 */
 		NodeCookie cookie=new NodeCookie();
 		String wdir       = MetaBaseDir + "regexplorer";
 		String jsonResult = wdir +  "/regresult.json";
@@ -100,7 +120,6 @@ public class RegistryExplorer extends RootClass {
 		JSONParser p = new JSONParser();
 		JSONObject jsonObject = (JSONObject) p.parse(br);
 		JSONArray array = (JSONArray) jsonObject.get("aaData");
-		ArrayList<String> results = new ArrayList<String>();
 		for( int i=0 ; i<array.size() ; i++) {
 			JSONArray sa = (JSONArray) array.get(i);
 			String ivoid = (String)sa.get(0);
@@ -109,7 +128,7 @@ public class RegistryExplorer extends RootClass {
 			String description = (String)sa.get(2);
 			RegistryMark rm;
 			if( registryMarks.get(key) == null ) {
-				if( (rm = offRegistryMarks.get(key)) == null ) {
+				if( (rm = offRegistryMarks.get(key)) != null ) {
 					registryMarks.put(key, rm);
 				} else {
 					registryMarks.put(key, new RegistryMark(key, ivoid, url, description, false, true));

@@ -36,6 +36,7 @@ public class NodeBase extends RootClass{
 
 		ThreadInit(RegistryMark node) {
 			url = node.getFullUrl();
+			key = node.getNodeKey();
 			supportJoin = node.supportJoin();
 		}
 		public void run() {
@@ -166,12 +167,4 @@ public class NodeBase extends RootClass{
 		return ShortNameBuilder.getShortName("", url); 
 	}
 
-	/**
-	 * Very basic test method: check that the default init is fine.
-	 * @param args
-	 * @throws Exception
-	 */
-	public static void main(String[] args) throws Exception {
-		new NodeBase();
-	}
 }

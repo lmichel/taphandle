@@ -68,7 +68,6 @@ class NodeMap  extends RootClass {
 	 * Returns the {@link TapNode} referenced by key 
 	 * @param   key
 	 * @return  Returns the TAP node
-	 * @throws Exception If the node cannot be found
 	 */
 	public TapNode getNode(String key)  throws Exception{
 		TapNode tn;
@@ -81,7 +80,7 @@ class NodeMap  extends RootClass {
 			tn = new TapNode(rm, MetaBaseDir + key);
 			nodeMap.put(key, tn);	
 		} else {
-			throw new TapException("There is registry marks referenced by the key " + key);
+			return null;
 		}
 		return tn;
 	}

@@ -64,7 +64,7 @@ public class RegistryMark extends RootClass {
 	public String getUrl() {
 		return url;
 	}
-	public String getDecsription() {
+	public String getDescription() {
 		return decsription;
 	}
 	public boolean mustBeInitAtStart() {
