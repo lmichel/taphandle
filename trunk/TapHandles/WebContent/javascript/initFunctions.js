@@ -29,58 +29,37 @@ function initFunctions () {
 
 	this.initNodeAccess = function() {
 		Processing.show("Fetching available nodes");
-		nodeList = new Array();
 		$(".logo").attr("class", "logourbana");
 		$.ajax({
 			async: false,
 			type: 'GET',
 			dataType: 'json',
 			url: "availablenodes",
-			error: function() {Processing.hide();Modalinfo.info("availablenodes failure") ;},
+			error: function() {
+				Processing.hide();
+				Modalinfo.error("availablenodes failure") ;
+				},
 			success: function(data) {
 				Processing.hide();
 				sessionID = data.sessionID;
 				for( var i=0 ; i<data.nodes.length ; i++) {
-					nodeList[nodeList.length] = {id:  data.nodes[i].key,  text: data.nodes[i].key  , extra: "&nbsp;&nbsp;" + data.nodes[i].extra};
+					nodeList[nodeList.length] = {
+							  id   :  data.nodes[i].key
+							, text : data.nodes[i].key+ ' [' + data.nodes[i].description + ']'
+							, ivoid: data.nodes[i].ivoid 
+							, url: data.nodes[i].url
+							, description: data.nodes[i].description
+							, extra: "<br>" +data.nodes[i].url + "<br>" +data.nodes[i].ivoid };
 				}
 				$('input#node_selector').jsonSuggest(
 						{data: nodeList
 							, minCharacters: 0
-							, onSelect: function(data){resultPaneView.fireNewNodeEvent($('#node_selector').val());}
+							, onSelect: function(data){resultPaneView.fireNewNodeEvent($('#node_selector').val().split(' ')[0]);}
 						});
 				setTimeout('$(".logourbana").attr("class", "logo")', 2000);
 			}
 		});
 
-//		for( var i=0 ; i<1 ; i++) {
-//			nodeList[nodeList.length] = {id:  "data.nodes[i].key",  text: "data.nodes[i].key", extra: "data.nodes[i].key"};
-//		}
-//		$('input#node_selector').jsonSuggest(
-//				{data: nodeList
-//					, minCharacters: 0
-//					, onSelect: function(data){resultPaneView.fireNewNodeEvent($('#node_selector').val());}
-//				});
-		
-		
-//		$.getJSON("availablenodes", {}, function(data) {
-//			Processing.hide();
-//			if( Processing.jsonError(data, "availablenodes failure") ) {
-//				return;
-//			}
-//			else {
-//				sessionID = data.sessionID;
-//				alert(sessionID);
-//				for( var i=0 ; i<data.nodes.length ; i++) {
-//					nodeList[nodeList.length] = {id:  data.nodes[i].key,  text: data.nodes[i].key};
-//				}
-//				$('input#node_selector').jsonSuggest(
-//						{data: nodeList
-//							, minCharacters: 0
-//							, onSelect: function(data){resultPaneView.fireNewNodeEvent($('#node_selector').val());}
-//						});
-//			}
-//		}
-//		);
 
 		$("input#node_selector").keypress(function(event) {
 			if (event.which == '13') {
@@ -112,9 +91,10 @@ function initFunctions () {
 				"dnd"         : {"drop_target" : "#resultpane,#taptab,#showquerymeta",
 					"drop_finish" : function (data) {
 						var parent = data.r;
-						var streepath = data.o.attr("id").split(';');
-						if( streepath.length < 3 ) {
-							Modalinfo.info("Query can only be applied on one data category or one data class: ("  +  streepath + ")", 'User Input Error');
+						var id = data.o.attr("id");
+						var streepath ;
+						if( id == null || (streepath = data.o.attr("id").split(';')).length < 3 ) {
+							Modalinfo.info("Meta data only available for tables: ("  +  streepath + ")", 'User Input Error');
 						}
 						else {
 							var treePath = {nodekey: streepath[0], schema: streepath[1], table: streepath[2]};

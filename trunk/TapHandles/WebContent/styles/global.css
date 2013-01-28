@@ -1238,3 +1238,10 @@ a:hover#sessionreport {
 #tooltip.fancy.viewport-right {
 	background: url('../styleimport/images/shadow2-reverse.png');
 }
+
+.odd{
+	background-color: white;
+}
+.even{
+	background-color: whitesmoke;
+}

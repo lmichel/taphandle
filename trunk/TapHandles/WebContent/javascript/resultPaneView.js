@@ -165,10 +165,18 @@ jQuery.extend({
 			/*
 			 * Create the root of the subtree of this node
 			 */
+			var description="No description available";
+			for( var i=0 ; i<nodeList.length ; i++ ) {
+				var n = nodeList[i];
+				if( n.id ==  jsdata.nodekey) {
+					description = jsdata.nodeurl + "\n" + n.ivoid + "\n" + n.description;
+					break;
+				}
+			}
 			$("div#treedisp").jstree("create"
 					, $("div#treedisp")
 					, false
-					, {"data" : {"icon": "images/Database.png", "attr":{"id": jsdata.nodekey, "title": jsdata.nodeurl}, "title" : jsdata.nodekey},
+					, {"data" : {"icon": "images/Database.png", "attr":{"id": jsdata.nodekey, "title": description}, "title" : jsdata.nodekey},
 						"state": "closed"}
 					,false
 					,true);       
