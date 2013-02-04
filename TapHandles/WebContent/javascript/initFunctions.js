@@ -54,7 +54,11 @@ function initFunctions () {
 				$('input#node_selector').jsonSuggest(
 						{data: nodeList
 							, minCharacters: 0
-							, onSelect: function(data){resultPaneView.fireNewNodeEvent($('#node_selector').val().split(' ')[0]);}
+							, onSelect: function(data){
+								var key = $('#node_selector').val().split(' ')[0];
+								resultPaneView.fireNewNodeEvent(key);
+								$('#node_selector').val(key);
+								}
 						});
 				setTimeout('$(".logourbana").attr("class", "logo")', 2000);
 			}

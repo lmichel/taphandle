@@ -180,7 +180,6 @@ jQuery.extend({
 						"state": "closed"}
 					,false
 					,true);       
-			var id_schema, id_table;
 			/*
 			 * Create first the first level tree (schemas)
 			 */
