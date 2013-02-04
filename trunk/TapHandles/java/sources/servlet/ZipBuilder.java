@@ -82,7 +82,6 @@ public class ZipBuilder extends RootServlet implements Servlet {
 				logger.info(zipUWS.getUserIdentifier() + ": " + zipUWS.getJobList("zipper").getNbJobs()+" jobs");
 			}
 		}catch(Exception ex){
-			System.out.println("Exxxxxxxxxxxxxxxxxxxx");
 			this.reportJsonError(req, res, ex);
 		}
 	}}
