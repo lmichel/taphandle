@@ -69,7 +69,6 @@ public class ZipperJob extends AbstractJob {
 	@Override
 	protected void jobWork() throws UWSException, InterruptedException {
 		try{
-System.out.println("Ziiiiiiiiiiiiiiiiiiiiiiiiiip in " + this.reportDir + File.separator + "cart.zip");
 			zipMap.prepareDataFiles(this.baseDir, this.reportDir);
 			ZIPUtil.buildZipBall(zipMap, this.reportDir + File.separator + "cart.zip");
 			/*

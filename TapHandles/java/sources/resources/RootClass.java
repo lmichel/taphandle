@@ -238,11 +238,9 @@ public class RootClass {
 		String table, schema;
 		if (m.matches()) {
 			if( m.groupCount() != 2) {
-				System.out.println("2");
 				table = m.group(1);
 				schema = "";
 			} else {
-				System.out.println("3");
 				table =  m.group(2);  
 				schema = m.group(1) + ".";
 			}
