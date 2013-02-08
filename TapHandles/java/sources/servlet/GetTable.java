@@ -49,7 +49,7 @@ public class GetTable extends RootServlet implements Servlet {
 				return;
 			}
 			tn.buildJsonTableDescription(table);
-			dumpJsonFile("/" + RootClass.WEB_NODEBASE_DIR + "/" + node + "/" + table + ".json", response);
+			dumpJsonFile("/" + RootClass.WEB_NODEBASE_DIR + "/" + node + "/" + RootClass.vizierNameToFileName(table) + ".json", response);
 		} catch (Exception e) {
 			reportJsonError(request, response, e);
 			return;
