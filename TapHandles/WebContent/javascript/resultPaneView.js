@@ -382,7 +382,7 @@ jQuery.extend({
 			table += '<h2> ' + histo + ' META <span>' + title
 			+ '</span></h2>';
 			table += "<h4 id=\"mappedmeta\" class='detailhead'> <img src=\"images/tdown.png\"> Table Columns </h4>";
-			table += "<div class='detaildata'>";
+			table = "<div class='detaildata'>";
 			table += "<table width=99% cellpadding=\"0\" cellspacing=\"0\" border=\"0\"  id=\"detailtable\" class=\"display\"></table>";
 			table += "</div>";
 
@@ -391,7 +391,8 @@ jQuery.extend({
 				$(document.documentElement).append(
 				"<div id=detaildiv style='width: 99%; display: none;'></div>");
 			}
-			$('#detaildiv').html(table);
+//			$('#detaildiv').html(table);
+			Modalinfo.dataPanel(title, table, null);
 			$('#detailtable').dataTable(
 					{
 						"aoColumns" : jsdata.attributes.aoColumns,
@@ -403,8 +404,7 @@ jQuery.extend({
 						"bFilter" : true,
 						"bAutoWidth" : true
 					});
-
-			$('#detaildiv').modal();
+//			$('#detaildiv').modal(title, table, null);
 
 		};
 
