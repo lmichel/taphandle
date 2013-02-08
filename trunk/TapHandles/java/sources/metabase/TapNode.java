@@ -408,34 +408,36 @@ public class TapNode  extends RootClass {
 		 * @throws Exception If something goes wrong
 		 */
 		public void buildJsonTableDescription(String tableName) throws Exception {
-			String productName = this.baseDirectory + tableName ;
-			if( new File(productName + ".json").exists()) {
-				return;
-			}
-			logger.debug("JSON file " + tableName + ".json not found: build it");
-			XmlToJson.translateTableMetaData(this.baseDirectory, "tables", tableName, tablesNS);		
-			/*
-			 * If there is no attribute in the JSON table description, the service delivers it likley table by table
-			 */
-			if( !isThereJsonTableDesc(tableName) ) {
-				logger.debug("No colmuns found in " + tableName + ": make a per table query");
-				File fn = new File(productName + ".xml");
-				String noSchemaName = tableName;
-				int pos = noSchemaName.indexOf('.');
-				if( pos > 0 ) {
-					noSchemaName = noSchemaName.substring(pos + 1);
-				}
-				this.getServiceReponse("columns?query=" + noSchemaName, tablesNS);
-				if( ! (new File(this.baseDirectory + "columns?query=" + noSchemaName  +  ".xml")).renameTo(fn) ) {
-					throw new TapException("Cannot store columns of table  " + tableName +" in file " + this.baseDirectory + tableName  +  ".xml");
-				}
-				XmlToJson.translateTableMetaData(this.baseDirectory, tableName, tablesNS);	
-				fn.delete();
-				(new File(this.baseDirectory + tableName  +  ".xsl")).delete();
-			}
+			String tableFileName = RootClass.vizierNameToFileName(tableName);
+            String productName = this.baseDirectory + tableFileName ;
+            if( new File(productName + ".json").exists()) {
+                    return;
+            }
+            logger.debug("JSON file " + tableName + ".json not found: build it");
+            XmlToJson.translateTableMetaData(this.baseDirectory, "tables", tableName, tablesNS);            
+            /*
+             * If there is no attribute in the JSON table description, the service delivers it likley table by table
+             */
+            if( !isThereJsonTableDesc(tableName) ) {
+                    logger.debug("No colmuns found in " + tableFileName + ": make a per table query");
+                    File fn = new File(productName + ".xml");
+                    String noSchemaName = tableName;
+                    int pos = noSchemaName.indexOf('.');
+                    if( pos > 0 ) {
+                            noSchemaName = noSchemaName.substring(pos + 1);
+                    }
+                    String outputFilename = this.getServiceReponse("tables/" + noSchemaName, tablesNS);
+                   //this.getServiceReponse("columns?query=" + noSchemaName, tablesNS);
+                    if( ! (new File(outputFilename)).renameTo(fn) ) {
+                            throw new TapException("Cannot store columns of table  " + tableName +" in file " + outputFilename);
+                    }
+                    XmlToJson.translateTableMetaData(this.baseDirectory, tableName, tablesNS);      
+                    fn.delete();
+                    (new File(this.baseDirectory + tableName  +  ".xsl")).delete();
+            }
 
-			setNodekeyInJsonResponse(tableName);
-		}
+            setNodekeyInJsonResponse(tableFileName);
+            }
 		/**
 		 * Return true if the JSON file describing the metadata of the table tableName is not empty of attributes.
 		 * If it is, the table comes likely from Vizier and a special query must be sent to get those column description
@@ -445,7 +447,7 @@ public class TapNode  extends RootClass {
 		 */
 		private boolean isThereJsonTableDesc(String tableName) throws Exception{
 			JSONParser parser = new JSONParser();
-			Object obj = parser.parse(new FileReader(this.baseDirectory + tableName + ".json"));
+			Object obj = parser.parse(new FileReader(this.baseDirectory + RootClass.vizierNameToFileName(tableName) + ".json"));
 			JSONObject jsonObject = (JSONObject) ((JSONObject) obj).get("attributes");
 
 			return (((JSONArray) jsonObject.get("aaData")).size() > 0)? true: false;

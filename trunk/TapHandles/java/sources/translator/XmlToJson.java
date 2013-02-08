@@ -154,15 +154,16 @@ public class XmlToJson  extends RootClass {
 	 */
 	public static void translateTableMetaData(String baseDir , String tablesFile, String tableName, NameSpaceDefinition nsDefinition) throws Exception {
 		setVosiNS(baseDir, "table", nsDefinition);
+		String tableFileName = RootClass.vizierNameToFileName(tableName);
 		String filename = baseDir + "table.xsl";
 		Scanner s = new Scanner(new File(filename));
-		PrintWriter fw = new PrintWriter(new File( baseDir + tableName + ".xsl"));
+		PrintWriter fw = new PrintWriter(new File( baseDir + tableFileName + ".xsl"));
 		while( s.hasNextLine() ) {
 			fw.println(s.nextLine().replaceAll("TABLENAME", tableName));
 		}
 		s.close();
 		fw.close();
-		applyStyle(baseDir  + tablesFile + ".xml", baseDir + tableName + ".json", baseDir + tableName + ".xsl");
+		applyStyle(baseDir  + tablesFile + ".xml", baseDir + tableFileName + ".json", baseDir + tableFileName + ".xsl");
 	}
 
 	/**
@@ -177,14 +178,15 @@ public class XmlToJson  extends RootClass {
 	public static void translateTableMetaData(String baseDir , String tableName, NameSpaceDefinition nsDefinition) throws Exception {
 		setVosiNS(baseDir, "table", nsDefinition);
 		String filename = baseDir + "table.xsl";
+		String tableFileName = RootClass.vizierNameToFileName(tableName);
 		Scanner s = new Scanner(new File(filename));
-		PrintWriter fw = new PrintWriter(new File( baseDir + tableName + ".xsl"));
+		PrintWriter fw = new PrintWriter(new File( baseDir + tableFileName + ".xsl"));
 		while( s.hasNextLine() ) {
 			fw.println(s.nextLine().replaceAll("TABLENAME", tableName));
 		}
 		s.close();
 		fw.close();
-		applyStyle(baseDir  + tableName + ".xml", baseDir + tableName + ".json", baseDir + tableName + ".xsl");
+		applyStyle(baseDir  + tableFileName + ".xml", baseDir + tableFileName + ".json", baseDir + tableFileName + ".xsl");
 	}
 
 	/**
