@@ -245,6 +245,7 @@ public class XmlToJson  extends RootClass {
 	public static void translateResultTable(String inputFile, String outputFile  ) throws Exception {
 		StarTableFactory stf = new StarTableFactory();
 		logger.info("Translate " +inputFile);
+		
 		try {
 			StarTable table = stf.makeStarTable(inputFile); 
 			JSONObject retour = new JSONObject();
@@ -253,7 +254,7 @@ public class XmlToJson  extends RootClass {
 
 			ColumnInfo[] ci = Tables.getColumnInfos(table);
 			JSONArray aoColumns = new JSONArray();
-			for (int i = 0; i < nCol; i++) {
+			for (int i=0; i < nCol; i++) {
 				JSONObject aoColumn = new JSONObject();
 				aoColumn.put("sTitle", ci[i].getName());
 				aoColumns.add(aoColumn);
@@ -266,7 +267,23 @@ public class XmlToJson  extends RootClass {
 					logger.warn("JSON result truncated to MAX_ROWS");
 					break;
 				}
-				Object[] o =table.getRow(r);
+				if( (r%100) == 0 ) {
+					long mb = 1024*1024;
+			        Runtime runtime = Runtime.getRuntime();
+					long max = runtime.maxMemory()/mb;
+					long tot = runtime.totalMemory()/mb;
+					long free = runtime.freeMemory()/mb;
+					System.out.println( "      -- " + max  + " " +  tot  + " " +  free);
+					if( max == tot ) {
+						double rt = (double)free/(double)max;
+						System.out.println("RT " + rt);
+						if( rt < 0.5 ) {
+							logger.warn("Result truncated to " + r + " rows to avoid memory overflow");
+							throw new TapException("No enough memory space to parse " + inputFile);
+						}
+					}		
+				}
+				Object[] o = table.getRow(r);
 				JSONArray rowData = new JSONArray();
 				for (int i = 0; i < nCol; i++) {
 					Object obj = o[i];
@@ -302,12 +319,21 @@ public class XmlToJson  extends RootClass {
 			 * If an error occurs while StartTable building, we suppose that the VO table contains 
 			 * some info about the issue
 			 */
+		} catch (OutOfMemoryError m) {	
+			m.printStackTrace();
+	        int mb = 1024*1024;
+	        Runtime runtime = Runtime.getRuntime();
+			System.out.println( " -- " + ((runtime.totalMemory() - runtime.freeMemory()) / mb));
+			System.out.println( "      -- " + ((runtime.maxMemory() - runtime.freeMemory()) / mb));
+			System.out.println( "      -- " + (runtime.maxMemory() / mb) + " " +  (runtime.totalMemory() / mb)  + " " +  (runtime.freeMemory() / mb));
+			throw new TapException("No enough memory space to parse " + inputFile);
+			
 		} catch (Exception e) {
 			logger.error("Can't translate result file " + inputFile);
 			SavotPullParser  sp = new SavotPullParser(inputFile, SavotPullEngine.FULL);
 			SavotVOTable sv = sp.getVOTable(); 
 			long rc =  sp.getResourceCount();
-			for (int l=0 ; l<rc ; l++) {		    	 
+			for (int l=0 ; l<rc ;) {		    	 
 				SavotResource currentResource = (SavotResource)(sv.getResources().getItemAt(l));
 				InfoSet is = currentResource.getInfos();
 				String msg = "Info returned by the server:\n";;
@@ -411,8 +437,8 @@ public class XmlToJson  extends RootClass {
 	 * @throws Exception  If something goes wrong
 	 */
 	public static void applyStyle(String inputFile, String outputFile, String styleSheet) throws Exception{
-//		logger.debug("Apply style to " + inputFile);
-//		logger.debug("   Style sheet " + styleSheet);
+		logger.debug("Apply style to " + inputFile);
+		logger.debug("   Style sheet " + styleSheet);
 		TransformerFactory tfactory = TransformerFactory.newInstance("net.sf.saxon.TransformerFactoryImpl", null);
 		tfactory.setErrorListener(new EcouteurDErreurs());
 
