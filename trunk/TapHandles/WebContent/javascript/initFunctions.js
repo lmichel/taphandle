@@ -154,7 +154,8 @@ function initFunctions () {
 		if( defaultUrl != null ) {
 			resultPaneView.fireNewNodeEvent(unescape(defaultUrl));
 		}
-	}
+		Out.setdebugModeFromUrl();
+	};
 
 	this.initQueryForm = function() {
 		/*
