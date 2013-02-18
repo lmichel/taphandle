@@ -242,13 +242,13 @@ public class UserSession  extends RootClass {
 				else {
 					JSONObject job = new JSONObject();
 					this.jobStack.removeJob(jobRef);
-					job.put("errmsg", "Invalid JOb state: removed");
+					job.put("errormsg", "Invalid JOb state: removed");
 					return job.toJSONString();					
 				}
 			}
 		}
 		JSONObject job = new JSONObject();
-		job.put("errmsg", "Job not found");
+		job.put("errormsg", "Job not found");
 		return job.toJSONString();					
 	}
 
