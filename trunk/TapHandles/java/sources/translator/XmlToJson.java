@@ -264,25 +264,25 @@ public class XmlToJson  extends RootClass {
 			JSONArray aaData = new JSONArray();
 			for( int r=0 ; r<nSrc ; r++ ) {
 				if( r >= MAX_ROWS ) {
-					logger.warn("JSON result truncated to MAX_ROWS");
+					logger.warn("JSON result truncated to " +  MAX_ROWS);
 					break;
 				}
-				if( (r%100) == 0 ) {
-					long mb = 1024*1024;
-			        Runtime runtime = Runtime.getRuntime();
-					long max = runtime.maxMemory()/mb;
-					long tot = runtime.totalMemory()/mb;
-					long free = runtime.freeMemory()/mb;
-					System.out.println( "      -- " + max  + " " +  tot  + " " +  free);
-					if( max == tot ) {
-						double rt = (double)free/(double)max;
-						System.out.println("RT " + rt);
-						if( rt < 0.5 ) {
-							logger.warn("Result truncated to " + r + " rows to avoid memory overflow");
-							throw new TapException("No enough memory space to parse " + inputFile);
-						}
-					}		
-				}
+//				if( (r%100) == 0 ) {
+//					long mb = 1024*1024;
+//			        Runtime runtime = Runtime.getRuntime();
+//					long max = runtime.maxMemory()/mb;
+//					long tot = runtime.totalMemory()/mb;
+//					long free = runtime.freeMemory()/mb;
+//					System.out.println( "      -- " + max  + " " +  tot  + " " +  free);
+//					if( max == tot ) {
+//						double rt = (double)free/(double)max;
+//						System.out.println("RT " + rt);
+//						if( rt < 0.5 ) {
+//							logger.warn("Result truncated to " + r + " rows to avoid memory overflow");
+//							throw new TapException("No enough memory space to parse " + inputFile);
+//						}
+//					}		
+//				}
 				Object[] o = table.getRow(r);
 				JSONArray rowData = new JSONArray();
 				for (int i = 0; i < nCol; i++) {
@@ -320,12 +320,6 @@ public class XmlToJson  extends RootClass {
 			 * some info about the issue
 			 */
 		} catch (OutOfMemoryError m) {	
-			m.printStackTrace();
-	        int mb = 1024*1024;
-	        Runtime runtime = Runtime.getRuntime();
-			System.out.println( " -- " + ((runtime.totalMemory() - runtime.freeMemory()) / mb));
-			System.out.println( "      -- " + ((runtime.maxMemory() - runtime.freeMemory()) / mb));
-			System.out.println( "      -- " + (runtime.maxMemory() / mb) + " " +  (runtime.totalMemory() / mb)  + " " +  (runtime.freeMemory() / mb));
 			throw new TapException("No enough memory space to parse " + inputFile);
 			
 		} catch (Exception e) {

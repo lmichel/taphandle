@@ -15,18 +15,27 @@ public class QueryModeChecker extends RootClass {
 	private String workingDirectory;
 	private boolean supportSyncMode = false;
 	private boolean supportAsyncMode = false;
-	
+	private String resultFile;
+	private String statusFile;
+	private NodeCookie cookie;
+	private String phase = "";
+	private String jobID;
+
 	public QueryModeChecker(String endpoint, String query,
 			String workingDirectory) {
 		super();
 		this.endpoint = endpoint;
 		this.query = query;
 		this.workingDirectory = workingDirectory;
-		
+
+		this.resultFile = "asyncmodetest.xml";
+		this.statusFile = this.workingDirectory + "asyncmodetest_status.xml";
+		this.cookie = new NodeCookie();
+
 		this.supportSyncMode = checkSyncMode();
 		this.supportAsyncMode = checkAsyncMode();
 	}
-	
+
 	/**
 	 * @return
 	 */
@@ -58,41 +67,42 @@ public class QueryModeChecker extends RootClass {
 	 * @return
 	 */
 	private boolean checkAsyncMode() {
-		logger.debug("Check query in asynchronous mode on " + this.endpoint);
-		try {
-			String resultFile = "asyncmodetest.xml";
-			String statusFile = this.workingDirectory + "asyncmodetest_status.xml";
-			NodeCookie cookie = new NodeCookie();
-			String jobID = TapAccess.createAsyncJob(this.endpoint,query, this.workingDirectory + resultFile, cookie, null);
-			TapAccess.runAsyncJob(this.endpoint, jobID,  statusFile, cookie);
-			String phase = "";
-			int cpt=0;
-			do {
-				phase = TapAccess.getAsyncJobPhase(this.endpoint, jobID,  this.workingDirectory + "asyncmodetest_phase.xml", cookie);
-				Thread.sleep(2000);
-				if( (cpt++) > 4 ) {
-					logger.warn("No result after 10\": async mode considered as not working");
-					TapAccess.deleteAsyncJob(phase, jobID, cookie);
-					return false;
-				}			
-			} while( phase.equals("EXECUTING") || phase.equals("PENDING"));
-			String[] resultURLs = TapAccess.getAsyncJobResults(this.endpoint
-					, jobID
-					, statusFile
-					, cookie);
-			for( String r: resultURLs) {
-				if( r.matches(".*\\.xml.*") ) {
-					TapAccess.getAsyncJobResultFile(r
-							,  this.workingDirectory
-							, "asyncmodetest.xml"
-							, cookie);
+		synchronized (this) {
+
+			logger.debug("Check query in asynchronous mode on " + this.endpoint);
+			try {
+				this.jobID = TapAccess.createAsyncJob(this.endpoint, this.query, this.workingDirectory + this.resultFile, this.cookie, null);
+				TapAccess.runAsyncJob(this.endpoint, this.jobID,  this.statusFile, this.cookie);
+				int cpt=0;
+				do {
+					phase = TapAccess.getAsyncJobPhase(this.endpoint, this.jobID,  this.workingDirectory + "asyncmodetest_phase.xml", this.cookie);
+					Thread.sleep(2000);
+					if( (cpt++) > 4 ) {
+						logger.warn("No result after 10\": async mode considered as not working");
+						TapAccess.deleteAsyncJob(this.endpoint, this.jobID, this.cookie);
+						System.out.println("-------------- FASLE1 " + this.endpoint + "--------------------");
+						return false;
+					}			
+				} while( phase.equals("EXECUTING") || phase.equals("PENDING")|| phase.equals("QUEUED"));
+				String[] resultURLs = TapAccess.getAsyncJobResults(this.endpoint
+						, this.jobID
+						, this.statusFile
+						, this.cookie);
+				for( String r: resultURLs) {
+					if( r.matches(".*\\.xml.*") ) {
+						TapAccess.getAsyncJobResultFile(r
+								,  this.workingDirectory
+								, "asyncmodetest.xml"
+								, this.cookie);
+					}
 				}
+			} catch(Exception e) {
+				e.printStackTrace();
+				return false;
 			}
-		} catch(Exception e) {
-			return false;
+			logger.debug(this.endpoint + " supports the query asynchronous mode");
+			return true;
 		}
-		logger.debug(this.endpoint + " supports the query asynchronous mode");
-		return true;
 	}
 
 }

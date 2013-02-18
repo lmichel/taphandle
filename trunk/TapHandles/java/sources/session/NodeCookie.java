@@ -30,12 +30,15 @@ import resources.RootClass;
  */
 public class NodeCookie extends RootClass {
 	private HttpCookie cookie;
-	private CookieManager manager;
+	public static final  CookieManager manager= new CookieManager();
 
-	public NodeCookie() {
-		manager = new CookieManager();
+	static {
 		manager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
-		CookieHandler.setDefault(manager);	
+		CookieHandler.setDefault(manager);			
+	}
+	public NodeCookie() {
+//		manager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
+//		CookieHandler.setDefault(manager);	
 	}
 
 	public void addCookieToUrl(URL url) throws URISyntaxException {
