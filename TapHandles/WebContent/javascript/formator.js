@@ -51,9 +51,9 @@ function formatValue(columnName, value, tdNode) {
 		var titlepath = $('#titlepath').text().split('>');
 		getDLView(titlepath[0], columnName, value, tdNode);	
 	} else if( value.match(/^((position)|(region)|(polygon))/i) ) {
-		tdNode.html("<a title='STC Region (click to expand)' class='dl_stc' href='#'  onclick='ModalInfo.info(\"STC Region\", \"" + value + "\");'></a>");
+		tdNode.html("<a title='STC Region (click to expand)' class='dl_stc' href='#'  onclick='Modalinfo.info(\"" + value + "\", \"STC Region\");'></a>");
 	} else if( value.startsWith("Array") ) {
-		tdNode.html("<a title='Data array(click to expand)' class='dl_dataarray' href='#'  onclick='ModalInfo.info(\"Data Array\", \"" + value + "\");'></a>");
+		tdNode.html("<a title='Data array(click to expand)' class='dl_dataarray' href='#'  onclick='Modalinfo.info(\"" + value + "\", \"Data Array\");'></a>");
 	} else if( decimaleRegexp.test(value)){
 		tdNode.html((new Number(value)).toPrecision(8));
 	} else if( bibcodeRegexp.test(value)){
