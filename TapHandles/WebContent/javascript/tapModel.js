@@ -80,8 +80,7 @@ jQuery.extend({
 
 					if( default_query == null || default_query == "") {
 						that.notifyQueryUpdated("SELECT TOP " + getQLimit() + " * \n FROM " + quoteTableName(jsondata.table) );
-					}
-					else {
+					} else {
 						that.notifyQueryUpdated(default_query);				
 					}
 
@@ -370,12 +369,31 @@ jQuery.extend({
 
 		this.submitQuery = function(){
 			Processing.show("Run job");
+			Out.info(' start ' + $('#saadaworkingContent').css('display'));
+			setTimeout("Out.info(' timeout ' +  $('#saadaworkingContent').css('display') + ' ' + $('#saadaworkingContent').css('visibility'))", 200);
+			setTimeout("Out.info(' timeout2 ' + $('#saadaworkingContent').css('display') + ' ' + $('#saadaworkingContent').css('visibility'));", 2000);
 			var limit = getQLimit();
 			$.ajax({type: 'POST'
 				, url:"runasyncjob"
 					, dataType: 'json'
-						, data: {jsessionid: sessionID, NODE: storedTreepath.nodekey, TREEPATH: storedTreepath.nodekey + ";" + storedTreepath.schema + ";" + storedTreepath.table, REQUEST: "doQuery", LANG: 'ADQL', FORMAT: 'json', PHASE: 'RUN', MAXREC: limit,QUERY: ($('#adqltext').val()) }
+						, data: {jsessionid: sessionID
+							, NODE: storedTreepath.nodekey
+							, TREEPATH: storedTreepath.nodekey + ";" + storedTreepath.schema + ";" + storedTreepath.table
+							, REQUEST: "doQuery"
+								, LANG: 'ADQL'
+									, FORMAT: 'json'
+										, PHASE: 'RUN'
+											, MAXREC: limit
+											, QUERY: ($('#adqltext').val()) }
+			, beforeSend: function(  jqXHR, settins) {
+				Out.info('before ' + $('#saadaworkingContent').css('display'));
+			}
+			, error: function(  jqXHR,  textStatus,  errorThrown) {
+				Processing.hide();
+				Modalinfo.error(errorThrown);
+			}
 			, success: function(jsondata) {
+				console.log("success");
 				if( Processing.jsonError(jsondata, "tap/async Cannot get job status") ) {
 					return;
 				} else {
@@ -529,28 +547,32 @@ jQuery.extend({
 					return;
 				}
 				var report  = "";
-				report += "jobId            : " + jid + "\n";
-				report += "owner            : " + jsondata.status.job.owner+ "\n";
-				report += "phase            : " + jsondata.status.job.phase+ "\n";
-				report += "startTime        : " + jsondata.status.job.startTime+ "\n";
-				report += "endTime          : " + jsondata.status.job.endTime+ "\n";
-				report += "executionDuration: " + jsondata.status.job.executionDuration+ "\n";
-				report += "destruction      : " + jsondata.status.job.destruction+ "\n";
-				report += "parameters " + "\n";
-				for( var i=0 ; i<jsondata.status.job.parameters.parameter.length ; i++ ) {
-					report += "    "  + jsondata.status.job.parameters.parameter[i].id + "  : " +  jsondata.status.job.parameters.parameter[i].$ + "\n";
+				if( jsondata.status != undefined && jsondata.status.job != undefined){
+					report += "jobId            : " + jid + "\n";
+					report += "owner            : " + jsondata.status.job.owner+ "\n";
+					report += "phase            : " + jsondata.status.job.phase+ "\n";
+					report += "startTime        : " + jsondata.status.job.startTime+ "\n";
+					report += "endTime          : " + jsondata.status.job.endTime+ "\n";
+					report += "executionDuration: " + jsondata.status.job.executionDuration+ "\n";
+					report += "destruction      : " + jsondata.status.job.destruction+ "\n";
+					report += "parameters " + "\n";
+					for( var i=0 ; i<jsondata.status.job.parameters.parameter.length ; i++ ) {
+						report += "    "  + jsondata.status.job.parameters.parameter[i].id + "  : " +  jsondata.status.job.parameters.parameter[i].$ + "\n";
 
-				}
-				if( jsondata.status.job.results != null ) {
-					for( var i=0 ; i<jsondata.status.job.results.length ; i++ ) {
-						report += "results #" + (i+1) + "\n";
-						report += "    id  : " + jsondata.status.job.results[i].id+ "\n";
-						report += "    type: " + jsondata.status.job.results[i].type+ "\n";
-						report += "    href: " + jsondata.status.job.results[i].href+ "\n";
 					}
-				}
-				if( jsondata.status.job.errorSummary != null ) {
-					report += "error: " + jsondata.status.job.errorSummary.message+ "\n";					
+					if( jsondata.status.job.results != null ) {
+						for( var i=0 ; i<jsondata.status.job.results.length ; i++ ) {
+							report += "results #" + (i+1) + "\n";
+							report += "    id  : " + jsondata.status.job.results[i].id+ "\n";
+							report += "    type: " + jsondata.status.job.results[i].type+ "\n";
+							report += "    href: " + jsondata.status.job.results[i].href+ "\n";
+						}
+					}
+					if( jsondata.status.job.errorSummary != null ) {
+						report += "error: " + jsondata.status.job.errorSummary.message+ "\n";					
+					}
+				} else {
+					report  = "No Jobs status returned";
 				}
 				Modalinfo.info(report,  "Summary of job "+ nodekey + '.' + jid);
 

@@ -49,7 +49,7 @@ function initFunctions () {
 							, ivoid: data.nodes[i].ivoid 
 							, url: data.nodes[i].url
 							, description: data.nodes[i].description
-							, extra: "<br>" +data.nodes[i].url + "<br>" +data.nodes[i].ivoid };
+							, extra: "<br>" +data.nodes[i].url + "<br>" +data.nodes[i].ivoid + "<br>"};
 				}
 				$('input#node_selector').jsonSuggest(
 						{data: nodeList

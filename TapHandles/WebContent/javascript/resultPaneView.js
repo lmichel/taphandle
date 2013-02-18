@@ -169,7 +169,7 @@ jQuery.extend({
 			for( var i=0 ; i<nodeList.length ; i++ ) {
 				var n = nodeList[i];
 				if( n.id ==  jsdata.nodekey) {
-					description = jsdata.nodeurl + "\n" + n.ivoid + "\n" + n.description;
+					description = jsdata.nodeurl + "\n" + n.ivoid + "\n" + n.description + "\n" ;
 					break;
 				}
 			}
