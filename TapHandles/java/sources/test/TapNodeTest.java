@@ -28,11 +28,12 @@ public class TapNodeTest  extends RootClass {
 				, "http://xcatdb.u-strasbg.fr/xidresult/tap"
 				, "http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/caom/"
 				, "http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap" */
-						"http://heasarc.gsfc.nasa.gov/xamin/vo/tap"};
+						/*"http://heasarc.gsfc.nasa.gov/xamin/vo/tap"*/
+				"http://xcatdb.unistra.fr/2xmmidr3/tap"};
 		for( String s: nodes) {
 			RegistryMark rm = new RegistryMark("gavo", "ivo", s, "test", false, true);
 			tn = new TapNode(rm, "/tmp/meta");
-
+System.out.println(tn.supportAsyncMode());
 			//tn.buildJsonTableAttributes("ivoa.obscore");
 		}
 		logger.info("Test passed");

@@ -44,15 +44,16 @@ public class TapAccess  extends RootClass {
 	}
 
 	/**
-	 * @param endpoint
-	 * @param data
-	 * @param outputfile
-	 * @param cookie
+	 * @param endpoint : service URL
+	 * @param data : HTTP parameters
+	 * @param outputfile: name of he output file
+	 * @param cookie: Session cookie
+	 * @param translate: Apply the asyncjob style sheet if needed
 	 * @throws Exception
 	 */
-	public static void sendPostRequest(String endpoint, String data, String outputfile, NodeCookie cookie) throws Exception {
+	public static void sendPostRequest(String endpoint, String data, String outputfile, NodeCookie cookie, boolean translate) throws Exception {
 
-        logger.debug("send POST request " + endpoint + "(" + data + ") " + cookie);
+		logger.debug("send POST request " + endpoint + "(" + data + ") " + cookie);
 		// Send the request
 		URL url = new URL(endpoint);  
 		cookie.addCookieToUrl(url);   
@@ -80,9 +81,11 @@ public class TapAccess  extends RootClass {
 			}
 			bw.close();
 			reader.close();
-			cookie.storeCookie();	        
-			XmlToJson.applyStyle(outputfile, outputfile.replaceAll("xml", "json")
-					, StyleDir + "asyncjob.xsl");
+			cookie.storeCookie();	   
+			if( translate){
+				XmlToJson.applyStyle(outputfile, outputfile.replaceAll("xml", "json")
+						, StyleDir + "asyncjob.xsl");
+			}
 
 		} catch(SocketTimeoutException e){
 			logger.warn("Socket on " + endpoint + " closed on client timeout (" + (RootClass.SOCKET_READ_TIMEOUT/1000) + "\")");
@@ -102,7 +105,7 @@ public class TapAccess  extends RootClass {
 			}
 			return ;
 		} */
-		
+
 
 	}
 
@@ -115,7 +118,7 @@ public class TapAccess  extends RootClass {
 	 */
 	public static void sendGetRequest(String endpoint, String outputfile, NodeCookie cookie) throws Exception {
 
-        logger.debug("send GET request " + endpoint + " cookie: " + cookie);
+		logger.debug("send GET request " + endpoint + " cookie: " + cookie);
 		// Send the request
 		URL url = new URL(endpoint);  
 		cookie.addCookieToUrl(url);   
@@ -136,7 +139,7 @@ public class TapAccess  extends RootClass {
 		reader.close();
 
 		cookie.storeCookie();	        
-	        
+
 		XmlToJson.applyStyle(outputfile, outputfile.replaceAll("xml", "json")
 				, StyleDir + "asyncjob.xsl");
 
@@ -201,18 +204,20 @@ public class TapAccess  extends RootClass {
 		httpCon.connect();
 		cookie.storeCookie();
 	}
-	
+
 	public static String runSyncJob(String endpoint, String query, String outputfile, NodeCookie cookie, String remoteAddress) throws Exception {
 		String runId = (remoteAddress == null )? RUNID: "TapHandle-" + remoteAddress;
 		sendPostRequest(endpoint + "sync"
 				, "RUNID=" + runId + "&REQUEST=doQuery&LANG=ADQL&QUERY=" + URLEncoder.encode(query, "ISO-8859-1")
 				, outputfile
-				, cookie);
+				, cookie
+				, false);
+		logger.debug("Resulte reveived, startt JSON translation");
 		XmlToJson.translateResultTable(outputfile, outputfile.replaceAll("xml", "json"));
 		return outputfile.replaceAll("xml", "json");
 		//return  JsonUtils.getValue (outputfile.replaceAll("xml", "json"), "job.jobId");
 	}
-	
+
 	/**
 	 * @param endpoint
 	 * @param query
@@ -227,7 +232,8 @@ public class TapAccess  extends RootClass {
 		sendPostRequest(endpoint + "async"
 				, "RUNID=" + runId + "&REQUEST=doQuery&LANG=ADQL&QUERY=" + URLEncoder.encode(query, "ISO-8859-1")
 				, outputfile
-				, cookie);
+				, cookie
+				, true);
 		return  JsonUtils.getValue (outputfile.replaceAll("xml", "json"), "job.jobId");
 	}
 
@@ -243,8 +249,8 @@ public class TapAccess  extends RootClass {
 		sendPostRequest(endpoint + "async/" + jobId + "/phase"
 				, "PHASE=RUN"
 				, outputfile
-				, cookie);
-
+				, cookie
+				, true);
 		return  JsonUtils.getValue (outputfile.replaceAll("xml", "json"), "job.phase");
 	}
 

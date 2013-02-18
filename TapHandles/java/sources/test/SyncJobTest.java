@@ -38,7 +38,7 @@ public class SyncJobTest  extends RootClass {
 		String nodeKey = args[1];
 		String query = args[2];
 		String jobID = "123";
-		String baseDirectory = "/home/michel/Desktop/tapbase/";
+		String baseDirectory = System.getProperty("user.home") + "/Desktop/";
 		String treepath = "tapvizieru-strasbgfrTAPVizieR>vizls>vizls.II/306/sdss8";
 		String statusFileName = baseDirectory + nodeKey + File.separator + "status.xml";
 		Date startTime = new Date();
