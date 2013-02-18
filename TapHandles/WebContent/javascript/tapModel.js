@@ -383,7 +383,9 @@ jQuery.extend({
 					jm = new $.JobModel(storedTreepath, jsondata.status.job, jsondata.session);
 					new $.JobControler(jm, jv);
 					lastJob = jv;
+					console.log("init");
 					lastJob.fireInitForm('tapjobs', attributesHandlers);
+					console.log("setto");
 					lastTimer = setTimeout("tapView.fireCheckJobCompleted(\"" + storedTreepath.nodekey + "\", \"" + jsondata.status.job.jobId + "\", \"9\");", 1000);
 				}
 			}
@@ -391,11 +393,13 @@ jQuery.extend({
 		};
 
 		this.checkJobCompleted = function(nodeKey, jid, counter) {
+			console.log("check");
 			if( lastJob == null ) {
 				lastTimer = null;
 				return;
 			}
 			else if( lastJob.fireGetPhase() == 'COMPLETED' ) {
+				console.log("result");
 				that.displayResult(nodeKey, jid);	
 			}
 			else if( counter < 0 ) {
