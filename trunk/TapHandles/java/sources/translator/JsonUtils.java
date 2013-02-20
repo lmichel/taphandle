@@ -22,7 +22,7 @@ import tapaccess.TapException;
  */
 public abstract class JsonUtils {
 	static boolean STDOUT = true;
-	
+
 	/**
 	 * Produces a JSON object interpreted by the client as an error message
 	 * @param msg Error message
@@ -34,7 +34,7 @@ public abstract class JsonUtils {
 		jso.put("errormsg", msg);
 		return jso.toJSONString();
 	}
-	
+
 	/**
 	 * Return a JSON string made with treepath.
 	 * treepath has the form filed1SEPARfiled2SEPA... where SERAP is either a " ", a ; or a :
@@ -55,7 +55,7 @@ public abstract class JsonUtils {
 		retour.put("path", path);
 		return retour.toJSONString();
 	}
-	
+
 	/**
 	 * Push the message into the output stream and copy it on stdout if the flag @see STDOUT is true
 	 * @param out          output stream
@@ -76,9 +76,9 @@ public abstract class JsonUtils {
 		response.setContentType("application/json");
 		teePrint(response.getOutputStream(),msg);
 	}
-	
+
 	/**
-	 * Returns the value of the field in the Json files. The field can be a doted path.
+	 * Returns the String value of the field in the Json files. The field can be a doted path.
 	 * We suppose that all field components are atomic (no array)
 	 * @param jsonFile     Input JSON file
 	 * @param Field        JSON object field we want the value
@@ -105,6 +105,34 @@ public abstract class JsonUtils {
 		}
 		return  (obj != null )? obj.toString(): null;
 	}
+	/**
+	 * Returns the Object value of the field in the Json files. The field can be a doted path.
+	 * We suppose that all field components are atomic (no array)
+	 * @param jsonFile     Input JSON file
+	 * @param Field        JSON object field we want the value
+	 * @return             The field value
+	 * @throws Exception   If the field is not found or if the file can not be read
+	 */
+	public static Object getObjectValue(String jsonFile, String Field) throws Exception {
+		String [] Fields = Field.split("\\.");
+		BufferedReader in = new BufferedReader(new FileReader(jsonFile));
+		String str;
+		StringBuffer sb =new StringBuffer();
+		while ((str = in.readLine()) != null) {
+			sb.append(str);
+		}
+		in.close();
+		Object obj=JSONValue.parse(sb.toString());
+		if( obj == null ) {
+			throw new TapException("File " + jsonFile + " (" + (new File(jsonFile)).length() + " bytes) is not a JSON file");
+		}
+		for( String f: Fields) {
+			if( obj != null ) {
+				obj = ((JSONObject)obj).get(f);
+			}
+		}
+		return obj ;
+	}
 
 	/**
 	 * Returns all values of field in the Json files. 
@@ -112,7 +140,8 @@ public abstract class JsonUtils {
 	 * @param Field        JSON object field we want the value
 	 * @return             The field value
 	 * @throws Exception   If the field is not found or if the file can not be read
-	 */	public static String[] getValues(String jsonFile, String Field) throws Exception {
+	 */	
+	public static String[] getValues(String jsonFile, String Field) throws Exception {
 		BufferedReader in = new BufferedReader(new FileReader(jsonFile));
 		String str;
 		StringBuffer sb =new StringBuffer();
@@ -122,11 +151,11 @@ public abstract class JsonUtils {
 		in.close();
 		return JsonKeyFinder.findKeys(sb.toString(), Field);
 	}
-		public static String getParam(String param, Object value, String indentation) {
-			return indentation + "\"" + param + "\": \"" + value + "\"";
-		}
-		public static String getParam(String param, Object value) {
-			return getParam(param, value, "");
-		}
+	public static String getParam(String param, Object value, String indentation) {
+		return indentation + "\"" + param + "\": \"" + value + "\"";
+	}
+	public static String getParam(String param, Object value) {
+		return getParam(param, value, "");
+	}
 
 }
