@@ -26,6 +26,7 @@ import registry.RegistryMark;
 import resources.RootClass;
 import tapaccess.JoinKeysJob;
 import tapaccess.QueryModeChecker;
+import tapaccess.TablesReconstructor;
 import tapaccess.TapAccess;
 import tapaccess.TapException;
 import translator.JsonUtils;
@@ -275,10 +276,19 @@ public class TapNode  extends RootClass {
 			logger.debug("check tables");
 			this.getServiceReponse("tables", tablesNS);
 			this.translateServiceReponse("tables", tablesNS);
-			if( (new File(this.baseDirectory + "tables.json")).length() == 0 ) {
-				throw new Exception("No tables in tables.xml, is that file compliant with the schema?");
+			try {
+				this.getFirstTableName();
+			} catch(Exception e){
+				logger.warn("No tables in tables.xml, Try to scan the TAP_SCHEMA");		
+				new TablesReconstructor(this.regMark.getAbsoluteURL(null), this.baseDirectory);
+				this.translateServiceReponse("tables", tablesNS);
+				if( this.getFirstTableName() == null ) {
+					throw new Exception("No tables in tables.xml, is that file compliant with the schema?");
+				} else {
+					logger.info("succeed");
+				}				
 			}
-			this.setNodekeyInJsonResponse("tables");
+			this.setNodekeyInJsonResponse("tables");			
 		}
 
 		/**
@@ -329,7 +339,7 @@ public class TapNode  extends RootClass {
 		private String getServiceReponse(String service, NameSpaceDefinition nsDefinition) throws Exception {
 			//Pattern pattern  = Pattern.compile("(?i)(?:.*(xmlns(?:\\:\\w+)?=\\\"http\\:\\/\\/www\\.ivoa\\.net\\/.*" + service + "[^\\\"]*\\\").*)");
 			Pattern pattern  = Pattern.compile(".*xmlns(?::\\w+)?=(\"[^\"]*(?i)(?:" + service + ")[^\"]*\").*");
-
+			logger.debug("Connect " + this.regMark.getAbsoluteURL(null) + service);
 			URLConnection conn = TapAccess.getUrlConnection(new URL(this.regMark.getAbsoluteURL(null) + service));
 			InputStream is = conn.getInputStream();
 			BufferedReader in = new BufferedReader(new InputStreamReader(is));
