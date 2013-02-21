@@ -80,7 +80,6 @@ public class QueryModeChecker extends RootClass {
 					if( (cpt++) > 4 ) {
 						logger.warn("No result after 10\": async mode considered as not working");
 						TapAccess.deleteAsyncJob(this.endpoint, this.jobID, this.cookie);
-						System.out.println("-------------- FASLE1 " + this.endpoint + "--------------------");
 						return false;
 					}			
 				} while( phase.equals("EXECUTING") || phase.equals("PENDING")|| phase.equals("QUEUED"));
@@ -97,10 +96,10 @@ public class QueryModeChecker extends RootClass {
 					}
 				}
 			} catch(Exception e) {
-				e.printStackTrace();
+				logger.warn(this.endpoint + " do not support queries in asynchronous mode");
 				return false;
 			}
-			logger.debug(this.endpoint + " supports the query asynchronous mode");
+			logger.info(this.endpoint + " supports queries in asynchronous mode");
 			return true;
 		}
 	}
