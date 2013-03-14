@@ -55,7 +55,7 @@ public class ShortNameBuilder extends RootClass {
 			} else if( (str = reservedIvornDomains.get(pe[2])) == null ) {
 				str = pe[2];
 			}
-			return str + GLU + pe[pe.length - 1];		
+			return (str + GLU + pe[pe.length - 1]).replaceAll("\\.", "");		
 		}
 	}		
 	
@@ -82,7 +82,8 @@ public class ShortNameBuilder extends RootClass {
 					break;
 				}
 			}
-			return str + GLU + pe[pe.length - 1];		
+			return (str + GLU + pe[pe.length - 1]).replaceAll("\\.", "");
+
 		}
 	}		
 	
