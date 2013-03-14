@@ -619,7 +619,7 @@ jQuery.extend({
 
 		this.downloadVotable= function(nodekey,jid) {
 			var url = 'jobresult?NODE=' + nodekey.trim() + '&JOBID=' + jid.trim() + '&jsessionid='+ sessionID;
-			downloadLocation(url);
+			Location.changeLocation(url);
 		};
 
 		this.sampBroadcast= function(nodekey,jid) {
