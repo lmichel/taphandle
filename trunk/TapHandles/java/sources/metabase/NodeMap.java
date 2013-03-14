@@ -41,10 +41,12 @@ class NodeMap  extends RootClass {
 			logger.warn("URL " + url + " already in the node base ");
 		} if( (rm = RegistryExplorer.getregistryMarkByUrl(url)) != null){
 			key = rm.getNodeKey();
+			logger.info("URL " + url + " exist in the registry, key = " + key);
 			nodeMap.put(key, new TapNode(rm, MetaBaseDir + key));	
 		} else  {
 			key = ShortNameBuilder.getShortName(null, url);
 			rm = new RegistryMark(key, "", url, "TAP NOde added by a user", false, supportJoins);
+			logger.info("URL " + url + " does not exist in the registry, create a mark with key = " + key);
 			nodeMap.put(key, new TapNode(new RegistryMark(key, "", url, "TAP NOde added by a user", false, supportJoins), MetaBaseDir + key));
 		}
 		return key;
