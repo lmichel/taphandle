@@ -169,4 +169,14 @@
     <servlet-name>AvailableNodes</servlet-name>
     <url-pattern>/availablenodes</url-pattern>
   </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>ForwardXMLResource</display-name>
+    <servlet-name>ForwardXMLResource</servlet-name>
+    <servlet-class>servlet.ForwardXMLResource</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>ForwardXMLResource</servlet-name>
+    <url-pattern>/forwardxmlresource</url-pattern>
+  </servlet-mapping>
 </web-app>
