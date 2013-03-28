@@ -54,10 +54,10 @@ public class NodeBase extends RootClass{
 		synchronized (this) {
 
 			try {
-				RegistryExplorer.readRegistries();
 				validWorkingDirectory(MetaBaseDir);
 				emptyDirectory(new File(MetaBaseDir));
 				emptyDirectory(new File(SessionBaseDir));
+				RegistryExplorer.readRegistries();
 				if( !NOINIT){
 					for( RegistryMark r: RegistryExplorer.registryMarks.values()) {
 						if(r.mustBeInitAtStart() ){
