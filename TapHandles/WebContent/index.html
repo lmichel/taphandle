@@ -16,78 +16,44 @@
 <link type="text/css" rel="stylesheet" href="styleimport/layout-default-latest.css" />
 <link type="text/css" rel="stylesheet" href="styleimport/jsonSuggest.css" />
 
-<link rel="stylesheet" type="text/css" href="http://saada.unistra.fr/jsresources/saadajsbasics/styles/basics.css" />
-<link rel="stylesheet" type="text/css" href="http://saada.unistra.fr/jsresources/saadajsbasics/styles/domain.css" />
-<!-- 
 <link rel="stylesheet" type="text/css" href="http://localhost:8888/jsStuff/saadajsbasics/styles/basics.css" />
 <link rel="stylesheet" type="text/css" href="http://localhost:8888/jsStuff/saadajsbasics/styles/domain.css" />
- --> 
+
 <script type="text/javascript" src="jsimport/jquery-1.7.2.js"></script>
-<script type="text/javascript" src="jsimport/jquery-ui-latest.js"></script>
-<script type="text/javascript" src="jsimport/jquery.ui.widget.js"></script>
-<script type="text/javascript" src="jsimport/jquery.layout-latest.js"></script>
-<script type="text/javascript" src="jsimport/jquery.ui.widget.js"></script>
-<script type="text/javascript" src="jsimport/jquery.ui.mouse.js"></script>
-<script type="text/javascript" src="jsimport/jquery.ui.draggable.js"></script>
-<script type="text/javascript" src="jsimport/jquery.ui.droppable.js"></script>
-<script type="text/javascript" src="jsimport/jquery.ui.sortable.js"></script>
-<script type="text/javascript" src="jsimport/jquery.ui.tabs.js"></script>
-<script type="text/javascript" src="jsimport/jquery.ui.dialog.js"></script>
-<script type="text/javascript" src="jsimport/jquery.jstree.js"></script>
-<script type="text/javascript" src="jsimport/jquery.tooltip.js"></script>
-<script type="text/javascript" src="jsimport/jquery.dataTables.js"></script>
-<script type="text/javascript" src="jsimport/jquery.jsonSuggest-2.js"></script> 
-<script type="text/javascript" src="jsimport/jquery.simplemodal.js"></script> 
-<script type="text/javascript" src="jsimport/jquery.alerts.js"></script> 
-<script type="text/javascript" src="jsimport/jquery.jsonSuggest-2.js"></script> 
-<script type="text/javascript" src="jsimport/jquery.jeditable.js"></script> 
-<script type="text/javascript" src="jsimport/json2.js"></script>
+<script type="text/javascript" src="http://localhost:8888/jsStuff/saadajsbasics/loader.js"></script>
 
-<script type="text/javascript" src="http://saada.unistra.fr/jsresources/saadajsbasics/javascript/basics.js"></script>
-<script type="text/javascript" src="http://saada.unistra.fr/jsresources/saadajsbasics/javascript/WebSamp_mVc.js"></script>
-<script type="text/javascript" src="http://saada.unistra.fr/jsresources/saadajsbasics/javascript/WebSamp_Mvc.js"></script>
-<script type="text/javascript" src="http://saada.unistra.fr/jsresources/saadajsbasics/javascript/WebSamp_mvC.js"></script>
-<script type="text/javascript" src="http://saada.unistra.fr/jsresources/saadajsbasics/javascript/domain.js"></script>
-
-<!--  
-<script type="text/javascript" src="http://localhost:8888/jsStuff/saadajsbasics/javascript/basics.js"></script>
-<script type="text/javascript" src="http://localhost:8888/jsStuff/saadajsbasics/javascript/WebSamp_mVc.js"></script>
-<script type="text/javascript" src="http://localhost:8888/jsStuff/saadajsbasics/javascript/WebSamp_Mvc.js"></script>
-<script type="text/javascript" src="http://localhost:8888/jsStuff/saadajsbasics/javascript/WebSamp_mvC.js"></script>
-<script type="text/javascript" src="http://localhost:8888/jsStuff/saadajsbasics/javascript/domain.js"></script>
-
- -->
-<script type="text/javascript" src="javascript/formator.js"></script>
-<script type="text/javascript" src="javascript/resultPaneModel.js"></script>
-<script type="text/javascript" src="javascript/resultPaneView.js"></script>
-<script type="text/javascript" src="javascript/resultPaneControler.js"></script>
-<script type="text/javascript" src="javascript/nodeFilterModel.js"></script>
-<script type="text/javascript" src="javascript/nodeFilterView.js"></script>
-<script type="text/javascript" src="javascript/nodeFilterControler.js"></script>
-<script type="text/javascript" src="javascript/kwconstraintModel.js"></script>
-<script type="text/javascript" src="javascript/kwconstraintView.js"></script>
-<script type="text/javascript" src="javascript/kwconstraintControler.js"></script>
-<script type="text/javascript" src="javascript/tapModel.js"></script>
-<script type="text/javascript" src="javascript/tapView.js"></script>
-<script type="text/javascript" src="javascript/tapControler.js"></script>
-<!-- 
-<script type="text/javascript" src="javascript/sampModel.js"></script>
-<script type="text/javascript" src="javascript/sampView.js"></script>
-<script type="text/javascript" src="javascript/sampControler.js"></script>
- -->
-<script type="text/javascript" src="javascript/jobModel.js"></script>
-<script type="text/javascript" src="javascript/jobView.js"></script>
-<script type="text/javascript" src="javascript/jobControler.js"></script>
-<script type="text/javascript" src="javascript/jobDictionnary.js"></script>
-<script type="text/javascript" src="javascript/cartView.js"></script>
-<script type="text/javascript" src="javascript/cartControler.js"></script>
-<script type="text/javascript" src="javascript/cartModel.js"></script>
-<script type="text/javascript" src="javascript/zipjobModel.js"></script>
-<script type="text/javascript" src="javascript/initFunctions.js"></script>
-<script type="text/javascript" src="javascript/utils.js"></script>
-<script type="text/javascript" src="javascript/ready.js"></script>
-<script type="text/javascript" src="javascript/resize.js"></script>
-
+<script >resourceLoader.loadMinScripts([  
+      "jsimport/jquery.jstree.js"  
+     ,"jsimport/jquery.jsonSuggest-2.js"   
+     ,"jsimport/jquery.jeditable.js"   
+     ,"jsimport/jquery.layout-latest.js"   
+     ,"jsimport/json2.js"  
+     ,"javascript/formator.js"  
+     ,"javascript/resultPaneModel.js"  
+     ,"javascript/resultPaneView.js"  
+     ,"javascript/resultPaneControler.js"  
+     ,"javascript/nodeFilterModel.js"  
+     ,"javascript/nodeFilterView.js"  
+     ,"javascript/nodeFilterControler.js"  
+     ,"javascript/kwconstraintModel.js"  
+     ,"javascript/kwconstraintView.js"  
+     ,"javascript/kwconstraintControler.js"  
+     ,"javascript/tapModel.js"  
+     ,"javascript/tapView.js"  
+     ,"javascript/tapControler.js"  
+     ,"javascript/jobModel.js"  
+     ,"javascript/jobView.js"  
+     ,"javascript/jobControler.js"  
+     ,"javascript/jobDictionnary.js"  
+     ,"javascript/cartView.js"  
+     ,"javascript/cartControler.js"  
+     ,"javascript/cartModel.js"  
+     ,"javascript/zipjobModel.js"  
+     ,"javascript/initFunctions.js"  
+     ,"javascript/utils.js"  
+     ,"javascript/ready.js"  
+     ,"javascript/resize.js"  
+                                        ]);</script>
 
 </head>
 

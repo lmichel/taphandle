@@ -45,7 +45,9 @@ var bibcodeRegexp  = new RegExp(/^[12][089]\d{2}[A-Za-z][A-Za-z0-9&][A-Za-z0-9&.
 function formatValue(columnName, value, tdNode) {
 	if( columnName.match(/.*datalink.*/i)  ){
 	//	var url = 'getdatalink?url=' + escape(value);
-		tdNode.html("<a class='dl_datalink' title='Get LinkedData'   href='#' onclick='resultPaneView.fireGetDataLink(\"" + value + "\"); return false;'/></a>");
+		//"DataLinkBrowser.startBrowser("http://obs-he-lm:8888/3XMM/smartdatalink?oid=1160803203386703882"
+		//tdNode.html("<a class='dl_datalink' title='Get LinkedData'   href='#' onclick='resultPaneView.fireGetDataLink(\"" + value + "\"); return false;'/></a>");
+		tdNode.html("<a class='dl_datalink' title='Get LinkedData'   href='#' onclick='DataLinkBrowser.startBrowser(\"" + value + "\", \"forwardxmlresource?target=\"); return false;'/></a>");
 			
 	} else if( value.startsWith("http://") ||  value.startsWith("https://") ) {
 		var titlepath = $('#titlepath').text().split('>');
