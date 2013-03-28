@@ -205,373 +205,442 @@ public class TapNode  extends RootClass {
 				};
 				new Thread(r).start();
 			}
-			}
-
-		}
-		/**
-		 * Check the service availability. This method is invoked each time the node is acceded.
-		 * The avoid useless network accesses, the  service is actually invoked every 
-		 * AVAILABILITY_CHECK_FREQUENCY ms. Otherwise the method returns the availability read in the file
-		 * returned by the service
-		 * @throws Exception
-		 */
-		private void checkAvailability() throws Exception {
-			logger.debug("check availability");
-			long t = new Date().getTime();
-			if( (t - this.last_availability_check) > AVAILABILITY_CHECK_FREQUENCY) {
-				this.getServiceReponse("availability", availabilityNS);
-				this.translateServiceReponse("availability", availabilityNS);
-				this.last_availability_check = t;
-			} else {
-				logger.debug("availability already checked");
-				if( availabilityNS.getNsDeclaration() == null )
-					this.getNamspaceDefinition("capabilities", capabilityNS);
-				return;
-			}
-
-			String av = JsonUtils.getValue (this.baseDirectory + "availability.json", "available");
-			if( "1".equals(av) || "true".equalsIgnoreCase(av)) {
-				logger.debug("Service " + this.regMark + " is available");
-			}
-			else {
-				logger.debug("Service " + this.regMark + " is unavailable");
-			}
 		}
 
-		/**
-		 * Check the capability of the service
-		 * If the service has already been invoked the name space is extracted from the XML response
-		 * to make sure the JSON translation works
-		 * @throws Exception If something goes wrong
-		 */
-		private void checkCapability() throws Exception {
-			File f = new File(this.baseDirectory + "capabilities" + ".xml");
-			if( f.exists() && f.isFile() &&f.canRead()) {
-				logger.debug("capabilities already checked");
-				if( capabilityNS.getNsDeclaration() == null )
-					this.getNamspaceDefinition("capabilities", capabilityNS);
-				return;
-			}
-			logger.debug("check capabilities");
-			this.getServiceReponse("capabilities", capabilityNS);
-			this.translateServiceReponse("capabilities", capabilityNS);
-			logger.debug(this.regMark + " Capabilities is available");
+	}
+	/**
+	 * Check the service availability. This method is invoked each time the node is acceded.
+	 * The avoid useless network accesses, the  service is actually invoked every 
+	 * AVAILABILITY_CHECK_FREQUENCY ms. Otherwise the method returns the availability read in the file
+	 * returned by the service
+	 * @throws Exception
+	 */
+	private void checkAvailability() throws Exception {
+		logger.debug("check availability");
+		long t = new Date().getTime();
+		if( (t - this.last_availability_check) > AVAILABILITY_CHECK_FREQUENCY) {
+			this.getServiceReponse("availability", availabilityNS);
+			this.translateServiceReponse("availability", availabilityNS);
+			this.last_availability_check = t;
+		} else {
+			logger.debug("availability already checked");
+			if( availabilityNS.getNsDeclaration() == null )
+				this.getNamspaceDefinition("capabilities", capabilityNS);
+			return;
 		}
 
-		/**
-		 * Get the table description of the service. 
-		 * If the service has already been invoked the name space is extracted from the XML response
-		 * to make sure the JSON translation works
-		 * The JSON translation of tables.xml do not contain column description but just schema/table names
-		 * @throws Exception If something goes wrong
-		 */
-		private void checkTables() throws Exception {
-			File f = new File(this.baseDirectory + "tables.xml");
-			if( f.exists() && f.isFile() &&f.canRead()) {
-				logger.debug("tables already checked");
-				if( tablesNS.getNsDeclaration()  == null  )
-					this.getNamspaceDefinition("tables", tablesNS);
-				return;
-			}
-			logger.debug("check tables");
-			this.getServiceReponse("tables", tablesNS);
-			this.translateServiceReponse("tables", tablesNS);
+		String av = JsonUtils.getValue (this.baseDirectory + "availability.json", "available");
+		if( "1".equals(av) || "true".equalsIgnoreCase(av)) {
+			logger.debug("Service " + this.regMark + " is available");
+		}
+		else {
+			logger.debug("Service " + this.regMark + " is unavailable");
+		}
+	}
+
+	/**
+	 * Check the capability of the service
+	 * If the service has already been invoked the name space is extracted from the XML response
+	 * to make sure the JSON translation works
+	 * @throws Exception If something goes wrong
+	 */
+	private void checkCapability() throws Exception {
+		File f = new File(this.baseDirectory + "capabilities" + ".xml");
+		if( f.exists() && f.isFile() &&f.canRead()) {
+			logger.debug("capabilities already checked");
+			if( capabilityNS.getNsDeclaration() == null )
+				this.getNamspaceDefinition("capabilities", capabilityNS);
+			return;
+		}
+		logger.debug("check capabilities");
+		this.getServiceReponse("capabilities", capabilityNS);
+		this.translateServiceReponse("capabilities", capabilityNS);
+		logger.debug(this.regMark + " Capabilities is available");
+	}
+
+	/**
+	 * Get the table description of the service. 
+	 * If the service has already been invoked the name space is extracted from the XML response
+	 * to make sure the JSON translation works
+	 * The JSON translation of tables.xml do not contain column description but just schema/table names
+	 * @throws Exception If something goes wrong
+	 */
+	private void checkTables() throws Exception {
+		File f = new File(this.baseDirectory + "tables.xml");
+		if( f.exists() && f.isFile() &&f.canRead()) {
+			logger.debug("tables already checked");
+			if( tablesNS.getNsDeclaration()  == null  )
+				this.getNamspaceDefinition("tables", tablesNS);
+			return;
+		}
+		logger.debug("check tables");
+		this.getServiceReponse("tables", tablesNS);
+		this.translateServiceReponse("tables", tablesNS);
+		try {
+			this.getFirstTableName();
+		} catch(Exception e){
+			logger.warn("No tables in tables.xml, Try to scan the TAP_SCHEMA");		
 			try {
-				this.getFirstTableName();
-			} catch(Exception e){
-				logger.warn("No tables in tables.xml, Try to scan the TAP_SCHEMA");		
 				new TablesReconstructor(this.regMark.getAbsoluteURL(null), this.baseDirectory);
 				this.translateServiceReponse("tables", tablesNS);
 				if( this.getFirstTableName() == null ) {
 					throw new Exception("No tables in tables.xml, is that file compliant with the schema?");
 				} else {
 					logger.info("succeed");
-				}				
-			}
-			this.setNodekeyInJsonResponse("tables");			
-		}
-
-		/**
-		 * Check if either syn or async query mode is available
-		 * @throws TapException If no query succeed
-		 */
-		private void checkAsyncMode() throws Exception {
-			String query = "SELECT TOP 1 * FROM " + quoteTableName(getFirstTableName());
-			logger.debug("Test query " + query);
-			QueryModeChecker qmc = new QueryModeChecker(this.regMark.getFullUrl(), query, this.baseDirectory);
-			this.supportSyncMode = qmc.supportSyncMode();
-			this.supportAsyncMode = qmc.supportAsyncMode();
-						
-			if( !this.supportSyncMode && !this.supportSyncMode ){
-				throw new TapException("No query mode supported (neither sync nor async");
+				}	
+			} catch (Exception e2) {
+				throw new Exception("No valid tables capability: failed to rebuild it from the TAP schema: " + e2.getMessage());
 			}
 		}
+		this.setNodekeyInJsonResponse("tables");			
+	}
 
-		/**
-		 * Return the first table name found in /tables query result. Could be used to check the service 
-		 * @return
-		 * @throws Exception
-		 */
-		private String getFirstTableName() throws Exception {
-			JSONParser parser = new JSONParser();
-			JSONObject jso = (JSONObject) parser.parse(new FileReader(this.baseDirectory + "tables.json"));
-			JSONArray jsa = (JSONArray)(jso.get("schemas"));
-			if( jsa.size() == 0 ) {
-				throw new Exception("No schema in tables.json");
-			}
-			for( int i=0 ; i<jsa.size() ; i++) {
-				JSONArray tbls = (JSONArray) ((JSONObject)(jsa.get(i))).get("tables");
-				if( tbls.size() == 0 ){
-					throw new TapException("No table published in node " + this.regMark.getNodeKey());
-				}
-				for( int t=0 ; t<jsa.size() ; t++) {
-					return  (String) ((JSONObject)(tbls.get(i))).get("name");
-				}
-			}
-			return null;
+	/**
+	 * Check if either syn or async query mode is available
+	 * @throws TapException If no query succeed
+	 */
+	private void checkAsyncMode() throws Exception {
+		String query = "SELECT TOP 1 * FROM " + quoteTableName(getFirstTableName());
+		logger.debug("Test query " + query);
+		QueryModeChecker qmc = new QueryModeChecker(this.regMark.getFullUrl(), query, this.baseDirectory);
+		this.supportSyncMode = qmc.supportSyncMode();
+		this.supportAsyncMode = qmc.supportAsyncMode();
+
+		if( !this.supportSyncMode && !this.supportSyncMode ){
+			throw new TapException("No query mode supported (neither sync nor async");
 		}
-		/**
-		 * Invokes a service of the node, extract its name space which will be used by XLST 
-		 * @param service either availability, capabilities or tables
-		 * @param nsDefinition {@link NameSpaceDefinition} modeling the name space
-		 * @throws Exception If something goes wrong
-		 */
-		private String getServiceReponse(String service, NameSpaceDefinition nsDefinition) throws Exception {
-			//Pattern pattern  = Pattern.compile("(?i)(?:.*(xmlns(?:\\:\\w+)?=\\\"http\\:\\/\\/www\\.ivoa\\.net\\/.*" + service + "[^\\\"]*\\\").*)");
-			Pattern pattern  = Pattern.compile(".*xmlns(?::\\w+)?=(\"[^\"]*(?i)(?:" + service + ")[^\"]*\").*");
-			logger.debug("Connect " + this.regMark.getAbsoluteURL(null) + service);
-			URLConnection conn = TapAccess.getUrlConnection(new URL(this.regMark.getAbsoluteURL(null) + service));
-			InputStream is = conn.getInputStream();
-			BufferedReader in = new BufferedReader(new InputStreamReader(is));
+	}
 
-			String inputLine;
-			String outputFileName = this.baseDirectory + RootClass.vizierNameToFileName(service) + ".xml";
-			BufferedWriter bfw = new BufferedWriter(new FileWriter(outputFileName));
-			boolean found = false;
-			while ((inputLine = in.readLine()) != null) {
-				if( !found ) {
-					Matcher m = pattern.matcher(inputLine);
-					if (m.matches()) {				
-						nsDefinition.init("xmlns:vosi=" + m.group(1)) ;
-						found = true;
-					}
-				}
-				bfw.write(inputLine + "\n"/*.replaceAll("<\\/.*\\>", ">\n")*/);
-			}
-			in.close();
-			bfw.close();
-			return outputFileName;
+	/**
+	 * Return the first table name found in /tables query result. Could be used to check the service 
+	 * @return
+	 * @throws Exception
+	 */
+	private String getFirstTableName() throws Exception {
+		JSONParser parser = new JSONParser();
+		JSONObject jso = (JSONObject) parser.parse(new FileReader(this.baseDirectory + "tables.json"));
+		JSONArray jsa = (JSONArray)(jso.get("schemas"));
+		if( jsa.size() == 0 ) {
+			throw new Exception("No schema in tables.json");
 		}
+		for( int i=0 ; i<jsa.size() ; i++) {
+			JSONArray tbls = (JSONArray) ((JSONObject)(jsa.get(i))).get("tables");
+			if( tbls.size() == 0 ){
+				throw new TapException("No table published in node " + this.regMark.getNodeKey());
+			}
+			for( int t=0 ; t<jsa.size() ; t++) {
+				return  (String) ((JSONObject)(tbls.get(i))).get("name");
+			}
+		}
+		return null;
+	}
+	/**
+	 * Invokes a service of the node, extract its name space which will be used by XLST 
+	 * @param service either availability, capabilities or tables
+	 * @param nsDefinition {@link NameSpaceDefinition} modeling the name space
+	 * @throws Exception If something goes wrong
+	 */
+	private String getServiceReponse(String service, NameSpaceDefinition nsDefinition) throws Exception {
+		//Pattern pattern  = Pattern.compile("(?i)(?:.*(xmlns(?:\\:\\w+)?=\\\"http\\:\\/\\/www\\.ivoa\\.net\\/.*" + service + "[^\\\"]*\\\").*)");
+		Pattern pattern  = Pattern.compile(".*xmlns(?::\\w+)?=(\"[^\"]*(?i)(?:" + service + ")[^\"]*\").*");
+		logger.debug("Connect " + this.regMark.getAbsoluteURL(null) + service);
+		URLConnection conn = TapAccess.getUrlConnection(new URL(this.regMark.getAbsoluteURL(null) + service));
+		InputStream is = conn.getInputStream();
+		BufferedReader in = new BufferedReader(new InputStreamReader(is));
 
-		/**
-		 * Extract the service name space which will be used by XLST 
-		 * @param service either availability, capabilities or tables
-		 * @param nsDefinition {@link NameSpaceDefinition} modeling the name space
-		 * @throws Exception If something goes wrong
-		 */
-		private void getNamspaceDefinition(String service, NameSpaceDefinition nsDefinition) throws Exception {
-			logger.debug("get VOSI ns for " + service);
-			Scanner s = new Scanner(new File(this.baseDirectory + service + ".xml"));
-			//Pattern pattern  = Pattern.compile("(?i)(?:.*(xmlns(?:\\:\\w+)?=\"http\\:\\/\\/www.ivoa.net\\/.*" + service + "[^\"]*\").*)");
-			Pattern pattern  = Pattern.compile(".*(xmlns:\\w+=\"[^\"]*(?i)(?:" + service + ")[^\"]*\").*");
-			while ( s.hasNextLine()) {
-				Matcher m = pattern.matcher(s.nextLine());
-				if (m.matches()) {
-					nsDefinition.init(m.group(1)) ;
-					break;
+		String inputLine;
+		String outputFileName = this.baseDirectory + RootClass.vizierNameToFileName(service) + ".xml";
+		BufferedWriter bfw = new BufferedWriter(new FileWriter(outputFileName));
+		boolean found = false;
+		while ((inputLine = in.readLine()) != null) {
+			if( !found ) {
+				Matcher m = pattern.matcher(inputLine);
+				if (m.matches()) {				
+					nsDefinition.init("xmlns:vosi=" + m.group(1)) ;
+					found = true;
 				}
 			}
-			s.close();
+			bfw.write(inputLine + "\n"/*.replaceAll("<\\/.*\\>", ">\n")*/);
 		}
+		in.close();
+		bfw.close();
+		return outputFileName;
+	}
 
-		/**
-		 * Translate the service response in JSON
-		 * @param service     either availability, capabilities or tables
-		 * @param namespace   Namespace t be used by XSLT
-		 * @throws Exception  If something goes wrong
-		 */
-		private void translateServiceReponse(String service, NameSpaceDefinition namespace) throws Exception {
-			XmlToJson.translate(this.baseDirectory, service, namespace);
-		}
-
-		/**
-		 * Write the node key in JSON file if ther is a filed with "NODEKEY" as value.
-		 * This feature is used by the client interface identify the nodes
-		 * @param service     either availability, capabilities or tables
-		 * @throws Exception  If something goes wrong
-		 */
-		private void setNodekeyInJsonResponse(String service) throws Exception {
-			String filename = this.baseDirectory + service + ".json";
-			Scanner s = new Scanner(new File(filename));
-			PrintWriter fw = new PrintWriter(new File(filename + ".new"));
-			while( s.hasNextLine() ) {
-				fw.println(s.nextLine().replaceAll("NODEKEY", this.regMark.getNodeKey()).replaceAll("NODEURL", this.regMark.getAbsoluteURL(null)));
+	/**
+	 * Extract the service name space which will be used by XLST 
+	 * @param service either availability, capabilities or tables
+	 * @param nsDefinition {@link NameSpaceDefinition} modeling the name space
+	 * @throws Exception If something goes wrong
+	 */
+	private void getNamspaceDefinition(String service, NameSpaceDefinition nsDefinition) throws Exception {
+		logger.debug("get VOSI ns for " + service);
+		Scanner s = new Scanner(new File(this.baseDirectory + service + ".xml"));
+		//Pattern pattern  = Pattern.compile("(?i)(?:.*(xmlns(?:\\:\\w+)?=\"http\\:\\/\\/www.ivoa.net\\/.*" + service + "[^\"]*\").*)");
+		Pattern pattern  = Pattern.compile(".*(xmlns:\\w+=\"[^\"]*(?i)(?:" + service + ")[^\"]*\").*");
+		while ( s.hasNextLine()) {
+			Matcher m = pattern.matcher(s.nextLine());
+			if (m.matches()) {
+				nsDefinition.init(m.group(1)) ;
+				break;
 			}
-			s.close();
-			fw.close();
-			(new File(filename + ".new")).renameTo(new File(filename));	
 		}
+		s.close();
+	}
 
-		/**
-		 * Builds a JSON file describing the table tableName in a format 
-		 * comprehensible by JQuery datatable widget
-		 * @param tableName  Name of the table
-		 * @throws Exception If something goes wrong
-		 */
-		public void buildJsonTableDescription(String tableName) throws Exception {
-			String tableFileName = RootClass.vizierNameToFileName(tableName);
-            String productName = this.baseDirectory + tableFileName ;
-            if( new File(productName + ".json").exists()) {
-                    return;
-            }
-            logger.debug("JSON file " + tableName + ".json not found: build it");
-            XmlToJson.translateTableMetaData(this.baseDirectory, "tables", tableName, tablesNS);            
-            /*
-             * If there is no attribute in the JSON table description, the service delivers it likley table by table
-             */
-            if( !isThereJsonTableDesc(tableName) ) {
-                    logger.debug("No colmuns found in " + tableFileName + ": make a per table query");
-                    File fn = new File(productName + ".xml");
-                    String noSchemaName = tableName;
-                    int pos = noSchemaName.indexOf('.');
-                    if( pos > 0 ) {
-                            noSchemaName = noSchemaName.substring(pos + 1);
-                    }
-                    String outputFilename = this.getServiceReponse("tables/" + noSchemaName, tablesNS);
-                   //this.getServiceReponse("columns?query=" + noSchemaName, tablesNS);
-                    if( ! (new File(outputFilename)).renameTo(fn) ) {
-                            throw new TapException("Cannot store columns of table  " + tableName +" in file " + outputFilename);
-                    }
-                    XmlToJson.translateTableMetaData(this.baseDirectory, tableName, tablesNS);      
-                    fn.delete();
-                    (new File(this.baseDirectory + tableName  +  ".xsl")).delete();
-            }
+	/**
+	 * Translate the service response in JSON
+	 * @param service     either availability, capabilities or tables
+	 * @param namespace   Namespace t be used by XSLT
+	 * @throws Exception  If something goes wrong
+	 */
+	private void translateServiceReponse(String service, NameSpaceDefinition namespace) throws Exception {
+		XmlToJson.translate(this.baseDirectory, service, namespace);
+	}
 
-            setNodekeyInJsonResponse(tableFileName);
-            }
-		/**
-		 * Return true if the JSON file describing the metadata of the table tableName is not empty of attributes.
-		 * If it is, the table comes likely from Vizier and a special query must be sent to get those column description
-		 * @param tableName
-		 * @return
-		 * @throws Exception
-		 */
-		private boolean isThereJsonTableDesc(String tableName) throws Exception{
-			JSONParser parser = new JSONParser();
-			Object obj = parser.parse(new FileReader(this.baseDirectory + RootClass.vizierNameToFileName(tableName) + ".json"));
-			JSONObject jsonObject = (JSONObject) ((JSONObject) obj).get("attributes");
-
-			return (((JSONArray) jsonObject.get("aaData")).size() > 0)? true: false;
+	/**
+	 * Write the node key in JSON file if ther is a filed with "NODEKEY" as value.
+	 * This feature is used by the client interface identify the nodes
+	 * @param service     either availability, capabilities or tables
+	 * @throws Exception  If something goes wrong
+	 */
+	private void setNodekeyInJsonResponse(String service) throws Exception {
+		String filename = this.baseDirectory + service + ".json";
+		Scanner s = new Scanner(new File(filename));
+		PrintWriter fw = new PrintWriter(new File(filename + ".new"));
+		while( s.hasNextLine() ) {
+			fw.println(s.nextLine().replaceAll("NODEKEY", this.regMark.getNodeKey()).replaceAll("NODEURL", this.regMark.getAbsoluteURL(null)));
 		}
+		s.close();
+		fw.close();
+		(new File(filename + ".new")).renameTo(new File(filename));	
+	}
 
-		/**
-		 * Builds a JSON file describing the table tableName to setup
-		 * query form
-		 * @param tableName  Name of the table
-		 * @throws Exception If something goes wrong
+	/**
+	 * Builds a JSON file describing the table tableName in a format 
+	 * comprehensible by JQuery datatable widget
+	 * @param tableName  Name of the table
+	 * @throws Exception If something goes wrong
+	 */
+	public void buildJsonTableDescription(String tableName) throws Exception {
+		String tableFileName = RootClass.vizierNameToFileName(tableName);
+		String productName = this.baseDirectory + tableFileName ;
+		if( new File(productName + ".json").exists()) {
+			return;
+		}
+		logger.debug("JSON file " + tableName + ".json not found: build it");
+		XmlToJson.translateTableMetaData(this.baseDirectory, "tables", tableName, tablesNS);            
+		/*
+		 * If there is no attribute in the JSON table description, the service delivers it likley table by table
 		 */
-		public void buildJsonTableAttributes(String tableName) throws Exception {
-			String tableFileName = RootClass.vizierNameToFileName(tableName);
-			String productName = this.baseDirectory + tableFileName + "_att";
-			if( new File(tableFileName + ".json").exists()) {
-				return;
+		if( !isThereJsonTableDesc(tableName) ) {
+			logger.debug("No colmuns found in " + tableFileName + ": make a per table query");
+			File fn = new File(productName + ".xml");
+			String noSchemaName = tableName;
+			int pos = noSchemaName.indexOf('.');
+			if( pos > 0 ) {
+				noSchemaName = noSchemaName.substring(pos + 1);
 			}
-			logger.debug("JSON file " + tableFileName + ".json not found: build it");
-			XmlToJson.translateTableAttributes(this.baseDirectory, "tables", tableName, tablesNS);		
-			/*
-			 * If there is no attribute in the JSON table description, the service delivers it likley table by table
-			 */
-			if( !isThereJsonTableAtt(tableName) ) {
-				logger.debug("No colmuns found in " + tableFileName + ": make a per table query");
-				File fn = new File(productName  +  ".xml");
-				String noSchemaName = tableName;
-				int pos = noSchemaName.indexOf('.');
-				if( pos > 0 ) {
-					noSchemaName = noSchemaName.substring(pos + 1);
+			String outputFilename = this.getServiceReponse("tables/" + noSchemaName, tablesNS);
+			//this.getServiceReponse("columns?query=" + noSchemaName, tablesNS);
+			if( ! (new File(outputFilename)).renameTo(fn) ) {
+				throw new TapException("Cannot store columns of table  " + tableName +" in file " + outputFilename);
+			}
+			XmlToJson.translateTableMetaData(this.baseDirectory, tableName, tablesNS);      
+			fn.delete();
+			(new File(this.baseDirectory + tableName  +  ".xsl")).delete();
+		}
+
+		setNodekeyInJsonResponse(tableFileName);
+	}
+	/**
+	 * Return true if the JSON file describing the metadata of the table tableName is not empty of attributes.
+	 * If it is, the table comes likely from Vizier and a special query must be sent to get those column description
+	 * @param tableName
+	 * @return
+	 * @throws Exception
+	 */
+	private boolean isThereJsonTableDesc(String tableName) throws Exception{
+		JSONParser parser = new JSONParser();
+		Object obj = parser.parse(new FileReader(this.baseDirectory + RootClass.vizierNameToFileName(tableName) + ".json"));
+		JSONObject jsonObject = (JSONObject) ((JSONObject) obj).get("attributes");
+
+		return (((JSONArray) jsonObject.get("aaData")).size() > 0)? true: false;
+	}
+
+	/**
+	 * Builds a JSON file describing the table tableName to setup
+	 * query form
+	 * @param tableName  Name of the table
+	 * @throws Exception If something goes wrong
+	 */
+	public void buildJsonTableAttributes(String tableName) throws Exception {
+		String tableFileName = RootClass.vizierNameToFileName(tableName);
+		String productName = this.baseDirectory + tableFileName + "_att";
+		if( new File(tableFileName + ".json").exists()) {
+			return;
+		}
+		logger.debug("JSON file " + tableFileName + ".json not found: build it");
+		XmlToJson.translateTableAttributes(this.baseDirectory, "tables", tableName, tablesNS);		
+		/*
+		 * If there is no attribute in the JSON table description, the service delivers it likley table by table
+		 */
+		if( !isThereJsonTableAtt(tableName) ) {
+			logger.debug("No colmuns found in " + tableFileName + ": make a per table query");
+			File fn = new File(productName  +  ".xml");
+			String noSchemaName = tableName;
+			int pos = noSchemaName.indexOf('.');
+			if( pos > 0 ) {
+				noSchemaName = noSchemaName.substring(pos + 1);
+			}
+			String outputFilename = this.getServiceReponse("tables/" + noSchemaName, tablesNS);
+			if( ! (new File(outputFilename)).renameTo(fn) ) {
+				throw new TapException("Cannot store columns of table  " + tableName +" in file " + this.baseDirectory + tableFileName  +  "_att.xml");
+			}
+			XmlToJson.translateTableAttributes(this.baseDirectory, tableName, tablesNS);	
+			fn.delete();
+			(new File(this.baseDirectory + tableFileName  +  "_att.xsl")).delete();
+		}
+	}		
+
+	/**
+	 * Return true if the JSON file describing the table tableName is not empty of attributes.
+	 * If it is, the table comes likely from Vizier and a special query must be sent to get those column description
+	 * @param tableName
+	 * @return
+	 * @throws Exception
+	 */
+	private boolean isThereJsonTableAtt(String tableName) throws Exception{
+		JSONParser parser = new JSONParser();
+		Object obj = parser.parse(new FileReader(this.baseDirectory + RootClass.vizierNameToFileName(tableName) + "_att.json"));
+		JSONObject jsonObject = (JSONObject) obj;
+		return (((JSONArray) jsonObject.get("attributes")).size() > 0)? true: false;
+	}
+
+	/**
+	 * Returns a JSON table list with maxSize first tables and tap schema tables
+	 * @param maxSize
+	 * @return
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+	public JSONObject filterTableList(int maxSize) throws Exception {
+		JSONParser parser = new JSONParser();
+		Object obj = parser.parse(new FileReader(this.getBaseDirectory() + "tables.json"));
+		JSONObject jsonObject = (JSONObject) obj;
+		JSONArray schemas = (JSONArray) jsonObject.get("schemas");
+		boolean truncated = false;
+		for(Object sn: schemas) {
+			boolean takeAnyway = false;
+			ArrayList<JSONObject> toRemove = new ArrayList<JSONObject>();
+			JSONObject s = (JSONObject)sn;
+			if( ((String)s.get("name")).equalsIgnoreCase("tap_schema") ) {
+				takeAnyway = true;
+			}
+			JSONArray tables = (JSONArray) s.get("tables");
+			int cpt = 0;
+			for( Object ts: tables) {
+				JSONObject t = (JSONObject)ts;
+
+				if( cpt >= maxSize && !takeAnyway ) {
+					truncated = true;
+					toRemove.add(t);
 				}
-				String outputFilename = this.getServiceReponse("tables/" + noSchemaName, tablesNS);
-				if( ! (new File(outputFilename)).renameTo(fn) ) {
-					throw new TapException("Cannot store columns of table  " + tableName +" in file " + this.baseDirectory + tableFileName  +  "_att.xml");
-				}
-				XmlToJson.translateTableAttributes(this.baseDirectory, tableName, tablesNS);	
-				fn.delete();
-				(new File(this.baseDirectory + tableFileName  +  "_att.xsl")).delete();
+				if( !takeAnyway) cpt++;
 			}
-		}		
-
-		/**
-		 * Return true if the JSON file describing the table tableName is not empty of attributes.
-		 * If it is, the table comes likely from Vizier and a special query must be sent to get those column description
-		 * @param tableName
-		 * @return
-		 * @throws Exception
-		 */
-		private boolean isThereJsonTableAtt(String tableName) throws Exception{
-			JSONParser parser = new JSONParser();
-			Object obj = parser.parse(new FileReader(this.baseDirectory + RootClass.vizierNameToFileName(tableName) + "_att.json"));
-			JSONObject jsonObject = (JSONObject) obj;
-			return (((JSONArray) jsonObject.get("attributes")).size() > 0)? true: false;
+			for( JSONObject tr: toRemove) {
+				tables.remove(tr);
+			}
 		}
-
-		/**
-		 * Returns a JSON table list with maxSize first tables and tap schema tables
-		 * @param maxSize
-		 * @return
-		 * @throws Exception
+		/*
+		 * Advice the client that the litt is truncated
 		 */
-		@SuppressWarnings("unchecked")
-		public JSONObject filterTableList(int maxSize) throws Exception {
-			JSONParser parser = new JSONParser();
-			Object obj = parser.parse(new FileReader(this.getBaseDirectory() + "tables.json"));
-			JSONObject jsonObject = (JSONObject) obj;
+		if( truncated ) {
+			jsonObject.put("truncated", "true");
+		}
+		return jsonObject;
+	}
+
+	/**
+	 * Returns a JSON table list with only tables matching the filer (filtered by name or by description)
+	 * and tap schema tables
+	 * @param filter
+	 * @return
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+	public JSONObject filterTableList(String filter) throws Exception {
+		JSONParser parser = new JSONParser();
+		Object obj = parser.parse(new FileReader(this.getBaseDirectory() + "tables.json"));
+		JSONObject jsonObject = (JSONObject) obj;
+		JSONArray schemas = (JSONArray) jsonObject.get("schemas");
+		boolean truncated = false;
+		int kept = 0;
+		for(Object sn: schemas) {
+			boolean takeAnyway = false;
+			ArrayList<JSONObject> toRemove = new ArrayList<JSONObject>();
+			JSONObject s = (JSONObject)sn;
+			String schema = (String) s.get("name");
+			if( schema.equalsIgnoreCase("tap_schema") ) {
+				takeAnyway = true;
+			}
+			JSONArray tables = (JSONArray) s.get("tables");
+			for( Object ts: tables) {
+				JSONObject t = (JSONObject)ts;
+				String table = (String) t.get("name");
+				String desc = (String) t.get("description");
+				if(takeAnyway ) {
+					continue;
+				} else if( kept >= MAXTABLES ) {
+					truncated = true;
+					toRemove.add(t);	
+					continue;
+				} else if (!desc.matches("(?i)(.*" + filter + ".*)") && !table.matches("(?i)(.*" + filter + ".*)") ){
+					toRemove.add(t);	
+					continue;
+				} else {
+					kept++;					
+				}
+			}
+			for( JSONObject tr: toRemove) {
+				tables.remove(tr);
+			}
+		}
+		/*
+		 * remove empty schemas
+		 */
+		ArrayList<JSONObject> toRemove = new ArrayList<JSONObject>();
+		for(Object sn: schemas) {
+			JSONObject s = (JSONObject)sn;
+			JSONArray tables = (JSONArray) s.get("tables");
+			if( tables.size() == 0 ) {
+				toRemove.add(s);					
+			}
+		}			
+		for( JSONObject tr: toRemove) {
+			schemas.remove(tr);
+		}
+		/*
+		 * Advice the client that the lsit is truncated
+		 */
+		if( truncated ) {
+			jsonObject.put("truncated", "true");
+		}
+		return jsonObject;
+	}
+
+	/**
+	 * Returns a JSON table list with only tables matching the filer (filtered by name or by description)
+	 * and not contained in rejectedIndividuals in addition with tap schema tables which cannot be discarded
+	 * @param filter
+	 * @param rejectedIndividuals
+	 * @return
+	 * @throws Exception
+	 */
+	public JSONObject filterTableList(String filter, Set<String> rejectedIndividuals) throws Exception {
+		JSONObject jsonObject = this.filterTableList(filter) ;
+		if( rejectedIndividuals != null && rejectedIndividuals.size() != 0 ) {
 			JSONArray schemas = (JSONArray) jsonObject.get("schemas");
-			boolean truncated = false;
-			for(Object sn: schemas) {
-				boolean takeAnyway = false;
-				ArrayList<JSONObject> toRemove = new ArrayList<JSONObject>();
-				JSONObject s = (JSONObject)sn;
-				if( ((String)s.get("name")).equalsIgnoreCase("tap_schema") ) {
-					takeAnyway = true;
-				}
-				JSONArray tables = (JSONArray) s.get("tables");
-				int cpt = 0;
-				for( Object ts: tables) {
-					JSONObject t = (JSONObject)ts;
-
-					if( cpt >= maxSize && !takeAnyway ) {
-						truncated = true;
-						toRemove.add(t);
-					}
-					if( !takeAnyway) cpt++;
-				}
-				for( JSONObject tr: toRemove) {
-					tables.remove(tr);
-				}
-			}
-			/*
-			 * Advice the client that the litt is truncated
-			 */
-			if( truncated ) {
-				jsonObject.put("truncated", "true");
-			}
-			return jsonObject;
-		}
-
-		/**
-		 * Returns a JSON table list with only tables matching the filer (filtered by name or by description)
-		 * and tap schema tables
-		 * @param filter
-		 * @return
-		 * @throws Exception
-		 */
-		@SuppressWarnings("unchecked")
-		public JSONObject filterTableList(String filter) throws Exception {
-			JSONParser parser = new JSONParser();
-			Object obj = parser.parse(new FileReader(this.getBaseDirectory() + "tables.json"));
-			JSONObject jsonObject = (JSONObject) obj;
-			JSONArray schemas = (JSONArray) jsonObject.get("schemas");
-			boolean truncated = false;
-			int kept = 0;
 			for(Object sn: schemas) {
 				boolean takeAnyway = false;
 				ArrayList<JSONObject> toRemove = new ArrayList<JSONObject>();
@@ -584,18 +653,11 @@ public class TapNode  extends RootClass {
 				for( Object ts: tables) {
 					JSONObject t = (JSONObject)ts;
 					String table = (String) t.get("name");
-					String desc = (String) t.get("description");
 					if(takeAnyway ) {
 						continue;
-					} else if( kept >= MAXTABLES ) {
-						truncated = true;
+					} else if (rejectedIndividuals.contains(table)  ){
 						toRemove.add(t);	
 						continue;
-					} else if (!desc.matches("(?i)(.*" + filter + ".*)") && !table.matches("(?i)(.*" + filter + ".*)") ){
-						toRemove.add(t);	
-						continue;
-					} else {
-						kept++;					
 					}
 				}
 				for( JSONObject tr: toRemove) {
@@ -616,76 +678,18 @@ public class TapNode  extends RootClass {
 			for( JSONObject tr: toRemove) {
 				schemas.remove(tr);
 			}
-			/*
-			 * Advice the client that the lsit is truncated
-			 */
-			if( truncated ) {
-				jsonObject.put("truncated", "true");
-			}
-			return jsonObject;
 		}
-
-		/**
-		 * Returns a JSON table list with only tables matching the filer (filtered by name or by description)
-		 * and not contained in rejectedIndividuals in addition with tap schema tables which cannot be discarded
-		 * @param filter
-		 * @param rejectedIndividuals
-		 * @return
-		 * @throws Exception
-		 */
-		public JSONObject filterTableList(String filter, Set<String> rejectedIndividuals) throws Exception {
-			JSONObject jsonObject = this.filterTableList(filter) ;
-			if( rejectedIndividuals != null && rejectedIndividuals.size() != 0 ) {
-				JSONArray schemas = (JSONArray) jsonObject.get("schemas");
-				for(Object sn: schemas) {
-					boolean takeAnyway = false;
-					ArrayList<JSONObject> toRemove = new ArrayList<JSONObject>();
-					JSONObject s = (JSONObject)sn;
-					String schema = (String) s.get("name");
-					if( schema.equalsIgnoreCase("tap_schema") ) {
-						takeAnyway = true;
-					}
-					JSONArray tables = (JSONArray) s.get("tables");
-					for( Object ts: tables) {
-						JSONObject t = (JSONObject)ts;
-						String table = (String) t.get("name");
-						if(takeAnyway ) {
-							continue;
-						} else if (rejectedIndividuals.contains(table)  ){
-							toRemove.add(t);	
-							continue;
-						}
-					}
-					for( JSONObject tr: toRemove) {
-						tables.remove(tr);
-					}
-				}
-				/*
-				 * remove empty schemas
-				 */
-				ArrayList<JSONObject> toRemove = new ArrayList<JSONObject>();
-				for(Object sn: schemas) {
-					JSONObject s = (JSONObject)sn;
-					JSONArray tables = (JSONArray) s.get("tables");
-					if( tables.size() == 0 ) {
-						toRemove.add(s);					
-					}
-				}			
-				for( JSONObject tr: toRemove) {
-					schemas.remove(tr);
-				}
-			}
-			return jsonObject;
-		}
-
-		/**
-		 * Filter not significant characters ending the URLS
-		 * @param url
-		 * @return
-		 * @throws Exception
-		 */
-		public static String filterURLTail(String url) throws Exception{
-			return url.replaceAll("[^a-zA-Z\\d_-]*$", "");
-		}
-
+		return jsonObject;
 	}
+
+	/**
+	 * Filter not significant characters ending the URLS
+	 * @param url
+	 * @return
+	 * @throws Exception
+	 */
+	public static String filterURLTail(String url) throws Exception{
+		return url.replaceAll("[^a-zA-Z\\d_-]*$", "");
+	}
+
+}
