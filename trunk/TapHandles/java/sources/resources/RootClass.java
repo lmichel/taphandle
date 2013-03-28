@@ -104,8 +104,8 @@ public class RootClass {
 	/*
 	 * Initialization directives
 	 */
-	public static final boolean INCLUDE_JOIN = true;
-	public static final boolean NOINIT = false;
+	public static final boolean INCLUDE_JOIN = false;
+	public static final boolean NOINIT = true;
 	/*
 	 * Max number of rows in a result table
 	 */
