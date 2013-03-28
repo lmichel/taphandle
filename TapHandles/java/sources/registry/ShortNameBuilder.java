@@ -82,7 +82,7 @@ public class ShortNameBuilder extends RootClass {
 					break;
 				}
 			}
-			return (str + GLU + pe[pe.length - 1]).replaceAll("\\.", "");
+			return (str + GLU + pe[pe.length - 1]).replaceAll("[\\.:-]", "");
 
 		}
 	}		
