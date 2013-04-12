@@ -72,7 +72,6 @@ public class GetNode extends RootServlet implements Servlet {
 				byte[] bytes  = (jso.toJSONString() + "\n              \n").getBytes();
 				logger.debug("Node " + key + " Seems to be too large to return all tables: apply a selection " + bytes.length + " bytes returned");
 				response.setContentLength(bytes.length);
-
 				response.getOutputStream().write(bytes);
 			} else {
 				dumpJsonFile("/" + RootClass.WEB_NODEBASE_DIR + "/" + key + "/tables.json", response);				
