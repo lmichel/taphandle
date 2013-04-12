@@ -15,6 +15,7 @@ public class QueryModeChecker extends RootClass {
 	private String workingDirectory;
 	private boolean supportSyncMode = false;
 	private boolean supportAsyncMode = false;
+	private boolean supportUpload = false;
 	private String resultFile;
 	private String statusFile;
 	private NodeCookie cookie;
@@ -34,6 +35,7 @@ public class QueryModeChecker extends RootClass {
 
 		this.supportSyncMode = checkSyncMode();
 		this.supportAsyncMode = checkAsyncMode();
+		this.supportUpload = checkUploadMode();
 	}
 
 	/**
@@ -103,5 +105,20 @@ public class QueryModeChecker extends RootClass {
 			return true;
 		}
 	}
+	/**
+	 * return true if the query with upload succeed in sync mode
+	 * @return
+	 */
+	private boolean checkUploadMode() {
+		logger.debug("Check upload query on " + this.endpoint);
+		try {
+			TapAccess.runSyncJob(this.endpoint, this.query, this.workingDirectory + "syncmodetest.xml", new NodeCookie(), null);
+		} catch(Exception e) {
+			return false;
+		}
+		logger.debug(this.endpoint + " supports the upload query");
+		return true;
+	}
+
 
 }
