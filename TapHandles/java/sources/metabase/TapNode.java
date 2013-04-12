@@ -63,6 +63,7 @@ public class TapNode  extends RootClass {
 	private boolean supportTapSchemaJoin = false;
 	private boolean supportAsyncMode = true;
 	private boolean supportSyncMode = true;
+	private boolean supportUpload = false;
 
 	/**
 	 * Creator
@@ -103,6 +104,10 @@ public class TapNode  extends RootClass {
 	 */
 	public boolean supportAsyncMode() {
 		return supportAsyncMode;
+	}
+
+	public boolean supportUpload() {
+		return supportUpload;
 	}
 
 	/**
