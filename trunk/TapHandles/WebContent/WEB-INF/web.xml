@@ -179,4 +179,14 @@
     <servlet-name>ForwardXMLResource</servlet-name>
     <url-pattern>/forwardxmlresource</url-pattern>
   </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>UploadFeeder</display-name>
+    <servlet-name>UploadFeeder</servlet-name>
+    <servlet-class>servlet.UploadFeeder</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>UploadFeeder</servlet-name>
+    <url-pattern>/uploadfeeder</url-pattern>
+  </servlet-mapping>
 </web-app>
