@@ -118,7 +118,6 @@ public class QueryModeChecker extends RootClass {
 	 */
 	private boolean checkUploadMode() {
 		logger.debug("Check upload query on " + this.endpoint + " with query " + this.uploadQuery);
-		System.out.println( this.uploadQuery);
 		try {
 			TapAccess.runSyncJob(this.endpoint, this.uploadQuery, "taphandlesample," +  "http://saada.unistra.fr/saada/datasample/uploadsample.xml", this.workingDirectory + "uploadtest.xml", new NodeCookie(), null);
 		} catch(Exception e) {
