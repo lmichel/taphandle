@@ -106,6 +106,7 @@ public class RootClass {
 	 */
 	public static final boolean INCLUDE_JOIN = true;
 	public static final boolean NOINIT = false;
+	public static final boolean CHECKUPLOAD = false;
 	/*
 	 * Max number of rows in a result table
 	 */
