@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VOTABLE xmlns="http://www.ivoa.net/xml/VOTable/v1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2">
+  <RESOURCE type="results">
+    <INFO name="QUERY_STATUS" value="OK" />
+    <TABLE>
+      <FIELD name="s_ra" utype="obscore:Char.SpatialAxis.Coverage.Location.Coord.Position2D.Value2.C1" ucd="pos.eq.ra" unit="deg" xtype="adql:DOUBLE" datatype="double">
+        <DESCRIPTION>RA of central coordinates</DESCRIPTION>
+      </FIELD>
+      <FIELD name="s_dec" utype="obscore:Char.SpatialAxis.Coverage.Location.Coord.Position2D.Value2.C2" ucd="pos.eq.dec" unit="deg" xtype="adql:DOUBLE" datatype="double">
+        <DESCRIPTION>DEC of central coordinates</DESCRIPTION>
+      </FIELD>
+      <FIELD name="obs_publisher_did" utype="obscore:Curation.PublisherDID" ucd="meta.ref.url;meta.curation" xtype="adql:VARCHAR" datatype="char" arraysize="256*">
+        <DESCRIPTION>publisher dataset identifier</DESCRIPTION>
+      </FIELD>
+      <DATA>
+        <TABLEDATA>
+          <TR>
+            <TD>92.25285484733719</TD>
+            <TD>24.39696910644254</TD>
+            <TD>taphandleUploadCheck</TD>
+          </TR>
+        </TABLEDATA>
+      </DATA>
+    </TABLE>
+  </RESOURCE>
+</VOTABLE>
