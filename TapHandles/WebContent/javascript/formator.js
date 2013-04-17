@@ -47,7 +47,7 @@ function formatValue(columnName, value, tdNode) {
 	//	var url = 'getdatalink?url=' + escape(value);
 		//"DataLinkBrowser.startBrowser("http://obs-he-lm:8888/3XMM/smartdatalink?oid=1160803203386703882"
 		//tdNode.html("<a class='dl_datalink' title='Get LinkedData'   href='#' onclick='resultPaneView.fireGetDataLink(\"" + value + "\"); return false;'/></a>");
-		tdNode.html("<a class='dl_datalink' title='Get LinkedData'   href='#' onclick='DataLinkBrowser.startBrowser(\"" + value + "\", \"forwardxmlresource?target=\"); return false;'/></a>");
+		tdNode.html("<a class='dl_datalink' title='Get LinkedData'   href='#' onclick='DataLinkBrowser.startBrowser(\"forwardxmlresource?target=" +  encodeURIComponent(value) + "\"); return false;'/></a>");
 			
 	} else if( value.startsWith("http://") ||  value.startsWith("https://") ) {
 		var titlepath = $('#titlepath').text().split('>');
