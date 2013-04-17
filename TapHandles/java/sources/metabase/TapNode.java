@@ -317,7 +317,6 @@ public class TapNode  extends RootClass {
 		this.supportSyncMode = qmc.supportSyncMode();
 		this.supportAsyncMode = qmc.supportAsyncMode();
 		this.supportUpload = qmc.supportUpload();
-System.out.println("@@@@@@@@@@@@@@@@@@@@ " + this.supportUpload);
 		if( !this.supportSyncMode && !this.supportSyncMode ){
 			
 			throw new TapException("No query mode supported (neither sync nor async");
@@ -421,7 +420,6 @@ System.out.println("@@@@@@@@@@@@@@@@@@@@ " + this.supportUpload);
 		String filename = this.baseDirectory + service + ".json";
 		Scanner s = new Scanner(new File(filename));
 		PrintWriter fw = new PrintWriter(new File(filename + ".new"));
-		System.out.println("@@@@@@@@@@@@@@@@@@@@222222 " + this.supportUpload);
 		while( s.hasNextLine() ) {
 			fw.println(s.nextLine().replaceAll("NODEKEY", this.regMark.getNodeKey())
 					.replaceAll("NODEURL", this.regMark.getAbsoluteURL(null))
@@ -440,7 +438,6 @@ System.out.println("@@@@@@@@@@@@@@@@@@@@ " + this.supportUpload);
 		String filename = this.baseDirectory  + "tables.json";
 		Scanner s = new Scanner(new File(filename));
 		PrintWriter fw = new PrintWriter(new File(filename + ".new"));
-		System.out.println("@@@@@@@@@@@@@@@@@@@@222222 " + this.supportUpload);
 		while( s.hasNextLine() ) {
 			fw.println(s.nextLine().replaceAll("NODEASYNC", Boolean.toString(this.supportAsyncMode))
 					.replaceAll("NODEUPLOAD", Boolean.toString(this.supportUpload()))
