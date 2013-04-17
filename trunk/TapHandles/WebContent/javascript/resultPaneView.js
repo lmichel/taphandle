@@ -49,7 +49,7 @@ jQuery.extend({
 							if( v.match(/fits$/) ) {
 								mtype = "table.load.fits";
 							} else {
-								mtype = "table.load.votable"
+								mtype = "table.load.votable";
 							}
 						} else if( k.match(/contentdisposition/i) ) {
 							var regex = new RegExp(/filename=(.*)$/) ;
@@ -173,6 +173,8 @@ jQuery.extend({
 					break;
 				}
 			}
+			description += "\n- Asynchronous mode  " + ((jsdata.asyncsupport == "false")?" not ": "") + "supported\n";
+			description += "- Table upload " + ((jsdata.uploadsupport  == "false")?" not ": "") + "supported\n";
 			$("div#treedisp").jstree("create"
 					, $("div#treedisp")
 					, false
