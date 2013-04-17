@@ -316,7 +316,11 @@ public class TapNode  extends RootClass {
 		QueryModeChecker qmc = new QueryModeChecker(this.regMark.getFullUrl(), query, uploadQuery, this.baseDirectory);
 		this.supportSyncMode = qmc.supportSyncMode();
 		this.supportAsyncMode = qmc.supportAsyncMode();
-		this.supportUpload = qmc.supportUpload();
+		if( CHECKUPLOAD ) {
+			this.supportUpload = qmc.supportUpload();
+		} else {
+			this.supportUpload = false;
+		}
 		if( !this.supportSyncMode && !this.supportSyncMode ){
 			
 			throw new TapException("No query mode supported (neither sync nor async");
