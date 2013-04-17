@@ -1,6 +1,7 @@
 package tapaccess;
 
 import resources.RootClass;
+import servlet.RootServlet;
 import session.NodeCookie;
 
 
@@ -12,6 +13,7 @@ import session.NodeCookie;
 public class QueryModeChecker extends RootClass {
 	private String endpoint;
 	private String query;
+	private String uploadQuery;
 	private String workingDirectory;
 	private boolean supportSyncMode = false;
 	private boolean supportAsyncMode = false;
@@ -22,11 +24,12 @@ public class QueryModeChecker extends RootClass {
 	private String phase = "";
 	private String jobID;
 
-	public QueryModeChecker(String endpoint, String query,
+	public QueryModeChecker(String endpoint, String query, String uploadQuery,
 			String workingDirectory) {
 		super();
 		this.endpoint = endpoint;
 		this.query = query;
+		this.uploadQuery = uploadQuery;
 		this.workingDirectory = workingDirectory;
 
 		this.resultFile = "asyncmodetest.xml";
@@ -50,6 +53,10 @@ public class QueryModeChecker extends RootClass {
 	public boolean supportAsyncMode() {
 		return supportAsyncMode;
 	}
+	public boolean supportUpload() {
+		return supportUpload;
+	}
+	
 	/**
 	 * return true if the query succeed in sync mode
 	 * @return
@@ -110,15 +117,17 @@ public class QueryModeChecker extends RootClass {
 	 * @return
 	 */
 	private boolean checkUploadMode() {
-		logger.debug("Check upload query on " + this.endpoint);
+		logger.debug("Check upload query on " + this.endpoint + " with query " + this.uploadQuery);
+		System.out.println( this.uploadQuery);
 		try {
-			TapAccess.runSyncJob(this.endpoint, this.query, this.workingDirectory + "syncmodetest.xml", new NodeCookie(), null);
+			TapAccess.runSyncJob(this.endpoint, this.uploadQuery, "taphandlesample," +  "http://saada.unistra.fr/saada/datasample/uploadsample.xml", this.workingDirectory + "uploadtest.xml", new NodeCookie(), null);
 		} catch(Exception e) {
+			e.printStackTrace();
+			logger.warn(this.endpoint + " do not support upload");
 			return false;
 		}
-		logger.debug(this.endpoint + " supports the upload query");
+		logger.debug(this.endpoint + " supports the upload");
+		System.out.println(this.uploadQuery);
 		return true;
 	}
-
-
 }

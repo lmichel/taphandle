@@ -105,9 +105,9 @@ public class TapAccess  extends RootClass {
 			}
 			return ;
 		} */
-
-
 	}
+
+
 
 	/**
 	 * @param endpoint
@@ -205,6 +205,38 @@ public class TapAccess  extends RootClass {
 		cookie.storeCookie();
 	}
 
+	/**
+	 * @param endpoint
+	 * @param query
+	 * @param uploadParam : SOMETHING LIKE: tableNmae,tableuRL
+	 * @param outputfile
+	 * @param cookie
+	 * @param remoteAddress
+	 * @return
+	 * @throws Exception
+	 */
+	public static String runSyncJob(String endpoint, String query, String uploadParam, String outputfile, NodeCookie cookie, String remoteAddress) throws Exception {
+		String runId = (remoteAddress == null )? RUNID: "TapHandle-" + remoteAddress;
+		System.out.println("@@@@@@@@@@@ " + "RUNID=" + runId + "&REQUEST=doQuery&LANG=ADQL&QUERY=" + URLEncoder.encode(query, "ISO-8859-1") + "&UPLOAD=" + uploadParam);
+		sendPostRequest(endpoint + "sync"
+				, "RUNID=" + runId + "&REQUEST=doQuery&LANG=ADQL&QUERY=" + URLEncoder.encode(query, "ISO-8859-1") + "&UPLOAD=" + uploadParam
+				, outputfile
+				, cookie
+				, false);
+		logger.debug("Result reveived, start JSON translation");
+		XmlToJson.translateResultTable(outputfile, outputfile.replaceAll("xml", "json"));
+		return outputfile.replaceAll("xml", "json");
+	}
+	
+	/**
+	 * @param endpoint
+	 * @param query
+	 * @param outputfile
+	 * @param cookie
+	 * @param remoteAddress
+	 * @return
+	 * @throws Exception
+	 */
 	public static String runSyncJob(String endpoint, String query, String outputfile, NodeCookie cookie, String remoteAddress) throws Exception {
 		String runId = (remoteAddress == null )? RUNID: "TapHandle-" + remoteAddress;
 		sendPostRequest(endpoint + "sync"
@@ -215,7 +247,6 @@ public class TapAccess  extends RootClass {
 		logger.debug("Result reveived, start JSON translation");
 		XmlToJson.translateResultTable(outputfile, outputfile.replaceAll("xml", "json"));
 		return outputfile.replaceAll("xml", "json");
-		//return  JsonUtils.getValue (outputfile.replaceAll("xml", "json"), "job.jobId");
 	}
 
 	/**

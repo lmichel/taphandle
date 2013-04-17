@@ -46,6 +46,7 @@ public abstract class RootServlet extends HttpServlet {
 	static private DecimalFormat exp =  new DecimalFormat("0.00E00");
 	static private DecimalFormat deux = new DecimalFormat("0.000");
 	static private DecimalFormat six = new DecimalFormat("0.000000");
+	static protected String ROOT_URL = "http://obs-he-lm:8888/TapHandles";// default value, can be changed in file WEB_INF/dbname.txt
 
 
 	static {
@@ -53,15 +54,22 @@ public abstract class RootServlet extends HttpServlet {
 		six.setDecimalFormatSymbols(new DecimalFormatSymbols(Locale.ENGLISH));
 		exp.setDecimalFormatSymbols(new DecimalFormatSymbols(Locale.ENGLISH));			
 	}
-	@Override
-	public void init(ServletConfig conf) throws ServletException {
-		super.init(conf);
-		synchronized (this) {
-			if( ! INIT) {
-				NodeBase.switchToContext(getServletContext().getRealPath("/"));
-				INIT = true;
-			}
-		}
+//	@Override
+//	public void init(ServletConfig conf) throws ServletException {
+//		super.init(conf);
+//		synchronized (this) {
+//			if( ! INIT) {
+//				NodeBase.switchToContext(getServletContext().getRealPath("/"));
+//				INIT = true;
+//			}
+//		}
+//	}
+	
+	/**
+	 * @return
+	 */
+	public static String getRootUrl() {
+		return ROOT_URL;
 	}
 
 	/**

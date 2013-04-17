@@ -164,7 +164,12 @@ public class TapNode  extends RootClass {
 		this.checkTables() ;
 		logger.debug("NS for tables " + tablesNS.getNsName());
 
-		this.checkAsyncMode() ;
+		this.testCapabilities() ;
+		/*
+		 * DO it again to add capability flags in tables.JSON
+		 */
+		this.setCapabilityFlagsInJsonResponse();			
+
 		logger.info("Service " + this.regMark + " seems to be working");		
 		if( INCLUDE_JOIN && this.regMark.supportJoin() ) {
 			this.setJoinKeys();
@@ -294,7 +299,7 @@ public class TapNode  extends RootClass {
 					logger.info("succeed");
 				}	
 			} catch (Exception e2) {
-				throw new Exception("No valid tables capability: failed to rebuild it from the TAP schema: " + e2.getMessage());
+				throw new Exception("No valid tables capability: failed to rebuild it from the TAP schema: " + e2);
 			}
 		}
 		this.setNodekeyInJsonResponse("tables");			
@@ -304,14 +309,17 @@ public class TapNode  extends RootClass {
 	 * Check if either syn or async query mode is available
 	 * @throws TapException If no query succeed
 	 */
-	private void checkAsyncMode() throws Exception {
+	private void testCapabilities() throws Exception {
 		String query = "SELECT TOP 1 * FROM " + quoteTableName(getFirstTableName());
+		String uploadQuery = "SELECT TOP 1 * FROM " + quoteTableName(getFirstTableName()) + " NATURAL JOIN TAP_UPLOAD.taphandlesample ";
 		logger.debug("Test query " + query);
-		QueryModeChecker qmc = new QueryModeChecker(this.regMark.getFullUrl(), query, this.baseDirectory);
+		QueryModeChecker qmc = new QueryModeChecker(this.regMark.getFullUrl(), query, uploadQuery, this.baseDirectory);
 		this.supportSyncMode = qmc.supportSyncMode();
 		this.supportAsyncMode = qmc.supportAsyncMode();
-
+		this.supportUpload = qmc.supportUpload();
+System.out.println("@@@@@@@@@@@@@@@@@@@@ " + this.supportUpload);
 		if( !this.supportSyncMode && !this.supportSyncMode ){
+			
 			throw new TapException("No query mode supported (neither sync nor async");
 		}
 	}
@@ -413,8 +421,30 @@ public class TapNode  extends RootClass {
 		String filename = this.baseDirectory + service + ".json";
 		Scanner s = new Scanner(new File(filename));
 		PrintWriter fw = new PrintWriter(new File(filename + ".new"));
+		System.out.println("@@@@@@@@@@@@@@@@@@@@222222 " + this.supportUpload);
 		while( s.hasNextLine() ) {
-			fw.println(s.nextLine().replaceAll("NODEKEY", this.regMark.getNodeKey()).replaceAll("NODEURL", this.regMark.getAbsoluteURL(null)));
+			fw.println(s.nextLine().replaceAll("NODEKEY", this.regMark.getNodeKey())
+					.replaceAll("NODEURL", this.regMark.getAbsoluteURL(null))
+					);
+		}
+		s.close();
+		fw.close();
+		(new File(filename + ".new")).renameTo(new File(filename));	
+	}
+
+	/**
+	 * @param service
+	 * @throws Exception
+	 */
+	private void setCapabilityFlagsInJsonResponse() throws Exception {
+		String filename = this.baseDirectory  + "tables.json";
+		Scanner s = new Scanner(new File(filename));
+		PrintWriter fw = new PrintWriter(new File(filename + ".new"));
+		System.out.println("@@@@@@@@@@@@@@@@@@@@222222 " + this.supportUpload);
+		while( s.hasNextLine() ) {
+			fw.println(s.nextLine().replaceAll("NODEASYNC", Boolean.toString(this.supportAsyncMode))
+					.replaceAll("NODEUPLOAD", Boolean.toString(this.supportUpload()))
+					);
 		}
 		s.close();
 		fw.close();
