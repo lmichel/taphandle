@@ -58,7 +58,7 @@ public class ForwardXMLResource extends RootServlet {
 					if( lt > MAX_LENGTH ) {
 						throw new Exception("Forwarding XML message longer than " + MAX_LENGTH  + " is not allowed" );
 					}
-					out.write(buffer);
+					out.write(buffer, 0, l);
 				}
 				out.flush();
 			} else {
