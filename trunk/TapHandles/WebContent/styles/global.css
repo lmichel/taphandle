@@ -847,6 +847,11 @@ a:active.dl_cart {
 	-moz-opacity: 0.8;
 	opacity: 0.8;
 }
+a:.dl_cart_added {
+	filter: alpha(opacity = 50);
+	-moz-opacity: 0.5;
+	opacity: 0.5;
+}
 
 a.dl_securecart {
 	display: inline-block;
