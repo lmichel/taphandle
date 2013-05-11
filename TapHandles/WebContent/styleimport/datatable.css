@@ -57,22 +57,22 @@
 }
 
 .dataTables_length {
-	width: 40%;
+	width: 200px;
 	float: left;
 	border-width: 0px;
-	
+	font-size: small
 }
 
 .dataTables_filter {
-	width: 50%;
-	float: right;
+	/*width: 50%;*/
+	float: left;
 	text-align: right;
 	border-width: 0px;
-	
+	font-size: small
 }
 
 .dataTables_info {
-	width: 60%;
+	/*width: 60%;*/
 	float: left;
 	border-width: 0px;
 	font-size: small;
@@ -80,9 +80,8 @@
 }
 
 .dataTables_paginate {
-	width: 44px;
-	* width: 50px;
-	float: right;
+	width: 64px;
+	float: left;
 	text-align: right;
 	border-width: 0px;
 	
