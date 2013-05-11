@@ -42,10 +42,10 @@ public class ForwardXMLResource extends RootServlet {
 		this.printAccess(request, true);
 		try {
 			String target = request.getParameter("target");
-			logger.info("Forward URL " + target);
 			URL url = new URL(target);
 			URLConnection conn = url.openConnection();
-			if( conn.getContentType().equals("text/xml") ) {
+			logger.info("Forward URL " + target + " of type " +  conn.getContentType());
+			if( conn.getContentType().equals("text/xml") || conn.getContentType().equals("application/x-votable+xml")) {
 				OutputStream out = response.getOutputStream();
 				bis = new BufferedInputStream(conn.getInputStream());
 				response.setContentType("text/xml");
@@ -62,8 +62,7 @@ public class ForwardXMLResource extends RootServlet {
 				}
 				out.flush();
 			} else {
-				logger.error("Request of type " + request.getContentType() + " cannot be forwarded");
-				throw new Exception("Request of type " + request.getContentType() + " cannot be forwarded"  );
+				throw new Exception("Request of type " + conn.getContentType() + " cannot be forwarded"  );
 			}
 		} catch (Exception e2) {
 			e2.printStackTrace();

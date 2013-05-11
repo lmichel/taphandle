@@ -25,7 +25,7 @@ import session.UserSession;
 public class InitBaseAtStart extends RootClass implements ServletContextListener , HttpSessionListener{
 
 	public void contextDestroyed(ServletContextEvent event) {
-		logger.info("Bye Bye");
+		logger.info("Bye Bye..");
 	}
 
 	public void contextInitialized(ServletContextEvent event) {
