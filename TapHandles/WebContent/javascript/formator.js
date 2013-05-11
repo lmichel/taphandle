@@ -43,19 +43,20 @@ var decimaleRegexp = new RegExp("^[+-]?[0-9]*[.][0-9]*([eE][+-]?[0-9]+)?$","m");
 var bibcodeRegexp  = new RegExp(/^[12][089]\d{2}[A-Za-z][A-Za-z0-9&][A-Za-z0-9&.]{2}[A-Za-z0-9.][0-9.][0-9.BCRU][0-9.]{2}[A-Za-z0-9.][0-9.]{4}[A-Z:.]$/);		
 
 function formatValue(columnName, value, tdNode) {
-	if( columnName.match(/.*datalink.*/i)  ){
-	//	var url = 'getdatalink?url=' + escape(value);
-		//"DataLinkBrowser.startBrowser("http://obs-he-lm:8888/3XMM/smartdatalink?oid=1160803203386703882"
-		//tdNode.html("<a class='dl_datalink' title='Get LinkedData'   href='#' onclick='resultPaneView.fireGetDataLink(\"" + value + "\"); return false;'/></a>");
-		tdNode.html("<a class='dl_datalink' title='Get LinkedData'   href='#' onclick='DataLinkBrowser.startBrowser(\"forwardxmlresource?target=" +  encodeURIComponent(value) + "\"); return false;'/></a>");
+	if( columnName.match(/.*URI.*/) && $('#titlepath').html().match(/.*betacadc.*/) ) {
+		tdNode.html("<a class='dl_datalink' title='Get LinkedData'   href='#' onclick='resultPaneView.highLightRow(this);DataLinkBrowser.startBrowser(\"http://beta.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/caom2proto/datalink?uri="+ value + "\", \"forwardxmlresource\"); return false;'/></a> " + value);		
+	}
+	else if( columnName.match(/.*datalink.*/i)  ){
+		//tdNode.html("<a class='dl_datalink' title='Get LinkedData'   href='#' onclick='resultPaneView.highLightRow(this);DataLinkBrowser.startBrowser(\"forwardxmlresource?target=" +  encodeURIComponent(value) + "\"); return false;'/></a>");
+		tdNode.html("<a class='dl_datalink' title='Get LinkedData'   href='#' onclick='resultPaneView.highLightRow(this);DataLinkBrowser.startBrowser(\""+ value + "\", \"forwardxmlresource\"); return false;'/></a>");
 			
 	} else if( value.startsWith("http://") ||  value.startsWith("https://") ) {
 		var titlepath = $('#titlepath').text().split('>');
 		getDLView(titlepath[0], columnName, value, tdNode);	
 	} else if( value.match(/^((position)|(region)|(polygon))/i) ) {
-		tdNode.html("<a title='STC Region (click to expand)' class='dl_stc' href='#'  onclick='Modalinfo.info(\"" + value + "\", \"STC Region\");'></a>");
+		tdNode.html("<a title='STC Region (click to expand)' class='dl_stc' href='#'  onclick='resultPaneView.highLightRow(this);Modalinfo.info(\"" + value + "\", \"STC Region\");'></a>");
 	} else if( value.startsWith("Array") ) {
-		tdNode.html("<a title='Data array(click to expand)' class='dl_dataarray' href='#'  onclick='Modalinfo.info(\"" + value + "\", \"Data Array\");'></a>");
+		tdNode.html("<a title='Data array(click to expand)' class='dl_dataarray' href='#'  onclick='resultPaneView.highLightRow(this);Modalinfo.info(\"" + value + "\", \"Data Array\");'></a>");
 	} else if( decimaleRegexp.test(value)){
 		tdNode.html((new Number(value)).toPrecision(8));
 	} else if( bibcodeRegexp.test(value)){
@@ -73,7 +74,7 @@ function getDLView(node, columnName, url, tdNode) {
 		} else {
 			var cd=null, ct=null, ce=null;
 			var dl_class = 'dl_download';
-			var dl_cart_tag  = "<a class='dl_cart' title='Add to cart' href='#' onclick='cartView.fireAddUrl(\"" + node + "\", \"" + url + "\"); return false;'/></a>";
+			var dl_cart_tag  = "<a class='dl_cart' title='Add to cart' href='#' onclick='$(this).css(&quot;opacity&quot;, &quot;0.5&quot;);resultPaneView.highLightRow(this);cartView.fireAddUrl(\"" + node + "\", \"" + url + "\"); return false;'/></a>";
 
 			$.each(jsdata, function(k, v) {
 				if( k == 'ContentDisposition')    cd = v;
@@ -82,7 +83,7 @@ function getDLView(node, columnName, url, tdNode) {
 				else if( k == 'nokey' ) {
 					if( v.match('401') != null ) {
 						dl_class = 'dl_securedownload';
-						dl_cart_tag  = "<a class='dl_securecart' title='Add to cart' href='#' onclick='cartView.fireRestrictedUrl(\"" + node + "\", \"" + url + "\"); return false;'/></a>";
+						dl_cart_tag  = "<a class='dl_securecart' title='Add to cart' href='#' onclick='resultPaneView.highLightRow(this);cartView.fireRestrictedUrl(\"" + node + "\", \"" + url + "\"); return false;'/></a>";
 					}
 				}
 			});
@@ -92,27 +93,27 @@ function getDLView(node, columnName, url, tdNode) {
 			if( (ct != null && (ct.match(/\.fit/i) || ct.match(/fits/))) ||
 				(cd != null && (cd.match(/\.fit/i) || cd.match(/fits/)))	){
 				//samp_tag = "<a class='dl_samp'     title='Broadcast to SAMP'   href='#' onclick='WebSamp_mVc.fireSendVoreport(\"" + url + "\"); return false;'/></a>";
-				samp_tag = "<a class='dl_samp'     title='Broadcast to SAMP'   href='#' onclick='resultPaneView.fireSendVoreportWithInfo(\"" + url + "\"); return false;'/></a>";
+				samp_tag = "<a class='dl_samp'     title='Broadcast to SAMP'   href='#' onclick='resultPaneView.highLightRow(this);resultPaneView.fireSendVoreportWithInfo(\"" + url + "\"); return false;'/></a>";
 				
 				isFits = true;
 			}
 			else if( (ct != null && (ct.match(/\.xml/i) || ct.match(/\.voty/)|| ct.match(/\.votable/))) ||
 					 (cd != null && (cd.match(/\.xml/i) || cd.match(/\.voty/)|| cd.match(/\.votable/)))){
 				isVotable = true;
-				samp_tag = "<a class='dl_samp'     title='Broadcast to SAMP'   href='#' onclick='WebSamp_mVc.fireSendVoreport(\"" + url + "\"); return false;'/></a>";
+				samp_tag = "<a class='dl_samp'     title='Broadcast to SAMP'   href='#' onclick='resultPaneView.highLightRow(this);WebSamp_mVc.fireSendVoreport(\"" + url + "\"); return false;'/></a>";
 			}
 			var dl_tag = "";
 			/*
 			 * Will be downloaded by the browser: no need to open a new tab
 			 */
 			if( (ce != null && (ce == 'gzip' || ce == 'zip')) || isFits ){
-				dl_tag = "<a class='" + dl_class + "' title='Download Data' href='javascript:void(0);' onclick='Location.changeLocation(\"" + url + "\");'></a>";
+				dl_tag = "<a class='" + dl_class + "' title='Download Data' href='javascript:void(0);' onclick='resultPaneView.highLightRow(this);Location.changeLocation(\"" + url + "\");'></a>";
 			} else {
-				dl_tag = "<a class='" + dl_class + "' title='Download Data' href='javascript:void(0);' onclick='Location.changeLocation(\"" + url + "\");' target=blank></a>";
+				dl_tag = "<a class='" + dl_class + "' title='Download Data' href='javascript:void(0);' onclick='resultPaneView.highLightRow(this);Location.changeLocation(\"" + url + "\");' target=blank></a>";
 			}
 
 			tdNode.html(
-				  "<a class='dl_info' title='Get info about' href='#' onclick='resultPaneView.fireGetProductInfo(\"" + url + "\"); return false;'></a>"
+				  "<a class='dl_info' title='Get info about' href='#' onclick='resultPaneView.highLightRow(this);resultPaneView.fireGetProductInfo(\"" + url + "\"); return false;'></a>"
 				+ dl_tag 
 			    + dl_cart_tag
 			    + samp_tag );
