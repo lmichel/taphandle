@@ -2,28 +2,19 @@ package servlet;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Scanner;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import metabase.NodeBase;
 
 import org.apache.log4j.Logger;
 
@@ -42,29 +33,17 @@ public abstract class RootServlet extends HttpServlet {
 	 */
 	private static final long serialVersionUID = 1L;
 	public static final Logger logger = Logger.getLogger("TapBrowser"); 
-	private static boolean INIT = false;
 	static private DecimalFormat exp =  new DecimalFormat("0.00E00");
 	static private DecimalFormat deux = new DecimalFormat("0.000");
 	static private DecimalFormat six = new DecimalFormat("0.000000");
 	static protected String ROOT_URL = "http://obs-he-lm:8888/TapHandles";// default value, can be changed in file WEB_INF/dbname.txt
-
 
 	static {
 		deux.setDecimalFormatSymbols(new DecimalFormatSymbols(Locale.ENGLISH));
 		six.setDecimalFormatSymbols(new DecimalFormatSymbols(Locale.ENGLISH));
 		exp.setDecimalFormatSymbols(new DecimalFormatSymbols(Locale.ENGLISH));			
 	}
-//	@Override
-//	public void init(ServletConfig conf) throws ServletException {
-//		super.init(conf);
-//		synchronized (this) {
-//			if( ! INIT) {
-//				NodeBase.switchToContext(getServletContext().getRealPath("/"));
-//				INIT = true;
-//			}
-//		}
-//	}
-	
+
 	/**
 	 * @return
 	 */
@@ -90,6 +69,18 @@ public abstract class RootServlet extends HttpServlet {
 	public void reportJsonError(HttpServletRequest request, HttpServletResponse response, String msg) {
 		try {
 			JsonUtils.teePrint(response.getOutputStream(), JsonUtils.getErrorMsg(accessMessage(request) + "\n" +msg));
+		} catch (Exception e1) {
+			logger.error("Servlet exception", e1);
+		}
+	}
+	/**
+	 * @param request
+	 * @param response
+	 * @param msg
+	 */
+	public void reportJsonStatus(HttpServletRequest request, HttpServletResponse response, String msg) {
+		try {
+			JsonUtils.teePrint(response.getOutputStream(), JsonUtils.getStatusMsg(msg));
 		} catch (Exception e1) {
 			logger.error("Servlet exception", e1);
 		}
@@ -141,12 +132,10 @@ public abstract class RootServlet extends HttpServlet {
 		if( product_path.toLowerCase().endsWith(".gz") ) {
 			res.setHeader("Content-Encoding", "gzip");
 			s_product = product_path.replaceAll("(?i)(\\.gz$)", "");
-		}
-		else if( product_path.toLowerCase().endsWith(".gzip") ) {
+		} else if( product_path.toLowerCase().endsWith(".gzip") ) {
 			res.setHeader("Content-Encoding", "gzip");
 			s_product = product_path.replaceAll("(?i)(\\.gzip$)", "");
-		}
-		else if( product_path.toLowerCase().endsWith(".zip") ) {
+		} else if( product_path.toLowerCase().endsWith(".zip") ) {
 			res.setHeader("Content-Encoding", "zip");
 			s_product = product_path.replaceAll("(?i)(\\.zip$)", "");
 		}
@@ -199,6 +188,11 @@ public abstract class RootServlet extends HttpServlet {
 		bos.close();		
 	}
 
+	/**
+	 * @param urlPath
+	 * @param response
+	 * @throws Exception
+	 */
 	protected void dumpJsonFile(String urlPath, HttpServletResponse response) throws Exception {
 		String realPath = getServletContext().getRealPath(urlPath);
 		String length = Long.toString((new File(realPath)).length());
@@ -243,12 +237,16 @@ public abstract class RootServlet extends HttpServlet {
 		return retour;
 	}
 
+	/**
+	 * @param req
+	 * @param param
+	 * @return
+	 */
 	protected String getParameter(HttpServletRequest req, String param) {
 		String retour = req.getParameter(param.toLowerCase());
 		if( retour == null ) {
 			return  req.getParameter(param.toUpperCase());
-		}
-		else {
+		} else {
 			return retour;
 		}
 	}
@@ -261,8 +259,7 @@ public abstract class RootServlet extends HttpServlet {
 	public static final String getDecimalCoordString(double val) {
 		if( Double.isInfinite(val) || Double.isNaN(val) ) {
 			return "Not Set";
-		}
-		else {
+		} else {
 			return six.format(val);
 		}
 	}
