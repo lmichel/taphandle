@@ -199,4 +199,24 @@
     <servlet-name>IsAlive</servlet-name>
     <url-pattern>/isalive</url-pattern>
   </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>PushJobToGoodies</display-name>
+    <servlet-name>PushJobToGoodies</servlet-name>
+    <servlet-class>servlet.PushJobToGoodies</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>PushJobToGoodies</servlet-name>
+    <url-pattern>/pushjobtogoodies</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>UploadUserPosList</display-name>
+    <servlet-name>UploadUserPosList</servlet-name>
+    <servlet-class>servlet.UploadUserPosList</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>UploadUserPosList</servlet-name>
+    <url-pattern>/uploaduserposlist</url-pattern>
+  </servlet-mapping>
 </web-app>
