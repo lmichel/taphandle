@@ -90,10 +90,10 @@ function initFunctions () {
 	this.initDataTree = function() {
 		dataTree = $("div#treedisp").jstree({
 			"json_data"   : {"data" : [ {  "attr"     : { "id"   : "rootid", "title": "Dummy node: Select one first with the node selector on the page top." },
-				"data"        : { "title"   : "Tap Nodes" }}]}  , 
+				"data"        : { "title"   : "Goodies" }}]}  , 
 				"plugins"     : [ "themes", "json_data", "dnd", "crrm"],
 				"dnd"         : {"drop_target" : "#resultpane,#taptab,#showquerymeta",
-					"drop_finish" : function (data) {
+			    "drop_finish" : function (data) {
 						var parent = data.r;
 						var id = data.o.attr("id");
 						var streepath ;

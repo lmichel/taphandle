@@ -16,18 +16,16 @@ jQuery.extend({
 		this.addListener = function(list) {
 			listeners.push(list);
 		};
-		
-		this.highLightRow = function(event) {
-			$(event).closest('tr').css("background-color", "#F8E0E0");
-		};
 
 		this.fireGetProductInfo = function(url) {
 			Processing.show("Waiting on product info");
+
 			$.getJSON("getproductinfo", {jsessionid: sessionID, url: url}, function(jsdata) {
 				Processing.hide();
 				if( Processing.jsonError(jsdata, "Cannot get product info") ) {
 					return;
-				} else {
+				}
+				else {
 					retour = "url: " + url + "\n";
 					$.each(jsdata, function(k, v) {
 						retour += k + ": " + v  + "\n";
@@ -43,7 +41,8 @@ jQuery.extend({
 				Processing.hide();
 				if( Processing.jsonError(jsdata, "Cannot get product info") ) {
 					return;
-				} else {
+				}
+				else {
 					var mtype=null, name=null;
 					$.each(jsdata, function(k, v) {
 						if( k.match(/contenttype/i) ) {
@@ -72,7 +71,8 @@ jQuery.extend({
 				Processing.hide();
 				if( Processing.jsonError(jsdata, "Cannot get datalink") ) {
 					return;
-				} else {
+				}
+				else {
 					var table = '';
 					var title = "Data link provided by <i>"
 						+ url 
@@ -122,7 +122,8 @@ jQuery.extend({
 				if( jsdata == undefined || jsdata == null ) {
 					window.open(url);
 					return;
-				} else {
+				}
+				else {
 					var ct, ce;
 					$.each(jsdata, function(k, v) {
 						if( k == 'ContentDisposition')    fn = v;
@@ -151,14 +152,15 @@ jQuery.extend({
 				Processing.hide();
 				if( Processing.jsonError(jsdata, "Cannot make data tree") ) {
 					return;
-				} else {
+				}
+				else {
 					that.fireBuildTree(jsdata);
 				}
 			});
 		};
 
 		this.fireBuildTree = function(jsdata) {
-			$("div#treedisp").jstree("remove","#rootid" );
+			//$("div#treedisp").jstree("remove","#rootid" );
 			$("div#treedisp").jstree("remove","#" + jsdata.nodekey);
 			/*
 			 * Create the root of the subtree of this node
@@ -457,7 +459,6 @@ jQuery.extend({
 				"aoColumns" : aoColumns,
 				"aaData" : jsdata.aaData,
 				//"sDom" : '<"top"f>rt',
-				"sDom": '<"#resultpane_banner"plri>t<"#resultpane_footer"plrf>',
 				"bPaginate" : true,
 				"aaSorting" : [],
 				"bSort" : false,
