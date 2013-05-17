@@ -74,14 +74,10 @@ public class RootClass {
 
 	public static final String ONE_COORDINATE = "[+-]?(?:(?:\\.[0-9]+)|(?:[0-9]+\\.?[0-9]*))(?:[eE][+-]?[0-9]+)?";
 	public static final String POSITION_COORDINATE = "^(" + ONE_COORDINATE + ")((?:[+-]|(?:[,:;\\s]+[+-]?))" +  ONE_COORDINATE + ")$";
-
 	/*
 	 * 
 	 */
 	public static final String URL = "(http|https)://[\\w-]+(\\.[\\w-]+)+([\\w.,@?^=%&amp;:/~+#-]*[\\w@?^=%&amp;/~+#-])?";
-
-
-
 	/*
 	 * Working directories pathes used in standalone mode (in dev e.g.). In production mode these directories
 	 * are replaced with Tomcat subdirs.
@@ -96,7 +92,13 @@ public class RootClass {
 	public static final String WEB_XSL_DIR      =  "styles";   // Style sheets dir
 	public static final String WEB_NODEBASE_DIR =  "nodebase"; // meta data repository
 	public static final String WEB_USERBASE_DIR =  "userbase"; // session data repository
+	public static final String WEB_USER_GOODIES_DIR =  "goodies"; // Directory where user can upload data files
 	public final static String RUNID = "TapHandle-Proxy";
+	/*
+	 * some standard file names
+	 */
+	public static final String VOTABLE_JOB_RESULT = "result.xml";
+	public static final String JSON_JOB_RESULT = "result.json";
 	/*
 	 * Max time period (ms) between service availability checking
 	 */
@@ -121,7 +123,6 @@ public class RootClass {
 	 */
 	public static final int SOCKET_CONNECT_TIMEOUT = 5000;
 	public static final int  SOCKET_READ_TIMEOUT   = 60000;					
-
 	public static int JOINKEY_PERIOD = 5*60*1000;
 	public static int JOINKEY_MAX_ATTEMPTS = 1;
 
