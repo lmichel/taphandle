@@ -56,7 +56,7 @@ public class JobResult extends RootServlet implements Servlet {
 				                   + "/" + sessionId 
 				                   + "/" + nodeKey 
 				                   + "/job_"  + jobId 
-				                   + "/result.xml";
+				                   + "/VOTABLE_RESULT";
 				downloadProduct(request, response,  getServletContext().getRealPath(resultfile), jobId + ".xml");
 			}
 			else if( "json".equals(format)) {
