@@ -36,6 +36,19 @@ public abstract class JsonUtils {
 	}
 
 	/**
+	 * Produces a JSON object interpreted by the client as a message
+	 * closing a successful operation
+	 * @param msg Error message
+	 * @return    Returns the JSON string
+	 */
+	@SuppressWarnings("unchecked")
+	public static String getStatusMsg(String msg) {
+		JSONObject jso = new JSONObject();
+		jso.put("statusmsg", msg);
+		return jso.toJSONString();
+	}
+
+	/**
 	 * Return a JSON string made with treepath.
 	 * treepath has the form filed1SEPARfiled2SEPA... where SERAP is either a " ", a ; or a :
 	 * @param treepath
