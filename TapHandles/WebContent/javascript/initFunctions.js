@@ -15,6 +15,9 @@ function initFunctions () {
 		var nodeFilterModel       = new $.NodeFilterModel();
 		nodeFilterView            = new $.NodeFilterView();
 		new $.NodeFilterController(nodeFilterModel, nodeFilterView);
+
+		dataTreeView = new DataTreeView();
+
 	};
 
 	this.initLayout = function() {
@@ -28,46 +31,11 @@ function initFunctions () {
 	};
 
 	this.initNodeAccess = function() {
-		Processing.show("Fetching available nodes");
-		$(".logo").attr("class", "logourbana");
-		$.ajax({
-			async: false,
-			type: 'GET',
-			dataType: 'json',
-			url: "availablenodes",
-			error: function() {
-				Processing.hide();
-				Modalinfo.error("availablenodes failure") ;
-				},
-			success: function(data) {
-				Processing.hide();
-				sessionID = data.sessionID;
-				for( var i=0 ; i<data.nodes.length ; i++) {
-					nodeList[nodeList.length] = {
-							  id   :  data.nodes[i].key
-							, text : data.nodes[i].key+ ' [' + data.nodes[i].description + ']'
-							, ivoid: data.nodes[i].ivoid 
-							, url: data.nodes[i].url
-							, description: data.nodes[i].description
-							, extra: "<br>" +data.nodes[i].url + "<br>" +data.nodes[i].ivoid + "<br>"};
-				}
-				$('input#node_selector').jsonSuggest(
-						{data: nodeList
-							, minCharacters: 0
-							, onSelect: function(data){
-								var key = $('#node_selector').val().split(' ')[0];
-								resultPaneView.fireNewNodeEvent(key);
-								$('#node_selector').val(key);
-								}
-						});
-				setTimeout('$(".logourbana").attr("class", "logo")', 2000);
-			}
-		});
-
+		dataTreeView.initNodeBase();
 
 		$("input#node_selector").keypress(function(event) {
 			if (event.which == '13') {
-				resultPaneView.fireNewNodeEvent($('#node_selector').val());
+				dataTreeView.fireNewNodeEvent($('#node_selector').val());
 			}
 		});
 		/*
@@ -90,7 +58,7 @@ function initFunctions () {
 	this.initDataTree = function() {
 		dataTree = $("div#treedisp").jstree({
 			"json_data"   : {"data" : [ {  "attr"     : { "id"   : "rootid", "title": "Dummy node: Select one first with the node selector on the page top." },
-				"data"        : { "title"   : "Goodies" }}]}  , 
+				"data"        : { "title"   : "Goodies" , "attr": {"id": "goodies"}}}]}  , 
 				"plugins"     : [ "themes", "json_data", "dnd", "crrm"],
 				"dnd"         : {"drop_target" : "#resultpane,#taptab,#showquerymeta",
 			    "drop_finish" : function (data) {
