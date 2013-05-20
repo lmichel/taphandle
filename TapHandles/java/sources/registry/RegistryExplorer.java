@@ -110,11 +110,11 @@ public class RegistryExplorer extends RootClass {
 		 */
 		NodeCookie cookie=new NodeCookie();
 		String wdir       = MetaBaseDir + "regexplorer";
-		String jsonResult = wdir +  "/regJSON_RESULT";
-		String xmlResult  = wdir +  "/regVOTABLE_RESULT";
+		String jsonResult = wdir +  "/regRESULT.json";
+		String xmlResult  = wdir +  "/regRESULT.xml";
 		validWorkingDirectory(wdir);
 		TapAccess.runSyncJob(regUrl, query, xmlResult, cookie, null);
-		XmlToJson.translateResultTable(xmlResult, jsonResult);
+	//	XmlToJson.translateResultTable(xmlResult, jsonResult);
 
 		BufferedReader br = new BufferedReader(new FileReader(jsonResult));
 		JSONParser p = new JSONParser();

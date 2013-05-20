@@ -13,7 +13,10 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.json.simple.JSONObject;
+
+import session.UserSession;
+import session.UserTrap;
+import translator.JsonUtils;
 
 
 
@@ -38,71 +41,37 @@ public class UploadUserPosList extends RootServlet {
 	}
 
 	/**
-	 * @param req
+	 * @param request
 	 * @param res
 	 */
-	public void process(HttpServletRequest req, HttpServletResponse res) {
-		this.printAccess(req, false);
-		if( ServletFileUpload.isMultipartContent(req) ) { 
+	@SuppressWarnings({ "rawtypes" })
+	public void process(HttpServletRequest request, HttpServletResponse response) {
+		this.printAccess(request, false);
+		if( ServletFileUpload.isMultipartContent(request) ) { 
 			try {
 				DiskFileItemFactory factory = new DiskFileItemFactory();
 				ServletFileUpload upload    = new ServletFileUpload(factory);
-				List items                  = upload.parseRequest(req);				
+				List items                  = upload.parseRequest(request);				
 				Iterator iter = items.iterator();
-				FileItem item_to_upload = null;
-				File uploadedFile = null;
-				String service = "getinstance";
-				String query=null;
 				/*
 				 * Read all fields
 				 */
 				while (iter.hasNext()) {
 					FileItem item = (FileItem) iter.next();
-					System.out.println(" @@@ " + item);
 					if (item.isFormField()) {
-						System.out.println(" @@@@@@@@@ " + item.getFieldName());
-						if( item.getFieldName().equals("hidden_datafile") ) {
-							//uploadedFile = new File(Database.getVOreportDir() + Database.getSepar() + item.getString());		
-						} else if( item.getFieldName().equals("hidden_service") ) {
-							service = item.getString();		
-						} else if( item.getFieldName().equals("hidden_query") ) {
-							query = item.getString();
-						}
-					}  else {
-/*						item_to_upload = item;			
-						String fileName = Database.getVOreportDir() + Database.getSepar() + item.getName();
-						File f = new File(fileName);
+					}else {
+						UserSession session = UserTrap.getUserAccount(request);
+						File f = new File(session.goodies.getNewUserListPath(item.getName()));
 						item.write(f);
-						PositionList pl = new PositionList(fileName, Database.getAstroframe());
-						JSONObject retour = new JSONObject();
-						retour.put("name",item.getName());
-						retour.put("size",f.length());
-						retour.put("positions",pl.size());
-						JsonUtils.teePrint(res, retour.toJSONString());
-*/					}
+						JsonUtils.teePrint(response, session.goodies.getJsonContent().toJSONString());
+					}
 				}			
 //				new PositionList(Database.getVOreportDir() + Database.getSepar() + item_to_upload.getString(), Database.getAstroframe());
-//
-//				/*
-//				 * If all fields are present, we upload the position file and 
-//				 * the page is redirected to the data selection page. The query is executed at loading time.
-//				 */
-//				if( item_to_upload != null && uploadedFile != null && query != null ) {
-//					String mark = "?";
-//					if( service.indexOf('?') != -1 ) {
-//						mark = "&";
-//					}
-//					item_to_upload.write(uploadedFile);
-//					res.setStatus(301);
-//					res.addHeader("Location" , service + mark + "query=" + URLEncoder.encode(query, "iso-8859-1").replaceAll("\\+", "%20").replaceAll("%0D", ""));					
-//				} else {
-//					reportJsonError(req, res, "e");
-//				}
 			} catch (Exception e) {
-				reportJsonError(req, res, e);
+				reportJsonError(request, response, e);
 			}
 		} else {
-			reportJsonError(req, res, "Request badly formed: not multipart")	;		
+			reportJsonError(request, response, "Request badly formed: not multipart")	;		
 		}
 	}
 }

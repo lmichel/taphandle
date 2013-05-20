@@ -73,7 +73,7 @@ public class AsyncJobTest  extends RootClass {
 				logger.debug("Download " + r);
 				TapAccess.getAsyncJobResultFile(r
 						, outputDir
-						, "VOTABLE_RESULT"
+						, VOTABLE_JOB_RESULT
 						, cookie);
 		}
 
