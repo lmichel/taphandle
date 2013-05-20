@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URLDecoder;
-import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -13,7 +12,6 @@ import java.util.Iterator;
 import metabase.NodeBase;
 import metabase.TapNode;
 
-import org.apache.commons.io.FileUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
@@ -34,6 +32,7 @@ public class UserSession  extends RootClass {
 	private final String baseDirectory;
 	private jobStack jobStack = new jobStack();
 	public final String remoteAddress ;
+	public final Goodies goodies;
 
 	/**
 	 * @param sessionID
@@ -46,7 +45,7 @@ public class UserSession  extends RootClass {
 		validWorkingDirectory(SessionBaseDir);
 		validWorkingDirectory(SessionBaseDir + this.sessionID);
 		this.baseDirectory = SessionBaseDir + this.sessionID + File.separator;
-		validWorkingDirectory(this.baseDirectory + WEB_USER_GOODIES_DIR );
+		this.goodies = new Goodies(this.baseDirectory + WEB_USER_GOODIES_DIR +File.separator );
 	}
 
 	/**
@@ -105,15 +104,10 @@ public class UserSession  extends RootClass {
 	 * @param goodiesName job new name
 	 * @throws Exception
 	 */
-	public void pushJobResultInGoodies(String nodeKey, String jobID, String goodiesName) throws Exception{
-		String dirName =  this.baseDirectory + WEB_USER_GOODIES_DIR +File.separator + nodeKey;
-		validWorkingDirectory(dirName );
-		FileUtils.copyFile(
-				  new File(this.getJobUrlPath(nodeKey, jobID) +File.separator  + "VOTABLE_RESULT")
-				, new File(dirName +File.separator  + ((goodiesName.endsWith(".xml"))? goodiesName: goodiesName + ".xml") )
-				  );
+	public void pushJobInGoodies(String nodeKey, String jobID, String goodiesName) throws Exception{
+		this.goodies.pushJobResultInGoodies(nodeKey, this.getJobUrlPath(nodeKey, jobID),  goodiesName);
 	}
-
+	
 	/**
 	 * Starts a job attached to a node.
 	 * If the node supports async mode, this mode is used.
@@ -148,7 +142,7 @@ public class UserSession  extends RootClass {
 			jobStack.pushJob(nodeKey, jobID, new JobTreePath(treepath), nodeCookie);
 			Date startTime = new Date();
 			try {
-				TapAccess.runSyncJob(node.getUrl(), query, outputDir + "VOTABLE_RESULT", nodeCookie, treepath);
+				TapAccess.runSyncJob(node.getUrl(), query, outputDir + VOTABLE_JOB_RESULT, nodeCookie, treepath);
 				JobUtils.writeSyncJobStatus(nodeKey, outputDir, jobID, startTime, query);
 			} catch(Exception e){
 				JobUtils.writeSyncJobError(nodeKey, outputDir, jobID, startTime, query, e.getMessage());
@@ -304,9 +298,9 @@ public class UserSession  extends RootClass {
 				logger.debug("Download " + r);
 				TapAccess.getAsyncJobResultFile(r
 						, this.getJobDir(nodeKey, jobID)
-						, "VOTABLE_RESULT"
+						, VOTABLE_JOB_RESULT
 						, nc);
-				return this.getJobDir(nodeKey, jobID) + "JSON_RESULT";
+				return this.getJobDir(nodeKey, jobID) + JSON_JOB_RESULT;
 			}
 		}
 		for( String r: resultURLs) {
@@ -314,9 +308,9 @@ public class UserSession  extends RootClass {
 			logger.debug("Download " + NodeBase.getNode(nodeKey).getAbsoluteURL(path));
 			TapAccess.getAsyncJobResultFile(NodeBase.getNode(nodeKey).getAbsoluteURL(path)
 					, this.getJobDir(nodeKey, jobID)
-					, "VOTABLE_RESULT"
+					, VOTABLE_JOB_RESULT
 					, nc);
-			return this.getJobDir(nodeKey, jobID) + "JSON_RESULT";
+			return this.getJobDir(nodeKey, jobID) + JSON_JOB_RESULT;
 
 		}	
 		return null;
@@ -404,7 +398,7 @@ public class UserSession  extends RootClass {
 	 * @return
 	 */
 	public String getJobResultUrlPath(String nodeKey, String jobID) {
-		return this.getJobUrlPath(nodeKey, jobID) + "JSON_RESULT";	
+		return this.getJobUrlPath(nodeKey, jobID) + JSON_JOB_RESULT;	
 	}
 
 	/**
@@ -413,7 +407,7 @@ public class UserSession  extends RootClass {
 	 * @return
 	 */
 	public String getJobDownloadUrlPath(String nodeKey, String jobID) {
-		return this.getJobUrlPath(nodeKey, jobID) + "VOTABLE_RESULT";	
+		return this.getJobUrlPath(nodeKey, jobID) + VOTABLE_JOB_RESULT;	
 	}
 
 	public String getZipDownloadPath(){

@@ -98,7 +98,7 @@ public class JobUtils extends RootClass {
 		tempo.put("type", "simple");
 		tempo.put("href", "/jobresult?node=" + nodeKey + "&jobid=" + jobId + "&format=json");
 		tempo.put("mime", "text/xml");
-		tempo.put("size", (new File(finalDir + "JSON_RESULT")).length());
+		tempo.put("size", (new File(finalDir + JSON_JOB_RESULT)).length());
 		job.put("results", tempo);
 		/*
 		 * Job error

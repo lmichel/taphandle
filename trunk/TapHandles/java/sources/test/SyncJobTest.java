@@ -51,7 +51,7 @@ public class SyncJobTest  extends RootClass {
 				, statusFileName, treepath);
 		nodeCookie.saveCookie(outputDir);
 		try {
-			System.out.println(TapAccess.runSyncJob(url, query, outputDir + "VOTABLE_RESULT", nodeCookie, treepath));
+			System.out.println(TapAccess.runSyncJob(url, query, outputDir + VOTABLE_JOB_RESULT, nodeCookie, treepath));
 			JobUtils.writeSyncJobStatus(nodeKey, outputDir, jobID, startTime, query);		
 
 			logger.info("complete");		

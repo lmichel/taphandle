@@ -54,17 +54,17 @@ public class JoinKeysJob extends RootClass {
 		} while( phase.equals("EXECUTING") || phase.equals("PENDING"));
 		String[] resultURLs = TapAccess.getAsyncJobResults(url
 				, jobID
-				, baseFN + "VOTABLE_RESULT"
+				, baseFN + VOTABLE_JOB_RESULT
 				, nc);
 		for( String r: resultURLs) {
 			//if( r.matches(".*\\.xml.*") ) {
 			logger.debug("Download " + r);
 			TapAccess.getAsyncJobResultFile(r
 					, baseDirectory + File.separator
-					,  prefix + "VOTABLE_RESULT"
+					,  prefix + VOTABLE_JOB_RESULT
 					, nc);
 
-			XmlToJson.translateJoinKeysTable(baseFN  + "VOTABLE_RESULT", baseDirectory);
+			XmlToJson.translateJoinKeysTable(baseFN  + VOTABLE_JOB_RESULT, baseDirectory);
 			//}
 		}
 	}

@@ -103,7 +103,7 @@ public class ZipMap extends RootClass {
 		if( ! isWorkingDirectoryValid(jobDir) ) {
 			throw new TapException("Cannot acces to " + jobDir);
 		}
-		File f = new File(jobDir + File.separator + "VOTABLE_RESULT");
+		File f = new File(jobDir + File.separator + VOTABLE_JOB_RESULT);
 		if( !f.exists() || !f.isFile() || !f.canRead()) {
 			throw new TapException("Cannot acces to result file " + f.getAbsolutePath());
 		}

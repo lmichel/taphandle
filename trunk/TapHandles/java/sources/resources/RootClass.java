@@ -93,6 +93,7 @@ public class RootClass {
 	public static final String WEB_NODEBASE_DIR =  "nodebase"; // meta data repository
 	public static final String WEB_USERBASE_DIR =  "userbase"; // session data repository
 	public static final String WEB_USER_GOODIES_DIR =  "goodies"; // Directory where user can upload data files
+	public static final String WEB_USER_GOODIES_LIST =  "myLists"; // Directory where user can upload data files
 	public final static String RUNID = "TapHandle-Proxy";
 	/*
 	 * some standard file names
@@ -107,7 +108,7 @@ public class RootClass {
 	 * Initialization directives
 	 */
 	public static final boolean INCLUDE_JOIN = true;
-	public static final boolean NOINIT = true;
+	public static final boolean NOINIT = false;
 	public static final boolean CHECKUPLOAD = false;
 	/*
 	 * Max number of rows in a result table

@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import session.UserSession;
 import session.UserTrap;
+import translator.JsonUtils;
 
 /**
  * Servlet implementation class PushJobToGoodies
@@ -41,10 +42,8 @@ public class PushJobToGoodies extends RootServlet {
 				return;
 			}
 			UserSession session = UserTrap.getUserAccount(request);
-			session.pushJobResultInGoodies(nodeKey, jobId, goodiesName);
-			this.reportJsonStatus(request, response
-					, "Result of job " + nodeKey + "." + jobId + " copied into goodies under the " + goodiesName + " name.");
-			
+			session.pushJobInGoodies(nodeKey, jobId, goodiesName);
+			JsonUtils.teePrint(response, session.goodies.getJsonContent().toJSONString());
 		} catch (Exception e) {
 			this.reportJsonError(request, response, e);
 		}

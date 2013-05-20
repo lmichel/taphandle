@@ -184,7 +184,7 @@ public class TapAccess  extends RootClass {
 		bw.close();
 		reader.close();
 		cookie.storeCookie();
-		XmlToJson.translateResultTable(outputdir + File.separator + outputfile, outputdir + File.separator + "JSON_RESULT");
+		XmlToJson.translateResultTable(outputdir + File.separator + outputfile, outputdir + File.separator + JSON_JOB_RESULT);
 		//XmlToJson.translateVOTable(outputdir, "result", "result", ns);
 	}
 
