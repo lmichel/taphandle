@@ -49,6 +49,7 @@
      ,"javascript/cartControler.js"  
      ,"javascript/cartModel.js"  
      ,"javascript/zipjobModel.js"  
+     ,"javascript/datatreeView.js"  
      ,"javascript/initFunctions.js"  
      ,"javascript/utils.js"  
      ,"javascript/ready.js"  
@@ -270,7 +271,7 @@
 	 -->
 	<div id="treepane" class="pane ui-layout-west" style="width: 300px">
 		<div style="border-style: hidden; vertical-align: middle;">
-			<span class=help title='Select TAP nodes with the node selector on the top of the page'>Tap Nodes</span>
+			<span class=help title='Select TAP nodes with the node selector on the top of the page'>Tap Nodes  <a href="javascript:void(0);" onclick="dataTreeView.addGoodies([{nodekey:'node',tables: ['name1', 'name2']}, {nodekey:'node2',tables: ['name1', 'name2']}]);">add</a></span>
 		</div>
 		<div id="treedisp" style="background-color: white">
 		</div>
