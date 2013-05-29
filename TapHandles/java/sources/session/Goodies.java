@@ -21,8 +21,8 @@ public  class Goodies extends RootClass{
 	 */
 	public Goodies(String baseDirectory) throws Exception {
 		super();
-		validWorkingDirectory(this.baseDirectory );
 		this.baseDirectory = baseDirectory;
+		validWorkingDirectory(this.baseDirectory );
 	}
 
 	/**
