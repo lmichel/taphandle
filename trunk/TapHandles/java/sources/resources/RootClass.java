@@ -21,6 +21,14 @@ import tapaccess.TapException;
  * @author laurent
  * @version $Id$
  */
+/**
+ * @author laurentmichel
+ *
+ */
+/**
+ * @author laurentmichel
+ *
+ */
 public class RootClass {
 	/**
 	 * Logger used everywhere in the project
@@ -107,9 +115,9 @@ public class RootClass {
 	/*
 	 * Initialization directives
 	 */
-	public static final boolean INCLUDE_JOIN = true;
-	public static final boolean NOINIT = false;
-	public static final boolean CHECKUPLOAD = false;
+	public static final boolean INCLUDE_JOIN;
+	public static final boolean NOINIT;
+	public static final boolean CHECKUPLOAD ;
 	/*
 	 * Max number of rows in a result table
 	 */
@@ -127,6 +135,34 @@ public class RootClass {
 	public static int JOINKEY_PERIOD = 5*60*1000;
 	public static int JOINKEY_MAX_ATTEMPTS = 1;
 
+	/**
+	 * Read the file taphandle.porpoerties to set up the init mode
+	 */
+	static  {
+		boolean noinit = true;
+		boolean checkupload = false;
+		boolean includejoin = true;
+		try {
+			Properties prop = new Properties(); 
+			prop.load(RootClass.class.getClassLoader().getResourceAsStream("taphandle.properties"));
+			if( "true".equals(prop.getProperty("init.node")) ) {
+				noinit = false;
+			} 
+			if( "true".equals(prop.getProperty("upload.check")) ) {
+				checkupload = false;
+			} 
+			if( "true".equals(prop.getProperty("include.join")) ) {
+				includejoin = true;
+			} 
+		} 
+		catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			NOINIT = noinit;
+			INCLUDE_JOIN = includejoin;
+			CHECKUPLOAD = checkupload;
+		}
+	}
 	/**
 	 * Use working directories contained in contextPath
 	 * MetaBaseDir and SessionBaseDir are set in system properties.

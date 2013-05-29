@@ -7,6 +7,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.json.simple.JSONObject;
+
 import session.UserSession;
 import session.UserTrap;
 import translator.JsonUtils;
@@ -21,6 +23,7 @@ public class PushJobToGoodies extends RootServlet {
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
+	@SuppressWarnings("unchecked")
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		printAccess(request, false);
 		response.setContentType("application/json; charset=UTF-8");
@@ -41,10 +44,15 @@ public class PushJobToGoodies extends RootServlet {
 				reportJsonError(request, response, "PushJobToGoodies: no goodiesName specified");
 				return;
 			}
-			UserSession session = UserTrap.getUserAccount(request);
+			JSONObject retour = new JSONObject();
+			retour.put("nodekey", nodeKey);
+			retour.put("table", goodiesName);
+			JsonUtils.teePrint(response, retour.toJSONString());
+			
+/*			UserSession session = UserTrap.getUserAccount(request);
 			session.pushJobInGoodies(nodeKey, jobId, goodiesName);
 			JsonUtils.teePrint(response, session.goodies.getJsonContent().toJSONString());
-		} catch (Exception e) {
+*/		} catch (Exception e) {
 			this.reportJsonError(request, response, e);
 		}
 	}
