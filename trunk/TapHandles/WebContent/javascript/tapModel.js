@@ -16,6 +16,7 @@ jQuery.extend({
 		var listeners = new Array();
 		/*
 		 * What we have to store and play with
+		 * the values of the following fields are attached to the current selected node.
 		 */
 		var attributesHandlers = new Array();
 		var joinKeys = new Array();
@@ -501,25 +502,20 @@ jQuery.extend({
 			$('#' + jid + "_actions").val('Actions'); 
 			if( val == 'Show Query') {	
 				that.showQuery(nodekey,jid);				
-			}
-			else if( val == 'Summary') {	
+			} else if( val == 'Summary') {	
 				that.showSummary(nodekey,jid);				
-			}
-			else if( val == 'Display Result') {			
+			} else if( val == 'Display Result') {			
 				that.displayResult(nodekey,jid);
-			}			
-			else if( val == 'Download Result') {			
+			} else if( val == 'Download Result') {			
 				that.downloadVotable(nodekey,jid);
-			}			
-			else if( val == 'Add to Cart') {			
+			} else if( val == 'Add to Cart') {			
 				cartView.fireAddJobResult(nodekey,jid);
-			}			
-			else if( val == 'Send to SAMP') {				
+			} else if( val == 'Send to SAMP') {				
 				var url = rootUrl + 'jobresult?node=' + nodekey.trim() + '&jobid=' + jid.trim()+ '&session=' + sessionID;
 				WebSamp_mVc.fireSendVoreport(url, "table.load.votable", nodekey.trim() + "/job_" + jid.trim());
-			}			
-			else if( val == 'Edit Query' ) {
+			} else if( val == 'Edit Query' ) {
 				that.editQuery(nodekey,jid);
+			} else if( val == ' "Add to Goodies' ){
 			}
 		};
 
