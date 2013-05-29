@@ -4,6 +4,10 @@ function DataTreeView() {
 	 * The nodes given here must be initialized in Nodebase.java
 	 */
 	this.nodeList = new Array();
+	/**
+	 * Metadata of the data files referenced in the Goodies node
+	 */
+	this.goodies = new Array();
 }
 DataTreeView.prototype = {
 		initNodeBase : function(){
@@ -158,33 +162,100 @@ DataTreeView.prototype = {
 		fireTreeNodeEvent:function(treepath) {
 			tapView.fireTreeNodeEvent(treepath, true);
 		},
-
+		/**
+		 * jsdata: {nodekey: ... , table: ...}
+		 */
 		addGoodies: function(jsdata){
-			for( var i=0 ; i<jsdata.length ; i++) {
-				var node = jsdata[i];
-				var id_schema = "GoodiesX" + node.nodekey;
-				$("div#treedisp").jstree("remove","#" + id_schema);
+			var id_schema = "GoodiesX" + jsdata.nodekey;
 
+			if( $("#" + id_schema).length == 0 ){
 				$("div#treedisp").jstree("create"
 						, $("#goodies")
 						, false
-						, {"data" : {"attr":{"id": id_schema, "title": "description"}, "title" : node.nodekey},
+						, {"data" : {"attr":{"id": id_schema, "title": "description"}, "title" : jsdata.nodekey},
 							"state": "closed",
-							"attr" :{"id": id_schema}}
-						,false
-						,true); 
-				for( var j=0 ; j<node.tables.length ; j++) {
-					var table = node.tables[j];
-					$("div#treedisp").jstree("create"
-							, $("#" + id_schema)
-							, false
-							, {"data"  : {"icon": "images/SQLTable.png", "attr":{"id": table, "title": "description"}, "title" : table},
-								"state": "closed"
-							}
-							,false
-							,true);   
+							"attr" :{"id": id_schema},
+
+						}
+						, false
+						, true); 
+			} else 	if( $("#" + id_schema + " #" + jsdata.table).length != 0 ){
+				Modalinfo.error( "Node " + jsdata.nodekey + "." + jsdata.table + " already exist" );
+				return;
+			}
+			if( $("#" + id_schema + " #" + jsdata.table).length == 0 ){
+				$("div#treedisp").jstree("create"
+						, $("#" + id_schema)
+						, false // position
+						, {"data"  : {"icon": "images/SQLTable.png", "attr":{"id": jsdata.table, "title": "description"}, "title" : jsdata.table},
+							"state": "closed"
+						}
+						,false// callback
+						,true //skip rename
+						);   
+			}
+			return;
+		},
+		/**
+		 * jsdata: {nodekey: ... , table: ...}
+		 */
+		delGoodies: function(jsdata){
+			var id_schema = "GoodiesX" + jsdata.nodekey;
+
+			if( $("#" + id_schema).length != 0 ){
+				$("div#treedisp").jstree("remove", $("#" + id_schema + " #" + jsdata.table));
+				if($("#" + id_schema).find("> ul > li:eq(0)").length == 0) {
+					$("div#treedisp").jstree("remove", $("#" + id_schema));
 				}
 			}
+			return;
+		},
+		pushJobToGoodies: function(jid){
+			var that = this;
+			Processing.show("Pushing job to goodies");
+			$.getJSON("pushjobtogoodies"
+				, {jsessionid: sessionID, node: "table", jobid:"jobid" , goodiesname: "goodiesname" }, function(jsondata) {
+				Processing.hide();
+				if( Processing.jsonError(jsondata, "Cannot get meta data") ) {
+					return;
+				}
+				that.addGoodies(jsondata);
+			});
+		},
+		uploadFile: function() {
+			Modalinfo.dataPanel(title			
+					, '<form id="uploadPanel" target="_sblank" action="uploaduserposlist" method="post"'
+					+  'enctype="multipart/form-data">'
+					+  ' <input class=stdinput  id="uploadPanel_filename" type="file" name="file" /><br>'
+					+ '  <p class=help></p><br>'
+					+  ' <input  type="submit" value="Upload" />'
+					+  ' </form>'
+					, null);
+			$('#uploadPanel p').html("description");
+			$('form#uploadPanel').ajaxForm({
+				beforeSubmit: function() {
+					if(beforeHandler != null ) {
+						beforeHandler();
+					}
+				},
+				success: function(e) {
+					Modalinfo.close();
+					if( Processing.jsonError(e, "Upload Position List Failure") ) {
+						return;
+					} else {
+						/*
+						 * Must add a goodies node here
+						 */
+						Out.debug("Upload success: " + JSON.stringify(e));
+						if( handler != null) {
+							var retour = {retour: e, path : $('#uploadPanel_filename').val().xtractFilename()};
+							handler(retour);
+						}
+					}
+				}
+			});
+
+
 		}
 }
 

@@ -60,6 +60,7 @@ function initFunctions () {
 			"json_data"   : {"data" : [ {  "attr"     : { "id"   : "rootid", "title": "Dummy node: Select one first with the node selector on the page top." },
 				"data"        : { "title"   : "Goodies" , "attr": {"id": "goodies"}}}]}  , 
 				"plugins"     : [ "themes", "json_data", "dnd", "crrm"],
+				"rules" : {"deletable" : "all"},
 				"dnd"         : {"drop_target" : "#resultpane,#taptab,#showquerymeta",
 			    "drop_finish" : function (data) {
 						var parent = data.r;
