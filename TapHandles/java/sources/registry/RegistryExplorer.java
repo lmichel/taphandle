@@ -53,6 +53,15 @@ public class RegistryExplorer extends RootClass {
 			offRegistryMarks.put("heasarc-xamin", new RegistryMark("heasarc-xamin", ""
 					, "http://heasarc.gsfc.nasa.gov/xamin/vo/tap"
 					, "HEASARCH Table Query (TAP) Service", true, true));
+			/*
+			 * For te datalink demo
+			 */
+			offRegistryMarks.put("betacadc"       , new RegistryMark("betacadc", ""
+					, "http://beta.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap"
+					, "Datalink Service Demonstrator", true, true));
+			offRegistryMarks.put("3xmm"       , new RegistryMark("3xmm", ""
+					, "http://xcatdb.u-strasbg.fr/3xmm/tap"
+					, "3rd XMM catalogue", true, false));
 		} catch (MalformedURLException e) {
 			logger.equals(e);
 		}
@@ -110,11 +119,11 @@ public class RegistryExplorer extends RootClass {
 		 */
 		NodeCookie cookie=new NodeCookie();
 		String wdir       = MetaBaseDir + "regexplorer";
-		String jsonResult = wdir +  "/regRESULT.json";
-		String xmlResult  = wdir +  "/regRESULT.xml";
+		String jsonResult = wdir +  "/regresult.json";
+		String xmlResult  = wdir +  "/regresult.xml";
 		validWorkingDirectory(wdir);
 		TapAccess.runSyncJob(regUrl, query, xmlResult, cookie, null);
-	//	XmlToJson.translateResultTable(xmlResult, jsonResult);
+		XmlToJson.translateResultTable(xmlResult, jsonResult);
 
 		BufferedReader br = new BufferedReader(new FileReader(jsonResult));
 		JSONParser p = new JSONParser();
