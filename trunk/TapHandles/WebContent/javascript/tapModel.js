@@ -215,11 +215,12 @@ jQuery.extend({
 
 		};
 
+		
 		this.processAlphaEvent= function(uidraggable){
 			var kwname = uidraggable.find(".item").text().split(' ')[0];
 			that.setAlphaKeyword(selectAttributesHandlers[kwname]);
 		};
-
+// @@@ removed
 		this.lookForAlphaKeyword = function(ah) {
 			for( var ahn in selectAttributesHandlers ) {
 				var ah = selectAttributesHandlers[ahn];
@@ -243,6 +244,7 @@ jQuery.extend({
 				}
 			}
 		};
+		// @@@ removed
 		this.setAlphaKeyword = function(ah) {
 			var m = new $.KWConstraintModel(true, table, { "name" : ah.name
 				, "dataType" : "Select"
@@ -261,6 +263,7 @@ jQuery.extend({
 			var kwname = uidraggable.find(".item").text().split(' ')[0];
 			that.setDeltaKeyword(selectAttributesHandlers[kwname]);
 		};
+		// @@@ removed
 		this.lookForDeltaKeyword = function(ah) {
 			for( var ahn in selectAttributesHandlers ) {
 				var ah = selectAttributesHandlers[ahn];
@@ -285,6 +288,7 @@ jQuery.extend({
 			}
 		};
 
+		// @@@ removed
 		this.setDeltaKeyword = function(ah) {
 			var m = new $.KWConstraintModel(true, table, { "name" : ah.name
 				, "dataType" : "Select"
@@ -298,7 +302,7 @@ jQuery.extend({
 			alphakw =  new $.KWConstraintControler(m, v);
 			m.notifyInitDone();					
 		};
-
+//@@@@@@ removed
 		this.updateQuery = function() {
 			var tableName = quoteTableName(storedTreepath.table);
 			console.log(tableName + " " + storedTreepath.table)
@@ -336,7 +340,7 @@ jQuery.extend({
 			}			
 			that.notifyQueryUpdated(query);
 		};
-
+		//@@@@@@@@@@@ removed
 		this.getJoin = function() {
 			var joinTables = new Array();
 			for( var kw in selects ) {
