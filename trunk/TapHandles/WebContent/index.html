@@ -6,11 +6,8 @@
 <link rel="icon" href="images/tap16.png" type="images/png" />
 <link rel="SHORTCUT ICON" href="images/tap16.png" />
 
-<link rel="stylesheet" type="text/css" href="styles/global.css" />
+<!-- <link rel="stylesheet" type="text/css" href="styles/global.css" />
 <link rel="stylesheet" type="text/css" href="styles/form.css" />
-<link rel="stylesheet" type="text/css" href="styleimport/datatable.css" />
-<link rel="stylesheet" type="text/css" href="styles/simplemodal.css" />
-<link rel="stylesheet" type="text/css" href="styleimport/jquery-ui.css" />
 <link rel="stylesheet" type="text/css" href="styleimport/jquery.alerts.css" />
 <link rel="stylesheet" type="text/css" href="styleimport/jquery.tooltip.css" />
 <link type="text/css" rel="stylesheet" href="styleimport/layout-default-latest.css" />
@@ -18,43 +15,53 @@
 
 <link rel="stylesheet" type="text/css" href="http://saada.unistra.fr/jsresources/saadajsbasics/styles/basics.css" />
 <link rel="stylesheet" type="text/css" href="http://saada.unistra.fr/jsresources/saadajsbasics/styles/domain.css" />
-
+ -->
 <script type="text/javascript" src="jsimport/jquery-1.7.2.js"></script>
-<script type="text/javascript" src="http://saada.unistra.fr/jsresources/saadajsbasics/loader.js"></script>
+<script type="text/javascript" src="javascript/loader.js"></script>
 
-<script >resourceLoader.loadMinScripts([  
-      "jsimport/jquery.jstree.js"  
-     ,"jsimport/jquery.jsonSuggest-2.js"   
-     ,"jsimport/jquery.jeditable.js"   
-     ,"jsimport/jquery.layout-latest.js"   
-     ,"jsimport/json2.js"  
-     ,"javascript/formator.js"  
-     ,"javascript/resultPaneModel.js"  
-     ,"javascript/resultPaneView.js"  
-     ,"javascript/resultPaneControler.js"  
-     ,"javascript/nodeFilterModel.js"  
-     ,"javascript/nodeFilterView.js"  
-     ,"javascript/nodeFilterControler.js"  
-     ,"javascript/kwconstraintModel.js"  
-     ,"javascript/kwconstraintView.js"  
-     ,"javascript/kwconstraintControler.js"  
-     ,"javascript/tapModel.js"  
-     ,"javascript/tapView.js"  
-     ,"javascript/tapControler.js"  
-     ,"javascript/jobModel.js"  
-     ,"javascript/jobView.js"  
-     ,"javascript/jobControler.js"  
-     ,"javascript/jobDictionnary.js"  
-     ,"javascript/cartView.js"  
-     ,"javascript/cartControler.js"  
-     ,"javascript/cartModel.js"  
-     ,"javascript/zipjobModel.js"  
-     ,"javascript/datatreeView.js"  
-     ,"javascript/initFunctions.js"  
-     ,"javascript/utils.js"  
-     ,"javascript/ready.js"  
-     ,"javascript/resize.js"  
-                                        ]);</script>
+<script>
+     resourceLoader.setCss([
+                            "styles/global.css"
+                          , "styles/form.css"
+                          , "styleimport/jquery.alerts.css"
+                          , "styleimport/jquery.tooltip.css"
+                          , "styleimport/jsonSuggest.css"
+                          ]);
+     resourceLoader.setScripts([  
+                                "jsimport/jquery.jstree.js"  
+                                ,"jsimport/jquery.jsonSuggest-2.js"   
+                                ,"jsimport/jquery.jeditable.js"   
+                                ,"jsimport/jquery.layout-latest.js"   
+                                ,"jsimport/json2.js"  
+                                ,"javascript/formator.js"  
+                                ,"javascript/resultPaneModel.js"  
+                                ,"javascript/resultPaneView.js"  
+                                ,"javascript/resultPaneControler.js"  
+                                ,"javascript/nodeFilterModel.js"  
+                                ,"javascript/nodeFilterView.js"  
+                                ,"javascript/nodeFilterControler.js"  
+                                ,"javascript/kwconstraintModel.js"  
+                                ,"javascript/kwconstraintView.js"  
+                                ,"javascript/kwconstraintControler.js"  
+                                ,"javascript/tapModel.js"  
+                                ,"javascript/tapView.js"  
+                                ,"javascript/tapControler.js"  
+                                ,"javascript/jobModel.js"  
+                                ,"javascript/jobView.js"  
+                                ,"javascript/jobControler.js"  
+                                ,"javascript/jobDictionnary.js"  
+                                ,"javascript/cartView.js"  
+                                ,"javascript/cartControler.js"  
+                                ,"javascript/cartModel.js"  
+                                ,"javascript/zipjobModel.js"  
+                                ,"javascript/datatreeView.js"  
+                                ,"javascript/initFunctions.js"  
+                                ,"javascript/utils.js"  
+                                ,"javascript/ready.js"  
+                                ,"javascript/resize.js"         ]);
+     resourceLoader.loadAll();
+     </script>
+
 
 </head>
 
@@ -144,7 +151,7 @@
 		<!--  
 			Query form
 		-->		
-		<div style="background-color: white;height: 260px;width:100%;margin-left:105px">
+		<div style="background-color: white;height: 260px; width:900px; margin-left:105px">
 			<div id="taptab" class=querytab style="border-width:0"">
 				<ul style="height: 32px;">
 	        		<li><a href="#tapselect" title="Set up the SELECT clause of the query"><span>Select What</span></a></li>
@@ -154,7 +161,7 @@
 	    		</ul>
 	    		<!-- Columns selection -->
 	    		<div id="tapselect" class=queryformtab>
-	 				<div style="background-color: white ; width: 380px; height: 220px; vertical-align: middle; float:left;">
+<!-- 	 				<div style="background-color: white ; width: 380px; height: 220px; vertical-align: middle; float:left;">
 	 					<div style="background: white;">
 	 						<span class=help>Keywords. Filter:</span>
 	 						<input type=text  class=kw_filter style="width: 60px; position: relative; bottom: 5;font-size: small; 
@@ -182,10 +189,10 @@
 	        				<div id="taporderby"></div>
 	    				</div>
 	    			</div>
-	    		</div>  
+ -->	    		</div>  
 	    		<!-- keywords selection -->
 	    		<div id="tapwhere" class=queryformtab >
-					<div style="background-color: white ; width: 340px; vertical-align: middle; float:left;">
+<!-- 					<div style="background-color: white ; width: 340px; vertical-align: middle; float:left;">
 	 						<div style="background: white;">
 	 							<span class=help>Keywords. Filter:</span>
 	 							<input type=text  class=kw_filter style="width: 60px; position: relative; bottom: 5;font-size: small; 
@@ -215,32 +222,32 @@
 	  									<td><span>delta</span></td>  
 	  									<td><div id="tapdelta" style="float:left;"></div> </td>	  															
 	  								</tr>
-<!-- 	    						</table>
+	    						</table>
 	  						</div>
 	  						<div style="background: white;float:left;">  							
 	  							<table border=0  style="border-spacing: 0px 0px;"">
-	 -->  								
-<!-- 	 								<tr>
+	  								
+	 								<tr>
 	  									<td></td>	
 	  									<td align=right colspan=2><span class=help>Type return or click to valid</span></td>							
 	  								</tr>
- -->	
+	
    								<tr>
 	    								<td align=right><span>Coord</span></td>								
 	   									<td><input id=tapcoordval type=text class=coordinputvalue
 	   									style="font-size: small;font-family: Arial, Helvetica, sans-serif;"/>
-<!-- 	   									</td>								
+	   									</td>								
 	    								<td>
- -->	    							<a class=sesame></a>
+	    							<a class=sesame></a>
 	    								<a title='Add the current positon to the query' id=acceptpattern class=add href="javascript:void(0);" 
 	  									onclick='tapView.fireInputCoordEvent();' 
 	  									title="click to add the position to the query"></a></td>							
-<!-- 	  								</tr>
+	  								</tr>
 	  								<tr>
- -->	    								<td><span>S/R</span> 
- <!-- </td>								
+	    								<td><span>S/R</span> 
+ </td>								
 	    								<td colspan=2>
- -->	    								<input  id=tapradiusval value=0.1 type=text class=numinputvalue style="font-family: Arial, Helvetica, sans-serif;font-size: small;"/>
+	    								<input  id=tapradiusval value=0.1 type=text class=numinputvalue style="font-family: Arial, Helvetica, sans-serif;font-size: small;"/>
 	    								<span class=help>deg</span>
 	    								<input type=radio name=tapboxcircle value="Circle" checked /><span> Circle </span>  								
 	    								<input type=radio name=tapboxcircle value=Box/><span>Box</span>    
@@ -253,13 +260,13 @@
 	        					<div id="tapconstraintlist" ></div>
 	        					<span class=typomsg></span>	
 	        				</div>
-	        			</div>
-	    			</div>
+	        			</div> 
+	    			</div>-->
 				</div>
 	    		<!--  Query text -->
 	    		<div id="taptext" class=queryformtab >	
-					<textarea id=adqltext class="querytext"></textarea>
-				</div>	
+<!-- 					<textarea id=adqltext class="querytext"></textarea>
+ -->				</div>	
 				<!--  job panel -->		
 				<div id="tapjob">        
 					 <div style="background: white;">

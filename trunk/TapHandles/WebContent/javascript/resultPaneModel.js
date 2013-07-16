@@ -14,19 +14,12 @@ jQuery.extend({
 		 * Query displayed data are coming from
 		 */
 		var current_query = "";
-		var treePath ;
 
 		/**
 		 * add a listener to this view
 		 */
 		this.addListener = function(list){
 			listeners.push(list);
-		};
-		/*
-		 * Event processing
-		 */
-		this.setTreePath = function(treepath){
-			treePath = treepath;
 		};
 
 		this.processShowRecord= function(oid){
@@ -60,7 +53,7 @@ jQuery.extend({
 
 		this.processShowMetaNode= function(treepath){
 			Processing.show("Get table description");
-			$.getJSON("gettable", {jsessionid: sessionID, node: treepath.nodekey, table:treepath.table }, function(data) {
+			$.getJSON("gettable", {jsessionid: sessionID, node: treepath.nodekey, schema: treepath.schema, table:treepath.table }, function(data) {
 				Processing.hide();
 				if( Processing.jsonError(data, "get attribute handlers") ) {
 					return;

@@ -8,10 +8,11 @@ function DataTreeView() {
 	 * Metadata of the data files referenced in the Goodies node
 	 */
 	this.goodies = new Array();
+	this.treePath = null;
 }
 DataTreeView.prototype = {
 		initNodeBase : function(){
-			var that = this
+			var that = this;
 			Processing.show("Fetching available nodes");
 			$(".logo").attr("class", "logourbana");
 			$.ajax({
@@ -50,21 +51,26 @@ DataTreeView.prototype = {
 		},
 
 		fireNewNodeEvent: function(nodekey) {
-			var that = this
+			var that = this;
 			Processing.show("Waiting on " + nodekey + " node description");
 
 			$.getJSON("getnode", {jsessionid: sessionID, node: nodekey }, function(jsdata) {
 				Processing.hide();
 				if( Processing.jsonError(jsdata, "Cannot make data tree") ) {
 					return;
-				}
-				else {
+				} else {
+					Processing.show("Building node");
 					that.fireBuildTree(jsdata);
+					Processing.hide();
 				}
 			});
 		},
 		fireBuildTree: function(jsdata) {
-			//$("div#treedisp").jstree("remove","#rootid" );
+			this.capabilities = {supportSyncQueries: true
+					, supportAsyncQueries: (jsdata.asyncsupport == "true")?true: false
+					, supportJoin: true
+					, supportUpload:(jsdata.uploadsupport == "true")?true: false};
+			this.info = {url: jsdata.nodeurl , ivoid: null, description: "Not available"};
 			$("div#treedisp").jstree("remove","#" + jsdata.nodekey);
 			/*
 			 * Create the root of the subtree of this node
@@ -73,12 +79,14 @@ DataTreeView.prototype = {
 			for( var i=0 ; i<this.nodeList.length ; i++ ) {
 				var n = this.nodeList[i];
 				if( n.id ==  jsdata.nodekey) {
+					this.info.ivoid = n.ivoid;
+					this.info.description = n.description;
 					description = jsdata.nodeurl + "\n" + n.ivoid + "\n" + n.description + "\n" ;
 					break;
 				}
 			}
-			description += "\n- Asynchronous mode  " + ((jsdata.asyncsupport == "false")?" not ": "") + "supported\n";
-			description += "- Table upload " + ((jsdata.uploadsupport  == "false")?" not ": "") + "supported\n";
+			description += "\n- Asynchronous mode  " + ((!this.capabilities.supportAsyncQueries)?" not ": "") + "supported\n";
+			description += "- Table upload " + ((!this.capabilities.supportUpload)?" not ": "") + "supported\n";
 			$("div#treedisp").jstree("create"
 					, $("div#treedisp")
 					, false
@@ -159,8 +167,10 @@ DataTreeView.prototype = {
 			}
 		},
 
-		fireTreeNodeEvent:function(treepath) {
-			tapView.fireTreeNodeEvent(treepath, true);
+		fireTreeNodeEvent:function(treepath, andsubmit) {
+			this.setTitlePath(treepath);
+			//resultPaneView.fireSetTreePath(treepath);	
+			tapView.fireTreeNodeEvent(treepath, andsubmit);	
 		},
 		/**
 		 * jsdata: {nodekey: ... , table: ...}
@@ -254,8 +264,31 @@ DataTreeView.prototype = {
 					}
 				}
 			});
-
-
+		},
+		setTitlePath: function (treepath) {
+			Out.info("title " + treepath);
+			this.treePath = treepath;
+			var job = (treepath.jobid == null)? "": '&gt;'+ treepath.jobid;
+			var tp = $('#titlepath');
+			var span = '<span style="font-style: normal; color: #888;font-size: x-small ; background-color:';
+			tp.html('');
+			tp.append(span
+					+ ((this.capabilities.supportSyncQueries== true)?'lightgreen': 'salmon') 
+					+ ';" title="' + ((this.capabilities.supportSyncQueries== true)?'S': 'Does not s') + 'upport synchronous queries">S</span>');
+			tp.append(span
+					+ ((this.capabilities.supportJoin== true)?'lightgreen': 'salmon')
+					+ ';" title="' + ((this.capabilities.supportJoin== true)?'S': 'Does not s')+ 'upport ADQL joins">J</span>');
+			tp.append(span
+					+ ((this.capabilities.supportAsyncQueries == true)?'lightgreen': 'salmon') 
+					+ ';" title="' + ((this.capabilities.supportAsyncQueries == true)?'S': 'Does not s')+ 'upport asynchronous queries">A</span>');
+			tp.append(span
+					+ ((this.capabilities.supportUpload == true)?'lightgreen': 'salmon') 
+					+ ';" title="' + ((this.capabilities.supportUpload == true)?'S': 'Does not s')+ 'upport table upload">U</span>');
+			tp.append('<a href="#" style="font-style: normal; font-size: x-small ; background-color: lightblue;" title="Click to get more info" onclick="dataTreeView.showNodeInfos();"> ? </a>');
+			tp.append('&nbsp;<i>' + treepath.nodekey + '&gt;' + treepath.schema + '&gt;'+ treepath.table+ job);
+		},
+		showNodeInfos: function () {
+			Modalinfo.dataPanel( "Info about node " + JSON.stringify(this.treePath), JSON.stringify(this.capabilities) + JSON.stringify(this.info));
 		}
-}
+};
 
