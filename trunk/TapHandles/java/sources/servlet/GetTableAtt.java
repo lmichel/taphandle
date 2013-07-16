@@ -27,6 +27,7 @@ public class GetTableAtt extends RootServlet implements Servlet {
 
 		String node = this.getParameter(request, "node");
 		String table = this.getParameter(request, "table");
+		String schema = this.getParameter(request, "schema");
 		if( node == null || node.length() ==  0 ) {
 			reportJsonError(request, response, "gettableatt: no node specified");
 			return;
@@ -35,6 +36,11 @@ public class GetTableAtt extends RootServlet implements Servlet {
 			reportJsonError(request, response, "gettableatt: no table specified");
 			return;
 		}
+		if( schema == null || schema.length() ==  0 ) {
+			reportJsonError(request, response, "gettableatt: no schema specified");
+			return;
+		}
+		// TAP duplicates the schema name in the table name
 		try {
 			TapNode tn;
 			if(  (tn = NodeBase.getNode(node)) == null ) {				

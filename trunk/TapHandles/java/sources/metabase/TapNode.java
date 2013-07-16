@@ -323,7 +323,6 @@ public class TapNode  extends RootClass {
 			this.supportUpload = false;
 		}
 		if( !this.supportSyncMode && !this.supportSyncMode ){
-			
 			throw new TapException("No query mode supported (neither sync nor async");
 		}
 	}

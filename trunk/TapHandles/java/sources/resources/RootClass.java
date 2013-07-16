@@ -146,10 +146,10 @@ public class RootClass {
 			Properties prop = new Properties(); 
 			prop.load(RootClass.class.getClassLoader().getResourceAsStream("taphandle.properties"));
 			if( "true".equals(prop.getProperty("init.node")) ) {
-				noinit = false;
+				noinit = true;
 			} 
 			if( "true".equals(prop.getProperty("upload.check")) ) {
-				checkupload = false;
+				checkupload = true;
 			} 
 			if( "true".equals(prop.getProperty("include.join")) ) {
 				includejoin = true;

@@ -68,7 +68,7 @@ public class QueryModeChecker extends RootClass {
 		} catch(Exception e) {
 			return false;
 		}
-		logger.debug(this.endpoint + " supports the query synchronous mode");
+		logger.info(this.endpoint + " supports the query synchronous mode");
 		return true;
 	}
 	/**

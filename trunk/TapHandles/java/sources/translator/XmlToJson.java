@@ -198,7 +198,7 @@ public class XmlToJson  extends RootClass {
 	 * @param nsDefinition Name space to use
 	 * @throws Exception If something goes wrong
 	 */
-	public static void translateTableAttributes(String baseDir , String tablesFile, String tableName, NameSpaceDefinition nsDefinition) throws Exception {
+	public static void translateTableAttributes(String baseDir, String tablesFile, String tableName, NameSpaceDefinition nsDefinition) throws Exception {
 		setVosiNS(baseDir, "table_att", nsDefinition);
 		String filename = baseDir + "table_att.xsl";
 		Scanner s = new Scanner(new File(filename));
