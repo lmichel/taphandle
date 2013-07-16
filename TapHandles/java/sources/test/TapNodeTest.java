@@ -35,7 +35,7 @@ public class TapNodeTest  extends RootClass {
 			
 		} finally {
 			System.out.println(rm.getNodeKey());
-			System.out.println(tn);
+			System.out.println(tn.supportUpload());
 			
 		}
 	}
