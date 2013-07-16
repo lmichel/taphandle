@@ -19,52 +19,17 @@ jQuery.extend({
 		 * Fire external events
 		 */
 		this.fireTreeNodeEvent = function(treepath, andsubmit){
-			$.each(listeners, function(i){
-				listeners[i].controlTreeNodeEvent(treepath, andsubmit, null);
-			});
-		};
-		this.fireAttributeEvent = function(uidraggable){
-			$.each(listeners, function(i){
-				listeners[i].controlAttributeEvent(uidraggable);
-			});
-		};
-		this.fireSelectEvent = function(uidraggable){
-			$.each(listeners, function(i){
-				listeners[i].controlSelectEvent(uidraggable);
-			});
-		};
-		this.fireOrderByEventEvent= function(uidraggable){
-			$("#taporderby").html('');
-			$.each(listeners, function(i){
-				listeners[i].controlOrderByEventEvent(uidraggable);
-			});
-		};
-		this.fireInputCoordEvent = function(){
-			if( $("#tapcoordval").val() == '' || $("#tapradiusval").val() == '' ) {
-				Modalinfo.info("Both position and radius must be given", 'Info');
-				return;
-			}
+			console.log("@@@@@@ tapview " + JSON.stringify(treepath))
 
-			$.each(listeners, function(i){
-				listeners[i].controlInputCoord($("#tapcoordval").val()
-						, $("#tapradiusval").val(), $('#tapboxcircle').val());
-			});
+			adqlQueryView.fireSetTreePath(treepath);
+			console.log("@@@@@@ tapview " + JSON.stringify(treepath))
+			adqlQueryView.fireAddConstraint("tap", "limit", [getQLimit()]);
+			console.log("@@@@@@ tapview " + JSON.stringify(treepath))
+			tapColumnSelector.fireSetTreepath(treepath, ((andsubmit)? this.fireSubmitQueryEvent: null));
+			tapConstraintEditor.fireSetTreepath(treepath);
+			console.log("@@@@@@ tapview " + JSON.stringify(treepath))
 		};
-		this.fireAlphaEvent = function(uidraggable){
-			$.each(listeners, function(i){
-				listeners[i].controlAlphaEvent(uidraggable);
-			});
-		};
-		this.fireDeltaEvent = function(uidraggable){
-			$.each(listeners, function(i){
-				listeners[i].controlDeltaEvent(uidraggable);
-			});
-		};
-		this.fireUpdateQueryEvent = function(){
-			$.each(listeners, function(i){
-				listeners[i].controlUpdateQueryEvent();
-			});
-		};
+
 		this.fireSubmitQueryEvent = function(){
 			$.each(listeners, function(i){
 				listeners[i].controlSubmitQueryEvent();

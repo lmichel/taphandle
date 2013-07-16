@@ -32,6 +32,19 @@ function initFunctions () {
 
 	this.initNodeAccess = function() {
 		dataTreeView.initNodeBase();
+		adqlQueryView = QueryConstraintEditor.adqlTextEditor({ parentDivId: 'taptext', defaultQuery: ''});
+		tapColumnSelector = QueryConstraintEditor.tapColumnSelector('tapselect'
+				, 'tapFormColName'
+				, "gettableatt"
+				, "gettablejoinkeys"
+				, adqlQueryView);
+		tapConstraintEditor = QueryConstraintEditor.tapConstraintEditor('tapwhere'
+				, 'tapFormName'
+				, "gettableatt"
+				, "gettablejoinkeys"
+				, "sesame"
+				, "uploadposlist"
+				, adqlQueryView);
 
 		$("input#node_selector").keypress(function(event) {
 			if (event.which == '13') {
@@ -39,7 +52,7 @@ function initFunctions () {
 			}
 		});
 		/*
-		 * Name resolver buton activation
+		 * Name resolver button activation
 		 */
 		$(".kw_filter").keyup(function(event) {
 			var val = $(this).val();
@@ -65,17 +78,19 @@ function initFunctions () {
 			    "drop_finish" : function (data) {
 						var parent = data.r;
 						var id = data.o.attr("id");
-						var streepath ;
+						var streepath = null; ;
 						if( id == null || (streepath = data.o.attr("id").split(';')).length < 3 ) {
 							Modalinfo.info("Meta data only available for tables: ("  +  streepath + ")", 'User Input Error');
 						}
 						else {
-							var treePath = {nodekey: streepath[0], schema: streepath[1], table: streepath[2]};
+							var treePath = {nodekey: streepath[0], schema: streepath[1], tableorg: streepath[2], table: streepath[2].split('.').pop()};
 							while(parent.length != 0  ) {
-								resultPaneView.fireSetTreePath(treePath);	
+								//resultPaneView.fireSetTreePath(treePath);	
 								if(parent.is('#resultpane') ) {
-									setTitlePath(treePath);
-									resultPaneView.fireTreeNodeEvent(treePath);	
+									dataTreeView.fireTreeNodeEvent(treePath);
+									// submit to do
+//									setTitlePath(treePath);
+//									resultPaneView.fireTreeNodeEvent(treePath);	
 									return;
 								}
 								else if(parent.attr('id') == "showquerymeta" ) {
@@ -84,7 +99,9 @@ function initFunctions () {
 								}
 
 								else if(  parent.attr('id') == "taptab") {
-									tapView.fireTreeNodeEvent(treePath);	
+									dataTreeView.fireTreeNodeEvent(treePath);
+								//L149	tapColumnSelector.fireSetTreepath({node:treePath.nodekey, schema: treePath.schema, table: treePath.table});
+								//	tapView.fireTreeNodeEvent(treePath);	
 									return;
 								}
 								parent = parent.parent();
@@ -109,10 +126,11 @@ function initFunctions () {
 			} else if( treePath.length < 3 ) {
 				Modalinfo.info("Query can only be applied on one data category or one data class: ("  +  treePath + ")", 'User Input Error');
 			} else {
-				var fTreePath = {nodekey: treePath[0], schema: treePath[1], table: treePath[2]};
-				resultPaneView.fireSetTreePath(fTreePath);	
-				setTitlePath(fTreePath);
-				resultPaneView.fireTreeNodeEvent(fTreePath);	
+				var fTreePath = {nodekey: treePath[0], schema: treePath[1], tableorg: treePath[2], table: treePath[2].split('.').pop() };
+//				resultPaneView.fireSetTreePath(fTreePath);	
+//				setTitlePath(fTreePath);
+//				tapView.fireTreeNodeEvent(fTreePath);	
+				dataTreeView.fireTreeNodeEvent(fTreePath, true);
 			}
 		});
 		rootUrl = "http://" + window.location.hostname +  (location.port?":"+location.port:"") + window.location.pathname;
@@ -121,7 +139,7 @@ function initFunctions () {
 		 */
 		var defaultUrl  =  (RegExp('url=' + '(.+?)(&|$)').exec(location.search)||[,null])[1];
 		if( defaultUrl != null ) {
-			resultPaneView.fireNewNodeEvent(unescape(defaultUrl));
+			dataTreeView.fireNewNodeEvent(unescape(defaultUrl));
 		}
 		Out.setdebugModeFromUrl();
 	};
@@ -135,11 +153,11 @@ function initFunctions () {
 		});
 		$("#qlimit").keyup(function(event) {
 			if( $("#qlimit").val() == '' || $("#qlimit").val().match(/^[0-9]+$/) ) {
-				tapView.fireUpdateQueryEvent();			
+				adqlQueryView.fireAddConstraint("tap", "limit", [getQLimit()]);
 			} else {
 				Modalinfo.info('The result limit must be a positive integer value' , "User Input Error");
 				$("#qlimit").val(100);
-				tapView.fireUpdateQueryEvent();			
+				adqlQueryView.fireAddConstraint("tap", "limit", [getQLimit()]);
 				return false;
 			}
 

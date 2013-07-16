@@ -8,7 +8,7 @@ jQuery.extend({
 		var that = this;
 
 		var sessionId = session;
-		var treePath = treepath;
+		var treePath = $.extend({}, treepath);
 		var id = description.jobId;
 		var href = description.href;
 		var phase = description.phase;

@@ -25,7 +25,7 @@
 &quot;table&quot;: &quot;<xsl:value-of select="name" />&quot;,
 &quot;attributes&quot;: 
 {&quot;aoColumns&quot;: [
-{&quot;sTitle&quot;: &quot;name&quot;}
+{&quot;sTitle&quot;: &quot;nameattr&quot;}
 ,{&quot;sTitle&quot;: &quot;unit&quot;}
 ,{&quot;sTitle&quot;: &quot;ucd&quot;}
 ,{&quot;sTitle&quot;: &quot;utype&quot;}

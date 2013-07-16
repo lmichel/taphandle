@@ -149,11 +149,6 @@ jQuery.extend({
 			$("#resultpane").html();
 			tapView.fireSubmitQueryEvent();
 		};
-		this.fireSetTreePath = function(treepath) {
-			$.each(listeners, function(i) {
-				listeners[i].controlSetTreePath(treepath);
-			});
-		};
 		this.fireHisto = function(direction) {
 		};
 		this.fireStoreHisto = function(query) {

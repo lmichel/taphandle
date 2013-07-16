@@ -8,27 +8,6 @@ jQuery.extend({
 				controlTreeNodeEvent : function(treepath, andsubmit, default_query){
 					model.processTreeNodeEvent(treepath, andsubmit, default_query);
 				},
-				controlAttributeEvent: function(uidraggable){
-					model.processAttributeEvent(uidraggable);
-				},
-				controlSelectEvent: function(uidraggable){
-					model.processSelectEvent(uidraggable);
-				},
-				controlOrderByEventEvent: function(uidraggable){
-					model.processOrderByEvent(uidraggable);
-				},
-				controlInputCoord: function(coord, radius, mode){
-					model.processInputCoord(coord, radius, mode);
-				},
-				controlAlphaEvent: function(uidraggable){
-					model.processAlphaEvent(uidraggable);
-				},
-				controlDeltaEvent: function(uidraggable){
-					model.processDeltaEvent(uidraggable);
-				},
-				controlUpdateQueryEvent: function(){
-					model.updateQuery();
-				},
 				controlSubmitQueryEvent: function(){
 					model.submitQuery();
 				},
