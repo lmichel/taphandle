@@ -26,6 +26,9 @@ public class GetTableAtt extends RootServlet implements Servlet {
 		response.setContentType("application/json; charset=UTF-8");
 
 		String node = this.getParameter(request, "node");
+		if( node == null ) {
+			node = this.getParameter(request, "nodekey");
+		}
 		String table = this.getParameter(request, "table");
 		String schema = this.getParameter(request, "schema");
 		if( node == null || node.length() ==  0 ) {

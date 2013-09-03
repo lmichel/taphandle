@@ -44,8 +44,8 @@ public class ForwardXMLResource extends RootServlet {
 			String target = request.getParameter("target");
 			URL url = new URL(target);
 			URLConnection conn = url.openConnection();
+			if( conn.getContentType() != null && (conn.getContentType().startsWith("text/xml") || conn.getContentType().startsWith("application/x-votable+xml"))) {
 			logger.info("Forward URL " + target + " of type " +  conn.getContentType());
-			if( conn.getContentType().equals("text/xml") || conn.getContentType().equals("application/x-votable+xml")) {
 				OutputStream out = response.getOutputStream();
 				bis = new BufferedInputStream(conn.getInputStream());
 				response.setContentType("text/xml");
