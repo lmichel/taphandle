@@ -2,11 +2,13 @@ package session;
 
 import java.io.File;
 
+import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.io.FileUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import resources.RootClass;
+import translator.GoodiesIngestor;
 
 /**
  * @author laurentmichel
@@ -23,6 +25,7 @@ public  class Goodies extends RootClass{
 		super();
 		this.baseDirectory = baseDirectory;
 		validWorkingDirectory(this.baseDirectory );
+		validWorkingDirectory(this.baseDirectory + WEB_USER_GOODIES_LIST);
 	}
 
 	/**
@@ -34,7 +37,7 @@ public  class Goodies extends RootClass{
 	 * @throws Exception
 	 */
 	protected void pushJobResultInGoodies(String nodeKey, String jobPath, String goodiesName) throws Exception{
-		String dirName =  this.baseDirectory + WEB_USER_GOODIES_DIR +File.separator + nodeKey;
+		String dirName =  this.baseDirectory + WEB_USER_GOODIES_LIST +File.separator + nodeKey;
 		validWorkingDirectory(dirName );
 		FileUtils.copyFile(
 				  new File(jobPath +File.separator  + VOTABLE_JOB_RESULT)
@@ -55,7 +58,7 @@ public  class Goodies extends RootClass{
 		String gn = goodiesName;
 		String fileName  =  this.baseDirectory + WEB_USER_GOODIES_LIST+File.separator + goodiesName;
 		File f = new File(fileName);
-		while(f.exists() ); {
+		while( f.exists() ) {
 			cpt++;
 			gn = goodiesName + "(" + cpt + ")";
 			fileName =  this.baseDirectory + WEB_USER_GOODIES_LIST+File.separator + gn;
@@ -63,9 +66,20 @@ public  class Goodies extends RootClass{
 		} 
 		return fileName;
 	}
-
+	
 	/**
-	 * Return a JSON descriptiion of the Goodies content
+	 * @param item
+	 * @throws Exception 
+	 */
+	public String ingestUserList(FileItem item, double radius) throws Exception{
+		File f = new File(this.getNewUserListPath(item.getName()));
+		item.write(f);		
+		GoodiesIngestor gi = new GoodiesIngestor(this.baseDirectory + WEB_USER_GOODIES_LIST, item.getName(), radius);
+		gi.ingestUserList();
+		return gi.getReport();
+	}
+	/**
+	 * Return a JSON description of the Goodies content
 	 * Retuned JSON is [{nodekey:"..", tables: ["...", "..."]}, ....] 
 	 * @return
 	 */

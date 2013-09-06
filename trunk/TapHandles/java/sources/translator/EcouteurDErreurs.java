@@ -5,6 +5,11 @@ import javax.xml.transform.TransformerException;
 
 import resources.RootClass;
 
+/**
+ * Listener used when applying style sheets
+ * @author michel
+ *
+ */
 public class EcouteurDErreurs extends RootClass implements ErrorListener{
 	public void warning(TransformerException exception)
 	throws TransformerException{

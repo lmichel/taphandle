@@ -14,6 +14,7 @@ import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
+import session.Goodies;
 import session.UserSession;
 import session.UserTrap;
 import translator.JsonUtils;
@@ -49,6 +50,7 @@ public class UploadUserPosList extends RootServlet {
 		this.printAccess(request, false);
 		if( ServletFileUpload.isMultipartContent(request) ) { 
 			try {
+				UserSession session         = UserTrap.getUserAccount(request);
 				DiskFileItemFactory factory = new DiskFileItemFactory();
 				ServletFileUpload upload    = new ServletFileUpload(factory);
 				List items                  = upload.parseRequest(request);				
@@ -56,17 +58,34 @@ public class UploadUserPosList extends RootServlet {
 				/*
 				 * Read all fields
 				 */
+				double radius = Double.NaN;
+				FileItem fileItem = null;;
 				while (iter.hasNext()) {
 					FileItem item = (FileItem) iter.next();
-					if (item.isFormField()) {
-					}else {
-						UserSession session = UserTrap.getUserAccount(request);
-						File f = new File(session.goodies.getNewUserListPath(item.getName()));
-						item.write(f);
-						JsonUtils.teePrint(response, session.goodies.getJsonContent().toJSONString());
+					if (item.isFormField() ) {
+						if(item.getFieldName().equalsIgnoreCase("radius") ) {
+							radius = Double.parseDouble(item.getString());
+						}
+					} else {
+						fileItem = item;
 					}
-				}			
-//				new PositionList(Database.getVOreportDir() + Database.getSepar() + item_to_upload.getString(), Database.getAstroframe());
+				}	
+				/*
+				 * Checks that all data have been received
+				 */
+				if( fileItem == null){
+					reportJsonError(request, response, "No file received");	
+					return;
+				} else if( Double.isNaN(radius)) {
+					reportJsonError(request, response, "No valid radius received");		
+					return;
+				} else {
+					/*
+					 * Store the file ad convert it into a VOTable
+					 */
+					Goodies goodies = session.goodies;
+					JsonUtils.teePrint(response, goodies.ingestUserList(fileItem, radius));
+				}
 			} catch (Exception e) {
 				reportJsonError(request, response, e);
 			}

@@ -60,11 +60,18 @@ public class RunAsyncJob extends RootServlet implements Servlet {
 				reportJsonError(request, response, "runasyncjob: no treepath specified");
 				return;
 			}
-			session.connectNode(nodeKey);
-//			String jobId = session.createJob(nodeKey, query, treenode);
-//			session.startAsyncJob(nodeKey, jobId);
-			String jobId = session.startJob(nodeKey, query, treenode);
-			response.getWriter().print(session.getJobSummary(nodeKey, jobId));
+
+			String upload = this.getParameter(request, "UPLOAD");	
+			if( upload != null && upload.length() >  0 ) {
+				String uploadParam = upload + "," + request.getRequestURL().toString() + "/getUploadedFile?session=" + request.getSession().getId() + "&file=" + upload;
+				session.connectNode(nodeKey);
+				String jobId = session.startJob(nodeKey, query, uploadParam, treenode);
+				response.getWriter().print(session.getJobSummary(nodeKey, jobId));
+			} else {
+				session.connectNode(nodeKey);
+				String jobId = session.startJob(nodeKey, query, treenode);
+				response.getWriter().print(session.getJobSummary(nodeKey, jobId));
+			}
 
 		} catch (Exception e) {
 			this.reportJsonError(request, response, e);
