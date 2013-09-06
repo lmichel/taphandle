@@ -43,7 +43,7 @@ function initFunctions () {
 				, "gettableatt"
 				, "gettablejoinkeys"
 				, "sesame"
-				, "uploadposlist"
+				, {url: "uploaduserposlist", postHandler: function(retour){dataTreeView.addGoodies({nodekey:'userLists',table: retour.name});}}
 				, adqlQueryView);
 
 		$("input#node_selector").keypress(function(event) {

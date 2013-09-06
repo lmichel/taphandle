@@ -50,6 +50,7 @@ jQuery.extend({
 									, FORMAT: 'json'
 										, PHASE: 'RUN'
 											, MAXREC: limit
+											, UPLOAD:tapConstraintEditor.getUploadedFile()
 											, QUERY: adqlQueryView.getQuery() }
 			, beforeSend: function(  jqXHR, settins) {
 				Out.info('before ' + $('#saadaworkingContent').css('display'));
