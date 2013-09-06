@@ -150,6 +150,23 @@ public class UserSession  extends RootClass {
 			return jobID;
 		}
 	}
+	
+		public String startJob(String nodeKey, String query, String uploadParam, String treepath) throws Exception {
+			TapNode node =  NodeBase.getNode(nodeKey);
+			/*
+			 * Asynchronous job
+			 */
+			if( node.supportAsyncMode() ) {
+				String jobId = this.createJob(nodeKey, query, uploadParam, treepath);
+				startAsyncJob(nodeKey, jobId);
+				return jobId;
+				/*
+				 * synchronous job
+				 */
+			} else {
+				throw new Exception("File upload not supported in synchronous mode");
+			}
+		}
 
 	/**
 	 * @param nodeKey
@@ -163,6 +180,19 @@ public class UserSession  extends RootClass {
 		NodeCookie nodeCookie = new NodeCookie();
 		String jobID = TapAccess.createAsyncJob(NodeBase.getNode(nodeKey).getUrl()
 				, query
+				, statusFileName
+				, nodeCookie
+				, this.remoteAddress);
+		nodeCookie.saveCookie(JobUtils.setupJobDir(nodeKey, this.getJobDir(nodeKey, jobID), statusFileName, treepath));
+		jobStack.pushJob(nodeKey, jobID, new JobTreePath(treepath), nodeCookie);
+		return jobID;
+	}
+	public  String createJob(String nodeKey, String query, String uploadParam, String treepath) throws Exception {
+		String statusFileName = this.baseDirectory + nodeKey + File.separator + "status.xml";
+		NodeCookie nodeCookie = new NodeCookie();
+		String jobID = TapAccess.createAsyncJob(NodeBase.getNode(nodeKey).getUrl()
+				, query
+				, uploadParam
 				, statusFileName
 				, nodeCookie
 				, this.remoteAddress);

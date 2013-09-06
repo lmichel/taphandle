@@ -269,6 +269,27 @@ public class TapAccess  extends RootClass {
 
 	/**
 	 * @param endpoint
+	 * @param query
+	 * @param uploadParamString
+	 * @param outputfile
+	 * @param cookie
+	 * @param remoteAddress
+	 * @return
+	 * @throws Exception
+	 */
+	public static String createAsyncJob(String endpoint, String query, String uploadParam, String outputfile, NodeCookie cookie, String remoteAddress) throws Exception {
+		String runId = (remoteAddress == null )? RUNID: "TapHandle-" + remoteAddress;
+		System.out.println("@@@@@@@@@@@@@ " + uploadParam);
+		sendPostRequest(endpoint + "async"
+				, "RUNID=" + runId + "&REQUEST=doQuery&LANG=ADQL&QUERY=" + URLEncoder.encode(query, "ISO-8859-1") + "&UPLOAD=" + uploadParam
+				, outputfile
+				, cookie
+				, true);
+		return  JsonUtils.getValue (outputfile.replaceAll("xml", "json"), "job.jobId");
+	}
+
+	/**
+	 * @param endpoint
 	 * @param jobId
 	 * @param outputfile
 	 * @param cookie
