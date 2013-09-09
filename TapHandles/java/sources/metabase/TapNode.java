@@ -589,7 +589,7 @@ public class TapNode  extends RootClass {
 			}
 		}
 		/*
-		 * Advice the client that the litt is truncated
+		 * Advice the client that the list is truncated
 		 */
 		if( truncated ) {
 			jsonObject.put("truncated", "true");
