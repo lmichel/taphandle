@@ -219,4 +219,14 @@
     <servlet-name>UploadUserPosList</servlet-name>
     <url-pattern>/uploaduserposlist</url-pattern>
   </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>ManageUserPosList</display-name>
+    <servlet-name>ManageUserPosList</servlet-name>
+    <servlet-class>servlet.ManageUserPosList</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>ManageUserPosList</servlet-name>
+    <url-pattern>/ManageUserPosList</url-pattern>
+  </servlet-mapping>
 </web-app>
