@@ -1,6 +1,5 @@
 package servlet;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
@@ -19,13 +18,16 @@ import session.UserSession;
 import session.UserTrap;
 import translator.JsonUtils;
 
-
-
 /**
- * Servlet implementation class UploadUserPosList
+ * parameter:
+ * - delete=listName: remove the list
+ * - info=istName: return the info attached to that list
+ * - other: return the content of the user poslist folder
+ * Servlet implementation class ManageUserPosList
  */
-public class UploadUserPosList extends RootServlet {
+public class ManageUserPosList extends RootServlet {
 	private static final long serialVersionUID = 1L;
+       
 
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
@@ -45,46 +47,20 @@ public class UploadUserPosList extends RootServlet {
 	 * @param request
 	 * @param res
 	 */
-	@SuppressWarnings({ "rawtypes" })
 	public void process(HttpServletRequest request, HttpServletResponse response) {
 		this.printAccess(request, false);
 		if( ServletFileUpload.isMultipartContent(request) ) { 
 			try {
-				UserSession session         = UserTrap.getUserAccount(request);
-				DiskFileItemFactory factory = new DiskFileItemFactory();
-				ServletFileUpload upload    = new ServletFileUpload(factory);
-				List items                  = upload.parseRequest(request);				
-				Iterator iter = items.iterator();
-				/*
-				 * Read all fields
-				 */
-				double radius = Double.NaN;
-				FileItem fileItem = null;;
-				while (iter.hasNext()) {
-					FileItem item = (FileItem) iter.next();
-					if (item.isFormField() ) {
-						if(item.getFieldName().equalsIgnoreCase("radius") ) {
-							radius = Double.parseDouble(item.getString());
-						}
-					} else {
-						fileItem = item;
-					}
-				}	
-				/*
-				 * Checks that all data have been received
-				 */
-				if( fileItem == null){
-					reportJsonError(request, response, "No file received");	
-					return;
-				} else if( Double.isNaN(radius)) {
-					reportJsonError(request, response, "No valid radius received");		
-					return;
+				UserSession session = UserTrap.getUserAccount(request);
+				Goodies goodies = session.goodies;
+				String listName;
+				if( (listName = request.getParameter("delete")) != null ||  (listName = request.getParameter("drop")) != null) {
+					goodies.dropUserList(listName);
+					JsonUtils.teePrint(response, "{status: \"ok\"}");
+				} else if( (listName = request.getParameter("info")) != null ) {
+					JsonUtils.teePrint(response, goodies.getUserListReport(listName).toJSONString());
 				} else {
-					/*
-					 * Store the file ad convert it into a VOTable
-					 */
-					Goodies goodies = session.goodies;
-					JsonUtils.teePrint(response, goodies.ingestUserList(fileItem));
+					JsonUtils.teePrint(response, goodies.getJsonContent().toJSONString());
 				}
 			} catch (Exception e) {
 				reportJsonError(request, response, e);
