@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 
 import org.json.simple.JSONObject;
 
@@ -39,7 +40,7 @@ public class GoodiesIngestor extends RootClass {
 		this.workingDir = workingDir;
 		this.filePrefix = filePrefix;
 		this.fileName = fileName.replaceAll("[\\.\\(\\)]", "_");;
-		this.jsonName = fileName + ".json";
+		this.jsonName = filePrefix + ".json";
 		this.defaultRadius = defaultRadius/60.;
 	}
 
@@ -53,24 +54,43 @@ public class GoodiesIngestor extends RootClass {
 		this.workingDir = workingDir;
 		this.filePrefix = filePrefix;
 		this.fileName = (filePrefix + ".xml").replaceAll("[\\.\\(\\)]", "_");
-		this.jsonName = fileName + ".json";
+		this.jsonName = filePrefix + ".json";
 		this.defaultRadius = defaultRadius/60.;
+	}
+
+	/**
+	 * Constructor used for user lists. The name of the final votable is derived from the name of the uploaded file.
+	 * @param workingDir 
+	 * @param filePrefix: name of the uploaded file (before conversion in VOtable)
+	 */
+	public GoodiesIngestor(String workingDir, String filePrefix) {
+		this.workingDir = workingDir;
+		this.filePrefix = filePrefix;
+		this.fileName = (filePrefix + ".xml").replaceAll("[\\.\\(\\)]", "_");
+		this.jsonName = filePrefix + ".json";
+		this.defaultRadius = Double.NaN;
 	}
 
 	public void ingestUserList() throws IOException {
 		try {
 			convertUserList();
 			writeJsonReport();
+			logger.info("File " + this.filePrefix + " ingested as  " + this.fileName + " with " + this.nbPositions + " valid  positions" );
+
 		} catch (Exception e) {
+			logger.error("File " + this.filePrefix + " error" + e.getMessage() );
 			FileWriter fw = new FileWriter(this.workingDir + File.separator + this.jsonName);
-			fw.write(JsonUtils.getErrorMsg("Position List converstion failure\n" +e.getMessage()));
+			fw.write(JsonUtils.getErrorMsg("Position List convertion failure\n" +e.getMessage()));
 			fw.close();
 		}
-		logger.info("File " + this.filePrefix + " ingested as  " + this.fileName + " with " + this.nbPositions + " valid  positions" );
 	}
 
 	private void convertUserList() throws Exception{
+		logger.info("Reading " + this.workingDir + File.separator + this.filePrefix );
 		File inpf = new File(this.workingDir + File.separator + this.filePrefix);
+		if( !inpf.exists() ){
+			throw new IOException("File " + inpf.getAbsolutePath() + " does not exist");
+		}
 		BufferedReader br = new BufferedReader(new FileReader(inpf)) ;
 		String boeuf;
 		ArrayList<Double> ra = new ArrayList<Double>();
@@ -131,10 +151,13 @@ public class GoodiesIngestor extends RootClass {
 	@SuppressWarnings("unchecked")
 	private void writeJsonReport() throws IOException {
 		this.report = new JSONObject();
-		report.put("name", this.fileName);
+		report.put("nameReport", this.jsonName);
+		report.put("nameOrg", this.filePrefix);
+		report.put("nameVot", this.fileName);
 		report.put("positions", this.nbPositions);
 		report.put("lines", this.nbLines);
 		report.put("radius", this.defaultRadius);
+		report.put("date", (new Date()).toString());
 		FileWriter fw = new FileWriter(this.workingDir + File.separator + this.jsonName);
 		fw.write(report.toJSONString());
 		fw.close();
