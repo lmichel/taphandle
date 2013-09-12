@@ -38,21 +38,17 @@ jQuery.extend({
 		if( attributehandler.dataType == 'select' ) {
 			operators = [];
 			andors = [];
-		}
-		else if( attributehandler.dataType == 'adqlpos' ) {
+		} else if( attributehandler.dataType == 'adqlpos' ) {
 			operators = ["inCircle", "inBox"];
 			andors = ["OR", "AND"];
 
-		}
-		else if( !that.isTextType()) {
+		} else if( !that.isTextType()) {
 			operators = ["=", "!=", ">", "<", "between", 'IS NULL', 'IS NOT NULL'];
 			andors = ['AND', 'OR'];
-		}
-		else {
+		} else {
 			operators = ["=", "!=", "LIKE", "NOT LIKE", 'IS NULL', 'IS NOT NULL'];
 			andors = ['AND', 'OR'];
 		}
-
 		if(  attributehandler.dataType != 'select' ) {
 			var addConst = presetValues[attributehandler.name .toLowerCase()];
 			if( addConst != null ) {
