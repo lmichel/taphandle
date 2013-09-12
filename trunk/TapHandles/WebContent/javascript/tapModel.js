@@ -35,6 +35,7 @@ jQuery.extend({
 
 		this.submitQuery = function(){
 			Processing.show("Run job");
+			Out.infoTrace("submit");
 			Out.info(' start ' + $('#saadaworkingContent').css('display'));
 			setTimeout("Out.info(' timeout ' +  $('#saadaworkingContent').css('display') + ' ' + $('#saadaworkingContent').css('visibility'))", 200);
 			setTimeout("Out.info(' timeout2 ' + $('#saadaworkingContent').css('display') + ' ' + $('#saadaworkingContent').css('visibility'));", 2000);
@@ -68,9 +69,7 @@ jQuery.extend({
 					jm = new $.JobModel(dataTreeView.treePath, jsondata.status.job, jsondata.session);
 					new $.JobControler(jm, jv);
 					lastJob = jv;
-					console.log("init");
 					lastJob.fireInitForm('tapjobs', attributesHandlers);
-					console.log("setto");
 					lastTimer = setTimeout("tapView.fireCheckJobCompleted(\"" + dataTreeView.treePath.nodekey + "\", \"" + jsondata.status.job.jobId + "\", \"9\");", 1000);
 				}
 			}
@@ -78,13 +77,11 @@ jQuery.extend({
 		};
 
 		this.checkJobCompleted = function(nodeKey, jid, counter) {
-			console.log("check");
 			if( lastJob == null ) {
 				lastTimer = null;
 				return;
 			}
 			else if( lastJob.fireGetPhase() == 'COMPLETED' ) {
-				console.log("result");
 				that.displayResult(nodeKey, jid);	
 			}
 			else if( counter < 0 ) {

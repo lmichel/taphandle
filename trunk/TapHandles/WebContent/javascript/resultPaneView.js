@@ -233,10 +233,9 @@ jQuery.extend({
 			//	$("div#accesspane").trigger("resize",[ height]);		
 		};
 		this.fireRemoveAllJobs= function() {
-			openConfirm({title: "Removing Jobs"
-				, message: "Do you really want to remove all jobs?"
-					, handler: function(){$("#tapjobs a").click();}
-			});
+			Modalinfo.confirm("Do you really want to remove all jobs?"
+					, function(){$("#tapjobs a").click();}
+					, "Removing Jobs");
 		};
 		this.showProgressStatus = function() {
 			Modalinfo.info("Job in progress", 'Info');

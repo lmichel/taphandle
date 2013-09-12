@@ -19,9 +19,9 @@ jQuery.extend({
 		 * Fire external events
 		 */
 		this.fireTreeNodeEvent = function(treepath, andsubmit){
+			tapColumnSelector.fireSetTreepath(treepath, ((andsubmit)? this.fireSubmitQueryEvent: null));
 			adqlQueryView.fireSetTreePath(treepath);
 			adqlQueryView.fireAddConstraint("tap", "limit", [getQLimit()]);
-			tapColumnSelector.fireSetTreepath(treepath, ((andsubmit)? this.fireSubmitQueryEvent: null));
 			tapConstraintEditor.fireSetTreepath(treepath);
 		};
 

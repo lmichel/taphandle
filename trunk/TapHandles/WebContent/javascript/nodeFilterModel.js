@@ -28,7 +28,7 @@ jQuery.extend({
 				if( Processing.jsonError(jsdata, "Cannot make data tree") ) {
 					return;
 				} else {
-					resultPaneView.fireBuildTree(jsdata);
+					dataTreeView.fireBuildTree(jsdata);
 					$.modal.close();
 				}
 			});

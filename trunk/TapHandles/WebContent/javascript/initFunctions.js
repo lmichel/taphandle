@@ -70,7 +70,7 @@ function initFunctions () {
 
 	this.initDataTree = function() {
 		dataTree = $("div#treedisp").jstree({
-			"json_data"   : {"data" : [ {  "attr"     : { "id"   : "rootid", "title": "Dummy node: Select one first with the node selector on the page top." },
+			"json_data"   : {"data" : [ {  "attr"     : { "id"   : "rootid", "title": "Repository for uploaded tables (Not implemented yet)" },
 				"data"        : { "title"   : "Goodies" , "attr": {"id": "goodies"}}}]}  , 
 				"plugins"     : [ "themes", "json_data", "dnd", "crrm"],
 				"rules" : {"deletable" : "all"},
@@ -127,9 +127,6 @@ function initFunctions () {
 				Modalinfo.info("Query can only be applied on one data category or one data class: ("  +  treePath + ")", 'User Input Error');
 			} else {
 				var fTreePath = {nodekey: treePath[0], schema: treePath[1], tableorg: treePath[2], table: treePath[2].split('.').pop() };
-//				resultPaneView.fireSetTreePath(fTreePath);	
-//				setTitlePath(fTreePath);
-//				tapView.fireTreeNodeEvent(fTreePath);	
 				dataTreeView.fireTreeNodeEvent(fTreePath, true);
 			}
 		});
