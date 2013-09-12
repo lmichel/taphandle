@@ -24,12 +24,10 @@ public class GetTableJoinKeys extends RootServlet implements Servlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		printAccess(request, true);
 		response.setContentType("application/json; charset=UTF-8");
-		/*
-		 * The node concept is specific to taphandle/saada whereas the concept of schema is specific to TAP, then we support both
-		 */
+
 		String node = this.getParameter(request, "node");
 		if( node == null ){
-			node = this.getParameter(request, "schema");
+			node = this.getParameter(request, "nodekey");
 		}
 		String table = this.getParameter(request, "table");
 		if( node == null || node.length() ==  0 ) {

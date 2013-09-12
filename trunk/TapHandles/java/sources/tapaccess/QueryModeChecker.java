@@ -130,7 +130,6 @@ public class QueryModeChecker extends RootClass {
 			return false;
 		}
 		logger.debug(this.endpoint + " supports the upload");
-		System.out.println(this.uploadQuery);
 		return true;
 	}
 }

@@ -40,7 +40,7 @@ public class JoinKeysJob extends RootClass {
 	private static void tryJoinKeys(String url, String query, String baseDirectory) throws Exception{
 		NodeCookie nc=new NodeCookie();
 		String baseFN = baseDirectory + File.separator + prefix;
-		String jobID = TapAccess.createAsyncJob(url, query,baseFN + "job.xml", nc, null);
+		String jobID = TapAccess.createAsyncJob(url, query, baseFN + "job.xml", nc, null);
 		TapAccess.runAsyncJob(url, jobID, baseFN + "status.xml", nc);
 		String phase;
 		int cpt = 10;		
@@ -52,6 +52,10 @@ public class JoinKeysJob extends RootClass {
 			}
 
 		} while( phase.equals("EXECUTING") || phase.equals("PENDING"));
+		
+		if( phase.equals("ERROR")) {
+			throw new TapException("ERROR when gettng Join keys ");
+		}
 		String[] resultURLs = TapAccess.getAsyncJobResults(url
 				, jobID
 				, baseFN + VOTABLE_JOB_RESULT
@@ -77,14 +81,14 @@ public class JoinKeysJob extends RootClass {
 	 */
 	public static void getJoinKeys(String url, String baseDirectory) throws Exception{
 		try {
-			logger.info("Get join keys for node " + url);
+			logger.info("Get join keys for node " + url );
 			tryJoinKeys(url, schema_query, baseDirectory);
 		} catch (Exception e) {
 			try {
-				logger.warn("Error when getting Join keys, try a query without schema");
+				logger.warn("Error when getting Join keys, try a query without schema" );
 				tryJoinKeys(url, noschema_query, baseDirectory);
 			} catch (Exception e2) {
-				logger.warn("Error when getting Join keys, try a query without schema but table prefixed");
+				logger.warn("Error when getting Join keys, try a query without schema but table prefixed" );
 				tryJoinKeys(url, xcatdb_schema_query, baseDirectory);
 			}
 		}

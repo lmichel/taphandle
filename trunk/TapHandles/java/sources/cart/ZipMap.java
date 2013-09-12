@@ -140,7 +140,7 @@ public class ZipMap extends RootClass {
 		Map<String, List<String>>  map = conn.getHeaderFields();
 		JSONObject jso = new JSONObject();
 		for( Entry<String, List<String>> s: map.entrySet()) {
-			System.out.println(s.getKey());
+			System.out.println("@@@ " + s.getKey());
 			for( String v: s.getValue() ) {
 				System.out.println("   " + v);
 			}
