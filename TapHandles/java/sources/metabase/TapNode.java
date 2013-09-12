@@ -314,7 +314,6 @@ public class TapNode  extends RootClass {
 		String uploadQuery = "SELECT TOP 1 * FROM " + quoteTableName(getFirstTableName()) + " NATURAL JOIN TAP_UPLOAD.taphandlesample ";
 		logger.debug("Test query " + query);
 		QueryModeChecker qmc = new QueryModeChecker(this.regMark.getFullUrl(), query, uploadQuery, this.baseDirectory);
-		System.out.println("---------------------------");
 		this.supportSyncMode = qmc.supportSyncMode();
 		this.supportAsyncMode = qmc.supportAsyncMode();
 		if( CHECKUPLOAD ) {
