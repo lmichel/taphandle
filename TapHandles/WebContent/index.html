@@ -2,7 +2,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
-<title>Taphandle V1.3.beta</title>
+<title>Taphandle V1.4</title>
 <link rel="icon" href="images/tap16.png" type="images/png" />
 <link rel="SHORTCUT ICON" href="images/tap16.png" />
 
@@ -74,8 +74,11 @@
 			<input type=text title="Enter a URL or a nickname of a TAP service. A suggestion list appears once one character has been typed"
 			id=node_selector class=inputvalue style="font-size: small;font-family: courier; width: 400px; position: relative; bottom: 5;" />
 			<span class=help>Node Selector</span>
+					     <a class=help href="javascript:void(0);" title="Contact the developper" 
+				onclick='Modalinfo.info("Send an Email to \n laurent.michel@astro.unistra.fr", "contact");'>@</a>
 		
 			<div id=externaltools style='position: relative;'> 
+			
 				<a href="javascript:void(0);" class="formexpender" title="Expand query form" 
 				onclick='resultPaneView.fireExpendForm();' id='formexpender'></a>
 		
@@ -290,13 +293,13 @@
 	<div id="treepane" class="pane ui-layout-west" style="width: 300px">
 		<div style="border-style: hidden; vertical-align: middle;">
 			<span class=help title='Select TAP nodes with the node selector on the top of the page'>Tap Nodes  
-			<a href="javascript:void(0);" onclick="dataTreeView.addGoodies({nodekey:'node',table: 'name1'});">A1</a>&nbsp;
+<!-- 			<a href="javascript:void(0);" onclick="dataTreeView.addGoodies({nodekey:'node',table: 'name1'});">A1</a>&nbsp;
 			<a href="javascript:void(0);" onclick="dataTreeView.addGoodies({nodekey:'node',table: 'name2'});">A2</a>&nbsp;
 			<a href="javascript:void(0);" onclick="dataTreeView.addGoodies({nodekey:'node2',table: 'name1'});">A3</a>&nbsp;
 			<a href="javascript:void(0);" onclick="dataTreeView.delGoodies({nodekey:'node',table: 'name1'});">D1</a>&nbsp;
 			<a href="javascript:void(0);" onclick="dataTreeView.delGoodies({nodekey:'node2',table: 'name1'});">D3</a>&nbsp;
 			<a href="javascript:void(0);" onclick="dataTreeView.pushJobToGoodies('aaa');">UP</a>
-			</span>
+ -->			</span>
 		</div>
 		<div id="treedisp" style="background-color: white">
 		</div>
