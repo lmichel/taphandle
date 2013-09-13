@@ -9,6 +9,8 @@ function DataTreeView() {
 	 */
 	this.goodies = new Array();
 	this.treePath = null;
+	this.capabilities = null;
+	this.info = null;
 }
 DataTreeView.prototype = {
 		initNodeBase : function(){
@@ -289,6 +291,10 @@ DataTreeView.prototype = {
 		},
 		showNodeInfos: function () {
 			Modalinfo.dataPanel( "Info about node " + JSON.stringify(this.treePath), JSON.stringify(this.capabilities) + JSON.stringify(this.info));
+		},
+		getBookmark: function() {
+			var np = window.location.href.split('?')[0].replace(/\/$/, "");;
+			return (this.info != null)?np + "?url=" + escape(this.info.url): np;
 		}
 };
 
