@@ -69,7 +69,6 @@ jQuery.extend({
 					new $.JobControler(jm, jv);
 					lastJob = jv;
 					lastJob.fireInitForm('tapjobs', attributesHandlers);
-					console.log("@@@@@ tapmodel " + attributesHandlers);
 					lastTimer = setTimeout("tapView.fireCheckJobCompleted(\"" + dataTreeView.treePath.nodekey + "\", \"" + jsondata.status.job.jobId + "\", \"9\");", 1000);
 				}
 			}
