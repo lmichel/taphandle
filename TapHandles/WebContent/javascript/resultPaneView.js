@@ -309,7 +309,6 @@ jQuery.extend({
 						+ " - This job has likely been initiated in a previous session" ;
 				}
 				else {
-					console.log(jsdata.aoColumns[i].sTitle);
 					var ah = attributeHandlers[jsdata.aoColumns[i].sTitle];/*
 					/*
 					 * Column name could be published in upper case but returned by the DBMS in lower case.
