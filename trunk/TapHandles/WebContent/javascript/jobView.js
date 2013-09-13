@@ -39,7 +39,7 @@ jQuery.extend({
 			return id;
 		};
 		this.fireGetPhase = function() {
-			var retour = false
+			var retour = false;
 			$.each(listeners, function(i){
 				retour = listeners[i].controlGetPhase();
 			});		
@@ -53,7 +53,6 @@ jQuery.extend({
 			$('#' + id).data("AttributeHandlers", attributesHandlers);
 			$('#' + id).html('');
 			$('#' + id).data('treepath', treepath);
-
 			$('#' + id).append('<span id=' + id + '_id>Job "' + nodekey + ' ' + id + '"</span>');
 			$('#' + id).append('&nbsp;<span id=' + id + '_phase class="' + phase.toLowerCase() + '">' + phase + '</span>');
 			$('#' + id).append('<select id=' + id + '_actions style="font-size: small;" onChange="tapView.fireJobAction(\'' + nodekey + '\', \'' + id + '\', \'' + session + '\');"></select>');

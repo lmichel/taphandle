@@ -21,7 +21,7 @@ jQuery.extend({
 		var attributesHandlers = new Array();
 		var editors = new Array();
 		//var storedTreepath = new Array();
-		var lastJob;
+		var lastJob = null;
 		var pendingJobs = new Array();
 		var lastTimer = null;
 		var listTimer = null;
@@ -35,7 +35,6 @@ jQuery.extend({
 
 		this.submitQuery = function(){
 			Processing.show("Run job");
-			Out.infoTrace("submit");
 			Out.info(' start ' + $('#saadaworkingContent').css('display'));
 			setTimeout("Out.info(' timeout ' +  $('#saadaworkingContent').css('display') + ' ' + $('#saadaworkingContent').css('visibility'))", 200);
 			setTimeout("Out.info(' timeout2 ' + $('#saadaworkingContent').css('display') + ' ' + $('#saadaworkingContent').css('visibility'));", 2000);
@@ -70,6 +69,7 @@ jQuery.extend({
 					new $.JobControler(jm, jv);
 					lastJob = jv;
 					lastJob.fireInitForm('tapjobs', attributesHandlers);
+					console.log("@@@@@ tapmodel " + attributesHandlers);
 					lastTimer = setTimeout("tapView.fireCheckJobCompleted(\"" + dataTreeView.treePath.nodekey + "\", \"" + jsondata.status.job.jobId + "\", \"9\");", 1000);
 				}
 			}
