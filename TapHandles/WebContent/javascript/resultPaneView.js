@@ -300,7 +300,7 @@ jQuery.extend({
 					//line[l] = formatValue(jsdata.aoColumns[l].sTitle, num);
 				}
 			}
-
+			attributeHandlers = tapConstraintEditor.getAttributeHandlers();
 			var aoColumns = new Array();
 			for(var i=0 ; i<jsdata.aoColumns.length ; i++) {
 				var title ;
@@ -309,6 +309,7 @@ jQuery.extend({
 						+ " - This job has likely been initiated in a previous session" ;
 				}
 				else {
+					console.log(jsdata.aoColumns[i].sTitle);
 					var ah = attributeHandlers[jsdata.aoColumns[i].sTitle];/*
 					/*
 					 * Column name could be published in upper case but returned by the DBMS in lower case.
