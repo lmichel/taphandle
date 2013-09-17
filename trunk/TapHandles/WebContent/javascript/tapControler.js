@@ -38,7 +38,7 @@ jQuery.extend({
 				controlChangeTable: function(newTable){
 					model.changeTable(newTable);
 				}
-		}
+		};
 		view.addListener(vlist);
 
 		var mlist = {

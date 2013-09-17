@@ -55,7 +55,7 @@ function formatValue(columnName, value, tdNode) {
 			
 	} else if( value.startsWith("http://") ||  value.startsWith("https://") ) {
 		var titlepath = $('#titlepath').text().split('>');
-		getDLView(titlepath[0], columnName, value, tdNode);	
+		getDLView(dataTreeView.treePath.nodekey, columnName, value, tdNode);	
 	} else if( value.match(/^((position)|(region)|(polygon))/i) ) {
 		tdNode.html("<a title='STC Region (click to expand)' class='dl_stc' href='#'  onclick='Modalinfo.info(\"" + value + "\", \"STC Region\");'></a>");
 	} else if( value.startsWith("Array") ) {
