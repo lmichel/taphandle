@@ -89,6 +89,7 @@ jQuery.extend({
 			$.each(listeners, function(i){
 				listeners[i].controlChangeName(nodekey, dataType, rowNum, newName);
 			});			
+			this.resetJobControl();
 		};
 		this.resetJobControl= function() {
 			Out.info("resetJobControl");
@@ -208,7 +209,6 @@ jQuery.extend({
 				return;
 			}
 			for( var nodekey in cartData) {
-				var folder = cartData[nodekey];
 				table += "<h4 id=\"mappedmeta\" class='detailhead'> <img src=\"images/tdown.png\">Node  " + nodekey + " </h4>";
 				table += "<div class='detaildata'>";
 				table += "<table width=99% cellpadding=\"0\" cellspacing=\"0\" border=\"0\"  id=\"folder_" + nodekey +"\" class=\"display\"></table>";
@@ -247,7 +247,19 @@ jQuery.extend({
 			    	 "callback": function( sValue, y ) {
 				        var node = $(this).parent().get(0);
 			            var aPos = oTable.fnGetPosition( node );
-			            cartView.fireChangeName(nodekey, oTable.fnGetData( aPos[0] )[1], aPos[0], sValue);
+			            var row = aPos[0];
+			            var type = oTable.fnGetData( row )[1];
+			            /*
+			             * jobs and urls are mixed in a table.
+			             * We must retreive th position within the correct type
+			             */
+			            var cpt = -1;
+			            for( var i=0 ; i<=row ; i++ ){
+			            	if(  oTable.fnGetData( i )[1] == type) {
+			            		cpt++;
+			            	}
+			            }
+			            cartView.fireChangeName(nodekey, type, cpt, sValue);
 			    	  },
 			        "height": "1.33em", 
 			        "width": "16em"}

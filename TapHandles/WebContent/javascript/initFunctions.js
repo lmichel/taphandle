@@ -54,18 +54,18 @@ function initFunctions () {
 		/*
 		 * Name resolver button activation
 		 */
-		$(".kw_filter").keyup(function(event) {
-			var val = $(this).val();
-			tapView.fireFilterColumns(val);
-			$('.kw_filter').val(val);
-
-		});
-		/*
-		 * Change the table displayed in the KW lists
-		 */
-		$('.table_filter').change(function() {
-			tapView.fireChangeTable(this.value);
-		});
+//		$(".kw_filter").keyup(function(event) {
+//			var val = $(this).val();
+//			tapView.fireFilterColumns(val);
+//			$('.kw_filter').val(val);
+//
+//		});
+//		/*
+//		 * Change the table displayed in the KW lists
+//		 */
+//		$('.table_filter').change(function() {
+//			tapView.fireChangeTable(this.value);
+//		});
 	};
 
 	this.initDataTree = function() {

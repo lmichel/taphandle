@@ -74,18 +74,20 @@
 			<input type=text title="Enter a URL or a nickname of a TAP service. A suggestion list appears once one character has been typed"
 			id=node_selector class=inputvalue style="font-size: small;font-family: courier; width: 400px; position: relative; bottom: 5;" />
 			<span class=help>Node Selector</span>
-					     <a class=help href="javascript:void(0);" title="Contact the developper" 
-				onclick='Modalinfo.info("Send an Email to \n laurent.michel@astro.unistra.fr", "contact");'>@</a>
+			    <a class=help href="javascript:void(0);" title="Contact the developper" 
+				onclick='Modalinfo.info("Send an Email to \n laurent.michel@astro.unistra.fr", "Bookmark");'>@</a>
+			    <a class=help href="javascript:void(0);" title="Bookmark the TAP node you are connect to" 
+				onclick='Modalinfo.info("Bookmark the following URL <b>\n" + dataTreeView.getBookmark() + " </b>\nto connect TapHandle on the current node at starting time.", "contact");'>b</a>
 		
 			<div id=externaltools style='position: relative;'> 
 			
 				<a href="javascript:void(0);" class="formexpender" title="Expand query form" 
 				onclick='resultPaneView.fireExpendForm();' id='formexpender'></a>
 		
-				<a href="javascript:void(0);" id=showquerymeta title='Show Metadata' class=question></a>
-				<a href="javascript:void(0);" title='Download the results of the current job in a VOTable'
+				<a href="javascript:void(0);" id=showquerymeta title='Show Metadata (Does not work with Vizier)' class=question></a>
+		<!-- 		<a href="javascript:void(0);" title='Download the results of the current job in a VOTable'
 				class=votable onclick='resultPaneView.fireDownloadVOTable();'></a> 		
-				<a href="javascript:void(0);" title='Open the shopping cart'
+		 -->		<a href="javascript:void(0);" title='Open the shopping cart'
 				class=zip onclick='cartView.fireOpenCart();' id=zipbutton></a> 		
 <!-- 				<a href="javascript:void(0);" title='Connect a SAMP hub. (The SAMP hub must be started first e.g. by starting Aladin)' 
 				class=samp id=sampconnector ></a> 
@@ -116,7 +118,7 @@
 		<h3 class=help>&nbsp;News </h3>
 		<ul>
 			<li class=help style="font-size: large;">(05/2013) Data link demo. Open 
-			<a style="font-size: small;" href='#' onclick='dataTreeView.fireNewNodeEvent(unescape("http://saada.unistra.fr/3xmm/tap"));'>XMM</a>
+			<a style="font-size: small;" href='#' onclick='dataTreeView.fireNewNodeEvent(unescape("http://xcatdb.unistra.fr/3xmm/tap"));'>XMM</a>
 			or
 			<a style="font-size: small;" href='#' onclick='dataTreeView.fireNewNodeEvent(unescape("http://beta.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap"));'>CADC</a> Demo Node
 			</li>
