@@ -509,7 +509,7 @@ public class TapNode  extends RootClass {
 	 * @param tableName  Name of the table
 	 * @throws Exception If something goes wrong
 	 */
-	public void buildJsonTableAttributes(String tableName) throws Exception {
+	synchronized public void buildJsonTableAttributes(String tableName) throws Exception {
 		String tableFileName = RootClass.vizierNameToFileName(tableName);
 		String productName = this.baseDirectory + tableFileName + "_att";
 		if( new File(tableFileName + ".json").exists()) {
@@ -530,7 +530,7 @@ public class TapNode  extends RootClass {
 			}
 			String outputFilename = this.getServiceReponse("tables/" + noSchemaName, tablesNS);
 			if( ! (new File(outputFilename)).renameTo(fn) ) {
-				throw new TapException("Cannot store columns of table  " + tableName +" in file " + this.baseDirectory + tableFileName  +  "_att.xml");
+				throw new TapException("Cannot rename " + fn.getAbsolutePath() + " to " + outputFilename );
 			}
 			XmlToJson.translateTableAttributes(this.baseDirectory, tableName, tablesNS);	
 			fn.delete();
@@ -559,7 +559,7 @@ public class TapNode  extends RootClass {
 	 * @throws Exception
 	 */
 	@SuppressWarnings("unchecked")
-	public JSONObject filterTableList(int maxSize) throws Exception {
+	synchronized public JSONObject filterTableList(int maxSize) throws Exception {
 		JSONParser parser = new JSONParser();
 		Object obj = parser.parse(new FileReader(this.getBaseDirectory() + "tables.json"));
 		JSONObject jsonObject = (JSONObject) obj;
@@ -604,7 +604,7 @@ public class TapNode  extends RootClass {
 	 * @throws Exception
 	 */
 	@SuppressWarnings("unchecked")
-	public JSONObject filterTableList(String filter) throws Exception {
+	synchronized public JSONObject filterTableList(String filter) throws Exception {
 		JSONParser parser = new JSONParser();
 		Object obj = parser.parse(new FileReader(this.getBaseDirectory() + "tables.json"));
 		JSONObject jsonObject = (JSONObject) obj;
@@ -672,7 +672,7 @@ public class TapNode  extends RootClass {
 	 * @return
 	 * @throws Exception
 	 */
-	public JSONObject filterTableList(String filter, Set<String> rejectedIndividuals) throws Exception {
+	synchronized public JSONObject filterTableList(String filter, Set<String> rejectedIndividuals) throws Exception {
 		JSONObject jsonObject = this.filterTableList(filter) ;
 		if( rejectedIndividuals != null && rejectedIndividuals.size() != 0 ) {
 			JSONArray schemas = (JSONArray) jsonObject.get("schemas");
