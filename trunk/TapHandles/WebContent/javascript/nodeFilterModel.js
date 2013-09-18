@@ -14,16 +14,29 @@ jQuery.extend({
 		this.getFilteredNodes  = function(node){
 			var tr = Array();
 			/*
-			 * Build a list with all unselected tables
+			 * Build a list with all selected tables
+			 * If all table are selected, take "any" as parameter
 			 */
+			var any = true;
 			$("#nodeFilterList span").each(function() {
-				if( $(this).parent().attr('class') == 'tableNotSelected') tr[tr.length ] = $(this).text();
+				if( $(this).parent().attr('class') == 'tableNotSelected') {
+					any = false;
+				}
 			});
+			if( ! any ){
+				$("#nodeFilterList span").each(function() {
+					if( $(this).parent().attr('class') == 'tableSelected') {
+						tr[tr.length ] = $(this).text();
+					}
+				});
+			} else {
+				tr.push("any");
+			}
 			/*
 			 * Ask for the new table list
 			 */
 			Processing.show("Waiting on " + node + " filtered node description");
-			$.getJSON("getnode", {jsessionid: sessionID, node: node , filter: $("#nodeFilter").val(), rejected:tr.join(',') }, function(jsdata) {
+			$.getJSON("getnode", {jsessionid: sessionID, node: node , filter: $("#nodeFilter").val(), selected:tr.join(',') }, function(jsdata) {
 				Processing.hide();
 				if( Processing.jsonError(jsdata, "Cannot make data tree") ) {
 					return;

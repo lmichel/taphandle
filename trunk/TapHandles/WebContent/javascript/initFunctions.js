@@ -83,7 +83,10 @@ function initFunctions () {
 							Modalinfo.info("Meta data only available for tables: ("  +  streepath + ")", 'User Input Error');
 						}
 						else {
-							var treePath = {nodekey: streepath[0], schema: streepath[1], tableorg: streepath[2], table: streepath[2].split('.').pop()};
+							var treePath = {nodekey: streepath[0]
+							, schema: streepath[1]
+							, tableorg: streepath[2]
+							, table: streepath[2].split('.').pop()};
 							while(parent.length != 0  ) {
 								//resultPaneView.fireSetTreePath(treePath);	
 								if(parent.is('#resultpane') ) {

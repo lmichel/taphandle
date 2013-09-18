@@ -46,8 +46,8 @@ jQuery.extend({
 			+ "    <hr><p class=help>The number of selected tables returned by the server is limited to 100 in any case.<p>"
 			+ "    <div id=nodeFilterList class='detaildata' style='border: 1px black solid; background-color: whitesmoke; width: 90%; height: 380px; overflow: auto;margin : auto;position:relative'></div>"
 			+ "    <p class=help>Unselect the tables you not want to access"
-			+ "    (<a href='#' onclick=\"$('.attlist input').attr('checked', 'true');\">select</a> /"
-			+ "     <a href='#' onclick=\"$('.attlist input').removeAttr('checked');\">unselect</a> all)<br>"
+			+ "    (<a href='#' onclick=\"$('#nodeFilterList input').attr('checked', 'true');$('#nodeFilterList li').attr('class', 'tableSelected');\">select</a> /"
+			+ "     <a href='#' onclick=\"$('#nodeFilterList input').removeAttr('checked');$('#nodeFilterList li').attr('class', 'tableNotSelected');\">unselect</a> all)<br>"
 			+ "    Caution: You cannot refine your selection once it is accepted (Version 1.1)<p><hr>"
 			+ "    <input type=button value='accept' onclick='nodeFilterView.fireGetFilteredNodes(\"" + node + "\");' style='font-weight: bold;'>"
 			+ "    <span class=help>(Type [ESC] to close the window)</span>"
@@ -69,18 +69,25 @@ jQuery.extend({
 			$(window).trigger('resize.simplemodal'); 
 			//Processing.show("Filering meta data");
 			$("#nodeFilter").keyup(function(event) {
-				if(event.keyCode == 13) {	            
-					$.getJSON("getnode", {jsessionid: sessionID, node: node, filter: $("#nodeFilter").val()}, function(jsdata) {
-						//Processing.hide();
-						if( Processing.jsonError(jsdata, "Cannot get the node selection") ) {
-							return;
-						} else {
-							that.fireShowNodeSelection($("#nodeFilterList"), jsdata);
-						}
-					});
+				if(event.keyCode != 13) {	            
+					that.applyFilter(node);
 				}
 			});
+			this.applyFilter(node);
 		};	
+		
+		this.applyFilter = function(node) {
+			Processing.show('Get filtered table list');			
+			$.getJSON("getnode", {jsessionid: sessionID, node: node, filter: $("#nodeFilter").val(), selected: ''}, function(jsdata) {
+				Processing.hide();
+				if( Processing.jsonError(jsdata, "Cannot get the node selection") ) {
+					return;
+				} else {
+					that.fireShowNodeSelection($("#nodeFilterList"), jsdata);
+				}
+			});
+			
+		};
 		/**
 		 * Display in the div the list of selected tables returned by the server 
 		 */
