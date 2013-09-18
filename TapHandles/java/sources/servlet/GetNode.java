@@ -36,7 +36,7 @@ public class GetNode extends RootServlet implements Servlet {
 
 		String node = this.getParameter(request, "node");
 		String filter = this.getParameter(request, "filter");
-		String rejected = this.getParameter(request, "rejected");
+		String selected = this.getParameter(request, "selected");
 		if( node == null || node.length() ==  0 ) {
 			reportJsonError(request, response, "getnode: no node specified");
 			return;
@@ -57,16 +57,21 @@ public class GetNode extends RootServlet implements Servlet {
 			}
 			
 			TapNode tn = NodeBase.getNode(key);
-			if( filter != null ) {
+			/*
+			 * If there is either a filter or a discriminative selection list, we apply the filter
+			 */
+			if( (filter != null && filter.length() > 0) || (selected != null && selected.length() > 0 && !selected.equalsIgnoreCase("any"))) {
 				logger.debug("Node " + key + " Apply the filter: " + filter);
 				Set<String> ra = null;
-				if( rejected != null && rejected.length() > 0) {
-					logger.debug("Node " + key + " Tables discarded by the user: " + rejected);
-					ra = new HashSet<String>(Arrays.asList(rejected.split(",")));
+				if( selected != null && selected.length() > 0) {
+					ra = new HashSet<String>(Arrays.asList(selected.split(",")));
 				}
 				// IN 2 steps in order not to call twice response.getWriter() in case of error
 				JSONObject jso = tn.filterTableList(filter, ra);
-				response.getWriter().print(jso.toJSONString());				
+				response.getWriter().print(jso.toJSONString());		
+			/*
+			 * otherwise, we take the full list
+			 */
 			} else if( tn.largeResource ){
 				JSONObject jso = tn.filterTableList(100);		
 				byte[] bytes  = (jso.toJSONString() + "\n              \n").getBytes();
