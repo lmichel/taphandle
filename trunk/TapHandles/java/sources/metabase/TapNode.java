@@ -426,7 +426,7 @@ public class TapNode  extends RootClass {
 		while( s.hasNextLine() ) {
 			fw.println(s.nextLine().replaceAll("NODEKEY", this.regMark.getNodeKey())
 					.replaceAll("NODEURL", this.regMark.getAbsoluteURL(null))
-					);
+			);
 		}
 		s.close();
 		fw.close();
@@ -444,7 +444,7 @@ public class TapNode  extends RootClass {
 		while( s.hasNextLine() ) {
 			fw.println(s.nextLine().replaceAll("NODEASYNC", Boolean.toString(this.supportAsyncMode))
 					.replaceAll("NODEUPLOAD", Boolean.toString(this.supportUpload()))
-					);
+			);
 		}
 		s.close();
 		fw.close();
@@ -547,6 +547,7 @@ public class TapNode  extends RootClass {
 	 */
 	private boolean isThereJsonTableAtt(String tableName) throws Exception{
 		JSONParser parser = new JSONParser();
+		System.out.println(this.baseDirectory + RootClass.vizierNameToFileName(tableName) + "_att.json");
 		Object obj = parser.parse(new FileReader(this.baseDirectory + RootClass.vizierNameToFileName(tableName) + "_att.json"));
 		JSONObject jsonObject = (JSONObject) obj;
 		return (((JSONArray) jsonObject.get("attributes")).size() > 0)? true: false;
@@ -627,9 +628,10 @@ public class TapNode  extends RootClass {
 				if(takeAnyway ) {
 					continue;
 				} else if( kept >= MAXTABLES ) {
-					truncated = true;
-					toRemove.add(t);	
-					continue;
+					//@@@@@@@@@@@
+					//					truncated = false;
+					//					toRemove.add(t);	
+					//					continue;
 				} else if (!desc.matches("(?i)(.*" + filter + ".*)") && !table.matches("(?i)(.*" + filter + ".*)") ){
 					toRemove.add(t);	
 					continue;
@@ -666,54 +668,63 @@ public class TapNode  extends RootClass {
 
 	/**
 	 * Returns a JSON table list with only tables matching the filer (filtered by name or by description)
-	 * and not contained in rejectedIndividuals in addition with tap schema tables which cannot be discarded
+	 * and  contained in seleced list in addition with tap schema tables which cannot be discarded
+	 * Any element are taken if selected = ["any"]
 	 * @param filter
-	 * @param rejectedIndividuals
+	 * @param selected: list a table to select
 	 * @return
 	 * @throws Exception
 	 */
-	synchronized public JSONObject filterTableList(String filter, Set<String> rejectedIndividuals) throws Exception {
+	synchronized public JSONObject filterTableList(String filter, Set<String> selected) throws Exception {
 		JSONObject jsonObject = this.filterTableList(filter) ;
-		if( rejectedIndividuals != null && rejectedIndividuals.size() != 0 ) {
-			JSONArray schemas = (JSONArray) jsonObject.get("schemas");
-			for(Object sn: schemas) {
-				boolean takeAnyway = false;
-				ArrayList<JSONObject> toRemove = new ArrayList<JSONObject>();
-				JSONObject s = (JSONObject)sn;
-				String schema = (String) s.get("name");
-				if( schema.equalsIgnoreCase("tap_schema") ) {
-					takeAnyway = true;
-				}
-				JSONArray tables = (JSONArray) s.get("tables");
-				for( Object ts: tables) {
-					JSONObject t = (JSONObject)ts;
-					String table = (String) t.get("name");
-					if(takeAnyway ) {
-						continue;
-					} else if (rejectedIndividuals.contains(table)  ){
-						toRemove.add(t);	
-						continue;
-					}
-				}
-				for( JSONObject tr: toRemove) {
-					tables.remove(tr);
-				}
-			}
-			/*
-			 * remove empty schemas
-			 */
+		int nbSelected = 0;
+		boolean any = ( selected != null && selected.size() == 1 && selected.contains("any"))? true: false;
+		JSONArray schemas = (JSONArray) jsonObject.get("schemas");
+		for(Object sn: schemas) {
+			boolean takeAnyway = false;
 			ArrayList<JSONObject> toRemove = new ArrayList<JSONObject>();
-			for(Object sn: schemas) {
-				JSONObject s = (JSONObject)sn;
-				JSONArray tables = (JSONArray) s.get("tables");
-				if( tables.size() == 0 ) {
-					toRemove.add(s);					
-				}
-			}			
-			for( JSONObject tr: toRemove) {
-				schemas.remove(tr);
+			JSONObject s = (JSONObject)sn;
+			String schema = (String) s.get("name");
+			if( schema.equalsIgnoreCase("tap_schema") ) {
+				takeAnyway = true;
 			}
+			JSONArray tables = (JSONArray) s.get("tables");
+			for( Object ts: tables) {
+				JSONObject t = (JSONObject)ts;
+				String table = (String) t.get("name");
+				if(takeAnyway ) {
+					continue;
+				} else if (nbSelected > MAXTABLES ){
+					toRemove.add(t);	
+					continue;
+				} else if ( any || selected == null  || selected.size() == 0 || selected.contains(table) ){
+					nbSelected ++;
+				} else {
+					toRemove.add(t);	
+					continue;
+				}
+			}
+			int si = tables.size();
+			for( JSONObject tr: toRemove) {
+				tables.remove(tr);
+			}
+
 		}
+		/*
+		 * remove empty schemas
+		 */
+		ArrayList<JSONObject> toRemove = new ArrayList<JSONObject>();
+		for(Object sn: schemas) {
+			JSONObject s = (JSONObject)sn;
+			JSONArray tables = (JSONArray) s.get("tables");
+			if( tables.size() == 0 ) {
+				toRemove.add(s);					
+			}
+		}			
+		for( JSONObject tr: toRemove) {
+			schemas.remove(tr);
+		}
+		//		}
 		return jsonObject;
 	}
 
