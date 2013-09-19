@@ -77,9 +77,9 @@ jQuery.extend({
 		};	
 		
 		this.applyFilter = function(node) {
-			Processing.show('Get filtered table list');			
+			//Processing.show('Get filtered table list');			
 			$.getJSON("getnode", {jsessionid: sessionID, node: node, filter: $("#nodeFilter").val(), selected: ''}, function(jsdata) {
-				Processing.hide();
+				//Processing.hide();
 				if( Processing.jsonError(jsdata, "Cannot get the node selection") ) {
 					return;
 				} else {
