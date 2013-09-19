@@ -173,8 +173,8 @@ jQuery.extend({
 			} else if( val == 'Add to Cart') {			
 				cartView.fireAddJobResult(nodekey,jid);
 			} else if( val == 'Send to SAMP') {				
-				var url = rootUrl + 'jobresult?node=' + nodekey.trim() + '&jobid=' + jid.trim()+ '&session=' + sessionID;
-				WebSamp_mVc.fireSendVoreport(url, "table.load.votable", nodekey.trim() + "/job_" + jid.trim());
+				var url =  rootUrl + 'jobresult?NODE=' + nodekey.trim() + '&JOBID=' + jid.trim() + '&jsessionid='+ sessionID;
+				WebSamp_mVc.fireSendVoreport(url, "table.load.votable", url);
 			} else if( val == 'Edit Query' ) {
 				that.editQuery(nodekey,jid);
 			} else if( val == ' "Add to Goodies' ){

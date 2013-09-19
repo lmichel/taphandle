@@ -53,7 +53,7 @@ jQuery.extend({
 
 		this.processShowMetaNode= function(treepath){
 			Processing.show("Get table description");
-			$.getJSON("gettable", {jsessionid: sessionID, node: treepath.nodekey, schema: treepath.schema, table:treepath.table }, function(data) {
+			$.getJSON("gettable", {jsessionid: sessionID, node: treepath.nodekey, schema: treepath.schema, table:treepath.tableorg }, function(data) {
 				Processing.hide();
 				if( Processing.jsonError(data, "get attribute handlers") ) {
 					return;

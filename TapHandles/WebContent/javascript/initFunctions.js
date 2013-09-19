@@ -28,6 +28,7 @@ function initFunctions () {
 		 * Split the bottom div in 3 splitters divs.
 		 */		
 		layoutPane = $('#accesspane').layout();
+		layoutPane.sizePane("south", "10%");
 	};
 
 	this.initNodeAccess = function() {
