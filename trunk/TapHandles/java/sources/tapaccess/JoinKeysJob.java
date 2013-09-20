@@ -54,7 +54,7 @@ public class JoinKeysJob extends RootClass {
 		} while( phase.equals("EXECUTING") || phase.equals("PENDING"));
 		
 		if( phase.equals("ERROR")) {
-			throw new TapException("ERROR when gettng Join keys ");
+			throw new TapException("ERROR when gettng Join keys  with query " + query);
 		}
 		String[] resultURLs = TapAccess.getAsyncJobResults(url
 				, jobID
@@ -85,10 +85,10 @@ public class JoinKeysJob extends RootClass {
 			tryJoinKeys(url, schema_query, baseDirectory);
 		} catch (Exception e) {
 			try {
-				logger.warn("Error when getting Join keys, try a query without schema" );
+				logger.warn("Error when getting Join keys (" + schema_query + "), try a query without schema" );
 				tryJoinKeys(url, noschema_query, baseDirectory);
 			} catch (Exception e2) {
-				logger.warn("Error when getting Join keys, try a query without schema but table prefixed" );
+				logger.warn("Error when getting Join keys(" + noschema_query + "), try a query without schema but table prefixed" );
 				tryJoinKeys(url, xcatdb_schema_query, baseDirectory);
 			}
 		}
