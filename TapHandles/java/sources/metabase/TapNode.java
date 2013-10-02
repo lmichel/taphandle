@@ -685,7 +685,7 @@ public class TapNode  extends RootClass {
 			ArrayList<JSONObject> toRemove = new ArrayList<JSONObject>();
 			JSONObject s = (JSONObject)sn;
 			String schema = (String) s.get("name");
-			if( schema.equalsIgnoreCase("tap_schema") ) {
+			if( schema.equalsIgnoreCase("tap_schema") || schema.equalsIgnoreCase("ivoa")) {
 				takeAnyway = true;
 			}
 			JSONArray tables = (JSONArray) s.get("tables");
@@ -704,7 +704,6 @@ public class TapNode  extends RootClass {
 					continue;
 				}
 			}
-			int si = tables.size();
 			for( JSONObject tr: toRemove) {
 				tables.remove(tr);
 			}
