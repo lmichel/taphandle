@@ -14,8 +14,8 @@ jQuery.extend({
 		var phase = description.phase;
 		var operator = ["Refresh", "get JSon result", "Show Query", "Summary"];			
 		var actions  = new Array();
-		actions['COMPLETED'] = ["Actions", "Show Query", "Display Result", "Download Result", "Add to Cart", "Send to SAMP", /*"Add to Goodies",*/ "Edit Query", "Summary"];
-		actions['PENDING']   = ["Actions", "Show Query", "Run", "Edit Query", "Summary"];
+		actions['COMPLETED'] = ["Actions", "Show Query", "Display Result", "Download Result", "Add to Cart", "Send to SAMP", /*"Add to Goodies", "Edit Query",*/ "Summary"];
+		actions['PENDING']   = ["Actions", "Show Query", "Run",/* "Edit Query"*/, "Summary"];
 		actions['EXECUTING'] = ["Actions", "Show Query", "Kill", "Summary"];
 		actions['QUEUED']    = ["Actions", "Show Query", "Kill", "Summary"];
 		actions['PENDED']    = ["Actions", "Show Query", "Start", "Edit Query", "Summary"];
