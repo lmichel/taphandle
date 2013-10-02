@@ -18,6 +18,7 @@ public class ShortNameBuilder extends RootClass {
 		reservedUrls = new LinkedHashMap<String, String>();
 		reservedUrls.put("http://tapvizier.u-strasbg.fr/TAPVizieR/tap"           , "vizier");
 		reservedUrls.put("http://xcatdb.u-strasbg.fr/2xmmidr3/tap"               , "xcatdb");
+		reservedUrls.put("http://xcatdb.unistra.fr/3xmm/tap"                     , "3xmm");
 		reservedUrls.put("http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap"       , "cadc");
 		reservedUrls.put("http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap", "gavo");
 		reservedUrls.put("http://simbad.u-strasbg.fr/simbad/sim-tap"             , "simbad");
