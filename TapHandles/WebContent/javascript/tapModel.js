@@ -166,8 +166,10 @@ jQuery.extend({
 				that.showQuery(nodekey,jid);				
 			} else if( val == 'Summary') {	
 				that.showSummary(nodekey,jid);				
+			} else if( val == 'Kill') {	
+				that.killJob(nodekey,jid);				
 			} else if( val == 'Display Result') {			
-				that.displayResult(nodekey,jid);
+				that.displayOldResult(nodekey,jid);
 			} else if( val == 'Download Result') {			
 				that.downloadVotable(nodekey,jid);
 			} else if( val == 'Add to Cart') {			
@@ -179,6 +181,17 @@ jQuery.extend({
 				that.editQuery(nodekey,jid);
 			} else if( val == ' "Add to Goodies' ){
 			}
+		};
+
+		this.killJob = function(nodekey,jid) {
+			Processing.show("Killing job " + jid);			
+
+			$.getJSON("killJob" , {jsessionid: sessionID, NODE: nodekey, JOBID: jid}, function(jsondata) {
+				Processing.hide();
+				if( Processing.jsonError(jsondata, "Cannot kill job") ) {
+					return;
+				}
+			});					
 		};
 
 		this.showQuery = function(nodekey,jid) {
@@ -234,6 +247,26 @@ jQuery.extend({
 				}
 				Modalinfo.info(report,  "Summary of job "+ nodekey + '.' + jid);
 
+			});					
+		};
+		this.displayOldResult = function(nodekey, jid) {
+			Processing.show("Get result of job " + jid);			
+			$.getJSON("jobresult" , {jsessionid: sessionID, NODE: nodekey, JOBID: jid, FORMAT: 'json'}, function(jsondata) {
+				Processing.hide();
+				if( Processing.jsonError(jsondata, "Cannot get result of job " + jid) ) {				
+					$('#resultpane').html();
+					if( lastJob != null ) {
+						lastJob.fireSetOnError();
+					}
+					return;
+				}
+				else {
+					var treepath = $('#' + jid).data().treepath;
+					treepath.jobid = jid;
+					//dataTreeView.setTitlePath(treepath);
+					dataTreeView.fireTreeNodeEvent(treepath, false);
+					resultPaneView.showTapResult(dataTreeView.treePath, jid, jsondata, $('#' + jid).data("AttributeHandlers") );
+				}
 			});					
 		};
 		this.displayResult = function(nodekey, jid) {
