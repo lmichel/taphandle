@@ -34,18 +34,18 @@ function initFunctions () {
 	this.initNodeAccess = function() {
 		dataTreeView.initNodeBase();
 		adqlQueryView = QueryConstraintEditor.adqlTextEditor({ parentDivId: 'taptext', defaultQuery: ''});
-		tapColumnSelector = QueryConstraintEditor.tapColumnSelector('tapselect'
-				, 'tapFormColName'
-				, "gettableatt"
-				, "gettablejoinkeys"
-				, adqlQueryView);
-		tapConstraintEditor = QueryConstraintEditor.tapConstraintEditor('tapwhere'
-				, 'tapFormName'
-				, "gettableatt"
-				, "gettablejoinkeys"
-				, "sesame"
-				, {url: "uploaduserposlist", postHandler: function(retour){dataTreeView.addGoodies({nodekey:'userLists',table: retour.name});}}
-				, adqlQueryView);
+		MetadataSource.init({getMetaTable: "gettableatt", getJoinedTables: "gettablejoinkeys", getUserGoodie: null});
+		
+		tapColumnSelector = QueryConstraintEditor.tapColumnSelector({parentDivId:'tapselect'
+			, formName: 'tapFormColName'
+			, queryView: adqlQueryView});
+			
+		tapConstraintEditor = QueryConstraintEditor.tapConstraintEditor({parentDivId: 'tapwhere'
+			, formName: 'tapFormName'
+			, sesameUrl:"sesame"
+			, upload: {url: "uploadposlist", postHandler: function(retour){alert("postHandler " + retour);}}
+			, queryView: adqlQueryView});
+
 
 		$("input#node_selector").keypress(function(event) {
 			if (event.which == '13') {
