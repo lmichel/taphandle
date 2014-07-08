@@ -340,14 +340,17 @@ public class TapNode  extends RootClass {
 		}
 		for( int i=0 ; i<jsa.size() ; i++) {
 			JSONArray tbls = (JSONArray) ((JSONObject)(jsa.get(i))).get("tables");
-			if( tbls.size() == 0 ){
-				throw new TapException("No table published in node " + this.regMark.getNodeKey());
-			}
-			for( int t=0 ; t<jsa.size() ; t++) {
+//			if( tbls.size() == 0 ){
+//				throw new TapException("No table published in node " + this.regMark.getNodeKey());
+//			}
+			if( tbls.size() != 0 ){
+				for( int t=0 ; t<jsa.size() ; t++) {			
 				return  (String) ((JSONObject)(tbls.get(i))).get("name");
+				}
 			}
 		}
-		return null;
+		throw new TapException("No table published in node " + this.regMark.getNodeKey());
+		//return null;
 	}
 	/**
 	 * Invokes a service of the node, extract its name space which will be used by XLST 
@@ -685,7 +688,7 @@ public class TapNode  extends RootClass {
 			ArrayList<JSONObject> toRemove = new ArrayList<JSONObject>();
 			JSONObject s = (JSONObject)sn;
 			String schema = (String) s.get("name");
-			if( schema.equalsIgnoreCase("tap_schema") || schema.equalsIgnoreCase("ivoa")) {
+			if( schema.equalsIgnoreCase("tap_schema") ) {
 				takeAnyway = true;
 			}
 			JSONArray tables = (JSONArray) s.get("tables");
@@ -704,6 +707,7 @@ public class TapNode  extends RootClass {
 					continue;
 				}
 			}
+			int si = tables.size();
 			for( JSONObject tr: toRemove) {
 				tables.remove(tr);
 			}
