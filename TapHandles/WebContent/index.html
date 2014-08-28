@@ -2,7 +2,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
-<title>Taphandle V1.4</title>
+<title>Taphandle</title>
 <link rel="icon" href="images/tap16.png" type="images/png" />
 <link rel="SHORTCUT ICON" href="images/tap16.png" />
 
@@ -17,6 +17,7 @@
 <link rel="stylesheet" type="text/css" href="http://saada.unistra.fr/jsresources/saadajsbasics/styles/domain.css" />
  -->
 <script type="text/javascript" src="jsimport/jquery-1.7.2.js"></script>
+<script>var useDebugResources = true;</script>
 <script type="text/javascript" src="javascript/loader.js"></script>
 
 <script>
@@ -59,6 +60,7 @@
                                 ,"javascript/initFunctions.js"  
                                 ,"javascript/utils.js"  
                                 ,"javascript/ready.js"  
+                                ,"javascript/viewState.js"                                  
                                 ,"javascript/resize.js"         ]);
      resourceLoader.loadAll();
      </script>
@@ -82,7 +84,7 @@
 			<div id=externaltools style='position: relative;'> 
 			
 				<a href="javascript:void(0);" class="formexpender" title="Expand query form" 
-				onclick='resultPaneView.fireExpendForm();' id='formexpender'></a>
+				onclick='resultPaneView.fireSwitchForm();' id='formexpender'></a>
 		
 				<a href="javascript:void(0);" id=showquerymeta title='Show Metadata (Does not work with Vizier)' class=question></a>
 		<!-- 		<a href="javascript:void(0);" title='Download the results of the current job in a VOTable'
