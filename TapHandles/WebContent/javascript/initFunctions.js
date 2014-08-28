@@ -52,21 +52,6 @@ function initFunctions () {
 				dataTreeView.fireNewNodeEvent($('#node_selector').val());
 			}
 		});
-		/*
-		 * Name resolver button activation
-		 */
-//		$(".kw_filter").keyup(function(event) {
-//			var val = $(this).val();
-//			tapView.fireFilterColumns(val);
-//			$('.kw_filter').val(val);
-//
-//		});
-//		/*
-//		 * Change the table displayed in the KW lists
-//		 */
-//		$('.table_filter').change(function() {
-//			tapView.fireChangeTable(this.value);
-//		});
 	};
 
 	this.initDataTree = function() {
@@ -89,23 +74,14 @@ function initFunctions () {
 							, tableorg: streepath[2]
 							, table: streepath[2].split('.').pop()};
 							while(parent.length != 0  ) {
-								//resultPaneView.fireSetTreePath(treePath);	
 								if(parent.is('#resultpane') ) {
-									dataTreeView.fireTreeNodeEvent(treePath);
-									// submit to do
-//									setTitlePath(treePath);
-//									resultPaneView.fireTreeNodeEvent(treePath);	
+									ViewState.fireDoubleClickOK(treePath);
 									return;
-								}
-								else if(parent.attr('id') == "showquerymeta" ) {
+								} else if(parent.attr('id') == "showquerymeta" ) {
 									resultPaneView.fireShowMetaNode(treePath);	
 									return;
-								}
-
-								else if(  parent.attr('id') == "taptab") {
-									dataTreeView.fireTreeNodeEvent(treePath);
-								//L149	tapColumnSelector.fireSetTreepath({node:treePath.nodekey, schema: treePath.schema, table: treePath.table});
-								//	tapView.fireTreeNodeEvent(treePath);	
+								} else if(  parent.attr('id') == "taptab") {
+									ViewState.fireDragOnQueryForm(treePath);
 									return;
 								}
 								parent = parent.parent();
@@ -131,7 +107,7 @@ function initFunctions () {
 				Modalinfo.info("Query can only be applied on one data category or one data class: ("  +  treePath + ")", 'User Input Error');
 			} else {
 				var fTreePath = {nodekey: treePath[0], schema: treePath[1], tableorg: treePath[2], table: treePath[2].split('.').pop() };
-				dataTreeView.fireTreeNodeEvent(fTreePath, true);
+				ViewState.fireDoubleClickOK(fTreePath);
 			}
 		});
 		rootUrl = "http://" + window.location.hostname +  (location.port?":"+location.port:"") + window.location.pathname;
@@ -150,7 +126,8 @@ function initFunctions () {
 		 * Activate submit buttons
 		 */
 		$('#submitquery').click(function() {
-			resultPaneView.fireSubmitQueryEvent();
+			ViewState.fireSubmit();
+			//resultPaneView.fireSubmitQueryEvent();
 		});
 		$("#qlimit").keyup(function(event) {
 			if( $("#qlimit").val() == '' || $("#qlimit").val().match(/^[0-9]+$/) ) {
