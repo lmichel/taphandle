@@ -316,6 +316,7 @@ public class TapNode  extends RootClass {
 		QueryModeChecker qmc = new QueryModeChecker(this.regMark.getFullUrl(), query, uploadQuery, this.baseDirectory);
 		this.supportSyncMode = qmc.supportSyncMode();
 		this.supportAsyncMode = qmc.supportAsyncMode();
+		
 		if( CHECKUPLOAD ) {
 			this.supportUpload = qmc.supportUpload();
 		} else {

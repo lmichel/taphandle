@@ -39,38 +39,11 @@ public class JoinKeysJob extends RootClass {
 	 */
 	private static void tryJoinKeys(String url, String query, String baseDirectory) throws Exception{
 		NodeCookie nc=new NodeCookie();
-		String baseFN = baseDirectory + File.separator + prefix;
-		String jobID = TapAccess.createAsyncJob(url, query, baseFN + "job.xml", nc, null);
-		TapAccess.runAsyncJob(url, jobID, baseFN + "status.xml", nc);
-		String phase;
-		int cpt = 10;		
-		do {
-			phase = TapAccess.getAsyncJobPhase(url, jobID,  baseFN + "phase.xml", nc);
-			Thread.sleep(1000);
-			if( (cpt--) <= 0 ) {
-				throw new TapException("Cannot get Join keys after 10'");
-			}
-
-		} while( phase.equals("EXECUTING") || phase.equals("PENDING"));
+		String baseFN = baseDirectory + File.separator + prefix;		
 		
-		if( phase.equals("ERROR")) {
-			throw new TapException("ERROR when gettng Join keys  with query " + query);
-		}
-		String[] resultURLs = TapAccess.getAsyncJobResults(url
-				, jobID
-				, baseFN + VOTABLE_JOB_RESULT
-				, nc);
-		for( String r: resultURLs) {
-			//if( r.matches(".*\\.xml.*") ) {
-			logger.debug("Download " + r);
-			TapAccess.getAsyncJobResultFile(r
-					, baseDirectory + File.separator
-					,  prefix + VOTABLE_JOB_RESULT
-					, nc);
+		logger.debug(TapAccess.runSyncJob(url, query, baseFN + VOTABLE_JOB_RESULT , nc, "JoinKeys>tables"));
+		XmlToJson.translateJoinKeysTable(baseFN  + VOTABLE_JOB_RESULT, baseDirectory);
 
-			XmlToJson.translateJoinKeysTable(baseFN  + VOTABLE_JOB_RESULT, baseDirectory);
-			//}
-		}
 	}
 
 	/**
@@ -84,6 +57,7 @@ public class JoinKeysJob extends RootClass {
 			logger.info("Get join keys for node " + url );
 			tryJoinKeys(url, schema_query, baseDirectory);
 		} catch (Exception e) {
+			e.printStackTrace();
 			try {
 				logger.warn("Error when getting Join keys (" + schema_query + "), try a query without schema" );
 				tryJoinKeys(url, noschema_query, baseDirectory);
