@@ -5,38 +5,20 @@ jQuery.extend({
 		 * listen to the view
 		 */
 		var vlist = {
-				controlTreeNodeEvent : function(treepath, andsubmit, default_query){
-					model.processTreeNodeEvent(treepath, andsubmit, default_query);
-				},
 				controlSubmitQueryEvent: function(){
 					model.submitQuery();
 				},
 				controlRefreshJobList: function(){
 					model.refreshJobList();
 				},
-				controlJobAction: function(nodekey, jid, session){
-					model.processJobAction(nodekey, jid, session);
-				},
-				controlDownloadVotable: function(nodekey, jid){
-					model.downloadVotable(nodekey, jid);
-				},
-				controlCheckJobCompleted: function(nodekey, jid, counter){
-					model.checkJobCompleted(nodekey, jid, counter);
-				},
-				controlUpdateRunningJobList: function() {
-					model.updateRunningJobList();
+				controlSelectJob: function(id) {
+					model.selectJob(id);
 				},
 				controlRemoveJob: function(id) {
 					model.removeJob(id);
 				},
-				controlSampBroadcast: function(nodekey, jid){
-					model.sampBroadcast(nodekey, jid);
-				},
-				controlDisplayResult: function(nodekey, jid){
-					model.displayResult(nodekey, jid);
-				},
-				controlChangeTable: function(newTable){
-					model.changeTable(newTable);
+				controlDisplayResult: function(jdataTreePath){
+					model.displayResult(jdataTreePath);
 				}
 		};
 		view.addListener(vlist);
