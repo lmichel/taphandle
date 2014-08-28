@@ -21,10 +21,10 @@ jQuery.extend({
 			listeners.push(list);
 		};
 
-		this.fireAddJobResult = function(nodekey, jobid) {
-			Processing.show("Result of job " + nodekey + "." + jobid + " added to the cart");
+		this.fireAddJobResult = function(treepath, jobid) {
+			Processing.show("Result of job " + treepath + "." + jobid + " added to the cart");
 			$.each(listeners, function(i){
-				listeners[i].controlAddJobResult(nodekey, jobid);
+				listeners[i].controlAddJobResult(treepath, jobid);
 			});
 			this.resetJobControl();
 			Processing.hide();
@@ -235,7 +235,8 @@ jQuery.extend({
 							"aaSorting" : [],
 							"bSort" : false,
 							"bFilter" : false,
-							"bAutoWidth" : true
+							"bAutoWidth" : true,
+							"bDestroy": true
 						});
 				var oTable = folderTables[folderTables.length-1];
 			    /* Apply the jEditable handlers to the table */
