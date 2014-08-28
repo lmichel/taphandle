@@ -5,17 +5,17 @@ jQuery.extend({
 		 * listen to the view
 		 */
 		var vlist = {
-				controlAddJobResult : function(nodekey, jobid){
-					model.addJobResult(nodekey, jobid);
+				controlAddJobResult : function(treepath, jobid){
+					model.addJobResult(treepath, jobid);
 				},
-				controlRemoveJobResult : function(nodekey, jobid){
-					model.removeJobResult(nodekey, jobid);
+				controlRemoveJobResult : function(treepath, jobid){
+					model.removeJobResult(treepath, jobid);
 				},
-				controlAddUrl : function(nodekey, url){
-					model.addUrl(nodekey, url);
+				controlAddUrl : function(treepath, url){
+					model.addUrl(treepath, url);
 				},
-				controlRemoveUrl : function(nodekey, url){
-					model.removeJobUrl(nodekey, url);
+				controlRemoveUrl : function(treepath, url){
+					model.removeJobUrl(treepath, url);
 				},
 				controlOpenCart : function(){
 					model.notifyCartOpen();

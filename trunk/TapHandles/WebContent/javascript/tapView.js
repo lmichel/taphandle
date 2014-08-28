@@ -19,42 +19,31 @@ jQuery.extend({
 		 * Fire external events
 		 */
 		this.fireTreeNodeEvent = function(treepath, andsubmit){
-			tapColumnSelector.fireSetTreepath(treepath, ((andsubmit)? this.fireSubmitQueryEvent: null));
 			adqlQueryView.fireSetTreePath(treepath);
 			adqlQueryView.fireAddConstraint("tap", "limit", [getQLimit()]);
+			// set to generate errors
+			///adqlQueryView.fireAddConstraint("tap", "limit", ['sfsfsfsdfds']);
 			tapConstraintEditor.fireSetTreepath(treepath);
-		};
+			tapColumnSelector.fireSetTreepath(treepath, ((andsubmit)? this.fireSubmitQueryEvent: null));
 
+		};
 		this.fireSubmitQueryEvent = function(){
 			$.each(listeners, function(i){
 				listeners[i].controlSubmitQueryEvent();
 			});
 		};
+		/**
+		 * Just called at init time to display the job still stored in the session (not implemented yet)
+		 */
 		this.fireRefreshJobList = function(){
 			$('#tapjobs').html('');
 			$.each(listeners, function(i){
 				listeners[i].controlRefreshJobList();
 			});
 		};
-		this.fireJobAction = function(nodekey, jid, session){
+		this.fireSelectJob= function(id) {			
 			$.each(listeners, function(i){
-				listeners[i].controlJobAction(nodekey, jid, session);
-			});
-		};
-		this.fireDownloadVotable = function(nodekey, jid){
-			$.each(listeners, function(i){
-				listeners[i].controlDownloadVotable(nodekey, jid);
-			});
-		};
-		this.fireCheckJobCompleted= function(nodekey, jid, counter){
-			$.each(listeners, function(i){
-				listeners[i].controlCheckJobCompleted(nodekey, jid, counter);
-			});
-		};
-		
-		this.fireUpdateRunningJobList= function() {			
-			$.each(listeners, function(i){
-				listeners[i].controlUpdateRunningJobList();
+				listeners[i].controlSelectJob(id);
 			});
 		};
 		this.fireRemoveJob = function(id) {
@@ -62,14 +51,10 @@ jQuery.extend({
 				listeners[i].controlRemoveJob(id);
 			});		
 		};
-		this.fireSampBroadcast= function(nodekey, jid){
+
+		this.fireDisplayResult= function(jdataTreePath){
 			$.each(listeners, function(i){
-				listeners[i].controlSampBroadcast(nodekey, jid);
-			});
-		};
-		this.fireDisplayResult= function(nodekey, jid){
-			$.each(listeners, function(i){
-				listeners[i].controlDisplayResult(nodekey, jid);
+				listeners[i].controlDisplayResult(jdataTreePath);
 			});
 		};
 		this.fireFilterColumns = function(val) {
@@ -84,11 +69,6 @@ jQuery.extend({
 							$(this).parent().hide();							
 						}
 					});
-		};
-		this.fireChangeTable = function(newtable) {
-			$.each(listeners, function(i){
-				listeners[i].controlChangeTable(newtable);
-			});			
 		};
 		/*
 		 * Local processing

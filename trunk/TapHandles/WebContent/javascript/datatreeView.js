@@ -28,6 +28,7 @@ DataTreeView.prototype = {
 				},
 				success: function(data) {
 					Processing.hide();
+					$("title").text("TapHandle " + data.version)
 					sessionID = data.sessionID;
 					for( var i=0 ; i<data.nodes.length ; i++) {
 						that.nodeList[that.nodeList.length] = {
@@ -70,8 +71,8 @@ DataTreeView.prototype = {
 		fireBuildTree: function(jsdata) {
 			this.capabilities = {supportSyncQueries: true
 					, supportAsyncQueries: (jsdata.asyncsupport == "true")?true: false
-					, supportJoin: true
-					, supportUpload:(jsdata.uploadsupport == "true")?true: false};
+							, supportJoin: true
+							, supportUpload:(jsdata.uploadsupport == "true")?true: false};
 			this.info = {url: jsdata.nodeurl , ivoid: null, description: "Not available"};
 			$("div#treedisp").jstree("remove","#" + jsdata.nodekey);
 			/*
@@ -169,10 +170,9 @@ DataTreeView.prototype = {
 			}
 		},
 
-		fireTreeNodeEvent:function(treepath, andsubmit) {
-			this.setTitlePath(treepath);
-			//resultPaneView.fireSetTreePath(treepath);	
-			tapView.fireTreeNodeEvent(treepath, andsubmit);	
+		fireTreeNodeEvent:function(dataTreePath, andsubmit) {
+			ViewState.fireDoubleClickOK(dataTreePath);
+			tapView.fireTreeNodeEvent(dataTreePath, andsubmit);	
 		},
 		/**
 		 * jsdata: {nodekey: ... , table: ...}
@@ -204,7 +204,7 @@ DataTreeView.prototype = {
 						}
 						,false// callback
 						,true //skip rename
-						);   
+				);   
 			}
 			return;
 		},
@@ -226,13 +226,13 @@ DataTreeView.prototype = {
 			var that = this;
 			Processing.show("Pushing job to goodies");
 			$.getJSON("pushjobtogoodies"
-				, {jsessionid: sessionID, node: "table", jobid:"jobid" , goodiesname: "goodiesname" }, function(jsondata) {
-				Processing.hide();
-				if( Processing.jsonError(jsondata, "Cannot get meta data") ) {
-					return;
-				}
-				that.addGoodies(jsondata);
-			});
+					, {jsessionid: sessionID, node: "table", jobid:"jobid" , goodiesname: "goodiesname" }, function(jsondata) {
+						Processing.hide();
+						if( Processing.jsonError(jsondata, "Cannot get meta data") ) {
+							return;
+						}
+						that.addGoodies(jsondata);
+					});
 		},
 		uploadFile: function() {
 			Modalinfo.dataPanel(title			
@@ -270,27 +270,30 @@ DataTreeView.prototype = {
 		setTitlePath: function (treepath) {
 			Out.info("title " + treepath);
 			this.treePath = treepath;
-			var job = (treepath.jobid == null)? "": '&gt;'+ treepath.jobid;
 			var tp = $('#titlepath');
 			var span = '<span style="font-style: normal; color: #888;font-size: x-small ; background-color:';
 			tp.html('');
-			tp.append(span
-					+ ((this.capabilities.supportSyncQueries== true)?'lightgreen': 'salmon') 
-					+ ';" title="' + ((this.capabilities.supportSyncQueries== true)?'S': 'Does not s') + 'upport synchronous queries">S</span>');
-			tp.append(span
-					+ ((this.capabilities.supportJoin== true)?'lightgreen': 'salmon')
-					+ ';" title="' + ((this.capabilities.supportJoin== true)?'S': 'Does not s')+ 'upport ADQL joins">J</span>');
-			tp.append(span
-					+ ((this.capabilities.supportAsyncQueries == true)?'lightgreen': 'salmon') 
-					+ ';" title="' + ((this.capabilities.supportAsyncQueries == true)?'S': 'Does not s')+ 'upport asynchronous queries">A</span>');
-			tp.append(span
-					+ ((this.capabilities.supportUpload == true)?'lightgreen': 'salmon') 
-					+ ';" title="' + ((this.capabilities.supportUpload == true)?'S': 'Does not s')+ 'upport table upload">U</span>');
-			tp.append('<a href="#" style="font-style: normal; font-size: x-small ; background-color: lightblue;" title="Click to get more info" onclick="dataTreeView.showNodeInfos();"> ? </a>');
-			tp.append('&nbsp;<i>' + treepath.nodekey + '&gt;' + treepath.schema + '&gt;'+ treepath.table+ job);
+			if( treepath) {
+				var job = ( !treepath.jobid || treepath.jobid == "")? "": '&gt;'+ treepath.jobid;
+				tp.append(span
+						+ ((this.capabilities.supportSyncQueries== true)?'lightgreen': 'salmon') 
+						+ ';" title="' + ((this.capabilities.supportSyncQueries== true)?'S': 'Does not s') + 'upport synchronous queries">S</span>');
+				tp.append(span
+						+ ((this.capabilities.supportJoin== true)?'lightgreen': 'salmon')
+						+ ';" title="' + ((this.capabilities.supportJoin== true)?'S': 'Does not s')+ 'upport ADQL joins">J</span>');
+				tp.append(span
+						+ ((this.capabilities.supportAsyncQueries == true)?'lightgreen': 'salmon') 
+						+ ';" title="' + ((this.capabilities.supportAsyncQueries == true)?'S': 'Does not s')+ 'upport asynchronous queries">A</span>');
+				tp.append(span
+						+ ((this.capabilities.supportUpload == true)?'lightgreen': 'salmon') 
+						+ ';" title="' + ((this.capabilities.supportUpload == true)?'S': 'Does not s')+ 'upport table upload">U</span>');
+				tp.append('<a href="#" style="font-style: normal; font-size: x-small ; background-color: lightblue;" title="Click to get more info" onclick="dataTreeView.showNodeInfos();"> ? </a>');
+				tp.append('&nbsp;<i>' + treepath.nodekey + '&gt;' + treepath.schema + '&gt;'+ treepath.table+ job);
+			}
 		},
 		showNodeInfos: function () {
-			Modalinfo.dataPanel( "Info about node " + JSON.stringify(this.treePath), JSON.stringify(this.capabilities) + JSON.stringify(this.info));
+			var report = {"info": this.info, "capabilities": this.capabilities};
+			Modalinfo.infoObject(report, "Node " + this.treePath.nodekey);
 		},
 		getBookmark: function() {
 			var np = window.location.href.split('?')[0].replace(/\/$/, "");;

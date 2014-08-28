@@ -13,7 +13,8 @@ jQuery.extend({
 		this.addListener = function(list){
 			listeners.push(list);
 		};
-		this.addJobResult = function(nodekey, jobid) {
+		this.addJobResult = function(treepath, jobid) {
+			var nodekey = treepath.nodekey;
 			var entry;
 			if( (entry = cartData[nodekey]) == undefined ) {
 				cartData[nodekey] = {jobs: new Array(), urls: new Array()};
@@ -30,10 +31,11 @@ jQuery.extend({
 				cartData[nodekey].jobs[i] = {name: jobid, uri: jobid};			
 			}
 		};
-		this.removeJobResult = function(nodekey, jobid) {
+		this.removeJobResult = function(treepath, jobid) {
+			var nodekey = treepath.nodekey;
 			var entry;
 			if( (entry = cartData[nodekey]) == undefined ) {
-				Modalinfo.info("There is no data associated with node " + nodekey + " in the cart", "input Error");
+				//Modalinfo.info("There is no data associated with node " + nodekey + " in the cart", "input Error");
 			}
 			else {
 				var jobs = entry.jobs;
@@ -49,7 +51,8 @@ jQuery.extend({
 				Modalinfo.info("Job " + nodekey + "." + jobid+ " not found in from the cart", "input Error");
 			}			
 		};
-		this.addUrl = function(nodekey, url) {
+		this.addUrl = function(treepath, url) {
+			var nodekey = treepath.nodekey;
 			var entry;
 //			var ch  = url.split("/");
 //			var name = ch[ch.length - 1].replace(/[^\w]/, "_");
@@ -69,7 +72,8 @@ jQuery.extend({
 				cartData[nodekey].urls[i] = {name: name, uri: url};			
 			}			
 		};
-		this.removeUrl = function(nodekey, url) {
+		this.removeUrl = function(treepath, url) {
+			var nodekey = treepath.nodekey;
 			var entry;
 			if( (entry = cartData[nodekey]) == undefined ) {
 				Modalinfo.info("There is no data associated with node " + nodekey + " in the cart", "input Error");
