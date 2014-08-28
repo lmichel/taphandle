@@ -8,6 +8,9 @@ jQuery.extend({
 				controlInitForm : function(attributesHandlers){
 					model.initForm(attributesHandlers);
 				},
+				controlJobAction : function(action){
+					model.processJobAction(action);
+				},
 				controlUpdateStatus : function(){
 					model.updateStatus();
 				},
@@ -16,19 +19,25 @@ jQuery.extend({
 				},
 				controlSetOnError: function(){
 					return model.setOnError();
+				},
+				controlCheckJobCompleted: function(){
+					return model.checkJobCompleted();
+				},
+				controlRemoveJob: function(){
+					return model.removeJob();
 				}
 				
-		}
+		};
 		view.addListener(vlist);
 
 		var mlist = {
-				isInit : function(treepath, id, session, phase, actions, attributesHandlers){
-					view.initForm(treepath, id, session, phase, actions, attributesHandlers);
+				isInit : function(jobsDescription, actions){
+					view.initForm(jobsDescription, actions);
 				},
-				isUpdated : function(treepath, id, phase, actions){
-					view.updateForm(treepath, id, phase, actions);
+				isUpdated : function(jobsDescription, actions){
+					view.updateForm(jobsDescription, actions);
 				}
-		}
+		};
 		model.addListener(mlist);
 	}
 });
