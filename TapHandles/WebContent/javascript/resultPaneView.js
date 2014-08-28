@@ -216,7 +216,7 @@ jQuery.extend({
 					"<img class=vignette src='" + preview_url + "'>");
 		};
 
-		this.fireExpendForm= function() {
+		this.fireSwitchForm= function() {
 			var height = $(window).height() ;
 			var icon = $('#formexpender').css("background-image");
 			if( icon.match("screen_up") != null ) {
@@ -232,10 +232,25 @@ jQuery.extend({
 			layoutPane.sizePane("south", height);
 			//	$("div#accesspane").trigger("resize",[ height]);		
 		};
+		this.fireExpandForm= function() {
+			var height = $(window).height() ;
+			var icon = $('#formexpender').css("background-image");
+			if( icon.match("screen_up") == null ) {
+				$('#formexpender').css("background-image", "url(images/screen_up.png)");
+				$('#formexpender').attr("title", "Minimize query form");
+				height='90%';
+				layoutPane.sizePane("south", height);
+			}
+			//	$("div#accesspane").trigger("resize",[ height]);		
+		};
+		
 		this.fireRemoveAllJobs= function() {
 			Modalinfo.confirm("Do you really want to remove all jobs?"
 					, function(){$("#tapjobs a").click();}
 					, "Removing Jobs");
+		};
+		this.clearTapResult = function() {
+			$("#resultpane").html("");
 		};
 		this.showProgressStatus = function() {
 			Modalinfo.info("Job in progress", 'Info');
@@ -292,14 +307,14 @@ jQuery.extend({
 		this.showTapResult = function(treepath, jid, jsdata, attributeHandlers) {
 			var table = "<table cellpadding=\"0\" cellspacing=\"0\" border=\"1\"  id=\"datatable\" class=\"display\"></table>";
 			$("#resultpane").html(table);
-			var nb_cols = jsdata.aoColumns.length;
-			for( var r=0 ; r<jsdata.aaData.length ; r++) {
-				var line = jsdata.aaData[r];
-				for( var l=0 ; l<nb_cols ; l++) {
-					var num = line[l];
-					//line[l] = formatValue(jsdata.aoColumns[l].sTitle, num);
-				}
-			}
+//			var nb_cols = jsdata.aoColumns.length;
+//			for( var r=0 ; r<jsdata.aaData.length ; r++) {
+//				var line = jsdata.aaData[r];
+//				for( var l=0 ; l<nb_cols ; l++) {
+//					var num = line[l];
+//					//line[l] = formatValue(jsdata.aoColumns[l].sTitle, num);
+//				}
+//			}
 			attributeHandlers = tapConstraintEditor.getAttributeHandlers();
 			var aoColumns = new Array();
 			for(var i=0 ; i<jsdata.aoColumns.length ; i++) {
@@ -323,7 +338,7 @@ jQuery.extend({
 						title = "Column not published";
 					} else {
 						title = ah.description
-						+ " - Name: " + ah.name
+						+ " - Name: " + ah.nameorg
 						+ " - Unit: " + ah.unit
 						+ " - UCD: " + ah.ucd
 						+ " - UType: " + ah.utype
@@ -333,7 +348,7 @@ jQuery.extend({
 				aoColumns[i] = {sTitle: '<span title="' + title + '">' + jsdata.aoColumns[i].sTitle + '</span>'};
 			}
 
-			var t = $('#datatable').dataTable({
+			$('#datatable').dataTable({
 				"aLengthMenu": [5, 10, 25, 50, 100],
 				"aoColumns" : aoColumns,
 				"aaData" : jsdata.aaData,
