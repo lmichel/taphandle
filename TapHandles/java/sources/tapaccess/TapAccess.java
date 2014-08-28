@@ -233,7 +233,7 @@ public class TapAccess  extends RootClass {
 	 * @param outputfile
 	 * @param cookie
 	 * @param remoteAddress
-	 * @return
+	 * @return result file path
 	 * @throws Exception
 	 */
 	public static String runSyncJob(String endpoint, String query, String outputfile, NodeCookie cookie, String remoteAddress) throws Exception {

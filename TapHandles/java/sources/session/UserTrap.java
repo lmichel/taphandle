@@ -43,7 +43,7 @@ public class UserTrap extends RootClass {
 //				return  (UserSession) session.getAttribute("account");			
 //			}
 //		}
-		session = request.getSession(true);  
+		session = request.getSession();  
 		session.setMaxInactiveInterval(-1);
 		String session_id = session.getId();
 		if (session.isNew()) {

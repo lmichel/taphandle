@@ -14,6 +14,7 @@ import org.json.simple.JSONObject;
 
 import registry.RegistryExplorer;
 import registry.RegistryMark;
+import resources.RootClass;
 import session.UserSession;
 import session.UserTrap;
 import translator.JsonUtils;
@@ -61,6 +62,7 @@ public class AvailableNodes extends RootServlet implements Servlet {
 				nodes.add(jsonNode);
 			}
 			retour.put("nodes", nodes);
+			retour.put("version", RootClass.VERSION);
 			JsonUtils.teePrint(response, retour.toJSONString());
 		} catch (Exception e) {
 			reportJsonError(request, response, e);

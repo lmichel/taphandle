@@ -52,8 +52,18 @@ public class GetNode extends RootServlet implements Servlet {
 				logger.info("Node " + node + " is an URL: add it to the base if it is not referenced");
 				key = NodeBase.addNode(node, true);			
 			} else {
-				reportJsonError(request, response, "Node " + node + " not referenced, enter its URL please");
-				return ;
+				/*
+				 * If the filter is applied to a schema, the node is nodeXschema.
+				 * The node is extracted and the schema is prepended to the filter
+				 */
+				String[] treePathElements = node.split("X");
+				if(treePathElements.length == 1 || NodeBase.getNode(treePathElements[0])  == null) {
+					reportJsonError(request, response, "Node " + treePathElements[0] + " not referenced, enter its URL please");
+					return ;
+				} else {
+					filter = (filter == null)? treePathElements[1]: (treePathElements[1] + ".*" + filter);
+					key = treePathElements[0];
+				}
 			}
 			
 			TapNode tn = NodeBase.getNode(key);
