@@ -73,6 +73,14 @@ function initFunctions () {
 							, schema: streepath[1]
 							, tableorg: streepath[2]
 							, table: streepath[2].split('.').pop()};
+							var s = streepath[2].split('.').shift();
+							var p = streepath[2].indexOf(".");
+							if( p > -1 ) s = streepath[2].substring(p+1);
+							else s = streepath[2]
+							var treePath = {nodekey: streepath[0]
+							, schema: streepath[1]
+							, tableorg: streepath[2]
+							, table: s};
 							while(parent.length != 0  ) {
 								if(parent.is('#resultpane') ) {
 									ViewState.fireDoubleClickOK(treePath);
@@ -107,6 +115,15 @@ function initFunctions () {
 				Modalinfo.info("Query can only be applied on one data category or one data class: ("  +  treePath + ")", 'User Input Error');
 			} else {
 				var fTreePath = {nodekey: treePath[0], schema: treePath[1], tableorg: treePath[2], table: treePath[2].split('.').pop() };
+				var s = treePath[2].split('.').shift();
+				var p = treePath[2].indexOf(".");
+				if( p > -1 ) s = treePath[2].substring(p+1);
+				else s = treePath[2]
+				fTreePath = {nodekey: treePath[0]
+				, schema: treePath[1]
+				, tableorg: treePath[2]
+				, table: s};
+
 				ViewState.fireDoubleClickOK(fTreePath);
 			}
 		});

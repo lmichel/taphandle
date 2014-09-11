@@ -88,7 +88,7 @@ jQuery.extend({
 			var parameter = description.status.job.parameters.parameter;
 			for( var i=0 ; i<parameter.length ; i++) {
 				var pi = parameter[i];
-				if( pi.id == "query" ) {
+				if( pi.id == "query" || pi.id == "QUERY") {
 					query = pi["$"];
 					break;
 				}
@@ -141,6 +141,7 @@ jQuery.extend({
 				}
 			} else  if( phase == 'ERROR'){
 				countDown = 0;
+				Processing.hide();				
 				Modalinfo.error("\nMESSAGE:\n\n" + jobDescription.status.job.errorSummary.message, treePath.nodekey + ' job ' + treePath.jobid + " failed");
 			} else {
 				Processing.hide();
@@ -182,7 +183,7 @@ jQuery.extend({
 			$.getJSON("jobresult" , {jsessionid: sessionId, NODE: treePath.nodekey, JOBID: id, FORMAT: 'json'}, function(jsondata) {
 				Processing.hide();
 				if( Processing.jsonError(jsondata, "Cannot get result of job " + id) ) {				
-					ViewState.fireSubmitKO();
+					ViewState.fireRecallKO(jobDescription.treepath, query);
 					that.setOnError();
 					return;
 				} else {
@@ -192,7 +193,9 @@ jQuery.extend({
 			});					
 		};		
 		this.showSummary = function() {
-			Modalinfo.infoObject(jobDescription.status.job, 'Status of ' + treePath.nodekey + ' job ' + treePath.jobid);
+			Modalinfo.infoObject(jobDescription);
+
+			//Modalinfo.infoObject(jobDescription.status.job, 'Status of ' + treePath.nodekey + ' job ' + treePath.jobid);
 		};
 
 		this.showQuery = function() {
