@@ -64,7 +64,9 @@ jQuery.extend({
 					return;
 				} else {
 					Processing.show("Run job " +  jsondata.status.job.jobId);
-					var jobParam = {"treepath" : dataTreeView.treePath, "status": jsondata.status, "session": jsondata.session};
+					var jobParam = {"treepath" : jQuery.extend({}, dataTreeView.treePath), "status": jsondata.status, "session": jsondata.session};
+					jobParam.treepath.jobid = jsondata.status.job.jobId;
+					
 					jv = new $.JobView();
 					jm = new $.JobModel(jobParam);
 					new $.JobControler(jm, jv);

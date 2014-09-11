@@ -50,8 +50,9 @@ public class GetTableAtt extends RootServlet implements Servlet {
 				reportJsonError(request, response, "Node " + node + " does not exist");
 				return;
 			}
-			tn.buildJsonTableAttributes(table);
-			dumpJsonFile("/" + RootClass.WEB_NODEBASE_DIR + "/" + node + "/" + RootClass.vizierNameToFileName(table) + "_att.json", response);
+			String tbn = (table.indexOf(".") == -1)? schema + "." + table: table;
+			tn.buildJsonTableAttributes(tbn);
+			dumpJsonFile("/" + RootClass.WEB_NODEBASE_DIR + "/" + node + "/" + RootClass.vizierNameToFileName(tbn) + "_att.json", response);
 		} catch (Exception e) {
 			reportJsonError(request, response, e);
 			return;

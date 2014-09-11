@@ -335,7 +335,7 @@ jQuery.extend({
 						ah = attributeHandlers[jsdata.aoColumns[i].sTitle.toUpperCase()];
 					}
 					if( ah == undefined ) {
-						title = "Column not published";
+						title = "No description available (joined query?)";
 					} else {
 						title = ah.description
 						+ " - Name: " + ah.nameorg

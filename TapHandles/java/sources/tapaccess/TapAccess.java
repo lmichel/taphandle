@@ -344,7 +344,7 @@ public class TapAccess  extends RootClass {
 		}
 		else {
 			logger.error("No result found in status of job " + jobId );
-			return null;
+			return new String[0];
 		}
 	}
 

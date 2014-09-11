@@ -395,7 +395,7 @@ public class XmlToJson  extends RootClass {
 					jsa.add(target);
 				}
 				String file = 	outputDir + File.separator + RootClass.vizierNameToFileName(source_table) + "_joinkeys.json"	;
-				logger.info("Write joinkey file " + file);
+			//	logger.info("Write joinkey file " + file);
 				FileWriter fw = new FileWriter(file);
 				fw.write(jso.toJSONString());
 				fw.close();				

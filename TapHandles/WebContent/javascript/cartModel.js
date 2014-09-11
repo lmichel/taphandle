@@ -48,7 +48,7 @@ jQuery.extend({
 						return;
 					}
 				}
-				Modalinfo.info("Job " + nodekey + "." + jobid+ " not found in from the cart", "input Error");
+			//	Modalinfo.info("Job " + nodekey + "." + jobid+ " not found in the cart", "input Error");
 			}			
 		};
 		this.addUrl = function(treepath, url) {
@@ -90,7 +90,7 @@ jQuery.extend({
 						return;
 					}
 				}
-				Modalinfo.info("URL not found in from the cart", "input Error");
+				//Modalinfo.info("URL not found in from the cart", "input Error");
 			}						
 		};
 		this.cleanCart = function(tokenArray) {
