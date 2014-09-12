@@ -61,7 +61,7 @@ public class RegistryExplorer extends RootClass {
 					, "Datalink Service Demonstrator", true, true));
 			offRegistryMarks.put("3xmm"       , new RegistryMark("3xmm", ""
 					, "http://xcatdb.u-strasbg.fr/3xmm/tap"
-					, "3rd XMM catalogue", true, false));
+					, "3rd XMM catalogue", true, true));
 		} catch (MalformedURLException e) {
 			logger.equals(e);
 		}
