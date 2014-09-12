@@ -49,7 +49,6 @@ public class RegistryMark extends RootClass {
 		this.mustBeInitAtStart = mustBeInitAtStart;
 		
 		this.fullUrl = this.url + ((!this.url.endsWith("?") && !this.url.endsWith("/"))? "/": "");
-		logger.debug("Create registry mark " + nodeKey + " from " + this.fullUrl);
 		URL u = new URL(fullUrl);
 		this.serverUrl = u.getProtocol() + "://" + u.getAuthority();
 		this.appPath = u.getFile();
