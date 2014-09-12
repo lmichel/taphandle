@@ -35,9 +35,9 @@ public class RegistryExplorer extends RootClass {
 	 */
 	static {
 		try {
-			offRegistryMarks.put("3xmm"       , new RegistryMark("3xmm", ""
-					, "http://xcatdb.unistra.fr/3xmm/tap"
-					, "SSC interface of the XMM-Newton catalogue", false, true));
+			offRegistryMarks.put("xcatdb"       , new RegistryMark("xcatdb", ""
+					, "http://xcatdb.u-strasbg.fr/3xmm/tap"
+					, "SSC interface of the XMM-Newton catalogue", true, true));
 			offRegistryMarks.put("vizier"       , new RegistryMark("vizier", ""
 					, "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/"
 					, "CDS Vizier TAP query engine", true, true));
@@ -59,12 +59,10 @@ public class RegistryExplorer extends RootClass {
 			offRegistryMarks.put("betacadc"       , new RegistryMark("betacadc", ""
 					, "http://beta.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap"
 					, "Datalink Service Demonstrator", true, true));
-/*	
- * Cannot be loaded at starting time because it works on the same server as taphandle.
- * 		offRegistryMarks.put("3xmm"       , new RegistryMark("3xmm", ""
+			offRegistryMarks.put("3xmm"       , new RegistryMark("3xmm", ""
 					, "http://xcatdb.u-strasbg.fr/3xmm/tap"
 					, "3rd XMM catalogue", true, false));
-*/		} catch (MalformedURLException e) {
+		} catch (MalformedURLException e) {
 			logger.equals(e);
 		}
 	}
@@ -141,8 +139,6 @@ public class RegistryExplorer extends RootClass {
 			if( registryMarks.get(key) == null ) {
 				if( (rm = offRegistryMarks.get(key)) != null ) {
 					registryMarks.put(key, rm);
-				} else if( !url.matches(URL) ) {
-					logger.error(key + " seems to have a not valid URL " + url + " ignored");
 				} else {
 					registryMarks.put(key, new RegistryMark(key, ivoid, url, description, false, true));
 				}
