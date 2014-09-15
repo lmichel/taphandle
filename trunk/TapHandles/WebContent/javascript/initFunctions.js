@@ -143,6 +143,7 @@ function initFunctions () {
 		 * Activate submit buttons
 		 */
 		$('#submitquery').click(function() {
+            _paq.push(['trackPageView', 'saada TapHandle/submit']);
 			ViewState.fireSubmit();
 			//resultPaneView.fireSubmitQueryEvent();
 		});
