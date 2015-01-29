@@ -205,7 +205,7 @@ jQuery.extend({
 		};
 		this.downloadVotable= function() {
 			var url = 'jobresult?NODE=' + treePath.nodekey.trim() + '&JOBID=' + id.trim() + '&jsessionid='+ sessionID;
-			Location.changeLocation(url);
+			PageLocation.changeLocation(url);
 		};
 		this.sampBroadcast= function() {
 			var url =  rootUrl + 'jobresult?NODE=' + treePath.nodekey.trim() + '&JOBID=' + id.trim() + '&jsessionid='+ sessionID;

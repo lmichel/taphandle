@@ -84,7 +84,7 @@ jQuery.extend({
 		};
 		this.downloadFITS = function() {
 			var url = "getqueryreport?query=" + escape(current_query) + "&protocol=auto&format=fits";
-			Location.changeLocation(url);
+			PageLocation.changeLocation(url);
 		};
 		this.downloadZip = function() {
 			/*
@@ -95,7 +95,7 @@ jQuery.extend({
 				Modalinfo.info("Not implemented for TAP queries", 'Info');
 			} else {
 				var url = "getqueryreport?query=" + escape(current_query) + "&protocol=noprotocol&format=zipball";
-				Location.changeLocation(url);
+				PageLocation.changeLocation(url);
 			}
 		};
 		this.sampBroadcast = function() {

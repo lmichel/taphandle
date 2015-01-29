@@ -68,7 +68,7 @@ jQuery.extend({
 		this.download = function() {
 			if( that.results.length >= 1 ) {
 				var url = that.results[0];
-				Location.changeLocation(url);
+				PageLocation.changeLocation(url);
 			} else {
 				Modalinfo.info("No ZIP archive available");
 			}

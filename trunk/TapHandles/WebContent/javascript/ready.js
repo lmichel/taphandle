@@ -49,6 +49,6 @@ $().ready(function() {
 	whenReady.initDataTree();
 	whenReady.initQueryForm();
 	whenReady.initSamp();
-	Location.confirmBeforeUnlaod();
+	PageLocation.confirmBeforeUnlaod();
 });
 
