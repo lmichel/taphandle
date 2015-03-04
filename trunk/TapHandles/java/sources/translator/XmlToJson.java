@@ -350,7 +350,8 @@ public class XmlToJson  extends RootClass {
 	 */
 	@SuppressWarnings("unchecked")
 	public static void translateJoinKeysTable(String inputFile, String outputDir  ) throws Exception {
-		Map<String, Collection<JSONObject>> map = new LinkedHashMap<String, Collection<JSONObject>>();
+		//Map<String, Collection<JSONObject>> map = new LinkedHashMap<String, Collection<JSONObject>>();
+		JoinKeyMap map = new JoinKeyMap();
 		StarTableFactory stf = new StarTableFactory();
 		logger.info("Translate " +inputFile);
 		try {
@@ -365,20 +366,22 @@ public class XmlToJson  extends RootClass {
 			 * Stores join links in a map 
 			 */
 			for( int r=0 ; r<nSrc ; r++ ) {
-				Object[] o =table.getRow(r);
-				String source_table = o[0].toString();
-
-				JSONObject jso = new JSONObject();
-				jso.put("target_table", o[1].toString());
-				jso.put("source_column", o[2].toString());
-				jso.put("target_column", o[3].toString());
-				Collection<JSONObject> set;
-				if( (set = map.get(source_table)) == null) {
-					set =  new ArrayList<JSONObject>();
-					map.put(source_table,set);
-				}
-				set.add(jso);
+				map.addJoin(table.getRow(r));
+//				Object[] o =table.getRow(r);
+//				String source_table = o[0].toString();
+//
+//				JSONObject jso = new JSONObject();
+//				jso.put("target_table", o[1].toString());
+//				jso.put("source_column", o[2].toString());
+//				jso.put("target_column", o[3].toString());
+//				Collection<JSONObject> set;
+//				if( (set = map.get(source_table)) == null) {
+//					set =  new ArrayList<JSONObject>();
+//					map.put(source_table,set);
+//				}
+//				set.add(jso);
 			}
+			map.buildReverseJoins();
 			/*
 			 * Builds individual JSON files for each table
 			 */
