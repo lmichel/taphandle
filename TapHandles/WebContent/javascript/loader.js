@@ -6,6 +6,7 @@
  * This class is a JS singleton.
  */
 resourceLoader = function() {
+	var version = "?nocache=" + Math.floor((Math.random() * 1000) + 1); 
 	/*
 	 * JS directories and files
 	 */
@@ -107,7 +108,7 @@ resourceLoader = function() {
 			js.shift();
 			if( js.length > 0 ) loadNextScript();
 		};
-		script.src = js[0];
+		script.src = js[0] + version;
 		script.type = "text/javascript";
 		head.appendChild( script);
 	};
@@ -117,7 +118,7 @@ resourceLoader = function() {
 	loadNextCss = function() {
 		var  href = css[0];
 		$.ajax({
-			url: href,
+			url: href + version,
 			dataType: 'text',
 			success: function(){        
 				$('<link rel="stylesheet" type="text/css" href="'+href+'" />').appendTo("head");
