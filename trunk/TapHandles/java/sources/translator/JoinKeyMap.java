@@ -81,7 +81,6 @@ public class JoinKeyMap extends RootClass{
 				String target_column = (String) jso.get("target_column");
 				Collection<JSONObject> coll ;
 				if( (coll = this.map.get(target_table)) == null ) {
-					System.out.println(target_table + " " + source_table + " to added");
 					reverseJoins.add(target_table, source_table, target_column, source_column);
 				} else {
 					boolean found = false;
@@ -92,7 +91,6 @@ public class JoinKeyMap extends RootClass{
 						}
 					}
 					if( !found ){
-						System.out.println(target_table + " " + source_table + " to be extended");
 						reverseJoins.add(target_table, source_table, target_column, source_column);
 					}
 				}
@@ -106,11 +104,11 @@ public class JoinKeyMap extends RootClass{
 			if( (coll = this.map.get(e.getKey())) == null ){
 				coll =  new ArrayList<JSONObject>();
 				map.put(e.getKey(),coll);
-				System.out.println("Add key " + e.getKey());
+				logger.debug("Add source table " + e.getKey());
 			}
 			for( JSONObject jso: e.getValue()){
 				coll.add(jso);
-				System.out.println("Add join " + e.getKey() + " " + jso.toJSONString());
+				logger.debug("Add reverse join " + e.getKey() + " " + jso.toJSONString());
 			}
 		}
 	}
