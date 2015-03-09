@@ -54,48 +54,51 @@ resourceLoader = function() {
 
 	var css = new Array();// global list of CSS to load
 	var CssOver = false; // true when all CSS are loaded (can start JS loading)
-	
-	/*
-	 * Check if saadajsbasics resources are installed locally
-	 */
-	baseUrl = "http://localhost:8888/jsresources/";
-	$.ajax({
-		url: baseUrl + 'saadajsbasics/loader.js',
-		async: false, 
-		dataType: "text",
-		error: function(data) {
-			baseUrl = "http://obs-he-lm:8888/jsresources/";
-			console.log("Try " + baseUrl + " as jsresource base URL");
-			$.ajax({
-				url: baseUrl + 'saadajsbasics/loader.js',
-				async: false, 
-				dataType: "text",
-				error: function(data) {
-					baseUrl = "./";
-					console.log("Try " + baseUrl + " as jsresource base URL");					
-					$.ajax({
-						url: 'saadajsbasics/loader.js',
-						async: false, 
-						dataType: "text",
-						error: function(data) {					
-							baseUrl = "http://saada.unistra.fr/jsresources/";
-							console.log("Try " + baseUrl + " as jsresource base URL");
-						},
-						success: function() {
-							console.log("Take " + baseUrl + " as jsresource base URL");
-						}   
-					});						
-				} ,
-				success: function() {
-					console.log("Take " + baseUrl + " as jsresource base URL");
-				}                  
-			});
-		}   ,
-		success: function() {
-			console.log("Take ./ as jsresource base URL");
-		}
-	});
-	console.log("jsresources will be taken from " + baseUrl);
+
+	var checkBaseUrl = function() {
+
+		/*
+		 * Check if saadajsbasics resources are installed locally
+		 */
+		baseUrl = "http://localhost:8888/jsresources/";
+		$.ajax({
+			url: baseUrl + 'saadajsbasics/loader.js',
+			async: false, 
+			dataType: "text",
+			error: function(data) {
+				baseUrl = "http://obs-he-lm:8888/jsresources/";
+				console.log("Try " + baseUrl + " as jsresource base URL");
+				$.ajax({
+					url: baseUrl + 'saadajsbasics/loader.js',
+					async: false, 
+					dataType: "text",
+					error: function(data) {
+						baseUrl = "./";
+						console.log("Try " + baseUrl + " as jsresource base URL");					
+						$.ajax({
+							url: 'saadajsbasics/loader.js',
+							async: false, 
+							dataType: "text",
+							error: function(data) {					
+								baseUrl = "http://saada.unistra.fr/jsresources/";
+								console.log("Try " + baseUrl + " as jsresource base URL");
+							},
+							success: function() {
+								console.log("Take " + baseUrl + " as jsresource base URL");
+							}   
+						});						
+					} ,
+					success: function() {
+						console.log("Take " + baseUrl + " as jsresource base URL");
+					}                  
+				});
+			}   ,
+			success: function() {
+				console.log("Take ./ as jsresource base URL");
+			}
+		});
+		console.log("jsresources will be taken from " + baseUrl);
+	};
 
 	/**
 	 * Recursive function loading the first script of the list
@@ -238,6 +241,7 @@ resourceLoader = function() {
 	};
 
 	var jss = {};
+	jss.checkBaseUrl = checkBaseUrl;
 	jss.loadAll = loadAll;
 	jss.setScripts = setScripts;
 	jss.setMinScripts = setMinScripts;
