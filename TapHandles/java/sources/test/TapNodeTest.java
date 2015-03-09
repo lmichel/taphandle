@@ -31,8 +31,9 @@ public class TapNodeTest  extends RootClass {
 		try {
 		rm = new RegistryMark("tapnodetest", "ivo://tabnodetest", args[0], "test", false, true);
 		tn = new TapNode(rm, "/tmp/meta");
+		tn.buildJsonTableAttributes("oidb");
 		} catch(Exception e) {
-			
+			e.printStackTrace();
 		} finally {
 			System.out.println(rm.getNodeKey());
 			System.out.println(tn.supportUpload());

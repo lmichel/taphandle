@@ -20,11 +20,11 @@ public class XmlToJsonTest extends RootClass {
 	 * @throws Exception 
 	 */
 	public static void main(String[] args) throws Exception {
-		String inputfile = "/home/michel/Desktop/tapbase/meta/voparis-basecom/test.xml";
-		String outputfile =  inputfile.replaceAll("xml", "json");
+		String inputfile = "/tmp/meta/tables.xml";
+		String outputfile =  "/tmp/meta/iodb.json";
 		XmlToJson.applyStyle(inputfile
 				, outputfile
-				, "/home/michel/Desktop/tapbase/meta/voparis-basecom/capabilities.xsl");
+				, "/tmp/meta/iodb_att.xsl");
 		BufferedReader br = new BufferedReader(new FileReader(outputfile));
 		String b;
 		while( (b = br.readLine()) != null ) {
