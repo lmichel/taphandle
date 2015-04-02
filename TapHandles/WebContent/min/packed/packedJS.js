@@ -6688,6 +6688,9 @@ tapColSelector_Mvc.prototype = Object.create(ConstQEditor_Mvc.prototype, {
 				q.push( ed.fireGetADQL());
 				// if constraint not applied to the queried table: join
 				if( tt != st ) {
+					/*
+					 * Key of the join descriptor
+					 */
 					for(var i=0 ;  i<this.joinKeys.length ; i++ ) {
 						var lt = this.joinKeys[i].target_datatreepath.schema + "." + this.joinKeys[i].target_datatreepath.table;
 						if( lt == tt) {
@@ -6701,6 +6704,9 @@ tapColSelector_Mvc.prototype = Object.create(ConstQEditor_Mvc.prototype, {
 				var tt = fs[0] + "." + fs[1] ;
 				if( tt != st ) {
 					for(var i=0 ;  i<this.joinKeys.length ; i++ ) {
+						/*
+						 * Key of the join descriptor
+						 */
 						var lt = this.joinKeys[i].target_datatreepath.schema + "." + this.joinKeys[i].target_datatreepath.table;
 						if( lt == tt) {
 							joins[tt] = this.joinKeys[i];
@@ -7677,7 +7683,7 @@ QueryTextEditor_Mvc.prototype = {
 function ADQLTextEditor_Mvc(){
 	QueryTextEditor_Mvc.call(this);
 	this.selectConst = new Array();
-	this.joinedTables = new Array();
+	this.joinedTables = new JoinKeyMap();
 	this.flatJoined = new Array();
 	/*
 	 * 
@@ -7707,18 +7713,25 @@ ADQLTextEditor_Mvc.prototype = Object.create(QueryTextEditor_Mvc.prototype, {
 			} else if( type == "limit" && constraints.length > 0) {
 				this.limConst = {label:label, constraints: constraints[0]};;				
 			} else {
-				Modalinfo.error("QueryTextEditor do not know what to do with a constraint typed as " +type);
+				Modalinfo.error("QueryTextEditor does not know what to do with a constraint typed as " +type);
 				return;
 			}	
-			this.joinedTables = new Array();
+			this.joinedTables.removeFromOrigin(label);
 			this.flatJoined = new Array();
 			if( tableJoin != null ) {
 				for( var jt in tableJoin ) {
+					/* 
+					 * key of tableJoin array
+					 *     [target_datatreepath.schema].[target_datatreepath.table];
+					 * joinKey format:  
+					 *     {"target_datatreepath":{"nodekey":"node","schema":"schema","table":"autre1","tableorg":"autre1","jobid":"","key":"node.schema.autre1"},
+					 *      "target_column":"1autre1","source_column":"1schema.table"}
+					 */
 					var joinKey = tableJoin[jt];
 					if( joinKey.target_column == "" ) {
 						this.flatJoined.push(joinKey.target_table);
 					} else {
-						this.joinedTables[jt] = joinKey;
+						this.joinedTables.addJoinKey(jt, joinKey, label);
 					}
 				}
 			}
@@ -7730,8 +7743,10 @@ ADQLTextEditor_Mvc.prototype = Object.create(QueryTextEditor_Mvc.prototype, {
 	getJoin : { 
 		value: function() {
 			var retour = "";
-			for( var jt in this.joinedTables ) {
-				var joinKey = this.joinedTables[jt];
+			var joinKeys = this.joinedTables.getJoinKeys();
+			var arrayLength = joinKeys.length;
+			for (var i = 0; i < arrayLength; i++) {
+				var joinKey = joinKeys[i];
 				var tt = (joinKey.target_datatreepath.schema + "." + joinKey.target_datatreepath.table).quotedTableName();
 				retour += "JOIN " + tt + " ON " 
 				+ this.getCurrentTableName().quotedTableName() + "." +  joinKey.source_column.quotedTableName()
@@ -7787,30 +7802,81 @@ ADQLTextEditor_Mvc.prototype = Object.create(QueryTextEditor_Mvc.prototype, {
 			return this.treePath.schema + "." + this.treePath.table;
 		}
 	}
-//	quoteTableName : {
-//		value: function(tableName){
-//			var regex = /([^.]*)\.(.*)/;
-//			var results = regex.exec(tableName);
-//			var table, schema;
-//			if(!results){
-//				table = tableName;
-//				schema = "";
-//			} else if( results.length == 2 ) {
-//				table = results[1]; 
-//				schema = "";
-//			} else  {
-//				table =  results[2];  
-//				schema = results[1] + ".";
-//			}
-//			if( table.match(/^[a-zA-Z0-9][a-zA-Z0-9_]*$/ ) ){
-//				return schema + table;
-//			} else {
-//				return schema + '"' + table +'"';
-//			}
-//		}
-//	}
 });
-
+/**
+ * Object merging the keyJoin coming from different forms.
+ * keyJoins remain unique but with a reference of all forms using them.
+ * When a key is no longer used by a form and just by it, it is removed from the map.
+ * If it is used by multiple keywords, the form label is removed from the origins array, 
+ * but the keyJoin remains in place within the map.
+ */
+function JoinKeyMap() {
+	/**
+	 * Map key: 
+	 *     [target_datatreepath.schema].[target_datatreepath.table];
+	 * Map value
+	 *     { keyJoin: {"target_datatreepath":{"nodekey":"node","schema":"schema","table":"autre1","tableorg":"autre1","jobid":"","key":"node.schema.autre1"},
+	 *                 "target_column":"1autre1","source_column":"1schema.table"}
+	 *       origins: []
+	 * Origins contains the labels of the forms using the keyJoin
+	 */
+	this.keyMap =  new Array();
+};
+/**
+ * Methods
+ */
+JoinKeyMap.prototype = {
+		/**
+		 * Add a joinKey to the map if it does not exist. 
+		 * If the joinKey already exists, the origins array is updated
+		 * @param key      map key: [target_datatreepath.schema].[target_datatreepath.table]
+		 * @param joinKey  map value: see above for the format
+		 * @param origin   form label
+		 */
+		addJoinKey : function(key, joinKey, origin){
+			var jk = this.keyMap[key];
+			if( jk == null ){
+				this.keyMap[key] = {joinKey: joinKey, origins: [origin]};
+			} else {
+				var index = ors.indexOf(origin);
+				if (index == -1) {
+					jk.origins.push(origin);
+				}
+			}
+		},
+		/**
+		 * remove the joinKey attached to origin it is only used by the form referenced by origin.
+		 * If it is used by multiple keywords, the lebel origin is removed from the origins array, 		 
+		 * @param origin form label
+		 */
+		removeFromOrigin : function(origin){
+			Out.info(" remove " + origin);
+			for( var key in this.keyMap ) {
+				var entry = this.keyMap[key];
+				var jk = entry.joinKey;
+				var ors = entry.origins;
+				if( ors.length == 1 && ors[0] == origin){
+					delete this.keyMap[key];
+				} else {
+					var index = ors.indexOf(origin);
+					if (index > -1) {
+					    ors.splice(index, 1);
+					}
+				}
+			}
+		},
+		/**
+		 * Used to iterate on the joinKeys
+		 * @returns {Array} All joinKeys in an array
+		 */
+		getJoinKeys: function() {
+			var retour = new Array();
+			for( var k in this.keyMap ) {
+				retour.push(this.keyMap[k].joinKey);
+			}
+			return retour;
+		}
+};
 
 console.log('=============== >  QueryTextEditor_m.js ');
 
