@@ -18,7 +18,7 @@ packedCSS=$outputDir/packedCSS.css    # name of the file containing the packed C
 packedJS=$outputDir/packedJS.js       # name of the file containing the packed JS
 imageDir="../WebContent/images"      # Directory from where the 3XMM images must be copied 
 imageOutput="../WebContent/min/images" # Directory where the 3XMM images must be copied 
-
+workspaceDir="/home/michel/workspace"
 #
 # List of jsresources JS objects
 # MVC template for names:
@@ -123,7 +123,8 @@ function  packCSS() {
 #########################      
 rm -f  $outputDir/$packedCSS	
 echo "=========== Pack CSS files"
-packCSS "../../jsresources/WebContent/saadajsbasics/styleimports/themes/base/"\
+pwd
+packCSS "$workspaceDir/jsresources/WebContent/saadajsbasics/styleimports/themes/base/"\
      "jquery-ui.css"\
     "jquery.ui.accordion.css"\
     "jquery.ui.autocomplete.css"\
@@ -138,13 +139,13 @@ packCSS "../../jsresources/WebContent/saadajsbasics/styleimports/themes/base/"\
     "jquery.ui.theme.css" 
 
     
-packCSS "../../jsresources/WebContent/saadajsbasics/styleimports" \
+packCSS "$workspaceDir/jsresources/WebContent/saadajsbasics/styleimports" \
     "layout-default-latest.css" \
 	"datatable.css" \
 	"simplemodal.css"\
 	"aladin.min.css"
 	
-packCSS "../../jsresources/WebContent/saadajsbasics/styles"\
+packCSS "$workspaceDir/jsresources/WebContent/saadajsbasics/styles"\
     "basics.css" \
     "domain.css" 
 
@@ -157,12 +158,12 @@ packCSS "../WebContent/styleimport/" \
 
 echo "=========== Minify JS files"
 rm -f $packedJS
-minifySet "../../jsresources/WebContent/saadajsbasics/javascript"   \
+minifySet "$workspaceDir/jsresources/WebContent/saadajsbasics/javascript"   \
     ${js_basic_array[@]} 
 
-minifySet "../../jsresources/WebContent/saadajsbasics/jsimports/ui"    \
+minifySet "$workspaceDir/jsresources/WebContent/saadajsbasics/jsimports/ui"    \
      "jquery-ui.js"
-minifySet "../../jsresources/WebContent/saadajsbasics/jsimports"       \
+minifySet "$workspaceDir/jsresources/WebContent/saadajsbasics/jsimports"       \
     "jquery.simplemodal.js"\
     "jquery.alerts.js"\
     "jquery.dataTables.js"\
