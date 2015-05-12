@@ -317,13 +317,13 @@ jQuery.extend({
 //			}
 			attributeHandlers = tapConstraintEditor.getAttributeHandlers();
 			var aoColumns = new Array();
+			var columnMap = {access_format: -1, s_ra: -1, s_dec: -1, s_fov: -1, currentColumn: -1};
 			for(var i=0 ; i<jsdata.aoColumns.length ; i++) {
 				var title ;
 				if( attributeHandlers == undefined ) {
 					title = "No descritption available"
 						+ " - This job has likely been initiated in a previous session" ;
-				}
-				else {
+				} else {
 					var ah = attributeHandlers[jsdata.aoColumns[i].sTitle];/*
 					/*
 					 * Column name could be published in upper case but returned by the DBMS in lower case.
@@ -344,6 +344,15 @@ jQuery.extend({
 						+ " - UType: " + ah.utype
 						+ " - DataType: " + ah.dataType;
 					}
+					if( ah.nameorg == "access_format" || ah.ucd == "meta.code.mime" ) {
+						columnMap.access_format = i;
+					} else if( ah.nameorg == "s_ra" || ah.ucd == "pos.eq.ra;meta.main" || ah.ucd == "pos.eq.ra") {
+						columnMap.s_ra = i;
+					} else if( ah.nameorg == "s_dec" || ah.ucd == "pos.eq.dec;meta.main" || ah.ucd == "pos.eq.dec") {
+						columnMap.s_dec = i;
+					} else if( ah.nameorg == "s_fov" || ah.match(/.*instr\.fov/) ) {
+						columnMap.s_fov = i;
+					}
 				}
 				aoColumns[i] = {sTitle: '<span title="' + title + '">' + jsdata.aoColumns[i].sTitle + '</span>'};
 			}
@@ -359,6 +368,15 @@ jQuery.extend({
 				"bFilter" : true,
 				"fnRowCallback": function( nRow, aData, iDisplayIndex ) {
 					for( var c=0 ; c<aData.length ; c++ ) {
+						var copiedcolumnMap = jQuery.extend(true, {}, columnMap);
+						var colName = this.fnSettings().aoColumns[c].sTitle;
+						/*
+						 * Makes sure the mime type is for the current column 
+						 */
+						if( colName != "access_url" ) {
+							copiedcolumnMap.access_format = -1;
+						}
+						copiedcolumnMap.currentColumn = c;
 						formatValue(this.fnSettings().aoColumns[c].sTitle, aData[c], $('td:eq(' + c + ')', nRow));
 					}
 					return nRow;
