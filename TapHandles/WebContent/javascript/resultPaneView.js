@@ -243,7 +243,7 @@ jQuery.extend({
 			}
 			//	$("div#accesspane").trigger("resize",[ height]);		
 		};
-		
+
 		this.fireRemoveAllJobs= function() {
 			Modalinfo.confirm("Do you really want to remove all jobs?"
 					, function(){$("#tapjobs a").click();}
@@ -309,11 +309,11 @@ jQuery.extend({
 			$("#resultpane").html(table);
 //			var nb_cols = jsdata.aoColumns.length;
 //			for( var r=0 ; r<jsdata.aaData.length ; r++) {
-//				var line = jsdata.aaData[r];
-//				for( var l=0 ; l<nb_cols ; l++) {
-//					var num = line[l];
-//					//line[l] = formatValue(jsdata.aoColumns[l].sTitle, num);
-//				}
+//			var line = jsdata.aaData[r];
+//			for( var l=0 ; l<nb_cols ; l++) {
+//			var num = line[l];
+//			//line[l] = formatValue(jsdata.aoColumns[l].sTitle, num);
+//			}
 //			}
 			attributeHandlers = tapConstraintEditor.getAttributeHandlers();
 			var aoColumns = new Array();
@@ -343,15 +343,16 @@ jQuery.extend({
 						+ " - UCD: " + ah.ucd
 						+ " - UType: " + ah.utype
 						+ " - DataType: " + ah.dataType;
-					}
-					if( ah.nameorg == "access_format" || ah.ucd == "meta.code.mime" ) {
-						columnMap.access_format = i;
-					} else if( ah.nameorg == "s_ra" || ah.ucd == "pos.eq.ra;meta.main" || ah.ucd == "pos.eq.ra") {
-						columnMap.s_ra = i;
-					} else if( ah.nameorg == "s_dec" || ah.ucd == "pos.eq.dec;meta.main" || ah.ucd == "pos.eq.dec") {
-						columnMap.s_dec = i;
-					} else if( ah.nameorg == "s_fov" || ah.match(/.*instr\.fov/) ) {
-						columnMap.s_fov = i;
+
+						if( ah.nameorg == "access_format" || ah.ucd == "meta.code.mime" ) {
+							columnMap.access_format = i;
+						} else if( ah.nameorg == "s_ra" || ah.ucd == "pos.eq.ra;meta.main" || ah.ucd == "pos.eq.ra") {
+							columnMap.s_ra = i;
+						} else if( ah.nameorg == "s_dec" || ah.ucd == "pos.eq.dec;meta.main" || ah.ucd == "pos.eq.dec") {
+							columnMap.s_dec = i;
+						} else if( ah.nameorg == "s_fov" || ah.nameorg.match(/.*instr\.fov/) ) {
+							columnMap.s_fov = i;
+						}
 					}
 				}
 				aoColumns[i] = {sTitle: '<span title="' + title + '">' + jsdata.aoColumns[i].sTitle + '</span>'};
@@ -369,7 +370,7 @@ jQuery.extend({
 				"fnRowCallback": function( nRow, aData, iDisplayIndex ) {
 					for( var c=0 ; c<aData.length ; c++ ) {
 						var copiedcolumnMap = jQuery.extend(true, {}, columnMap);
-						var colName = this.fnSettings().aoColumns[c].sTitle;
+						var colName = $(this.fnSettings().aoColumns[c].sTitle).text();;
 						/*
 						 * Makes sure the mime type is for the current column 
 						 */
@@ -377,7 +378,8 @@ jQuery.extend({
 							copiedcolumnMap.access_format = -1;
 						}
 						copiedcolumnMap.currentColumn = c;
-						formatValue(this.fnSettings().aoColumns[c].sTitle, aData[c], $('td:eq(' + c + ')', nRow));
+						//formatValue(this.fnSettings().aoColumns[c].sTitle, aData[c], $('td:eq(' + c + ')', nRow));
+						ValueFormator.formatValue(colName, aData, $('td:eq(' + c + ')', nRow), copiedcolumnMap);
 					}
 					return nRow;
 				}
