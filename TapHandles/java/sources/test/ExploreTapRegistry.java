@@ -40,16 +40,16 @@ public class ExploreTapRegistry  extends RootClass {
 		String json = System.getProperty("java.io.tmpdir") + "/job.json";
 		String node = "http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap/";
 		String query = "SELECT ivoid, access_url, res_title\n"
-		+ "FROM rr.capability \n"
-		+ "  NATURAL JOIN rr.interface\n"
-		+ "  NATURAL JOIN rr.resource\n"
-//		+ "  NATURAL JOIN rr.table_column\n"
-//		+ "  NATURAL JOIN rr.res_table\n"
-		+ "WHERE standard_id='ivo://ivoa.net/std/tap' AND intf_type = 'vs:paramhttp' ";
-			NodeCookie cookie=new NodeCookie();
+				+ "FROM rr.capability \n"
+				+ "  NATURAL JOIN rr.interface\n"
+				+ "  NATURAL JOIN rr.resource\n"
+				//		+ "  NATURAL JOIN rr.table_column\n"
+				//		+ "  NATURAL JOIN rr.res_table\n"
+				+ "WHERE standard_id='ivo://ivoa.net/std/tap' AND intf_type = 'vs:paramhttp' ";
+		NodeCookie cookie=new NodeCookie();
 		String outFile = TapAccess.runSyncJob(node, query, xml, cookie, null);
 		XmlToJson.translateResultTable(xml, json);
-		
+
 		BufferedReader br = new BufferedReader(new FileReader(json));
 		JSONParser p = new JSONParser();
 		JSONObject jsonObject = (JSONObject) p.parse(br);
@@ -64,18 +64,21 @@ public class ExploreTapRegistry  extends RootClass {
 			System.out.print(key + "\t"+ url );
 			String description = (String)sa.get(2);
 			TapNode tn=null;
+			String result = url + "," + ivoid + "," + key + ",";
+			RegistryMark rm = new RegistryMark(key, ivoid, url, description, false, true);
 			try {
-				String result = url + " " + ivoid + " (" + key + ") ";
-				RegistryMark rm = new RegistryMark(key, ivoid, url, description, false, true);
-				tn = new TapNode(rm, "/tmp/meta");
-				result +=  (tn.supportSyncMode())? "   SYNC  ": "   NOSYNC";
-				result +=  (tn.supportAsyncMode())? "   ASYNC  ": "   NOASYNC";
-				result += description;
-				results.add(result);
-			} catch (Exception e) {
-				e.printStackTrace();		
-				//delete(new File( MetaBaseDir + key));
-			}
+				tn = new TapNode(rm, "/tmp/meta", false);
+				tn.check();
+			} catch (Exception e) {}
+
+			result +=  (tn.supportCapability())?    "CAPABILITY,": "NOCAPABILITY,";
+			result +=  (tn.supportTables())?        "TABLES,"    : "NOTABLES,";
+			result +=  (tn.supportTapSchemaJoin())? "JOIN,"      : "NOJOIN,";
+			result +=  (tn.supportSyncMode())?      "SYNC ,"     : "NOSYNC,";
+			result +=  (tn.supportAsyncMode())?     "ASYNC,"     : "NOASYNC,";
+			result +=  (tn.supportUpload())?        "UPLOAD ,"   : "NOUPLOAD,";
+			result += "\"" + description.replace(",", " ") + "\"" ;
+			results.add(result);
 		}
 		for( String s: results) {
 			System.out.println(s);

@@ -29,6 +29,7 @@ import tapaccess.QueryModeChecker;
 import tapaccess.TablesReconstructor;
 import tapaccess.TapAccess;
 import tapaccess.TapException;
+import test.ExploreTapRegistry;
 import translator.JsonUtils;
 import translator.NameSpaceDefinition;
 import translator.XmlToJson;
@@ -60,6 +61,8 @@ public class TapNode  extends RootClass {
 	 * true if a query on the tap schema building possible joins succeeded 
 	 * Not really used yet
 	 */
+	private boolean supportCapability = false;
+	private boolean supportTables = false;
 	private boolean supportTapSchemaJoin = false;
 	private boolean supportAsyncMode = true;
 	private boolean supportSyncMode = true;
@@ -92,7 +95,36 @@ public class TapNode  extends RootClass {
 			this.largeResource = false;
 		}
 	}
+	/**
+	 * This constructor does not check the real capability of the service.
+	 * It is just devited to scan all nodes (see {@link ExploreTapRegistry} without failure
+	 * @param regMark
+	 * @param baseDirectory
+	 * @param simpleInit just to differenciate the constructors
+	 * @throws Exception
+	 */
+	public TapNode(RegistryMark regMark, String baseDirectory, boolean simpleInit) throws Exception {
+		this.baseDirectory = baseDirectory;
+		this.regMark = regMark;
 
+		if( !this.baseDirectory.endsWith(File.separator) ) {
+			this.baseDirectory += File.separator;
+		}
+		emptyDirectory(new File(baseDirectory));
+		validWorkingDirectory(baseDirectory);
+		this.largeResource = false;
+	}
+
+	/**
+	 * Do some checking "by hand"
+	 * It is just devoted to scan all nodes (see {@link ExploreTapRegistry} without failure
+	 * 
+	 * @throws Exception
+	 */
+	public void check() throws Exception {
+		this.checkServices();
+		
+	}
 	/**
 	 * @return
 	 */
@@ -110,6 +142,12 @@ public class TapNode  extends RootClass {
 		return supportUpload;
 	}
 
+	public boolean supportCapability(){
+		return this.supportCapability;
+	}
+	public boolean supportTables(){
+		return this.supportTables;
+	}
 	/**
 	 * @return Returns he node directory (ended with a file separator)
 	 */
@@ -266,6 +304,7 @@ public class TapNode  extends RootClass {
 		this.getServiceReponse("capabilities", capabilityNS);
 		this.translateServiceReponse("capabilities", capabilityNS);
 		logger.debug(this.regMark + " Capabilities is available");
+		this.supportCapability = true;
 	}
 
 	/**
@@ -302,7 +341,8 @@ public class TapNode  extends RootClass {
 				throw new Exception("No valid tables capability: failed to rebuild it from the TAP schema: " + e2);
 			}
 		}
-		this.setNodekeyInJsonResponse("tables");			
+		this.setNodekeyInJsonResponse("tables");		
+		this.supportTables = true;
 	}
 
 	/**
@@ -323,7 +363,7 @@ public class TapNode  extends RootClass {
 			this.supportUpload = false;
 		}
 		if( !this.supportSyncMode && !this.supportSyncMode ){
-			throw new TapException("No query mode supported (neither sync nor async");
+			throw new TapException("No query mode supported (neither sync nor async)");
 		}
 	}
 
