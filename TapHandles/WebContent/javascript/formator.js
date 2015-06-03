@@ -229,4 +229,3 @@ ValueFormator = function() {
 	pblc.formatValue = formatValue;
 	return pblc;
 }();
-
