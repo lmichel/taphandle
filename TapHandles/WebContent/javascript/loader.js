@@ -20,6 +20,7 @@ resourceLoader = function() {
 	                , "DataLink"
 	                , "ConstQEditor"
 	                , "QueryTextEditor"
+	                , "RegionEditor"
 	                , "domain.js"];
 	var local_min_js = ["basics.js"
 	                    , "WebSamp"
@@ -33,6 +34,7 @@ resourceLoader = function() {
 	                 "jquery.prints.js",
 	                 "jquery.tooltip.js",
 	                 "jquery.form.js",
+	                 "aladin.min.js"
 	                 ];
 	var js = new Array();  // global list of JS to load
 
@@ -50,6 +52,7 @@ resourceLoader = function() {
 	                  , "layout-default-latest.css"
 	                  , "datatable.css"
 	                  , "simplemodal.css"
+	                  , "aladin.min.css"
 	                  ];
 
 	var css = new Array();// global list of CSS to load
