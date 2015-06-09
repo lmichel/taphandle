@@ -205,7 +205,8 @@ public class XmlToJson  extends RootClass {
 		String tableFileName = RootClass.vizierNameToFileName(tableName);
 		PrintWriter fw = new PrintWriter(new File( baseDir + tableFileName + "_att.xsl"));
 		while( s.hasNextLine() ) {
-			fw.println(s.nextLine().replaceAll("TABLENAME", tableName));
+			String s2 = s.nextLine().replaceAll("TABLENAME", tableName);
+			fw.println(s2);
 		}
 		s.close();
 		fw.close();
@@ -413,7 +414,6 @@ public class XmlToJson  extends RootClass {
 			String msg = e.getMessage() + "\n";;
 			for (int l = 0; l<sp.getResourceCount(); l++) {		    	 
 				SavotResource currentResource = (SavotResource)(sv.getResources().getItemAt(l));
-				System.err.println(l + " " + currentResource);
 				InfoSet is = currentResource.getInfos();
 				for( int i=0 ; i<is.getItemCount() ; i++ ) {
 					msg += ((SavotInfo)is.getItemAt(i)).getContent() + "\n";

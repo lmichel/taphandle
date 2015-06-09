@@ -591,8 +591,8 @@ public class TapNode  extends RootClass {
 	 */
 	private boolean isThereJsonTableAtt(String tableName) throws Exception{
 		JSONParser parser = new JSONParser();
-		System.out.println(this.baseDirectory + RootClass.vizierNameToFileName(tableName) + "_att.json");
-		Object obj = parser.parse(new FileReader(this.baseDirectory + RootClass.vizierNameToFileName(tableName) + "_att.json"));
+		String vizFilename =  RootClass.vizierNameToFileName(tableName) + "_att.json";
+		Object obj = parser.parse(new FileReader(this.baseDirectory + vizFilename));
 		JSONObject jsonObject = (JSONObject) obj;
 		return (((JSONArray) jsonObject.get("attributes")).size() > 0)? true: false;
 	}
