@@ -6,18 +6,8 @@
 <link rel="icon" href="images/tap16.png" type="images/png" />
 <link rel="SHORTCUT ICON" href="images/tap16.png" />
 
-<!-- <link rel="stylesheet" type="text/css" href="styles/global.css" />
-<link rel="stylesheet" type="text/css" href="styles/form.css" />
-<link rel="stylesheet" type="text/css" href="styleimport/jquery.alerts.css" />
-<link rel="stylesheet" type="text/css" href="styleimport/jquery.tooltip.css" />
-<link type="text/css" rel="stylesheet" href="styleimport/layout-default-latest.css" />
-<link type="text/css" rel="stylesheet" href="styleimport/jsonSuggest.css" />
-
-<link rel="stylesheet" type="text/css" href="http://saada.unistra.fr/jsresources/saadajsbasics/styles/basics.css" />
-<link rel="stylesheet" type="text/css" href="http://saada.unistra.fr/jsresources/saadajsbasics/styles/domain.css" />
- -->
 <script type="text/javascript" src="jsimport/jquery-1.7.2.js"></script>
-<script>var useDebugResources = true; var productionMode=false;</script>
+<script>var useDebugResources = true; var productionMode=true;</script>
 <script type="text/javascript" src="javascript/loader.js"></script>
 <script type="text/javascript" src="javascript/packedLoader.js"></script>
 
@@ -70,33 +60,33 @@
 
 <body>
 
-	<div id=banner class="levelonediv" >
-		&nbsp;<a href="http://code.google.com/p/tap-handles/" title="Taphandle project page" target="_blank" class=logo></a> &nbsp;&nbsp;
-		<div id=pagetitle style='width: 100%'><span class=pagetitle>TAPHandle</span>
-			<input type=text title="Enter a URL or a nickname of a TAP service. A suggestion list appears once one character has been typed"
-			id=node_selector class=inputvalue style="font-size: small;font-family: courier; width: 400px; position: relative; bottom: 5;" />
-			<span class=help>Node Selector</span>
-			    <a class=help href="javascript:void(0);" title="Contact the developper" 
+	<div id='banner' class="levelonediv" >
+		&nbsp;<a href="http://code.google.com/p/tap-handles/" title="Taphandle project page" target="_blank" class='logo'></a> &nbsp;&nbsp;
+		<div id='pagetitle' style='width: 100%'><span class='pagetitle'>TAPHandle</span>
+			<input type='text' title="Enter a URL or a nickname of a TAP service. A suggestion list appears once one character has been typed"
+			id='node_selector' class='inputvalue' style="font-size: small;font-family: courier; width: 400px; position: relative; bottom: 5;" />
+			<span class='help'>Node Selector</span>
+			    <a class='help' href="javascript:void(0);" title="Contact the developper" 
 				onclick='Modalinfo.info("Send an Email to \n laurent.michel@astro.unistra.fr", "Bookmark");'>@</a>
-			    <a class=help href="javascript:void(0);" title="Bookmark the TAP node you are connected to" 
+			    <a class='help' href="javascript:void(0);" title="Bookmark the TAP node you are connected to" 
 				onclick='Modalinfo.info("Bookmark the following URL <b>\n" + dataTreeView.getBookmark() + " </b>\nto connect TapHandle on the current node at starting time.", "contact");'>b</a>
 		
-			<div id=externaltools style='position: relative;'> 
+			<div id='externaltools' style='position: relative;'> 
 			
 				<a href="javascript:void(0);" class="formexpender" title="Expand query form" 
 				onclick='resultPaneView.fireSwitchForm();' id='formexpender'></a>
 		
-				<a href="javascript:void(0);" id=showquerymeta title='Show Metadata (Does not work with Vizier)' class=question></a>
+				<a href="javascript:void(0);" id='showquerymeta' title='Show Metadata (Does not work with Vizier)' class='question'></a>
 		<!-- 		<a href="javascript:void(0);" title='Download the results of the current job in a VOTable'
 				class=votable onclick='resultPaneView.fireDownloadVOTable();'></a> 		
 		 -->		<a href="javascript:void(0);" title='Open the shopping cart'
-				class=zip onclick='cartView.fireOpenCart();' id=zipbutton></a> 		
+				class='zip' onclick='cartView.fireOpenCart();' id='zipbutton'></a> 		
 <!-- 				<a href="javascript:void(0);" title='Connect a SAMP hub. (The SAMP hub must be started first e.g. by starting Aladin)' 
 				class=samp id=sampconnector ></a> 
 				<a href="javascript:void(0);" title='Send the data selection to SAMP clients' 
 				class=ivoa  style='visibility: hidden;'></a> -->
 				<a id="sampIndicator" onclick="WebSamp_mVc.fireJustConnect();" class="sampOff" href="#" title="SampStatus"></a>
-				<span class=pagetitlepath id=titlepath></span>
+				<span class='pagetitlepath' id='titlepath'></span>
 			</div>
 			
 		</div>
@@ -104,43 +94,45 @@
 
 <div id="accesspane">
 	<div id="resultpane"  class="pane ui-layout-center">
-		<h3 class=help>&nbsp;Welcome to Taphandle</h3>
+		<h2 class="home">&nbsp;1- Connect a TAP Service</h2>
 		<ul>
-			<li class=help style="font-size: large;">Select the TAP services you want to connect with in the <b>Node Selector</b> above.</li>
-			<li class=help style="font-size: large;">The GAVO SQL <b>registry is queried</b> to suggest a list of nodes matching the typed characters.</li>
-			<li class=help style="font-size: large;"> You can also give a <b>URL directly</b>.</li>
-			<li class=help style="font-size: large;"><b>Double click</b> on a <b>service node</b> to filter the table set.</li>
+			<li class="home" style="font-size: large;">Select the TAP service you want to connect with in the <b>Node Selector</b> field.</li>
+			<li class="home" style="font-size: large;">Type <b>free text</b> and follow the GAVO TAP registry <b>suggestions</b>.</li>
+			<li class="home" style="font-size: large;">Or type a <b>full URL</b>.</li>
+			<li class="home" style="font-size: large;"><b>Double click</b> on a <b>service node</b> to filter the table set.</li>
 		</ul>
-		<h3 class=help>&nbsp;Then access both data and meta-data</h3>
+		<h2 class="home">&nbsp;2- Access both data and meta-data</h2>
 		<ul>
-			<li class=help style="font-size: large;"><b>Double click</b> on a leaf of the resource tree to see the first rows of the published table.</li>
-			<li class=help style="font-size: large;"><b>Click </b>on <img src=./images/screen_down.png></img> to expend/reduce the query editor.</li>
-			<li class=help style="font-size: large;"><b>Drop a leaf </b> of the resource tree on <img src=./images/question.png></img> to display a description of the columns of the table.</li>
+			<li class="home" style="font-size: large;"><b>Double click</b> on a table icon on the resource tree to see its content.</li>
+			<li class="home" style="font-size: large;"><b>Click </b>on <img src="./images/screen_down.png"></img> to expend/reduce the query editor.</li>
+			<li class="home" style="font-size: large;"><b>Drop a table leaf </b> from the resource tree on <img src="./images/question.png"></img> to display the column description.</li>
 		</ul>
-		<h3 class=help>&nbsp;News </h3>
+		<h3 class="home">&nbsp;News </h3>
 		<ul>
 			<!--  li class=help style="font-size: large;">(05/2013) Data link demo. Open 
 			<a style="font-size: small;" href='#' onclick='dataTreeView.fireNewNodeEvent(unescape("http://xcatdb.unistra.fr/3xmm/tap"));'>XMM</a>
 			or
 			<a style="font-size: small;" href='#' onclick='dataTreeView.fireNewNodeEvent(unescape("http://beta.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap"));'>CADC</a> Demo Node
 			</li -->
-			<li class=help style="font-size: large;">(03/2015) Support of reverse joins: If the join A to B is declared in the TAP schema, then TapHandle add the B to A join.
-			<li class=help style="font-size: small;">(09/2014) General Improvement of the interface.
-			<li class=help style="font-size: small;">(02/2013) Browse the registry with the node selector</li>
-			<li class=help style="font-size: small;">(12/2012) Connect Samp with the Web Samp Profile</li>
-			<li class=help style="font-size: small;">(11/2012) Query Vizier with the real names for both tables and columns</li>
-			<li class=help style="font-size: small;">Recent fixes:<i>Download facility, Metadata window, Cookie manager</i> </li>
+			<li class="home" style="font-size: large;">(06/2015) Support of Datalink 1.0, display of STC region with Aladin(s)</li>
+            <li class="home" style="font-size: large;">(03/2015) Job results bigger than 1Mb and older than one hour are removed every night</li>
+			<li class="home" style="font-size: large;">(03/2015) Support of reverse joins: If the join A to B is declared in the TAP schema, then TapHandle add the B to A join.</li>
+			<li class="help" style="font-size: small;">(09/2014) General Improvement of the interface.</li>
+			<li class="help" style="font-size: small;">(02/2013) Browse the registry with the node selector</li>
+			<li class="help" style="font-size: small;">(12/2012) Connect Samp with the Web Samp Profile</li>
+			<li class="help" style="font-size: small;">(11/2012) Query Vizier with the real names for both tables and columns</li>
+			<li class="help" style="font-size: small;">Recent fixes:<i>Download facility, Metadata window, Cookie manager</i> </li>
 		</ul>
-		<h3 class=help>&nbsp;Credit and Contact</h3>
+		<h3 class="home">&nbsp;Credit and Contact</h3>
 		<ul>
-			<li class=help style="font-size: large;list-style-type:none">
-				<a target='_blank' href="http://www.france-ov.org/"><img border=0px height=64px src="./images/ovfrance.jpg"></img></a>
-				<a target='_blank' href="http://www.insu.cnrs.fr/"><img border=0px height=64px src="./images/insu.jpg"></img></a>
-				<a target='_blank' href="http://www.unistra.fr/index.php?id=accueil"><img border=0px height=64px src="./images/uds.jpg"></img></a>
-				<a target='_blank' href="http://astro.unistra.fr/"><img border=0px height=64px src="./images/obs.jpg"></img></a>
-				<a target='_blank' href="http://xmmssc-www.star.le.ac.uk/"><img border=0px height=64px src="./images/ssc.png" title="XMM-Newton SSC"></img></a>
+			<li class="help" style="font-size: large;list-style-type:none">
+				<a target='_blank' href="http://www.france-ov.org/"><img border="0px" height="64px" src="./images/ovfrance.jpg"></img></a>
+				<a target='_blank' href="http://www.insu.cnrs.fr/"><img border="0px" height="64px" src="./images/insu.jpg"></img></a>
+				<a target='_blank' href="http://www.unistra.fr/index.php?id=accueil"><img border="0px" height="64px" src="./images/uds.jpg"></img></a>
+				<a target='_blank' href="http://astro.unistra.fr/"><img border="0px" height="64px" src="./images/obs.jpg"></img></a>
+				<a target='_blank' href="http://xmmssc-www.star.le.ac.uk/"><img border="0px" height="64px" src="./images/ssc.png" title="XMM-Newton SSC"></img></a>
 			</li>
-			<li class=help style="font-size: small;list-style-type:none">
+			<li class="help" style="font-size: small;list-style-type:none">
 				laurent.michel [at] astro.unistra.fr
 			</li>
 		</ul>
@@ -152,14 +144,14 @@
 		<!--  
 			SUBMIT panel 
 		-->
-		<div id=formpanemenu style="float: left; text-align: center ;width: 91; border-style: hidden;">
+		<div id='formpanemenu' style="float: left; text-align: center ;width: 91; border-style: hidden;">
 			<div style="text-align: center ;padding: 5px; border-style: hidden;">
-				<a href="javascript:void(0);" class=accept id=submitquery title='Execute the query as shown in the "plain text query" tab'></a>
+				<a href="javascript:void(0);" class='accept' id='submitquery' title='Execute the query as shown in the "plain text query" tab'></a>
 				<hr/>
 			</div> 
 			<div style="text-align: left ;padding: 5px; text-align: center; border-style: hidden; ">
-				<span class=help>Result Limit</span><br/>
-				<input type=text id='qlimit' class=numinputvalue  title='Set the max number of returned rows'
+				<span class='help'>Result Limit</span><br/>
+				<input type='text' id='qlimit' class='numinputvalue'  title='Set the max number of returned rows'
 	        	style="font-size: small;font-family: Arial, Helvetica, sans-serif;" value='100'/><hr/>  
 			</div>
 		</div>
@@ -167,7 +159,7 @@
 			Query form
 		-->		
 		<div style="background-color: white;height: 260px; width:900px; margin-left:105px">
-			<div id="taptab" class=querytab style="border-width:0"">
+			<div id="taptab" class='querytab' style="border-width:0">
 				<ul style="height: 32px;">
 	        		<li><a href="#tapselect" title="Set up the SELECT clause of the query"><span>Select What</span></a></li>
 	        		<li><a href="#tapwhere"  title="Set up the WHERE clause of the query"><span>Where</span></a></li>
@@ -175,118 +167,20 @@
 	        		<li><a href="#tapjob"    title="Acces to the jobs attached to the current session"><span>Job Control</span></a></li>
 	    		</ul>
 	    		<!-- Columns selection -->
-	    		<div id="tapselect" class=queryformtab>
-<!-- 	 				<div style="background-color: white ; width: 380px; height: 220px; vertical-align: middle; float:left;">
-	 					<div style="background: white;">
-	 						<span class=help>Keywords. Filter:</span>
-	 						<input type=text  class=kw_filter style="width: 60px; position: relative; bottom: 5;font-size: small; 
-	 						font-family: Arial, Helvetica, sans-serif;" />	 							
-	 						<span class=help>Tables:</span>
-	 						<select id=tableSelector class=table_filter></select>
-	 					</div>
-	        			<div id="tapselectmeta" class=kw_list>
-	        			</div>      
-	        			<div style="background-color: white;">
-	        				<span class=help>Drag and Drop keywords to the list of selected fields</span>
-	        			</div>
-	        		</div>
-	        		<div style="background-color: white ;  width: 485px; height: 200px; float: left">
-	 					<div style="background-color: white ; width: 480px; height: 125px; float:left;">
-	  						<div style="background: white;">
-	  							<span class=help>Selected Fields</span>
-	  						</div>
-	        				<div id="tapselectlist"></div>
-	    				</div>
-	 					<div style="background-color: white ; width: 480px; height: 60px; float:left;">
-	  						<div style="background: white;">
-	  							<span class=help>Order By Field</span>
-	  						</div>
-	        				<div id="taporderby"></div>
-	    				</div>
-	    			</div>
- -->	    		</div>  
+	    		<div id="tapselect" class='queryformtab'>
+	    		</div>  
 	    		<!-- keywords selection -->
-	    		<div id="tapwhere" class=queryformtab >
-<!-- 					<div style="background-color: white ; width: 340px; vertical-align: middle; float:left;">
-	 						<div style="background: white;">
-	 							<span class=help>Keywords. Filter:</span>
-	 							<input type=text  class=kw_filter style="width: 60px; position: relative; bottom: 5;font-size: small; 
-	 							font-family: Arial, Helvetica, sans-serif;" />	 							
-	 							<span class=help>Tables:</span>
-	 							<select id=tableSelector class=table_filter></select>
-	 						</div>
-	        				<div id="tapmeta" class=kw_list ></div>      
-	        				<div style="background-color: white;">
-	       						<span class=help>Drag and Drop keywords to the list of constraints</span>
-	        				</div>
-	        					
-	        			</div>
-	 				<div style="background-color: white ; width: 680px; float:left; margin-left: 15px;">
-	  					<div style="background: white;">
-	  						<div style="background: white;float:left;">	  								
-	   							<table border=0 style="border-spacing: 0px 0px;"">
-									<tr>
-	  									<td></td>  
-	  									<td><span class=help>Drop Coord. Keywords</span></td>	  															
-	  								</tr>
-									<tr>
-	  									<td><span>alpha</span></td>  
-	  									<td><div id="tapalpha" style="float:left;"></div> </td>	  															
-	  								</tr>
-									<tr>
-	  									<td><span>delta</span></td>  
-	  									<td><div id="tapdelta" style="float:left;"></div> </td>	  															
-	  								</tr>
-	    						</table>
-	  						</div>
-	  						<div style="background: white;float:left;">  							
-	  							<table border=0  style="border-spacing: 0px 0px;"">
-	  								
-	 								<tr>
-	  									<td></td>	
-	  									<td align=right colspan=2><span class=help>Type return or click to valid</span></td>							
-	  								</tr>
-	
-   								<tr>
-	    								<td align=right><span>Coord</span></td>								
-	   									<td><input id=tapcoordval type=text class=coordinputvalue
-	   									style="font-size: small;font-family: Arial, Helvetica, sans-serif;"/>
-	   									</td>								
-	    								<td>
-	    							<a class=sesame></a>
-	    								<a title='Add the current positon to the query' id=acceptpattern class=add href="javascript:void(0);" 
-	  									onclick='tapView.fireInputCoordEvent();' 
-	  									title="click to add the position to the query"></a></td>							
-	  								</tr>
-	  								<tr>
-	    								<td><span>S/R</span> 
- </td>								
-	    								<td colspan=2>
-	    								<input  id=tapradiusval value=0.1 type=text class=numinputvalue style="font-family: Arial, Helvetica, sans-serif;font-size: small;"/>
-	    								<span class=help>deg</span>
-	    								<input type=radio name=tapboxcircle value="Circle" checked /><span> Circle </span>  								
-	    								<input type=radio name=tapboxcircle value=Box/><span>Box</span>    
-	    								</td>								
-	  								</tr>
-	  							</table>
-	   						</div>
-	   						<div style="background: white; float:left; width: 480px;">  							
-	  							<span class=help>Constraints</span>
-	        					<div id="tapconstraintlist" ></div>
-	        					<span class=typomsg></span>	
-	        				</div>
-	        			</div> 
-	    			</div>-->
+	    		<div id="tapwhere" class='queryformtab' > 					
 				</div>
 	    		<!--  Query text -->
-	    		<div id="taptext" class=queryformtab >	
+	    		<div id="taptext" class='queryformtab' >	
 <!-- 					<textarea id=adqltext class="querytext"></textarea>
  -->				</div>	
 				<!--  job panel -->		
 				<div id="tapjob">        
 					 <div style="background: white;">
-	 					<span class=help>List of UWS jobs</span>
-	 					<a title="Remove all jobs" href="javascript:void(0);" class=closekw onclick="resultPaneView.fireRemoveAllJobs();"></a>
+	 					<span class='help'>List of UWS jobs</span>
+	 					<a title="Remove all jobs" href="javascript:void(0);" class='closekw' onclick="resultPaneView.fireRemoveAllJobs();"></a>
 	 				</div>
 	        		<div id="tapjobs" ></div>      							    	
 				</div>	
@@ -298,14 +192,8 @@
 	 -->
 	<div id="treepane" class="pane ui-layout-west" style="width: 300;">
 		<div style="border-style: hidden; vertical-align: middle;">
-			<span class=help title='Select TAP nodes with the node selector on the top of the page'>Tap Nodes  
-<!-- 			<a href="javascript:void(0);" onclick="dataTreeView.addGoodies({nodekey:'node',table: 'name1'});">A1</a>&nbsp;
-			<a href="javascript:void(0);" onclick="dataTreeView.addGoodies({nodekey:'node',table: 'name2'});">A2</a>&nbsp;
-			<a href="javascript:void(0);" onclick="dataTreeView.addGoodies({nodekey:'node2',table: 'name1'});">A3</a>&nbsp;
-			<a href="javascript:void(0);" onclick="dataTreeView.delGoodies({nodekey:'node',table: 'name1'});">D1</a>&nbsp;
-			<a href="javascript:void(0);" onclick="dataTreeView.delGoodies({nodekey:'node2',table: 'name1'});">D3</a>&nbsp;
-			<a href="javascript:void(0);" onclick="dataTreeView.pushJobToGoodies('aaa');">UP</a>
- -->			</span>
+			<span class='help' title='Select TAP nodes with the node selector on the top of the page'>Tap Nodes  
+			</span>
 		</div>
 		<div id="treedisp" style="background-color: white">
 		</div>

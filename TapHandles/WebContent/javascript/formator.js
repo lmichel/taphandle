@@ -1,46 +1,39 @@
 /*
- * Some utilities
+ * Some utilities moved to basic.js
  */
-if(!String.prototype.startsWith){
-	String.prototype.startsWith = function (str) {
-		return !this.indexOf(str);
-	};
-};
-if(!String.prototype.endsWith){
-	String.prototype.endsWith = function(suffix) {
-		return this.indexOf(suffix, this.length - suffix.length) !== -1;
-	};
-};
-
-if(!String.prototype.hashCode){
-	String.prototype.hashCode = function(){
-		var hash = 0;
-		if (this.length == 0) return code;
-		for (var i = 0; i < this.length; i++) {
-			var char = this.charCodeAt(i);
-			hash = 31*hash+char;
-			hash = hash & hash; 
-		}
-		return hash;
-	};
-};
-if(!String.prototype.trim){
-	String.prototype.trim = function(chaine){
-		return chaine.replace(/^\s+|\s+$/g,"");
-	} ;
-};
-
-function trim(chaine) {
-	return chaine.replace(/^\s+|\s+$/g,"");
-}
-
-function isNumber(val) {
-	var exp = new RegExp("^[+-]?[0-9]*[.]?[0-9]*([eE][+-]?[0-9]+)?$","m"); 
-	return exp.test(val);
-}
-
-var decimaleRegexp = new RegExp("^[+-]?[0-9]*[.][0-9]*([eE][+-]?[0-9]+)?$","m"); 
-var bibcodeRegexp  = new RegExp(/^[12][089]\d{2}[A-Za-z][A-Za-z0-9&][A-Za-z0-9&.]{2}[A-Za-z0-9.][0-9.][0-9.BCRU][0-9.]{2}[A-Za-z0-9.][0-9.]{4}[A-Z:.]$/);	
+//if(!String.prototype.startsWith){
+//	String.prototype.startsWith = function (str) {
+//		return !this.indexOf(str);
+//	};
+//};
+//if(!String.prototype.endsWith){
+//	String.prototype.endsWith = function(suffix) {
+//		return this.indexOf(suffix, this.length - suffix.length) !== -1;
+//	};
+//};
+//
+//if(!String.prototype.hashCode){
+//	String.prototype.hashCode = function(){
+//		var hash = 0;
+//		if (this.length == 0) return code;
+//		for (var i = 0; i < this.length; i++) {
+//			var char = this.charCodeAt(i);
+//			hash = 31*hash+char;
+//			hash = hash & hash; 
+//		}
+//		return hash;
+//	};
+//};
+//if(!String.prototype.trim){
+//	String.prototype.trim = function(chaine){
+//		return chaine.replace(/^\s+|\s+$/g,"");
+//	} ;
+//};
+//
+//function trim(chaine) {
+//	return chaine.replace(/^\s+|\s+$/g,"");
+//}
+//
 
 /**
  * Singleton encapsulating the formating function 
@@ -66,8 +59,8 @@ ValueFormator = function() {
 			/*
 			 * To be send to the the datalink processor to setup possible cutout services
 			 */
-			var fovObject = {s_ra: (columnMap.s_ra != -1)? columnMap.s_ra: 9999 ,
-					s_dec: (columnMap.s_dec != -1)? columnMap.s_dec: 9999 ,
+			var fovObject = {s_ra: (columnMap.s_ra != -1)?  columnMap.s_ra : 9999 ,
+					        s_dec: (columnMap.s_dec != -1)? columnMap.s_dec: 9999 ,
 							s_fov: (columnMap.s_fov != -1)? columnMap.s_fov: 9999 };
 			/*
 			 * The mime type is specified: we can take into account the type of response withpout requesting the HTTP header
@@ -115,8 +108,7 @@ ValueFormator = function() {
 		 * TODO :add SAMP message to Aladin : script.aladin.send
 		 */
 		if( value.match(/^((position)|(region)|(polygon))/i) ) {
-			tdNode.html("<a title='STC Region (click to expand)' class='dl_stc' href='#'  onclick='Modalinfo.info(\"" + value + "\", \"STC Region\");'></a>");
-			tdNode.append("<a class='dl_samp' title='Broadcast to SAMP'   href='#' onclick='WebSamp_mVc.fireSendAladinScript(\"" +value + "\"); return false;'/></a>");
+			addSTCRegionControl(tdNode, value);
 		} else if( value.startsWith("Array") ) {
 			tdNode.html("<a title='Data array(click to expand)' class='dl_dataarray' href='#'  onclick='Modalinfo.info(\"" + value + "\", \"Data Array\");'></a>");
 		} else if( decimaleRegexp.test(value)){
@@ -156,6 +148,14 @@ ValueFormator = function() {
 			DataLinkBrowser.startCompliantBrowser(url, "forwardxmlresource", fovObject);
 		});
 	};
+	var addSTCRegionControl = function(tdNode, stcRegion) {
+		var region = new STCRegion(stcRegion);
+		tdNode.html("<a title='STC Region (click to expand)' class='dl_stc' href='#'></a>");
+		tdNode.first("a").click(function() {
+			Modalinfo.showSTCRegion(region);
+		})
+		tdNode.append("<a class='dl_samp' title='Broadcast to SAMP'   href='#' onclick='WebSamp_mVc.fireSendAladinScript(\"" + region.getAladinScript() + "\"); return false;'/></a>");				
+	}
 	/**
 	 * Get the URL infos asynchronously: formating must be achieved inside the callback
 	 */

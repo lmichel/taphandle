@@ -5,7 +5,7 @@
 function setTitlePath(treepath) {
 	Out.info("title " + treepath);
 	var job = (treepath.jobid == null)? "": '&gt;'+ treepath.jobid;
-	$('#titlepath').html('<i>' + treepath.nodekey + '&gt;' + treepath.schema + '&gt;'+ treepath.table+ job);
+	$('#titlepath').html(treepath.nodekey + '&gt;' + treepath.schema + '&gt;'+ treepath.table+ job);
 }
 
 function getQLimit() {
@@ -25,6 +25,9 @@ function switchArrow(id) {
 	}
 }
 
+/*
+ * move to saadajsbasic
+ *
 function quoteTableName(tableName){
 	var regex = /([^.]*)\.(.*)/;
 	var results = regex.exec(tableName);
@@ -45,4 +48,5 @@ function quoteTableName(tableName){
 	} else {
 		return schema + '"' + table +'"';
 	}
-}
+	*
+}*/

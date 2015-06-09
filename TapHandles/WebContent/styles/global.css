@@ -475,7 +475,9 @@ a:active.sesame {
 }
 
 .pagetitlepath {
-	font-style: italic;
+	font-style: normal;
+	color: lightblue; 
+	font-weight: bold;
 	font-size: 150%
 }
 /*******************************************************
