@@ -34,7 +34,7 @@ resourceLoader = function() {
 	                 "jquery.prints.js",
 	                 "jquery.tooltip.js",
 	                 "jquery.form.js",
-	                 "aladin.min.js"
+	                 "aladin.js"
 	                 ];
 	var js = new Array();  // global list of JS to load
 

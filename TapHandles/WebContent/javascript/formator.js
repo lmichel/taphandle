@@ -59,9 +59,9 @@ ValueFormator = function() {
 			/*
 			 * To be send to the the datalink processor to setup possible cutout services
 			 */
-			var fovObject = {s_ra: (columnMap.s_ra != -1)?  columnMap.s_ra : 9999 ,
-					        s_dec: (columnMap.s_dec != -1)? columnMap.s_dec: 9999 ,
-							s_fov: (columnMap.s_fov != -1)? columnMap.s_fov: 9999 };
+			var fovObject = {s_ra: (columnMap.s_ra != -1)?  parseFloat(values[columnMap.s_ra]) : 9999 ,
+					        s_dec: (columnMap.s_dec != -1)? parseFloat(values[columnMap.s_dec]): 9999 ,
+							s_fov: (columnMap.s_fov != -1)?parseFloat( values[columnMap.s_fov]): 9999 };
 			/*
 			 * The mime type is specified: we can take into account the type of response withpout requesting the HTTP header
 			 */

@@ -6542,11 +6542,11 @@ Link_mVc.prototype = {
 				return "<a class=dldownload href='#' onclick='DataLinkBrowser.startCompliantBrowser(&quot;" +  this.linkInstance.access_url  + "&quot)' title='Download link target'></a>";
 			} else if( this.linkInstance.semantics.endsWith("#preview") ){
 				return "<a class='dlinfo' title='Get info about' href='#' onclick='LinkProcessor.fireGetProductInfo(\"" + this.linkInstance.access_url + "\"); return false;'></a>"
-			         + "<a class=dldownload href='#' onclick='Modalinfo.openIframePanel(&quot;" +  this.linkInstance.access_url  + "&quot)' title='Download link target'></a>";
+				+ "<a class=dldownload href='#' onclick='Modalinfo.openIframePanel(&quot;" +  this.linkInstance.access_url  + "&quot)' title='Download link target'></a>";
 			} else if( this.linkInstance.semantics.endsWith("#proc") || this.linkInstance.semantics.endsWith("#this")){
 				return "<a class='dlinfo' title='Get info about' href='#' onclick='LinkProcessor.fireGetProductInfo(\"" + this.linkInstance.access_url + "\"); return false;'></a>"
-				     + "<a class=dldownload href='#' onclick='PageLocation.changeLocation(&quot;" +  this.linkInstance.access_url  + "&quot)' title='Download link target'></a>"
-				     + "<a class='dlivoalogo'  href='#' onclick='LinkProcessor.processToSampWithParams(\"" + this.linkInstance.access_url + "\", \"" + this.linkInstance.semantics + "\");' title='broadcast to SAMP'></a>"
+				+ "<a class=dldownload href='#' onclick='PageLocation.changeLocation(&quot;" +  this.linkInstance.access_url  + "&quot)' title='Download link target'></a>"
+				+ "<a class='dlivoalogo'  href='#' onclick='LinkProcessor.processToSampWithParams(\"" + this.linkInstance.access_url + "\", \"" + this.linkInstance.semantics + "\");' title='broadcast to SAMP'></a>"
 				;
 			} else {
 				return "<a class=dldownload href='#' onclick='Modalinfo.openIframePanel(&quot;" +  this.linkInstance.access_url  + "&quot)' title='Download link target'></a>";	
@@ -6598,7 +6598,7 @@ Link_mVc.prototype = {
 						var divAladin = paramId + "_aladin";
 						html += "    <span id='cutoutParam'><b>" + paramName + "</b></span><span class=help> " 
 						+ description + "</b></span><br><textarea id='" + divId + "' style='width:100%;' rows='3' name='" 
-						+ paramName +"'>Aladin lite</textarea><br><div id='" + divAladin + "' style='width: 400px; height: 400px'></div>";
+						+ paramName +"'>POLYGON ICRS</textarea><br><div id='" + divAladin + "' style='width: 400px; height: 400px'></div>";
 						this.aladins.push(divAladin);
 						/*
 						 * Parmas with a defined value range: use either a slider or a choice menu
@@ -6685,44 +6685,80 @@ Link_mVc.prototype = {
 		buildRegionEditors : function(fovObject){
 			for( var i=0 ; i<this.aladins.length ; i++ ) {
 				var div = this.aladins[i];
+				var message = "";
 				if( div.length != 0){
-					if( !('s_ra' in fovObject) || !('s_dec' in fovObject) || !('s_fov' in fovObject)) {
-						div.text("cannot acess object position");
-					}else  {
-						size = fovObject.s_fov/2;
-						var ra_min = ((fovObject.s_ra - size) < 0)  ? (360 + (fovObject.s_ra - size)):  
-							((fovObject.s_ra - size) > 360)? (360 - (fovObject.s_ra - size)): (fovObject.s_ra - size);
-
-						var dec_min = ((fovObject.s_dec - size) < -90)? (-180 - (fovObject.s_dec - size)):  
-							((fovObject.s_dec - size) >  90)? ( 180 - (fovObject.s_dec - size)):   (fovObject.s_dec - size);
-
-						var ra_max = ((fovObject.s_ra + size) < 0)  ? (360 + (fovObject.s_ra + size)):  
-							((fovObject.s_ra + size) > 360)? (360 - (fovObject.s_ra + size)): (fovObject.s_ra + size);
-
-						var dec_max = ((fovObject.s_dec + size) < -90)? (-180 - (fovObject.s_dec + size)):  
-							((fovObject.s_dec + size) >  90)? ( 180 - (fovObject.s_dec + size)):   (fovObject.s_dec + size);
-						points = [
-						          ra_min, dec_min,
-						          ra_min, dec_max,
-						          ra_max, dec_max,
-						          ra_max, dec_min,
-						          ];
-						var initRegion = {type: "array", value: points};
-						var regionEditor = new RegionEditor_mVc  (div
-							, function(params){			
-								str = "polygon ICRS ";
-								var pts = params.region.points
-								for( var i=0 ; i<pts.length ; i++) {
-									str += pts[i][0] + " " +pts[i][1] + " "; 
-								}
-								$("#" + div.replace("aladin", "input")).text(str);
+					var points = [];
+					if( !('s_ra' in fovObject) || !('s_dec' in fovObject) ) {
+						message = "CUTOUT Link: Cannot access object position: set it by hand";
+					} else {
+						var ra = fovObject.s_ra;
+						var dec = fovObject.s_dec;
+						if( ra < 0 || ra > 360 || dec <-90 || dec >90 ) {
+							message = "CUTOUT Link: No valid position for this object: set it by hand";
+						} else {
+							var fov;
+							/*
+							 * Take 1' as FoV by default
+							 */
+							if ( !(('s_fov' in fovObject) && (fov = fovObject.s_fov) > 0 && fov < 180 )){
+								fov = 1/60;
 							}
-							, [fovObject.s_ra ,fovObject.s_dec ] 
-							); 		
-						regionEditor.init();	
-						$(".aladin-box").css("z-index", (9999));
+
+							size = fov/2;
+							var ra_min = ((ra - size) < 0)  ? (360 + (ra - size)): ((ra - size) > 360)? (360 - (ra - size)): (ra - size);
+							var dec_min = ((dec - size) < -90)? (-180 - (dec - size)):  ((dec - size) >  90)? ( 180 - (dec - size)):   (dec - size);
+							var ra_max = ((ra + size) < 0)  ? (360 + (ra + size)): ((ra + size) > 360)? (360 - (ra + size)): (ra + size);
+							var dec_max = ((dec + size) < -90)? (-180 - (dec + size)): ((dec + size) >  90)? ( 180 - (dec + size)):   (dec + size);
+
+							points = [
+							          ra_min, dec_min,
+							          ra_min, dec_max,
+							          ra_max, dec_max,
+							          ra_max, dec_min,
+							          ];								
+						}
+					}
+					var regionEditor = new RegionEditor_mVc  (div
+							, function(params){			
+						str = "polygon ICRS ";
+						var pts = params.region.points
+						for( var i=0 ; i<pts.length ; i++) {
+							str += parseFloat(pts[i][0]).toFixed(6) + " " +parseFloat(pts[i][1]).toFixed(6) + " "; 
+						}
+						$("#" + div.replace("aladin", "input")).text(str);
+					}
+					, [fovObject.s_ra ,fovObject.s_dec ] 
+					); 		
+					regionEditor.init();	
+					$(".aladin-box").css("z-index", (9999));
+					if( message != ""){
+						Modalinfo.info(message);								
+					}
+
+					if( points.length > 0 ) {
+						var initRegion = {type: "array", value: points};
 						Processing.show("init Aladin");
-						setTimeout(function() {regionEditor.setInitialValue( {type: "array", value: points});Processing.hide();}, 2000)
+						setTimeout(function() {
+							regionEditor.setInitialValue( initRegion );
+							Processing.hide();
+						}
+						, 1000);
+						/*
+						 * We need to draw a polygon in any case; otherwise AL loops for even in the view.redraw function 
+						 * from the second time the modal is open
+						 */
+					} else {
+						var initRegion = {type: "array", value: [1,2,1.1, 2, 1.1, 2.1]};
+						Processing.show("init Aladin");
+						setTimeout(function() {
+							regionEditor.setInitialValue( initRegion );
+							regionEditor.clean();						
+							$("#" + div.replace("aladin", "input")).text("POLYGON ICRS");
+
+							Processing.hide();
+						}
+						, 1000);
+					
 					}
 				}
 			}
@@ -9806,9 +9842,6 @@ RegionEditor_Mvc.prototype = {
 			//console.log('this.skyPositions: ' + this.skyPositions);
 			if(this.skyPositions != null)
 			{
-				console.log("ALSM " + this.skyPositions);
-
-
 				//console.log('this.skyPositions' + this.skyPositions);
 				//console.log('this.node' + this.node);					
 				this.node = [];
@@ -9890,11 +9923,18 @@ RegionEditor_Mvc.prototype = {
 				this.overlay = A.graphicOverlay({color: 'red'});
 				this.aladin.addOverlay(this.overlay);
 			}
-			this.overlay.removeAll();	       
+			this.overlay.removeAll();	  
 			this.overlay.addFootprints(A.polygon(this.skyPositions));
 			this.PolygonCenter();
 		},
-
+		setOverlay: function(points)
+		{
+			if (this.overlay==null) {
+				this.overlay = A.graphicOverlay({color: 'red'});
+				this.aladin.addOverlay(this.overlay);
+			}
+			this.overlay.removeAll();	  
+		},
 		//function pour effacer le poligone de this.canvas
 		CleanPoligon: function()
 		{
@@ -10017,9 +10057,8 @@ console.log('=============== >  RegionEditor_m.js ');
  * Manager of the view of the region editor
  * 
  * Author Gerardo Irvin Campos yah
- */
-function 
-RegionEditor_mVc(parentDivId, handler, points){
+ */ 
+function RegionEditor_mVc(parentDivId, handler, points){
 	this.parentDivId = parentDivId;
 	this.drawCanvas = null; // canvas where the polygon is drawn
 	this.drawContext = null;
@@ -10034,12 +10073,19 @@ RegionEditor_mVc.prototype = {
 		init: function (data){
 			// création instance d'Aladin lite
 			$('#' + this.parentDivId).append('<div id="' + this.parentDivId + '_aladin" style="width: 390px; height: 320px;"></div><div id="' + this.parentDivId + '_button"></div>');
-			this.aladin = $.aladin('#' + this.parentDivId + '_aladin', {showControl: true, fov: 0.5, target: "orion", cooFrame: "J2000", survey: "P/DSS2/color", showFullscreenControl: false, showFrame: false, showGotoControl: false});
+				this.aladin = $.aladin('#' + this.parentDivId + '_aladin'
+					, {showControl: true, 
+				      fov: 0.5, 
+				      target: "orion", 
+				      cooFrame: "ICRS", 
+				      survey: "P/DSS2/color", 
+				      showFullscreenControl: false, 
+				      showFrame: false, 
+				      showGotoControl: false});
 			//this.aladin.setImageSurvey("P/XMM/PN/color");
 			this.aladin.setImageSurvey("P/DSS2/color");
 			this.parentDiv = this.aladin.getParentDiv();
 			$('#' + this.parentDivId).css("position", "relative");
-
 			// création du canvas pour éditeur régions
 			/*
 			 * Be cautious: the canvas context must be taken before the canvas is appended to the parent div, otherwise the geometry is wrong. 
@@ -10148,6 +10194,20 @@ RegionEditor_mVc.prototype = {
 
 		},
 		/**
+		 * Operate the drawing removal from outside 
+		 */
+		clean: function() {
+			this.controller.CleanPoligon();				
+			this.setEditMode();
+			this.controller.DeleteOverlay()
+			this.lineContext.clearRect(0, 0, this.lineCanvas[0].width, this.lineCanvas[0].height);            
+			this.drawContext.clearRect(0, 0, this.drawCanvas[0].width, this.drawCanvas[0].height);
+			this.controller.almacenar();	       
+			this.controller.recuperar();   
+			this.setBrowseMode();
+
+		},
+		/**
 		 * Initalize the darw with the default parameter. If points contains a region, it is drawn, 
 		 * if it just contain a position, AladinLite is centered on that position
 		 * @param points  object denoting the initial value of the polygone : {type: ... value:} type is format of the 
@@ -10187,7 +10247,6 @@ RegionEditor_mVc.prototype = {
 					Modalinfo.error("Polygone format " + points.type + " not understood");
 					return;
 				}
-//				this.points = [84.24901652054093, -5.640882748140112,83.34451837951998, -6.103216341255678,83.60897420186223, -4.553808802262613, 84.24901652054093, -5.640882748140112];			
 				this.setBrowseMode();
 				this.controller.DeleteOverlay()
 				this.controller.setPoligon(pts);
@@ -47922,9 +47981,9 @@ ValueFormator = function() {
 			/*
 			 * To be send to the the datalink processor to setup possible cutout services
 			 */
-			var fovObject = {s_ra: (columnMap.s_ra != -1)?  columnMap.s_ra : 9999 ,
-					        s_dec: (columnMap.s_dec != -1)? columnMap.s_dec: 9999 ,
-							s_fov: (columnMap.s_fov != -1)? columnMap.s_fov: 9999 };
+			var fovObject = {s_ra: (columnMap.s_ra != -1)?  parseFloat(values[columnMap.s_ra]) : 9999 ,
+					        s_dec: (columnMap.s_dec != -1)? parseFloat(values[columnMap.s_dec]): 9999 ,
+							s_fov: (columnMap.s_fov != -1)?parseFloat( values[columnMap.s_fov]): 9999 };
 			/*
 			 * The mime type is specified: we can take into account the type of response withpout requesting the HTTP header
 			 */
