@@ -57,7 +57,6 @@ public class JoinKeysJob extends RootClass {
 			logger.info("Get join keys for node " + url );
 			tryJoinKeys(url, schema_query, baseDirectory);
 		} catch (Exception e) {
-			e.printStackTrace();
 			try {
 				logger.warn("Error when getting Join keys (" + schema_query + "), try a query without schema" );
 				tryJoinKeys(url, noschema_query, baseDirectory);
