@@ -50,6 +50,15 @@ if(!String.prototype.trim){
 	String.prototype.trim = function(){
 	} ;
 };
+
+function isNumber(val) {
+	var exp = new RegExp("^[+-]?[0-9]*[.]?[0-9]*([eE][+-]?[0-9]+)?$","m"); 
+	return exp.test(val);
+}
+
+var decimaleRegexp = new RegExp("^[+-]?[0-9]*[.][0-9]*([eE][+-]?[0-9]+)?$","m"); 
+var bibcodeRegexp  = new RegExp(/^[12][089]\d{2}[A-Za-z][A-Za-z0-9&][A-Za-z0-9&.]{2}[A-Za-z0-9.][0-9.][0-9.BCRU][0-9.]{2}[A-Za-z0-9.][0-9.]{4}[A-Z:.]$/);	
+
 /**
  * return the last node of file pathname
  */
@@ -69,39 +78,216 @@ if(!String.prototype.xtractFilename){
 /**
  * Quotes the element of a data treepath which cannot be understood by SQL
  * e.g. 
- * "alert(
-    'vizls.II/306/sdss8'.quotedTableName() + '\n' +
-    'vizls.II/306/sdss8.OBS'.quotedTableName() + '\n' +
-    'viz2.J/other/KFNT/15.483/jovsat'.quotedTableName() + '\n' +
-    'viz2.J/other/KFNT/15.483/jovsat.OBS'.quotedTableName());
+ * test:
+ * 
+  alert(
+	    'vizls.II/306/sdss8'.quotedTableName() + '\n' +
+	    'vizls.II/306/sdss8.OBS'.quotedTableName() + '\n' +
+	    'viz2.J/other/KFNT/15.483/jovsat'.quotedTableName() + '\n' +
+	    'viz2.J/other/KFNT/15.483/jovsat.OBS'.quotedTableName()+ '\n' +
+	    'viz2."J/other/KFNT/15.483/jovsat.OBS"'.quotedTableName()+ '\n' +
+	    '"viz2"."J/other/KFNT/15.483/jovsat.OBS"'.quotedTableName()+ '\n' +
+	    'J/other/KFNT/15.483/jovsat.OBS'.quotedTableName()+ '\n' +
+	    'ivoa.obcore.s_ra'.quotedTableName()
+	    
+);
  */
 
 if (!String.prototype.quotedTableName) {
 	String.prototype.quotedTableName = function () {
+		/*
+		 * already quoted, nothing to do
+		 */
+		if( this.indexOf("\"") >= 0  ){
+			return this;
+		}
 		var results = this.split(".");
-		var tbl = new Array(results[0]);
-		if (results.length > 1) {
-			for (var i = 1; i < results.length; i++) {
+		var tbl = new Array();
+		/*
+		 * One element: take it as as whole
+		 */
+		if( results.length == 1 ) {
+				tbl.push(this);
+        } 
+		/*
+		 * a.b could be either schema.table or just a table name including a dot.
+		 */
+		else if( results.length == 2 ) {
+			/*
+			 * If the dot is followed by number, it cannot be a separator since a table name cannot start with number
+			 */
+			if (results[1].match(/^[0-9].*/)) {
+				tbl.push(this);
+			}
+			/*
+			 * Otherwise there is no way to determine the matter, but we can suppose that we are dealing with Vizier
+			 * So, if both path elements contain a / we are having to do with a simple table name
+			 */
+			else if( !results[0].match(/^[a-zA-Z_][a-zA-Z0-9_]*$/) ) {
+				tbl.push(this);
+			} else {
+				tbl.push(results[0]);
+				tbl.push(results[1]);				
+			}
+			/*
+			 * In this case, we have to know if the first element is a schema or the first part of a table name
+			 * We suppose that schemas have regular names 
+			 */
+		} else if (results.length > 2 ) {
+			/*
+			 * Gamble on a schema name 
+			 */
+			if(results[0].match(/^[a-zA-Z_][a-zA-Z0-9_]*$/) ) {
+				tbl.push(results[0]);
+				tbl.push(results[1]);
+				var last = results[results.length -1];
 				/*
-				 * If a field starts with a dot we suppose that this dot is not a treepath separator but
-				 * that is belongs to that field since table names or columns names do not spart with a number
+				 * The last one is certainly a field name
 				 */
-				if (results[i].match(/^[0-9].*/)) {
-					tbl[tbl.length - 1] += "." +results[i];
+				if( last.match(/^[a-zA-Z_][a-zA-Z0-9_]*$/) ) {
+					for (var i = 2; i < (results.length -1); i++) {
+						tbl[tbl.length - 1] += "." +results[i];
+					}	
+					tbl.push(last);
 				} else {
-					tbl.push(results[i]);
+					for (var i = 2; i < results.length; i++) {
+						tbl[tbl.length - 1] += "." +results[i];
+					}
 				}
+			} else {
+				tbl.push(this);
 			}
 		}
 		for (var j = 0; j < tbl.length; j++) {
 			if (!tbl[j].match(/^[a-zA-Z0-9][a-zA-Z0-9_]*$/)) {
 				tbl[j] = '"' + tbl[j] + '"';
 			}
-		}
+		}		
 		return tbl.join(".");
 	};
 }
+/**
+ * Quotes the element of a data treepath which cannot be understood by SQL
+ * e.g. 
+ * test:
+ * 
+   alert(
+	    JSON.stringify('vizls.II/306/sdss8'.getTreepath()) + '\n' +
+	    JSON.stringify('vizls.II/306/sdss8.OBS'.getTreepath()) + '\n' +
+	    JSON.stringify('viz2.J/other/KFNT/15.483/jovsat'.getTreepath()) + '\n' +
+	    JSON.stringify('viz2.J/other/KFNT/15.483/jovsat.OBS'.getTreepath())+ '\n' +
+	    JSON.stringify('viz2."J/other/KFNT/15.483/jovsat.OBS"'.getTreepath())+ '\n' +
+	    JSON.stringify('"viz2"."J/other/KFNT/15.483/jovsat.OBS"'.getTreepath())+ '\n' +
+	    JSON.stringify( 'J/other/KFNT/15.483/jovsat.OBS'.getTreepath())+ '\n' +
+	    JSON.stringify('ivoa.obcore.s_ra'.getTreepath())
+        );
+);
+ */
 
+if (!String.prototype.getTreepath) {
+	String.prototype.getTreepath = function () {
+		var retour = {
+		  schema: ''
+		, tableorg: this.valueOf()
+		, table: ''};
+		var results = this.split(".");
+		var tbl = new Array();
+		/*
+		 * One element: assumed to a table
+		 */
+		if( results.length == 1 ) {
+			retour.table = this.valueOf();			
+		}
+		
+		/*
+		 * a.b could be either schema.table or just a table name including a dot.
+		 */
+		else if( results.length == 2 ) {
+			/*
+			 * If the dot is followed by number, it cannot be a separator since a table name cannot start with number
+			 */
+			if (results[1].match(/^[0-9].*/)) {
+				retour.table = this.valueOf();
+			}
+			/*
+			 * Otherwise there is no way to determine the matter, but we can suppose that we are dealing with Vizier
+			 * So, if both path elements contain a / we are having to do with a simple table name
+			 */
+			else if( !results[0].match(/^[a-zA-Z_][a-zA-Z0-9_]*$/) ) {
+				retour.table = this.valueOf();
+			} else {
+				retour.schema = results[0];
+				retour.table = results[1];
+			}
+			/*
+			 * In this case, we have to know if the first element is a schema or the first part of a table name
+			 * We suppose that schemas have regular names 
+			 */
+		} else if (results.length > 2 ) {
+			/*
+			 * Gamble on a schema name 
+			 */
+			if(results[0].match(/^[a-zA-Z_][a-zA-Z0-9_]*$/) ) {
+				retour.schema = results[0];
+				retour.table = results[1];
+				var last = results[results.length -1];
+				/*
+				 * The last one is certainly a field name
+				 */
+				if( last.match(/^[a-zA-Z_][a-zA-Z0-9_]*$/) ) {
+					for (var i = 2; i < (results.length -1); i++) {
+						retour.table += "." +results[i];
+					}	
+				} else {
+					for (var i = 2; i < results.length; i++) {
+						retour.table += "." +results[i];
+					}
+				}
+			} else {
+				retour.table = this.valueOf();
+			}
+		}
+		return retour;
+	};
+}
+
+/**
+ * Basic sky geometry fucntions
+ */
+SkyGeometry = function() {
+	/**
+	 * 
+	 */
+	var toRadians = function(alpha){
+		return alpha*Math.PI/180;
+	}
+	/**
+	 * 
+	 */
+	var toDegrees = function(alpha){
+		return alpha*180/Math.PI;
+	}
+	/**
+	 * 
+	 */
+	var  distanceDegrees = function(ra0, de0, ra1, de1){
+		var  rra0 = toRadians(ra0);
+		var  rra1 = toRadians(ra1);
+		var  rde0 = toRadians(de0);
+		var  rde1 = toRadians(de1);
+		return toDegrees(Math.acos((Math.sin(rde0)*Math.sin(rde1)) +
+				(Math.cos(rde0)*Math.cos(rde1) * Math.cos(rra0-rra1))));
+	}
+	/*
+	 * exports
+	 */
+	var pblc = {};
+	pblc.toRadians = toRadians;
+	pblc.toDegrees = toDegrees;
+	pblc.distanceDegrees = distanceDegrees;
+	return pblc;
+
+}();
 
 /*****************************************************
  * Some global variables
@@ -266,6 +452,23 @@ Modalcommand = function() {
 				, zIndex: (zIndexModalinfo -1)
 				, close: chdl});
 	};
+	/**
+	 * Open a modal dialog with an handler called once the html is attached to the DOM
+	 */
+	var commandPanelAsync = function (title, htmlContent, openHandler, closeHandler) {
+		initDiv();
+		var chdl = ( closeHandler == null )? function(ev, ui)  {}: closeHandler;
+		var ohdl = ( openHandler == null )? function(ev, ui)  {}: openHandler;
+		$(divSelect).html(htmlContent);
+		$(divSelect).dialog({ modal: true
+			, resizable: false
+			, width: 'auto'
+				, title: title 			                      
+				, zIndex: (zIndexModalinfo -1)
+				, close: chdl
+				, open: ohdl
+				});
+	};
 	var setDivToggling = function(handler) {
 		$(divSelect + " fieldset legend").click(function() {
 			$(this).parent().find("div").first().toggle(handler);		  
@@ -276,6 +479,7 @@ Modalcommand = function() {
 	 */
 	var pblc = {};
 	pblc.commandPanel = commandPanel;
+	pblc.commandPanelAsync = commandPanelAsync;
 	pblc.setDivToggling = setDivToggling;
 	return pblc;
 }();
@@ -319,7 +523,7 @@ Modalinfo = function() {
 		if( $(iframeSelect).length != 0){		
 			$(iframeSelect).remove();
 		}		
-		$(document.documentElement).append("<div id=" + iframeId + " style='display: none; width: auto; hight: auto;'></div>");
+		$(document.documentElement).append("<div id=" + iframeId + " style='display: none; width: auto; hight: auto;'>Waiting for server response...</div>");
 	}; 
 	var initPopupDiv = function() {
 		/*
@@ -465,7 +669,7 @@ Modalinfo = function() {
 			+ " <a class=dldownload href='#' onclick='PageLocation.changeLocation(&quot;" 
 			+ url + "&quot;, &quot;" + fileName 
 			+ "&quot;);' title='Open in a new tab or download' style='display: inline-block;'></a></span>";
-		$(iframeSelect).html("<iframe style='width: 98%; height: 98%;'></iframe>");
+		$(iframeSelect).html("<iframe style='width: 98%; height: 98%;'>Waiting on server response...</iframe>");
 		$(iframeSelect).dialog({ modal: true
 			, resizable: true
 			, width: ($(window).width()*0.9)
@@ -474,6 +678,11 @@ Modalinfo = function() {
 			, zIndex: zIndexModalinfo
 			, close: function(){$(iframeSelect).html("");} // avoid the src to be called again
 		});
+		//$(iframeSelect + " iframe").attr("src", "data:text/html;charset=utf-8," + escape("Waiting on server response..."));
+
+//		$(iframeSelect + " iframe").on("load", function () {
+//		alert("loxade " + $(this).length);
+//		});
 		$(iframeSelect + " iframe").attr("src", url);
 	};
 
@@ -836,7 +1045,7 @@ PageLocation = function () {
 		}
 		Out.info("Download " + url);
 		if( downloadIframe == null ) {
-			$(document.body).append('<iframe id="downloadIframe" src="' + url + '" style="display: hiddden;"></iframe>');
+			$(document.body).append('<iframe id="downloadIframe" src="' + url + '" style="display: hiddden;">Waitng for server response...</iframe>');
 			this.downloadIframe =  $("#downloadIframe");
 		} else {
 			this.downloadIframe.attr("src", url);
@@ -2435,12 +2644,76 @@ WebSamp_mVc = function() {
 				+ '- Click on the broadcast icon if you want your data to be sent to all clients.');
 		setPostHelp('');
 		removeAllItems();				
-		var callback = (requete.type == "oid" )? "WebSamp_mVc.fireSendFileToClient"
-				:(requete.type == "voreport") ? "WebSamp_mVc.fireSendUrlToClient"
-						:(requete.type == "skyat") ?"WebSamp_mVc.fireSendSkyatToClient"
-								: "";
+		var callback = (requete.type == "oid" )     ? "WebSamp_mVc.fireSendFileToClient"
+				      :(requete.type == "voreport") ? "WebSamp_mVc.fireSendUrlToClient"
+					  :(requete.type == "skyat")    ? "WebSamp_mVc.fireSendSkyatToClient"
+					  :(requete.type == "script")   ? "fireSendAladinScript"
+					  : "";
 		var found = false;
 		for (ident in sampClients) {
+			found = true;
+			if (sampClients[ident].meta && sampClients[ident].subs) {
+				var meta = sampClients[ident].meta;
+
+				var onclick = (callback == "")? "Modalinfo.info(&quot;No message to send&quot;);"
+						: callback + "(\"" +  ident + "\");";
+				addItem("<img class=clickableicon align=bottom style='height: 32px; border: 0px;' src='"
+						+ meta["samp.icon.url"]
+						+ "' onclick='" + onclick + "'>"
+						+ "<span class=help> <b>"
+						+ meta["samp.name"]
+						+ "</b> "
+						+ meta["samp.description.text"]
+						+ " </span><a style='font-color: blue; font-size: small; font-style: italic;' target=_blank href='"
+						+ meta["home.page"] + "'>read more...</a>");
+			}
+		}
+		if (found) {
+			addItem("<a class=sampOn "
+					+ " onclick='" + callback + "(null);'></a>"
+					+ "<span class=help> <b>Broadcast</b> to any client");
+			openModalWithClose();
+		} else {
+			fireCloseModal();
+			Modalinfo.info("No SAMP Clients Available: Is your Hub still running?");			
+			if (fireIsConnected()) showConnectionOff();
+
+		}
+	};
+	var processOrShowClientList = function(callback) {
+		var cpt=0;
+		var loneIdent="";
+		for (var ident in sampClients) {
+			cpt++;
+			loneIdent = ident;
+		}
+		if( cpt == 1) {
+			if(requete.type == "oid" ){
+				WebSamp_mVc.fireSendFileToClient(loneIdent);
+			} else if(requete.type == "voreport") {
+				WebSamp_mVc.fireSendUrlToClient(loneIdent);
+			} else if( requete.type == "skyat") {
+				WebSamp_mVc.fireSendSkyatToClient(loneIdent);
+			} else if( requete.type == "script"){
+				WebSamp_mVc.fireSendAladinScript(loneIdent);
+			}
+			return;
+		}
+		Out.debug("showClientList");
+		setIvoaIcon();
+		setTitle("Available SAMP Clients");
+		setHelp('Below is the list of SAMP clients accepting data<br>\n'
+				+ '- Click on the icon of the client you want to send data.<BR>'
+				+ '- Click on the broadcast icon if you want your data to be sent to all clients.');
+		setPostHelp('');
+		removeAllItems();				
+		var callback = (requete.type == "oid" )? "WebSamp_mVc.fireSendFileToClient"
+			      :(requete.type == "voreport") ? "WebSamp_mVc.fireSendUrlToClient"
+				  :(requete.type == "skyat") ?"WebSamp_mVc.fireSendSkyatToClient"
+				  :(requete.type == "script") ?"fireSendAladinScript"
+				  : "";
+		var found = false;
+		for (var ident in sampClients) {
 			found = true;
 			if (sampClients[ident].meta && sampClients[ident].subs) {
 				var meta = sampClients[ident].meta;
@@ -2512,10 +2785,10 @@ WebSamp_mVc = function() {
 	 */		
 	var fireCloseModal = function() {
 		if( modalOpen ) {
-		modalOpen = false;
-		waitForHub = false;
-		mode = SLEEPING;
-		Modalinfo.close();
+			modalOpen = false;
+			waitForHub = false;
+			mode = SLEEPING;
+			Modalinfo.close();
 		}
 	};
 	var fireSendOid = function(oid, mtype, displayName) {
@@ -2563,6 +2836,22 @@ WebSamp_mVc = function() {
 			fireCloseModal();
 		});
 	};
+	var fireSendAladinScript = function(script) {		
+		if (!fireIsConnected()) {
+			fireRegisterToHub();
+		} else {
+			requete = {type: "script", param: script};			
+			mode = SENDDATA;
+			var mtype = "script.aladin.send";
+			var message = new Object();
+			message["samp.mtype"] = mtype;
+			message["samp.params"] = {"script": script};
+			Processing.showAndHide("Script sent to Aladin "+  JSON.stringify(message));
+			listener.controlSendFileToClient(null, message); 
+			fireCloseModal();
+		}
+
+	};
 	var fireSendVoreport = function(reportUrl, mtype, name) {
 		mode = SENDDATA;
 		requete = {type: "voreport"
@@ -2579,10 +2868,12 @@ WebSamp_mVc = function() {
 			 */
 			for (ident in sampClients) {
 				cpt++;
-				showClientList();
-				return ;
 			}
-			fireSendUrlToClient(null);
+			if( cpt > 1){
+				showClientList();
+			} else {
+				fireSendUrlToClient(null);
+			}
 		}
 	};
 	var fireSendUrlToClient = function(target) {
@@ -2620,10 +2911,12 @@ WebSamp_mVc = function() {
 			var cpt=0;
 			for (ident in sampClients) {
 				cpt++;
-				showClientList();
-				return ;
 			}
-			fireSendSkyatToClient(null);
+			if( cpt > 1){
+				showClientList();	
+			} else {
+				fireSendSkyatToClient(null);
+			}
 		}
 	};	
 	var fireSendSkyatToClient = function(target) {
@@ -2667,7 +2960,7 @@ WebSamp_mVc = function() {
 		if (!fireIsConnected()) {
 			fireRegisterToHub();
 //			if (!fireIsConnected()) {
-//				showHupLauncher();
+//			showHupLauncher();
 //			}
 
 		} else {
@@ -2779,6 +3072,7 @@ WebSamp_mVc = function() {
 	jss.fireSendFileToClient = fireSendFileToClient;
 	jss.fireSendVoreport = fireSendVoreport;
 	jss.fireSendUrlToClient = fireSendUrlToClient;
+	jss.fireSendAladinScript = fireSendAladinScript;
 	jss.fireSendSkyat = fireSendSkyat; //
 	jss.fireSendSkyatToClient = fireSendSkyatToClient;
 	jss.fireRegisterToHubAttempt = fireRegisterToHubAttempt;//
@@ -5851,7 +6145,7 @@ DataLink_mVc.prototype = {
 				var productType ="";
 				var contentType ="";
 				var size ="";
-				
+
 				var type = $(this).find('TD').each(function(){
 					hasLink = true;
 					switch(i){
@@ -5873,9 +6167,9 @@ DataLink_mVc.prototype = {
 				html += "</fieldset>";
 			});
 			if( hasLink){
-			Modalcommand.commandPanel("Link Browser", html);
-			$("div.datalinkform").toggle();
-			Modalcommand.setDivToggling(function() {that.buildWebserviceForm($(this).attr("id"));});
+				Modalcommand.commandPanel("Link Browser", html);
+				$("div.datalinkform").toggle();
+				Modalcommand.setDivToggling(function() {that.buildWebserviceForm($(this).attr("id"));});
 			} else {
 				Modalinfo.info("No link available", "Datalink Info");
 			}
@@ -6047,6 +6341,531 @@ DataLink_mVc.prototype = {
 		}
 
 };
+
+
+/**
+ * Subclass of DataLink_mVc handler
+ * @returns {UcdQEditor_mVc}
+ */
+function CompliantDataLink_mVc(params /* { parentDivId: 'query_div',baseurl, dataobject}*/){
+	DataLink_mVc.call(this, params);
+	this.dataObject = ('dataobject' in params )? params.dataobject: {};
+	this.linkMap = new Array();
+
+	var that = this;
+};
+
+/**
+ * Method overloading
+ */
+CompliantDataLink_mVc.prototype = Object.create(DataLink_mVc.prototype, {	
+	draw : { 
+		value: function() {
+			var that = this;
+			var url  = (this.forwardurl != null )? (this.forwardurl+ "?target=" + encodeURIComponent( this.baseurl))
+					: this.baseurl;
+			Processing.show("Fetching Compliant Datalink Description at " + url);
+			$.ajax({
+				type: "GET",
+				url: url,
+				dataType: "xml",      
+				error: function (xhr, ajaxOptions, thrownError) {
+					Processing.hide();
+					Modalinfo.error(url + "\n" + xhr.responseText + "\n" + thrownError);
+				},
+				success: function(xml) {
+					Processing.hide();
+					if( $(xml).find('VOTABLE').length != 0 ){
+						that.processVOTABLEResponse(xml);
+					} else { 
+						Modalinfo.error(url + "\n doesn't look like a VOTable");
+						//that.processXMLResponse(xml);
+					}
+				}});
+		},
+
+	} ,
+	processVOTABLEResponse : { 
+		value: function(xml) {
+			var that = this;
+			$(xml).find('RESOURCE[type="results"]').each(function(){
+				var fieldNames = new Array();
+				$(this).find("FIELD").each(function(){
+					var id = $(this).attr("ID");
+					if( id != undefined ){
+						fieldNames.push(id);
+					} else {
+						fieldNames.push($(this).attr("name"));
+					}
+				});
+				var type = $(this).find('TR').each(function(index){
+					var i=0;
+					var obj = new  Object();
+					var type = $(this).find('TD').each(function(){
+						obj[fieldNames[i]] = $(this).text().trim();
+						i++;
+					});
+					that.linkMap.push(new Link_mVc(obj, xml, index));
+				});
+			});
+			var html = "";
+			for( var i=0 ; i<this.linkMap.length ; i++ ){
+				html += this.linkMap[i].getHtml();
+			}
+			Modalcommand.commandPanel("Link Browser", html);
+			//$("div.datalinkform").toggle();
+			Modalcommand.setDivToggling();
+
+			for( var link in this.linkMap) {
+				this.linkMap[link].buildSliders();
+				this.linkMap[link].buildRegionEditors(this.dataObject);
+			}
+		}
+	},
+	setCutoutRegion : { 
+		value: function(params) {
+			str = "POLYGON ICRS ";
+			var pts = params.region.points
+			for( var i=0 ; i<pts.length ; i++) {
+				str += pts[i][0] + " " +pts[i][1] + " "; 
+			}
+			$("textarea[name=cutout]").text(str);
+		}
+	}
+
+});
+
+function Link_mVc(instance, xml, index) {
+	this.linkInstance = instance;
+	/**
+	 * Array of XML representations of params. 
+	 * Each cells contain a reference ref which msut be use with a JQuery selector $(ref)
+	 */
+	this.params = new Array();
+	/**
+	 * Link number: requested to get the right data in TABLEDATA
+	 */
+	this.index = index; 
+	this.sliders = new Array();
+	this.aladins = new Array();
+	this.xml = xml;
+	this.setParams();
+
+}
+Link_mVc.prototype = {
+
+		setParams : function(){
+			var that = this;
+			//if( this.linkInstance.semantics != "#this") {
+			if( that.linkInstance.service_def != "#") {
+				$(this.xml).find('RESOURCE[ID="' + that.linkInstance.service_def + '"]').each(function(){
+					$(this).find('PARAM[name="accessURL"]').each(function() {
+						that.linkInstance.access_url =  $(this).attr("value");
+					});
+					$(this).find('GROUP[name="inputParams"]').each(function() {
+
+						$(this).find('PARAM').each(function() {
+							var param = {xml: $(this), value : ""};
+							var fieldPointer = $(this);
+							var x = $(this).find('VALUES');
+							/*
+							 * IF a field is referenced, its value is taken for the parameter value
+							 */
+							if( fieldPointer.attr("ref") != null ){
+								var ref = fieldPointer.attr("ref");
+								param.value = that.getFieldValueByRef(ref);
+							}
+							/*
+							 * If there is no value element attached to the PARAM, will look
+							 * if there is a field having the same name as the parameter
+							 */
+							else if( $(this).find('VALUES').length == 0 ){
+								var name = fieldPointer.attr("name");
+								param.value = that.getFieldValueByName(name);
+							}
+							that.params.push(param);
+						});
+					});
+				});
+			}
+		},
+		/**
+		 * Get the value of the field identified by ID = fieldRef
+		 * in the current column (# this.index)
+		 * @param fieldRef
+		 * @returns
+		 */
+		getFieldValueByRef : function(fieldRef){
+			var that = this;
+			var fieldIndex = -1;
+			var retour = null;
+			$(this.xml).find('FIELD').each(function(index){
+				if( $(this).attr("ID") == fieldRef) {
+					fieldIndex = index;
+				}
+			}); 
+			$(this.xml).find('TR').each(function(rowIndex){
+				if( rowIndex == that.index) {
+					$(this).find('TD').each(function(colIndex){
+						if( colIndex == fieldIndex) {
+							retour =$(this).text() ;
+						}
+					}); 
+				}
+			}); 
+			return retour;
+		},
+
+		getFieldValueByName : function(fieldRef){
+			var that = this;
+			var fieldIndex = -1;
+			var retour = null;
+			$(this.xml).find('FIELD').each(function(index){
+				if( $(this).attr("name") == fieldRef) {
+					fieldIndex = index;
+				}
+			}); 
+			$(this.xml).find('TR').each(function(rowIndex){
+				if( rowIndex == that.index) {
+					$(this).find('TD').each(function(colIndex){
+						if( colIndex == fieldIndex) {
+							retour =$(this).text() ;
+						}
+					}); 
+				}
+			}); 
+			return retour;
+		},
+
+		getSimpleLinkAction: function(){
+			if( this.linkInstance.content_type == "application/x-votable+xml;content=datalink") {
+				return "<a class=dldownload href='#' onclick='DataLinkBrowser.startCompliantBrowser(&quot;" +  this.linkInstance.access_url  + "&quot)' title='Download link target'></a>";
+			} else if( this.linkInstance.semantics.endsWith("#preview") ){
+				return "<a class='dlinfo' title='Get info about' href='#' onclick='LinkProcessor.fireGetProductInfo(\"" + this.linkInstance.access_url + "\"); return false;'></a>"
+				+ "<a class=dldownload href='#' onclick='Modalinfo.openIframePanel(&quot;" +  this.linkInstance.access_url  + "&quot)' title='Download link target'></a>";
+			} else if( this.linkInstance.semantics.endsWith("#proc") || this.linkInstance.semantics.endsWith("#this")){
+				return "<a class='dlinfo' title='Get info about' href='#' onclick='LinkProcessor.fireGetProductInfo(\"" + this.linkInstance.access_url + "\"); return false;'></a>"
+				+ "<a class=dldownload href='#' onclick='PageLocation.changeLocation(&quot;" +  this.linkInstance.access_url  + "&quot)' title='Download link target'></a>"
+				+ "<a class='dlivoalogo'  href='#' onclick='LinkProcessor.processToSampWithParams(\"" + this.linkInstance.access_url + "\", \"" + this.linkInstance.semantics + "\");' title='broadcast to SAMP'></a>"
+				;
+			} else {
+				return "<a class=dldownload href='#' onclick='Modalinfo.openIframePanel(&quot;" +  this.linkInstance.access_url  + "&quot)' title='Download link target'></a>";	
+			}
+		},
+		getHtml : function(){
+			if( this.params.length == 0 ){
+				var html = "";
+				html += "<fieldset>";
+				html += "  <legend><span title='Click on the link name to toggle'>Link <i>"  + this.linkInstance.semantics + "</i></legend><div class=datalinkform>";
+				html += this.getSimpleLinkAction();
+				html += "    <span class=help>" +  this.linkInstance.description + "</span>";
+				html += "</div></fieldset>";
+				return html;
+			} else {
+				var html = "";
+				html += "<fieldset name='" + this.linkInstance.semantics + "'>";
+				var that = this;
+				html += "  <legend><span title='Click on the link name to toggle'>Link <i>"  + this.linkInstance.semantics + "</i></legend><div class=datalinkform>";
+				html += "    <a class=dldownload    href='#' onclick='LinkProcessor.processWithParams(\"" + this.linkInstance.access_url + "\", \"" + this.linkInstance.semantics + "\");' title='Download link target'></a>";
+				html += "    <a class='dlivoalogo'  href='#' onclick='LinkProcessor.processToSampWithParams(\"" + this.linkInstance.access_url + "\", \"" + this.linkInstance.semantics + "\");' title='broadcast to SAMP'></a><BR\>";
+				for( var i=0 ; i<this.params.length ; i++) {
+					var param = this.params[i];
+					var paramName = param.xml.attr("name") ;
+					var paramType = param.xml.attr("datatype") ;
+					var paramId = paramName + "_" + this.index; // used to buid unique div IDs
+					var divId = paramId + "_input";
+					var sliderId = paramId + "_input_slider";
+
+					var values;
+					var description, de;
+					if ( (de = $(param.xml).find('DESCRIPTION')).length != 0 ){
+						description = $(de[0]).html() ;
+					} else {
+						description = "no description provided";
+					}
+
+					/*
+					 * Constant value
+					 */
+					if( param.value != null && param.value != ""){
+						html += "    <span><b>" + paramName + "</b></span> <span class=help>" + description + "</span><br>"
+						+ "<input id='" + divId + "' readonly style='width: 100%;' type='text' value='" 
+						+ param.value + "' name='" + param.xml.attr("name") + "'><br>";
+						/*
+						 * Cutout: open Aladin Lite
+						 */
+					} else if ("stc:AstroCoordArea" == param.xml.attr("xtype")){
+						var divAladin = paramId + "_aladin";
+						html += "    <span id='cutoutParam'><b>" + paramName + "</b></span><span class=help> " 
+						+ description + "</b></span><br><textarea id='" + divId + "' style='width:100%;' rows='3' name='" 
+						+ paramName +"'>POLYGON ICRS</textarea><br><div id='" + divAladin + "' style='width: 400px; height: 400px'></div>";
+						this.aladins.push(divAladin);
+						/*
+						 * Parmas with a defined value range: use either a slider or a choice menu
+						 */	
+					} else if ( (values = $(param.xml).find('VALUES')).length != 0 ){
+						var minField, maxField, option;
+
+						if( (minField = $(values).find("MIN")).length != 0 && (maxField = $(values).find("MAX")).length != 0 ) {
+							var range = $(minField).attr("value") + " " + $(maxField).attr("value");
+							var min = parseFloat(minField.attr("value"));
+							var max = parseFloat(maxField.attr("value"));
+							var scaleMin = this.getScaleFactor(min);
+							var scaleMax = this.getScaleFactor(max);
+							min = scaleMin.normValue;
+							max = scaleMax.normValue;
+							var def =  (paramName.endsWith("MIN"))? min: (paramName.endsWith("MAX"))?max: (min + max)/2;
+							def = (paramType == "int")? Math.round(def) :def ;
+							var scaleMention = (scaleMin.factor != 1)? (" (* " + (1/scaleMin.factor) +")"): "" ;
+							html += "    <span><b>" + paramName + "</b></span> <span class=help>" + description + scaleMention + "</span><br>";
+							html += '&nbsp;&nbsp;<label for="amount">Value</label>'
+								+ ' <input type="text" name="' + paramName + '" id="' + divId + '" size=10 style="border: 0;font-weight: bold;" value="' + (Math.round(def*1000)/1000) + '"/>'
+								+ ' <intput type=hidden value="' + scaleMin.factor + '" id="' + paramId + '_input_factor">'
+								+ '<div style="display: inline-block;width: 300px" id="' + sliderId + '"></div><br>'    ;
+							this.sliders[sliderId] = {id: divId, type: paramType, min: min, max: max, def: def, scaleFactor: scaleMin.factor};
+
+						} else if( (option = $(values).find("OPTION")).length != 0) {
+							html += "    <span><b>" + paramName + "</b></span> <span class=help>" + description + "</span><br>";
+							html += ' <select type="text" name="' + paramName + '" id="' + divId + '">';
+							option.each(function() {
+								var name = $(this).attr("name");
+								var value = $(this).attr("value");
+								if( name != "" ) {
+									name = "(" + name + ")";
+								}
+								html += "  <option value='" + value + "'>" + value + " " + name + ")</option>";
+							});					
+							html += ' </select>';
+
+
+						} else {
+							html += "    <span class=help>" + paramName + " " + description +"</span><br>FREE<br>";
+						}
+					} 
+				}
+				html += "</div></fieldset>";
+				return html;
+			}
+
+		},
+		/*
+		 * Active widget must be built after the link HTML has beeb attached to the DOM
+		 */
+		buildSliders : function(){
+			for( sliderId in this.sliders) {
+				var slider = this.sliders[sliderId];
+				var sliderHandler;
+				if( slider.type != "int" ){
+					sliderHandler = function( event, ui ) {
+						var factor = $( "#" +  $(this).attr("id").replace("_slider", "_factor")).attr("value");
+						var value  = Math.round(1000*ui.value)/1000;
+						$( "#" +  $(this).attr("id").replace("_slider", "")).val(value );
+					}
+				} else {
+					sliderHandler = function( event, ui ) {
+						var factor = $( "#" +  $(this).attr("id").replace("_slider", "_factor")).attr("value");
+						var value  = Math.round(ui.value);
+						$( "#" +  $(this).attr("id").replace("_slider", "")).val(value );
+					}					
+				}
+				$( "#" + sliderId ).slider({
+					range: "min",
+					value: slider.def,
+					min: slider.min,
+					max: slider.max,
+					step: ((slider.max - slider.min)/20),
+					slide: sliderHandler
+				});
+
+			}
+		},
+		/*
+		 * Active widget must be built after the link HTML has beeb attached to the DOM
+		 */
+		buildRegionEditors : function(fovObject){
+			for( var i=0 ; i<this.aladins.length ; i++ ) {
+				var div = this.aladins[i];
+				var message = "";
+				if( div.length != 0){
+					var points = [];
+					if( !('s_ra' in fovObject) || !('s_dec' in fovObject) ) {
+						message = "CUTOUT Link: Cannot access object position: set it by hand";
+					} else {
+						var ra = fovObject.s_ra;
+						var dec = fovObject.s_dec;
+						if( ra < 0 || ra > 360 || dec <-90 || dec >90 ) {
+							message = "CUTOUT Link: No valid position for this object: set it by hand";
+						} else {
+							var fov;
+							/*
+							 * Take 1' as FoV by default
+							 */
+							if ( !(('s_fov' in fovObject) && (fov = fovObject.s_fov) > 0 && fov < 180 )){
+								fov = 1/60;
+							}
+
+							size = fov/2;
+							var ra_min = ((ra - size) < 0)  ? (360 + (ra - size)): ((ra - size) > 360)? (360 - (ra - size)): (ra - size);
+							var dec_min = ((dec - size) < -90)? (-180 - (dec - size)):  ((dec - size) >  90)? ( 180 - (dec - size)):   (dec - size);
+							var ra_max = ((ra + size) < 0)  ? (360 + (ra + size)): ((ra + size) > 360)? (360 - (ra + size)): (ra + size);
+							var dec_max = ((dec + size) < -90)? (-180 - (dec + size)): ((dec + size) >  90)? ( 180 - (dec + size)):   (dec + size);
+
+							points = [
+							          ra_min, dec_min,
+							          ra_min, dec_max,
+							          ra_max, dec_max,
+							          ra_max, dec_min,
+							          ];								
+						}
+					}
+					var regionEditor = new RegionEditor_mVc  (div
+							, function(params){			
+						str = "polygon ICRS ";
+						var pts = params.region.points
+						for( var i=0 ; i<pts.length ; i++) {
+							str += parseFloat(pts[i][0]).toFixed(6) + " " +parseFloat(pts[i][1]).toFixed(6) + " "; 
+						}
+						$("#" + div.replace("aladin", "input")).text(str);
+					}
+					, [fovObject.s_ra ,fovObject.s_dec ] 
+					); 		
+					regionEditor.init();	
+					$(".aladin-box").css("z-index", (9999));
+					if( message != ""){
+						Modalinfo.info(message);								
+					}
+
+					if( points.length > 0 ) {
+						var initRegion = {type: "array", value: points};
+						Processing.show("init Aladin");
+						setTimeout(function() {
+							regionEditor.setInitialValue( initRegion );
+							Processing.hide();
+						}
+						, 1000);
+						/*
+						 * We need to draw a polygon in any case; otherwise AL loops for even in the view.redraw function 
+						 * from the second time the modal is open
+						 */
+					} else {
+						var initRegion = {type: "array", value: [1,2,1.1, 2, 1.1, 2.1]};
+						Processing.show("init Aladin");
+						setTimeout(function() {
+							regionEditor.setInitialValue( initRegion );
+							regionEditor.clean();						
+							$("#" + div.replace("aladin", "input")).text("POLYGON ICRS");
+
+							Processing.hide();
+						}
+						, 1000);
+					
+					}
+				}
+			}
+		},
+		getScaleFactor : function(value){
+			var stringValue = value.toString();
+			var tvalue = value;
+			var step;
+			var factor=1.0;
+			if( value > -1 && value < 1 ){
+				step = 10.
+			} else {
+				return ({normValue: tvalue, factor: 1});
+			}
+			while( (step == 10 && tvalue > -1 && tvalue < 1) || (step == 0.1 && (tvalue > 10 || tvalue < -10)) ){
+				tvalue *= step;
+				factor *= step;
+				stringValue = tvalue.toString();
+			}
+			return ({normValue: tvalue, factor: factor});
+		}	
+}
+
+/**
+ * Singleton class providing the fonction processing the link accesses 
+ */
+LinkProcessor = function() {
+	var processWithParams = function(access_url, semantic) {
+		var fieldset = $("fieldset[name=" + semantic + "]");
+		var params = new Array();
+		fieldset.find("input[type='text']").each(function(){
+			var id = $(this).attr("id");
+			var factorEle = $("#" + id + "_factor");
+			var value;
+			if( factorEle.length == 0 ){
+				value =  $(this).val();
+			} else {
+				value =  $(this).val()/ factorEle.attr("value");
+			}
+			params.push($(this).attr("name") + "=" + encodeURIComponent(value) );
+		})
+		fieldset.find("select").each(function(){
+			var id = $(this).attr("id");
+			var value =  $(this).val();
+			params.push($(this).attr("name") + "=" + encodeURIComponent(value) );
+		})
+		var retour = access_url + "?" + params.join("&");
+		PageLocation.download(retour);
+	}; 
+	var processToSampWithParams = function(access_url, semantic) {
+		var fieldset = $("fieldset[name=" + semantic + "]");
+		var params = new Array();
+		fieldset.find("input[type='text']").each(function(){
+			var id = $(this).attr("id");
+			var factorEle = $("#" + id + "_factor");
+			var value;
+			if( factorEle.length == 0 ){
+				value =  $(this).val();
+			} else {
+				value =  $(this).val()/ factorEle.attr("value");
+			}
+			params.push($(this).attr("name") + "=" + encodeURIComponent(value) );
+		})
+		fieldset.find("select").each(function(){
+			var id = $(this).attr("id");
+			var value =  $(this).val();
+			params.push($(this).attr("name") + "=" + encodeURIComponent(value) );
+		})
+		var retour = access_url + "?" + params.join("&");
+		WebSamp_mVc.fireSendVoreport(retour, null, null);
+	}; 
+	var fileDownload = function(access_url) {
+		$.fileDownload($(this).prop(access_url), {
+			preparingMessageHtml: "We are preparing your report, please wait...",
+			failMessageHtml: "There was a problem generating your report, please try again."
+		});
+	};
+	var fireGetProductInfo = function(url) {
+		Processing.show("Waiting on product info");
+
+		$.getJSON("getproductinfo", {jsessionid: "", url: url}, function(jsdata) {
+			Processing.hide();
+			if( Processing.jsonError(jsdata, "Cannot get product info") ) {
+				return;
+			} else {
+				retour = "url: " + url + "\n";
+				$.each(jsdata, function(k, v) {
+					retour += k + ": " + v  + "\n";
+				});
+				Modalinfo.info(retour, "Product Info");
+			}
+		});
+	}	;	
+
+	/*
+	 * exports
+	 */
+	var pblc = {};
+	pblc.processWithParams = processWithParams;
+	pblc.processToSampWithParams = processToSampWithParams;
+	pblc.fileDownload = fileDownload;
+	pblc.fireGetProductInfo = fireGetProductInfo;
+	return pblc;
+
+}();
+
+
 
 console.log('=============== >  DataLink_v.js ');
 
@@ -6618,7 +7437,8 @@ tapColSelector_Mvc.prototype = Object.create(ConstQEditor_Mvc.prototype, {
 								for( var k=0 ; k<jt.length ; k++) {
 									that.joinKeys.push(jt[k]);
 								}
-								that.joinedTableLoaded = true;
+								// The same component is used for all dataset: meta data must be refreshed at any time
+								//that.joinedTableLoaded = true;
 							}
 							if( handler ) handler();
 						});
@@ -6688,6 +7508,9 @@ tapColSelector_Mvc.prototype = Object.create(ConstQEditor_Mvc.prototype, {
 				q.push( ed.fireGetADQL());
 				// if constraint not applied to the queried table: join
 				if( tt != st ) {
+					/*
+					 * Key of the join descriptor
+					 */
 					for(var i=0 ;  i<this.joinKeys.length ; i++ ) {
 						var lt = this.joinKeys[i].target_datatreepath.schema + "." + this.joinKeys[i].target_datatreepath.table;
 						if( lt == tt) {
@@ -6701,6 +7524,9 @@ tapColSelector_Mvc.prototype = Object.create(ConstQEditor_Mvc.prototype, {
 				var tt = fs[0] + "." + fs[1] ;
 				if( tt != st ) {
 					for(var i=0 ;  i<this.joinKeys.length ; i++ ) {
+						/*
+						 * Key of the join descriptor
+						 */
 						var lt = this.joinKeys[i].target_datatreepath.schema + "." + this.joinKeys[i].target_datatreepath.table;
 						if( lt == tt) {
 							joins[tt] = this.joinKeys[i];
@@ -7677,7 +8503,7 @@ QueryTextEditor_Mvc.prototype = {
 function ADQLTextEditor_Mvc(){
 	QueryTextEditor_Mvc.call(this);
 	this.selectConst = new Array();
-	this.joinedTables = new Array();
+	this.joinedTables = new JoinKeyMap();
 	this.flatJoined = new Array();
 	/*
 	 * 
@@ -7707,18 +8533,25 @@ ADQLTextEditor_Mvc.prototype = Object.create(QueryTextEditor_Mvc.prototype, {
 			} else if( type == "limit" && constraints.length > 0) {
 				this.limConst = {label:label, constraints: constraints[0]};;				
 			} else {
-				Modalinfo.error("QueryTextEditor do not know what to do with a constraint typed as " +type);
+				Modalinfo.error("QueryTextEditor does not know what to do with a constraint typed as " +type);
 				return;
 			}	
-			this.joinedTables = new Array();
+			this.joinedTables.removeFromOrigin(label);
 			this.flatJoined = new Array();
 			if( tableJoin != null ) {
 				for( var jt in tableJoin ) {
+					/* 
+					 * key of tableJoin array
+					 *     [target_datatreepath.schema].[target_datatreepath.table];
+					 * joinKey format:  
+					 *     {"target_datatreepath":{"nodekey":"node","schema":"schema","table":"autre1","tableorg":"autre1","jobid":"","key":"node.schema.autre1"},
+					 *      "target_column":"1autre1","source_column":"1schema.table"}
+					 */
 					var joinKey = tableJoin[jt];
 					if( joinKey.target_column == "" ) {
 						this.flatJoined.push(joinKey.target_table);
 					} else {
-						this.joinedTables[jt] = joinKey;
+						this.joinedTables.addJoinKey(jt, joinKey, label);
 					}
 				}
 			}
@@ -7730,8 +8563,10 @@ ADQLTextEditor_Mvc.prototype = Object.create(QueryTextEditor_Mvc.prototype, {
 	getJoin : { 
 		value: function() {
 			var retour = "";
-			for( var jt in this.joinedTables ) {
-				var joinKey = this.joinedTables[jt];
+			var joinKeys = this.joinedTables.getJoinKeys();
+			var arrayLength = joinKeys.length;
+			for (var i = 0; i < arrayLength; i++) {
+				var joinKey = joinKeys[i];
 				var tt = (joinKey.target_datatreepath.schema + "." + joinKey.target_datatreepath.table).quotedTableName();
 				retour += "JOIN " + tt + " ON " 
 				+ this.getCurrentTableName().quotedTableName() + "." +  joinKey.source_column.quotedTableName()
@@ -7787,30 +8622,80 @@ ADQLTextEditor_Mvc.prototype = Object.create(QueryTextEditor_Mvc.prototype, {
 			return this.treePath.schema + "." + this.treePath.table;
 		}
 	}
-//	quoteTableName : {
-//		value: function(tableName){
-//			var regex = /([^.]*)\.(.*)/;
-//			var results = regex.exec(tableName);
-//			var table, schema;
-//			if(!results){
-//				table = tableName;
-//				schema = "";
-//			} else if( results.length == 2 ) {
-//				table = results[1]; 
-//				schema = "";
-//			} else  {
-//				table =  results[2];  
-//				schema = results[1] + ".";
-//			}
-//			if( table.match(/^[a-zA-Z0-9][a-zA-Z0-9_]*$/ ) ){
-//				return schema + table;
-//			} else {
-//				return schema + '"' + table +'"';
-//			}
-//		}
-//	}
 });
-
+/**
+ * Object merging the keyJoin coming from different forms.
+ * keyJoins remain unique but with a reference of all forms using them.
+ * When a key is no longer used by a form and just by it, it is removed from the map.
+ * If it is used by multiple keywords, the form label is removed from the origins array, 
+ * but the keyJoin remains in place within the map.
+ */
+function JoinKeyMap() {
+	/**
+	 * Map key: 
+	 *     [target_datatreepath.schema].[target_datatreepath.table];
+	 * Map value
+	 *     { keyJoin: {"target_datatreepath":{"nodekey":"node","schema":"schema","table":"autre1","tableorg":"autre1","jobid":"","key":"node.schema.autre1"},
+	 *                 "target_column":"1autre1","source_column":"1schema.table"}
+	 *       origins: []
+	 * Origins contains the labels of the forms using the keyJoin
+	 */
+	this.keyMap =  new Array();
+};
+/**
+ * Methods
+ */
+JoinKeyMap.prototype = {
+		/**
+		 * Add a joinKey to the map if it does not exist. 
+		 * If the joinKey already exists, the origins array is updated
+		 * @param key      map key: [target_datatreepath.schema].[target_datatreepath.table]
+		 * @param joinKey  map value: see above for the format
+		 * @param origin   form label
+		 */
+		addJoinKey : function(key, joinKey, origin){
+			var jk = this.keyMap[key];
+			if( jk == null ){
+				this.keyMap[key] = {joinKey: joinKey, origins: [origin]};
+			} else {
+				var index = ors.indexOf(origin);
+				if (index == -1) {
+					jk.origins.push(origin);
+				}
+			}
+		},
+		/**
+		 * remove the joinKey attached to origin it is only used by the form referenced by origin.
+		 * If it is used by multiple keywords, the lebel origin is removed from the origins array, 		 
+		 * @param origin form label
+		 */
+		removeFromOrigin : function(origin){
+			for( var key in this.keyMap ) {
+				var entry = this.keyMap[key];
+				var jk = entry.joinKey;
+				var ors = entry.origins;
+				if( ors.length == 1 && ors[0] == origin){
+					delete this.keyMap[key];
+				} else {
+					var index = ors.indexOf(origin);
+					if (index > -1) {
+					    ors.splice(index, 1);
+					}
+				}
+			}
+		},
+		/**
+		 * Used to iterate on the joinKeys
+		 * @returns {Array} All joinKeys in an array
+		 */
+		getJoinKeys: function() {
+			var retour = new Array();
+			for( var k in this.keyMap ) {
+				retour.push(this.keyMap[k].joinKey);
+			}
+			return retour;
+		}
+};
 
 console.log('=============== >  QueryTextEditor_m.js ');
 
@@ -8957,9 +9842,6 @@ RegionEditor_Mvc.prototype = {
 			//console.log('this.skyPositions: ' + this.skyPositions);
 			if(this.skyPositions != null)
 			{
-				console.log("ALSM " + this.skyPositions);
-
-
 				//console.log('this.skyPositions' + this.skyPositions);
 				//console.log('this.node' + this.node);					
 				this.node = [];
@@ -9041,11 +9923,18 @@ RegionEditor_Mvc.prototype = {
 				this.overlay = A.graphicOverlay({color: 'red'});
 				this.aladin.addOverlay(this.overlay);
 			}
-			this.overlay.removeAll();	       
+			this.overlay.removeAll();	  
 			this.overlay.addFootprints(A.polygon(this.skyPositions));
 			this.PolygonCenter();
 		},
-
+		setOverlay: function(points)
+		{
+			if (this.overlay==null) {
+				this.overlay = A.graphicOverlay({color: 'red'});
+				this.aladin.addOverlay(this.overlay);
+			}
+			this.overlay.removeAll();	  
+		},
 		//function pour effacer le poligone de this.canvas
 		CleanPoligon: function()
 		{
@@ -9168,9 +10057,8 @@ console.log('=============== >  RegionEditor_m.js ');
  * Manager of the view of the region editor
  * 
  * Author Gerardo Irvin Campos yah
- */
-function 
-RegionEditor_mVc(parentDivId, handler, points){
+ */ 
+function RegionEditor_mVc(parentDivId, handler, points){
 	this.parentDivId = parentDivId;
 	this.drawCanvas = null; // canvas where the polygon is drawn
 	this.drawContext = null;
@@ -9185,11 +10073,19 @@ RegionEditor_mVc.prototype = {
 		init: function (data){
 			// création instance d'Aladin lite
 			$('#' + this.parentDivId).append('<div id="' + this.parentDivId + '_aladin" style="width: 390px; height: 320px;"></div><div id="' + this.parentDivId + '_button"></div>');
-			this.aladin = $.aladin('#' + this.parentDivId + '_aladin', {showControl: true, fov: 0.5, target: "orion", cooFrame: "J2000", survey: "P/DSS2/color", showFullscreenControl: false, showFrame: false, showGotoControl: false});
-			this.aladin.setImageSurvey("P/XMM/PN/color");
+				this.aladin = $.aladin('#' + this.parentDivId + '_aladin'
+					, {showControl: true, 
+				      fov: 0.5, 
+				      target: "orion", 
+				      cooFrame: "ICRS", 
+				      survey: "P/DSS2/color", 
+				      showFullscreenControl: false, 
+				      showFrame: false, 
+				      showGotoControl: false});
+			//this.aladin.setImageSurvey("P/XMM/PN/color");
+			this.aladin.setImageSurvey("P/DSS2/color");
 			this.parentDiv = this.aladin.getParentDiv();
 			$('#' + this.parentDivId).css("position", "relative");
-
 			// création du canvas pour éditeur régions
 			/*
 			 * Be cautious: the canvas context must be taken before the canvas is appended to the parent div, otherwise the geometry is wrong. 
@@ -9298,6 +10194,20 @@ RegionEditor_mVc.prototype = {
 
 		},
 		/**
+		 * Operate the drawing removal from outside 
+		 */
+		clean: function() {
+			this.controller.CleanPoligon();				
+			this.setEditMode();
+			this.controller.DeleteOverlay()
+			this.lineContext.clearRect(0, 0, this.lineCanvas[0].width, this.lineCanvas[0].height);            
+			this.drawContext.clearRect(0, 0, this.drawCanvas[0].width, this.drawCanvas[0].height);
+			this.controller.almacenar();	       
+			this.controller.recuperar();   
+			this.setBrowseMode();
+
+		},
+		/**
 		 * Initalize the darw with the default parameter. If points contains a region, it is drawn, 
 		 * if it just contain a position, AladinLite is centered on that position
 		 * @param points  object denoting the initial value of the polygone : {type: ... value:} type is format of the 
@@ -9337,7 +10247,6 @@ RegionEditor_mVc.prototype = {
 					Modalinfo.error("Polygone format " + points.type + " not understood");
 					return;
 				}
-//				this.points = [84.24901652054093, -5.640882748140112,83.34451837951998, -6.103216341255678,83.60897420186223, -4.553808802262613, 84.24901652054093, -5.640882748140112];			
 				this.setBrowseMode();
 				this.controller.DeleteOverlay()
 				this.controller.setPoligon(pts);
@@ -9784,6 +10693,70 @@ var supportedUnits =  [
                        , {id: 'Time_nsec', text: "nsec"}
                        ];
 
+function STCRegion(stcString) {
+	this.stcString = stcString;
+	this.size = 0.0;
+	this.raCenter = 0.0;
+	this.decCenter = 0.0;			
+	this.points = [];
+
+	this.init();
+}
+STCRegion.prototype = {
+		init: function(){
+			var elements  = this.stcString.split(" ");
+			var coords = [];
+			/*
+			 * Extract coordinates from STC string
+			 */
+			for( var i=0 ; i<elements.length ; i++){
+				if( isNumber(elements[i])) {
+					coords.push(parseFloat(elements[i]));
+				}
+			}
+			if((coords.length %2) ){
+				Modalinfo.error("STC Region " + this.stcString + " is not valid");
+			} else {
+				/*
+				 * Get the coords extrema
+				 */
+				var raMin = 360, raMax = 0;
+				var decMin = 90, decMax = -90;
+				for( var i=0 ; i<(coords.length/2) ; i++){
+					var ra = coords[2*i];
+					var dec = coords[(2*i) + 1];
+					if( ra > raMax ) raMax = ra;
+					if( ra < raMin ) raMin = ra;
+					if( dec > decMax ) decMax = dec;
+					if( dec < decMin ) decMin = dec;
+				}
+				/*
+				 * Get size and center
+				 */
+				var width = Math.abs(raMin - raMax);
+				var height = Math.abs(decMin - decMax);
+				this.size = (width > height) ? width: height;
+				this.raCenter = raMin + width/2;
+				if( this.raCenter > 360 ) this.raCenter -= 360;
+				this.decCenter = decMin + height/2;
+				if( this.decCenter > 90 ) this.decCenter -= 90;
+				/*
+				 * Build the point array for Aladin Lite
+				 */
+				for( var i=0 ; i<(coords.length/2) ; i++){
+					this.points.push([coords[2*i], coords[(2*i) + 1]]);
+					
+				}
+				this.points.push([coords[0], coords[1]]);
+			}
+			
+		},
+		getAladinScript : function(list){
+			return this.stcString + ";sync; " 
+			+ this.raCenter.toFixed(6) + " " + this.decCenter.toFixed(6) + ";sync;" 
+			+ " zoom " + 2*this.size + " deg;";
+		}
+}
 /**
  * Object modeling a dataTreePath
  * 
@@ -9948,6 +10921,7 @@ MetadataSource = function() {
 					}
 				});
 				//if( getJoinedTablesUrl != null ){
+				if( getJoinedTablesUrl != null) {
 					Processing.show("Waiting on join keys " + getJoinedTablesUrl);
 					$.ajax({
 						url: getJoinedTablesUrl,
@@ -9977,7 +10951,8 @@ MetadataSource = function() {
 							//if( handler != null ) handler();
 						}
 					});
-					cache[key] = buffer;
+				}
+				cache[key] = buffer;
 				//}
 			} else {
 				Out.info("No getMetaTableUrl provided" );
@@ -10191,6 +11166,27 @@ Modalinfo.region = function (handler, points) {
  */
 Modalinfo.closeRegion  = function (){
 	$('#aladin-lite-div').dialog('close');
+}
+
+Modalinfo.showSTCRegion = function (stcRegion) {	
+	var divAladin = "aladin-lite-stcdiv";
+	var html = "<textarea readonly style='width:100%;' rows='6' >" + stcRegion.stcString + "</textarea><br><div id='" + divAladin + "' style='width: 400px; height: 400px'></div>";
+	Modalcommand.commandPanelAsync("STC Region Viewer", html, function(){
+		var aladin = A.aladin('#' + divAladin
+				, {showControl: true
+			       , cooFrame: "ICRS"
+			       , survey: "P/DSS2/color"
+			       , showFullscreenControl: false
+			       , showFrame: false
+			       , showGotoControl: false
+			       , target: stcRegion.raCenter + ' ' + stcRegion.decCenter
+			       , fov: (2*stcRegion.size)
+			       });
+		var overlay = A.graphicOverlay({color: 'red', lineWidth: 2});
+		aladin.addOverlay(overlay);
+		overlay.addFootprints(A.polygon(stcRegion.points));		
+		$(".aladin-box").css("z-index", (9999));
+		});	
 }
 
 /**
@@ -10452,10 +11448,25 @@ DataLinkBrowser = function() {
 		;
 	};
 	/*
+	 * The dataObject should contain some value of the data row from which the Datalink popup has ben called
+	 * This might help to get the parameter ranges and the obs_did
+	 * if must have the form {key: value...}
+	 * positional parameter must be complaient with Obscore (s_ra/dev/fov)
+	 */
+	var startCompliantBrowser = function (baseurl, forwardurl, dataObject) {
+		var view  = new CompliantDataLink_mVc({baseurl: baseurl,forwardurl:forwardurl, dataobject: dataObject});
+		var mod = new DataLink_Mvc();
+		new DataLink_mvC(view, mod);
+		view.draw();
+		return view;
+		;
+	};
+	/*
 	 * exports
 	 */
 	var pblc = {};
 	pblc.startBrowser = startBrowser;
+	pblc.startCompliantBrowser = startCompliantBrowser;
 	return pblc;
 }();
 
@@ -46910,130 +47921,236 @@ if (!JSON) {
 console.log('=============== >  json2.js ');
 
 /*
- * Some utilities
+ * Some utilities moved to basic.js
  */
-if(!String.prototype.startsWith){
-	String.prototype.startsWith = function (str) {
-		return !this.indexOf(str);
-	};
-};
-if(!String.prototype.endsWith){
-	String.prototype.endsWith = function(suffix) {
-		return this.indexOf(suffix, this.length - suffix.length) !== -1;
-	};
-};
+//if(!String.prototype.startsWith){
+//	String.prototype.startsWith = function (str) {
+//		return !this.indexOf(str);
+//	};
+//};
+//if(!String.prototype.endsWith){
+//	String.prototype.endsWith = function(suffix) {
+//		return this.indexOf(suffix, this.length - suffix.length) !== -1;
+//	};
+//};
+//
+//if(!String.prototype.hashCode){
+//	String.prototype.hashCode = function(){
+//		var hash = 0;
+//		if (this.length == 0) return code;
+//		for (var i = 0; i < this.length; i++) {
+//			var char = this.charCodeAt(i);
+//			hash = 31*hash+char;
+//			hash = hash & hash; 
+//		}
+//		return hash;
+//	};
+//};
+//if(!String.prototype.trim){
+//	String.prototype.trim = function(chaine){
+//		return chaine.replace(/^\s+|\s+$/g,"");
+//	} ;
+//};
+//
+//function trim(chaine) {
+//	return chaine.replace(/^\s+|\s+$/g,"");
+//}
+//
 
-if(!String.prototype.hashCode){
-	String.prototype.hashCode = function(){
-		var hash = 0;
-		if (this.length == 0) return code;
-		for (var i = 0; i < this.length; i++) {
-			var char = this.charCodeAt(i);
-			hash = 31*hash+char;
-			hash = hash & hash; 
+/**
+ * Singleton encapsulating the formating function 
+ * Called each time a result value has to be displayed
+ * @returns {___anonymous_ValueFormator}
+ */
+ValueFormator = function() {
+
+	/**
+	 * 
+	 */
+	var formatValue = function(columnName, values, tdNode, columnMap) {
+		var value = values[columnName.currentColumn];
+		if( columnName.currentColumn)  {
+			Modalinfo.error("formatValue: Missing column numer in " + JSON.stringify(columnMap));
+			return;
 		}
-		return hash;
-	};
-};
-if(!String.prototype.trim){
-	String.prototype.trim = function(chaine){
-		return chaine.replace(/^\s+|\s+$/g,"");
-	} ;
-};
-
-function trim(chaine) {
-	return chaine.replace(/^\s+|\s+$/g,"");
-}
-
-function isNumber(val) {
-	var exp = new RegExp("^[+-]?[0-9]*[.]?[0-9]*([eE][+-]?[0-9]+)?$","m"); 
-	return exp.test(val);
-}
-
-var decimaleRegexp = new RegExp("^[+-]?[0-9]*[.][0-9]*([eE][+-]?[0-9]+)?$","m"); 
-var bibcodeRegexp  = new RegExp(/^[12][089]\d{2}[A-Za-z][A-Za-z0-9&][A-Za-z0-9&.]{2}[A-Za-z0-9.][0-9.][0-9.BCRU][0-9.]{2}[A-Za-z0-9.][0-9.]{4}[A-Z:.]$/);		
-
-function formatValue(columnName, value, tdNode) {
-	if( columnName.match(/.*datalink.*/i)  ){
-	//	var url = 'getdatalink?url=' + escape(value);
-		//"DataLinkBrowser.startBrowser("http://obs-he-lm:8888/3XMM/smartdatalink?oid=1160803203386703882"
-		//tdNode.html("<a class='dl_datalink' title='Get LinkedData'   href='#' onclick='resultPaneView.fireGetDataLink(\"" + value + "\"); return false;'/></a>");
-//		tdNode.html("<a class='dl_datalink' title='Get LinkedData'   href='#' onclick='DataLinkBrowser.startBrowser(\"forwardxmlresource?target=" 
-//				+  encodeURIComponent(value) + "\" , \"forwardxmlresource\" ); return false;'/></a>"
-				tdNode.html("<a class='dl_datalink' title='Get LinkedData'   href='#' onclick='DataLinkBrowser.startBrowser(\""
-						+  value + "\" , \"forwardxmlresource\" ); return false;'/></a>"
-				);
-			
-	} else if( value.startsWith("http://") ||  value.startsWith("https://") ) {
-		var titlepath = $('#titlepath').text().split('>');
-		getDLView(dataTreeView.treePath.nodekey, columnName, value, tdNode);	
-	} else if( value.match(/^((position)|(region)|(polygon))/i) ) {
-		tdNode.html("<a title='STC Region (click to expand)' class='dl_stc' href='#'  onclick='Modalinfo.info(\"" + value + "\", \"STC Region\");'></a>");
-	} else if( value.startsWith("Array") ) {
-		tdNode.html("<a title='Data array(click to expand)' class='dl_dataarray' href='#'  onclick='Modalinfo.info(\"" + value + "\", \"Data Array\");'></a>");
-	} else if( decimaleRegexp.test(value)){
-		tdNode.html((new Number(value)).toPrecision(8));
-	} else if( bibcodeRegexp.test(value)){
-		tdNode.html("<a title=\"bibcode\" HREF=\http://cdsads.u-strasbg.fr/cgi-bin/nph-bib_query?" + value + "\" target=blank>" + value + "</A>");
-	} else {
-		tdNode.html(value);
-	}
-}
-
-function getDLView(node, columnName, url, tdNode) {
-	Processing.hide();
-	$.getJSON("getproductinfo", {jsessionid: sessionID, url: url}, function(jsdata) {
-		if( Processing.jsonError(jsdata, "Cannot connect data") ) {
-			tdNode.html("Error");
-		} else {
-			var cd=null, ct=null, ce=null;
-			var dl_class = 'dl_download';
-			var dl_cart_tag  = "<a class='dl_cart' title='Add to cart' href='#' onclick='cartView.fireAddUrl(\"" + node + "\", \"" + url + "\"); return false;'/></a>";
-
-			$.each(jsdata, function(k, v) {
-				if( k == 'ContentDisposition')    cd = v;
-				else if( k == 'ContentType' )     ct = v;
-				else if( k == 'ContentEncoding' ) ce = v;
-				else if( k == 'nokey' ) {
-					if( v.match('401') != null ) {
-						dl_class = 'dl_securedownload';
-						dl_cart_tag  = "<a class='dl_securecart' title='Add to cart' href='#' onclick='cartView.fireRestrictedUrl(\"" + node + "\", \"" + url + "\"); return false;'/></a>";
-					}
-				}
-			});
-			var isFits = false;
-			var isVotable = false;
-			var samp_tag = "";
-			if( (ct != null && (ct.match(/\.fit/i) || ct.match(/fits/))) ||
-				(cd != null && (cd.match(/\.fit/i) || cd.match(/fits/)))	){
-				//samp_tag = "<a class='dl_samp'     title='Broadcast to SAMP'   href='#' onclick='WebSamp_mVc.fireSendVoreport(\"" + url + "\"); return false;'/></a>";
-				samp_tag = "<a class='dl_samp'     title='Broadcast to SAMP'   href='#' onclick='resultPaneView.fireSendVoreportWithInfo(\"" + url + "\"); return false;'/></a>";
-				
-				isFits = true;
-			}
-			else if( (ct != null && (ct.match(/\.xml/i) || ct.match(/\.voty/)|| ct.match(/\.votable/))) ||
-					 (cd != null && (cd.match(/\.xml/i) || cd.match(/\.voty/)|| cd.match(/\.votable/)))){
-				isVotable = true;
-				samp_tag = "<a class='dl_samp'     title='Broadcast to SAMP'   href='#' onclick='WebSamp_mVc.fireSendVoreport(\"" + url + "\"); return false;'/></a>";
-			}
-			var dl_tag = "";
+		var value = values[columnMap.currentColumn];
+		/*
+		 * First case te value is an URL
+		 */
+		if( value.startsWith("http://") ||  value.startsWith("https://") ) {
 			/*
-			 * Will be downloaded by the browser: no need to open a new tab
+			 * To be send to the the datalink processor to setup possible cutout services
 			 */
-			if( (ce != null && (ce == 'gzip' || ce == 'zip')) || isFits ){
-				dl_tag = "<a class='" + dl_class + "' title='Download Data' href='javascript:void(0);' onclick='PageLocation.changeLocation(\"" + url + "\");'></a>";
+			var fovObject = {s_ra: (columnMap.s_ra != -1)?  parseFloat(values[columnMap.s_ra]) : 9999 ,
+					        s_dec: (columnMap.s_dec != -1)? parseFloat(values[columnMap.s_dec]): 9999 ,
+							s_fov: (columnMap.s_fov != -1)?parseFloat( values[columnMap.s_fov]): 9999 };
+			/*
+			 * The mime type is specified: we can take into account the type of response withpout requesting the HTTP header
+			 */
+			if( columnMap.access_format != -1 ){
+				var access_format = values[columnMap.access_format];
+				if( access_format.endsWith("content=datalink" ) ){
+					tdNode.html("");
+					addInfoControl(columnName, tdNode, value);
+					addDatalinkControl(value,  tdNode, fovObject);
+				} else if( access_format.startsWith("image/") || access_format.startsWith("text/") ){
+					tDdNode.html("");
+					addInfoControl(columnName, tdNode, value);
+					addPreviewControl(columnName, tdNode, fileName);	
+					addCartControl(columnName, tdNode, value, secureMode);
+				} else  {
+					/*
+					 * In case of a simple download we he to request the HTTP header anyway to get extra information (zipper, encrypted..)
+					 */
+					processURLInfo( columnName, value, tdNode, fovObject);
+				}
+				/*
+				 * No mime type specified: We need to request the HTTP header for taking into account the response type
+				 */
 			} else {
-				dl_tag = "<a class='" + dl_class + "' title='Download Data' href='javascript:void(0);' onclick='PageLocation.changeLocation(\"" + url + "\");' target=blank></a>";
-			}
-
-			tdNode.html(
-				  "<a class='dl_info' title='Get info about' href='#' onclick='resultPaneView.fireGetProductInfo(\"" + url + "\"); return false;'></a>"
-				+ dl_tag 
-			    + dl_cart_tag
-			    + samp_tag );
+				processURLInfo(columnName, value, tdNode, fovObject);
+			} 
+			/*
+			 * Second case: an atomic value;
+			 */
+		} else {
+			formatSimpleValue(columnName, value, tdNode);
 		}
-	});
-}
+	};
+
+	/************************************
+	 * Private logic
+	 */
+	/**
+	 * Format value: take into account the format of the string representing the value.
+	 * No reference to the context
+	 */
+	var formatSimpleValue = function(columnName, value, tdNode) {
+		/*
+		 * TODO :add SAMP message to Aladin : script.aladin.send
+		 */
+		if( value.match(/^((position)|(region)|(polygon))/i) ) {
+			addSTCRegionControl(tdNode, value);
+		} else if( value.startsWith("Array") ) {
+			tdNode.html("<a title='Data array(click to expand)' class='dl_dataarray' href='#'  onclick='Modalinfo.info(\"" + value + "\", \"Data Array\");'></a>");
+		} else if( decimaleRegexp.test(value)){
+			tdNode.html((new Number(value)).toPrecision(8));
+		} else if( bibcodeRegexp.test(value)){
+			tdNode.html("<a title=\"bibcode\" HREF=\http://cdsads.u-strasbg.fr/cgi-bin/nph-bib_query?" + value + "\" target=blank>" + value + "</A>");
+		} else {
+			tdNode.html(value);
+		}
+	}
+	var addInfoControl = function(columnName, tdNode, url){
+		tdNode.append("<a class='dl_info' title='Get info about' href='#' onclick='resultPaneView.fireGetProductInfo(\"" + url + "\"); return false;'></a>");
+	};
+	var addDownloadControl = function(columnName, tdNode, url, secureMode, contentEncoding){
+		var target = (contentEncoding == "")? "": "target=blank";				
+		var dl_class = (secureMode)? "dl_securedownload": 'dl_download';
+		tdNode.append("<a class='" + dl_class + "' " + target + " title='Download Data' href='javascript:void(0);' onclick='PageLocation.changeLocation(\"" + url + "\");'></a>");
+	};	
+	var addCartControl = function(columnName, tdNode, url, secureMode){
+		if( secureMode ){
+			tdNode.append("<a class='dl_securecart' title='Add to cart' href='#' onclick='cartView.fireRestrictedUrl(\"" + dataTreeView.treePath.nodekey + "\", \"" + url + "\"); return false;'/></a>");
+		} else {
+			tdNode.append("<a class='dl_cart' title='Add to cart' href='#' onclick='cartView.fireAddUrl(\"" + dataTreeView.treePath.nodekey + "\", \"" + url + "\"); return false;'/></a>");
+		}
+	};	
+	var addSampControl = function(columnName, tdNode, url, sampMType, fileName){
+		tdNode.append("<a class='dl_samp'     title='Broadcast to SAMP'   href='#' onclick='WebSamp_mVc.fireSendVoreport(\"" 
+				+ url + "\",\"" + sampMType + "\", \"" + fileName + "\"); return false;'/></a>");
+	};	
+	var addPreviewControl = function(columnName, tdNode, url, fileName){
+		var title = fileName + " preview";
+		tdNode.append("<a class='dl_download' title='Data preview' href='javascript:void(0);' onclick='Modalinfo.openIframePanel(\"" + url + "\", \"", title + "\");'></a>");
+	};	
+	var addDatalinkControl = function(url, tdNode, fovObject){
+		tdNode.append("<a class='dl_datalink' title='Get LinkedData'/></a>");
+		tdNode.children(".dl_datalink").first().click(function() {
+			DataLinkBrowser.startCompliantBrowser(url, "forwardxmlresource", fovObject);
+		});
+	};
+	var addSTCRegionControl = function(tdNode, stcRegion) {
+		var region = new STCRegion(stcRegion);
+		tdNode.html("<a title='STC Region (click to expand)' class='dl_stc' href='#'></a>");
+		tdNode.first("a").click(function() {
+			Modalinfo.showSTCRegion(region);
+		})
+		tdNode.append("<a class='dl_samp' title='Broadcast to SAMP'   href='#' onclick='WebSamp_mVc.fireSendAladinScript(\"" + region.getAladinScript() + "\"); return false;'/></a>");				
+	}
+	/**
+	 * Get the URL infos asynchronously: formating must be achieved inside the callback
+	 */
+	var processURLInfo = function(columnName, url, tdNode, fovObject) {
+		$.getJSON("getproductinfo", {jsessionid: sessionID, url: url}, function(jsdata) {
+			if( Processing.jsonError(jsdata, "Cannot connect data") ) {
+				tdNode.html("Error");
+			} else {
+				/*
+				 * Extract useful header data
+				 */
+				var cd=null, ct=null, ce=null;
+				var contentDisposition = "";
+				var contentType = "";
+				var contentEncoding = "";
+				var secureMode=false;
+				var sampMType = "";
+				var fileName = "";
+				/*
+				 * HTTP header parsing
+				 */
+				$.each(jsdata, function(k, v) {
+					if( k == 'ContentDisposition') {
+						contentDisposition = v;
+						var regex = new RegExp(/filename=(.*)$/) ;
+						var results = regex.exec(v);
+						if(results){
+							fileName = results[1];
+						}
+					} else if( k == 'ContentType' ) {
+						contentType = v;
+						if( v.match(/fits$/) ) {
+							sampMType = "table.load.fits";
+						} else {
+							sampMType = "table.load.votable";
+						}
+					} else if( k == 'ContentEncoding' ) {
+						contentEncoding = v;
+					} else if( k == 'nokey' &&  v.match('401')  ) {
+						secureMode = true;
+					}
+				});				
+				/*
+				 * Put the right controls according to the context
+				 */
+				tdNode.html("");
+				if( contentType.endsWith("content=datalink" ) ){
+					addInfoControl(columnName, tdNode, url);
+					addDatalinkControl(url,  tdNode, fovObject);
+				} else if( contentType.match(/fits/) ||  contentType.match(/votable/)) {
+					addInfoControl(columnName, tdNode, url);
+					addDownloadControl(columnName, tdNode, url, secureMode, contentEncoding);
+					addCartControl(columnName, tdNode, url, secureMode);
+					addSampControl(columnName, tdNode, url, secureMode, sampMType, fileName);
+				} else if( urlInfo.access_format.startsWith("image/") || urlInfo.access_format.startsWith("text/") ){
+					addInfoControl(columnName, tdNode, url);
+					addPreviewControl(columnName, tdNode, fileName);	
+					addCartControl(columnName, tdNode, url, secureMode);
+				} else {
+					addInfoControl(columnName, tdNode, url);
+					addDownloadControl(columnName, tdNode, url, secureMode, contentEncoding);
+					addCartControl(columnName, tdNode, url, secureMode);
+				}
+			}
+		});
+	}
+	/*
+	 * exports
+	 */
+	var pblc = {};
+	pblc.formatValue = formatValue;
+	return pblc;
+}();
 console.log('=============== >  formator.js ');
 
 jQuery.extend({
@@ -47419,7 +48536,7 @@ jQuery.extend({
 			if( icon.match("screen_up") != null ) {
 				$('#formexpender').css("background-image", "url(images/screen_down.png)");
 				$('#formexpender').attr("title", "Expend query form");
-				height='10%';
+				height='30%';
 			}
 			else {
 				$('#formexpender').css("background-image", "url(images/screen_up.png)");
@@ -47440,7 +48557,7 @@ jQuery.extend({
 			}
 			//	$("div#accesspane").trigger("resize",[ height]);		
 		};
-		
+
 		this.fireRemoveAllJobs= function() {
 			Modalinfo.confirm("Do you really want to remove all jobs?"
 					, function(){$("#tapjobs a").click();}
@@ -47506,21 +48623,21 @@ jQuery.extend({
 			$("#resultpane").html(table);
 //			var nb_cols = jsdata.aoColumns.length;
 //			for( var r=0 ; r<jsdata.aaData.length ; r++) {
-//				var line = jsdata.aaData[r];
-//				for( var l=0 ; l<nb_cols ; l++) {
-//					var num = line[l];
-//					//line[l] = formatValue(jsdata.aoColumns[l].sTitle, num);
-//				}
+//			var line = jsdata.aaData[r];
+//			for( var l=0 ; l<nb_cols ; l++) {
+//			var num = line[l];
+//			//line[l] = formatValue(jsdata.aoColumns[l].sTitle, num);
+//			}
 //			}
 			attributeHandlers = tapConstraintEditor.getAttributeHandlers();
 			var aoColumns = new Array();
+			var columnMap = {access_format: -1, s_ra: -1, s_dec: -1, s_fov: -1, currentColumn: -1};
 			for(var i=0 ; i<jsdata.aoColumns.length ; i++) {
 				var title ;
 				if( attributeHandlers == undefined ) {
 					title = "No descritption available"
 						+ " - This job has likely been initiated in a previous session" ;
-				}
-				else {
+				} else {
 					var ah = attributeHandlers[jsdata.aoColumns[i].sTitle];/*
 					/*
 					 * Column name could be published in upper case but returned by the DBMS in lower case.
@@ -47534,12 +48651,24 @@ jQuery.extend({
 					if( ah == undefined ) {
 						title = "No description available (joined query?)";
 					} else {
-						title = ah.description
+						/*
+						 * Titkle must be filtered to be undestood by the tooltip plugin
+						 */
+						title = ah.description.replace(/&[a-z]+;/g, '').replace(/[<>]/g, ' ').replace(/"/g, '');
 						+ " - Name: " + ah.nameorg
 						+ " - Unit: " + ah.unit
 						+ " - UCD: " + ah.ucd
 						+ " - UType: " + ah.utype
 						+ " - DataType: " + ah.dataType;
+						if( ah.nameorg == "access_format" || ah.ucd == "meta.code.mime" ) {
+							columnMap.access_format = i;
+						} else if( ah.nameorg == "s_ra" || ah.ucd == "pos.eq.ra;meta.main" || ah.ucd == "pos.eq.ra") {
+							columnMap.s_ra = i;
+						} else if( ah.nameorg == "s_dec" || ah.ucd == "pos.eq.dec;meta.main" || ah.ucd == "pos.eq.dec") {
+							columnMap.s_dec = i;
+						} else if( ah.nameorg == "s_fov" || ah.nameorg.match(/.*instr\.fov/) ) {
+							columnMap.s_fov = i;
+						}
 					}
 				}
 				aoColumns[i] = {sTitle: '<span title="' + title + '">' + jsdata.aoColumns[i].sTitle + '</span>'};
@@ -47556,7 +48685,17 @@ jQuery.extend({
 				"bFilter" : true,
 				"fnRowCallback": function( nRow, aData, iDisplayIndex ) {
 					for( var c=0 ; c<aData.length ; c++ ) {
-						formatValue(this.fnSettings().aoColumns[c].sTitle, aData[c], $('td:eq(' + c + ')', nRow));
+						var copiedcolumnMap = jQuery.extend(true, {}, columnMap);
+						var colName = $(this.fnSettings().aoColumns[c].sTitle).text();;
+						/*
+						 * Makes sure the mime type is for the current column 
+						 */
+						if( colName != "access_url" ) {
+							copiedcolumnMap.access_format = -1;
+						}
+						copiedcolumnMap.currentColumn = c;
+						//formatValue(this.fnSettings().aoColumns[c].sTitle, aData[c], $('td:eq(' + c + ')', nRow));
+						ValueFormator.formatValue(colName, aData, $('td:eq(' + c + ')', nRow), copiedcolumnMap);
 					}
 					return nRow;
 				}
@@ -49731,7 +50870,7 @@ DataTreeView.prototype = {
 						+ ((this.capabilities.supportUpload == true)?'lightgreen': 'salmon') 
 						+ ';" title="' + ((this.capabilities.supportUpload == true)?'S': 'Does not s')+ 'upport table upload">U</span>');
 				tp.append('<a href="#" style="font-style: normal; font-size: x-small ; background-color: lightblue;" title="Click to get more info" onclick="dataTreeView.showNodeInfos();"> ? </a>');
-				tp.append('&nbsp;<i>' + treepath.nodekey + '&gt;' + treepath.schema + '&gt;'+ treepath.table+ job);
+				tp.append('&nbsp;' + treepath.nodekey + '&gt;' + treepath.schema + '&gt;'+ treepath.table + job);
 			}
 		},
 		showNodeInfos: function () {
@@ -49766,7 +50905,6 @@ function initFunctions () {
 		new $.NodeFilterController(nodeFilterModel, nodeFilterView);
 
 		dataTreeView = new DataTreeView();
-
 	};
 
 	this.initLayout = function() {
@@ -49777,7 +50915,7 @@ function initFunctions () {
 		 * Split the bottom div in 3 splitters divs.
 		 */		
 		layoutPane = $('#accesspane').layout();
-		layoutPane.sizePane("south", "10%");
+		layoutPane.sizePane("south", "50%");
 	};
 
 	this.initNodeAccess = function() {
@@ -49813,32 +50951,43 @@ function initFunctions () {
 			    "drop_finish" : function (data) {
 						var parent = data.r;
 						var id = data.o.attr("id");
-						var streepath = null; ;
-						if( id == null || (streepath = data.o.attr("id").split(';')).length < 3 ) {
-							Modalinfo.info("Meta data only available for tables: ("  +  streepath + ")", 'User Input Error');
-						}
-						else {
-							var treePath = {nodekey: streepath[0]
-							, schema: streepath[1]
-							, tableorg: streepath[2]
-							, table: streepath[2].split('.').pop()};
-							var s = streepath[2].split('.').shift();
-							var p = streepath[2].indexOf(".");
-							if( p > -1 ) s = streepath[2].substring(p+1);
-							else s = streepath[2]
-							var treePath = {nodekey: streepath[0]
-							, schema: streepath[1]
-							, tableorg: streepath[2]
-							, table: s};
+						var streePath = null; ;
+						if( id == null || (streePath = data.o.attr("id").split(';')).length < 3 ) {
+							Modalinfo.info("Meta data only available for tables: ("  +  streePath + ")", 'User Input Error');
+						} else {
+//							var treePath = {nodekey: streePath[0]
+//							, schema: streePath[1]
+//							, tableorg: streePath[2]
+//							, table: streePath[2].split('.').pop()};
+//							var s = streepath[2].split('.').shift();
+//							var p = streepath[2].indexOf(".");
+//							if( p > -1 ) s = streepath[2].substring(p+1);
+//							else s = streepath[2]
+////							
+//							
+//							var treePath = {nodekey: streepath[0]
+//							, schema: streepath[1]
+//							, tableorg: streepath[2]
+//							, table: s};
+//							alert(JSON.stringify(treePath));
+							var parsedTreePath = streePath[2].getTreepath();
+							var treePath = {nodekey: streePath[0]
+							, schema: streePath[1]
+							, tableorg: streePath[2]
+							, table: parsedTreePath.table};
+
 							while(parent.length != 0  ) {
 								if(parent.is('#resultpane') ) {
 									ViewState.fireDoubleClickOK(treePath);
+						            _paq.push(['trackPageView', 'saada TapHandle/dropresult/' + streePath[0]]);
 									return;
 								} else if(parent.attr('id') == "showquerymeta" ) {
 									resultPaneView.fireShowMetaNode(treePath);	
-									return;
+						            _paq.push(['trackPageView', 'saada TapHandle/dropmeta/' + streePath[0]]);
+								return;
 								} else if(  parent.attr('id') == "taptab") {
 									ViewState.fireDragOnQueryForm(treePath);
+						            _paq.push(['trackPageView', 'saada TapHandle/dropquery/' + streePath[0]]);
 									return;
 								}
 								parent = parent.parent();
@@ -49864,16 +51013,18 @@ function initFunctions () {
 				Modalinfo.info("Query can only be applied on one data category or one data class: ("  +  treePath + ")", 'User Input Error');
 			} else {
 				var fTreePath = {nodekey: treePath[0], schema: treePath[1], tableorg: treePath[2], table: treePath[2].split('.').pop() };
-				var s = treePath[2].split('.').shift();
-				var p = treePath[2].indexOf(".");
-				if( p > -1 ) s = treePath[2].substring(p+1);
-				else s = treePath[2]
+//				var s = treePath[2].split('.').shift();
+//				var p = treePath[2].indexOf(".");
+//				if( p > -1 ) s = treePath[2].substring(p+1);
+//				else s = treePath[2];
+							
+				var parsedTreePath = treePath[2].getTreepath();
 				fTreePath = {nodekey: treePath[0]
 				, schema: treePath[1]
 				, tableorg: treePath[2]
-				, table: s};
-
+				, table: parsedTreePath.table};
 				ViewState.fireDoubleClickOK(fTreePath);
+	            _paq.push(['trackPageView', 'saada TapHandle/2clicks/' + treePath[0]]);
 			}
 		});
 		rootUrl = "http://" + window.location.hostname +  (location.port?":"+location.port:"") + window.location.pathname;
@@ -49988,7 +51139,7 @@ console.log('=============== >  initFunctions.js ');
 function setTitlePath(treepath) {
 	Out.info("title " + treepath);
 	var job = (treepath.jobid == null)? "": '&gt;'+ treepath.jobid;
-	$('#titlepath').html('<i>' + treepath.nodekey + '&gt;' + treepath.schema + '&gt;'+ treepath.table+ job);
+	$('#titlepath').html(treepath.nodekey + '&gt;' + treepath.schema + '&gt;'+ treepath.table+ job);
 }
 
 function getQLimit() {
@@ -50008,6 +51159,9 @@ function switchArrow(id) {
 	}
 }
 
+/*
+ * move to saadajsbasic
+ *
 function quoteTableName(tableName){
 	var regex = /([^.]*)\.(.*)/;
 	var results = regex.exec(tableName);
@@ -50028,7 +51182,8 @@ function quoteTableName(tableName){
 	} else {
 		return schema + '"' + table +'"';
 	}
-}
+	*
+}*/
 
 console.log('=============== >  utils.js ');
 
