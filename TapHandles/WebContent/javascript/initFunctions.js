@@ -17,7 +17,6 @@ function initFunctions () {
 		new $.NodeFilterController(nodeFilterModel, nodeFilterView);
 
 		dataTreeView = new DataTreeView();
-
 	};
 
 	this.initLayout = function() {
@@ -28,7 +27,7 @@ function initFunctions () {
 		 * Split the bottom div in 3 splitters divs.
 		 */		
 		layoutPane = $('#accesspane').layout();
-		layoutPane.sizePane("south", "10%");
+		layoutPane.sizePane("south", "50%");
 	};
 
 	this.initNodeAccess = function() {
@@ -64,32 +63,43 @@ function initFunctions () {
 			    "drop_finish" : function (data) {
 						var parent = data.r;
 						var id = data.o.attr("id");
-						var streepath = null; ;
-						if( id == null || (streepath = data.o.attr("id").split(';')).length < 3 ) {
-							Modalinfo.info("Meta data only available for tables: ("  +  streepath + ")", 'User Input Error');
-						}
-						else {
-							var treePath = {nodekey: streepath[0]
-							, schema: streepath[1]
-							, tableorg: streepath[2]
-							, table: streepath[2].split('.').pop()};
-							var s = streepath[2].split('.').shift();
-							var p = streepath[2].indexOf(".");
-							if( p > -1 ) s = streepath[2].substring(p+1);
-							else s = streepath[2]
-							var treePath = {nodekey: streepath[0]
-							, schema: streepath[1]
-							, tableorg: streepath[2]
-							, table: s};
+						var streePath = null; ;
+						if( id == null || (streePath = data.o.attr("id").split(';')).length < 3 ) {
+							Modalinfo.info("Meta data only available for tables: ("  +  streePath + ")", 'User Input Error');
+						} else {
+//							var treePath = {nodekey: streePath[0]
+//							, schema: streePath[1]
+//							, tableorg: streePath[2]
+//							, table: streePath[2].split('.').pop()};
+//							var s = streepath[2].split('.').shift();
+//							var p = streepath[2].indexOf(".");
+//							if( p > -1 ) s = streepath[2].substring(p+1);
+//							else s = streepath[2]
+////							
+//							
+//							var treePath = {nodekey: streepath[0]
+//							, schema: streepath[1]
+//							, tableorg: streepath[2]
+//							, table: s};
+//							alert(JSON.stringify(treePath));
+							var parsedTreePath = streePath[2].getTreepath();
+							var treePath = {nodekey: streePath[0]
+							, schema: streePath[1]
+							, tableorg: streePath[2]
+							, table: parsedTreePath.table};
+
 							while(parent.length != 0  ) {
 								if(parent.is('#resultpane') ) {
 									ViewState.fireDoubleClickOK(treePath);
+						            _paq.push(['trackPageView', 'saada TapHandle/dropresult/' + streePath[0]]);
 									return;
 								} else if(parent.attr('id') == "showquerymeta" ) {
 									resultPaneView.fireShowMetaNode(treePath);	
-									return;
+						            _paq.push(['trackPageView', 'saada TapHandle/dropmeta/' + streePath[0]]);
+								return;
 								} else if(  parent.attr('id') == "taptab") {
 									ViewState.fireDragOnQueryForm(treePath);
+						            _paq.push(['trackPageView', 'saada TapHandle/dropquery/' + streePath[0]]);
 									return;
 								}
 								parent = parent.parent();
@@ -115,16 +125,18 @@ function initFunctions () {
 				Modalinfo.info("Query can only be applied on one data category or one data class: ("  +  treePath + ")", 'User Input Error');
 			} else {
 				var fTreePath = {nodekey: treePath[0], schema: treePath[1], tableorg: treePath[2], table: treePath[2].split('.').pop() };
-				var s = treePath[2].split('.').shift();
-				var p = treePath[2].indexOf(".");
-				if( p > -1 ) s = treePath[2].substring(p+1);
-				else s = treePath[2]
+//				var s = treePath[2].split('.').shift();
+//				var p = treePath[2].indexOf(".");
+//				if( p > -1 ) s = treePath[2].substring(p+1);
+//				else s = treePath[2];
+							
+				var parsedTreePath = treePath[2].getTreepath();
 				fTreePath = {nodekey: treePath[0]
 				, schema: treePath[1]
 				, tableorg: treePath[2]
-				, table: s};
-
+				, table: parsedTreePath.table};
 				ViewState.fireDoubleClickOK(fTreePath);
+	            _paq.push(['trackPageView', 'saada TapHandle/2clicks/' + treePath[0]]);
 			}
 		});
 		rootUrl = "http://" + window.location.hostname +  (location.port?":"+location.port:"") + window.location.pathname;
