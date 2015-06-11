@@ -222,7 +222,7 @@ jQuery.extend({
 			if( icon.match("screen_up") != null ) {
 				$('#formexpender').css("background-image", "url(images/screen_down.png)");
 				$('#formexpender').attr("title", "Expend query form");
-				height='10%';
+				height='30%';
 			}
 			else {
 				$('#formexpender').css("background-image", "url(images/screen_up.png)");
@@ -337,13 +337,15 @@ jQuery.extend({
 					if( ah == undefined ) {
 						title = "No description available (joined query?)";
 					} else {
-						title = ah.description
+						/*
+						 * Titkle must be filtered to be undestood by the tooltip plugin
+						 */
+						title = ah.description.replace(/&[a-z]+;/g, '').replace(/[<>]/g, ' ').replace(/"/g, '');
 						+ " - Name: " + ah.nameorg
 						+ " - Unit: " + ah.unit
 						+ " - UCD: " + ah.ucd
 						+ " - UType: " + ah.utype
 						+ " - DataType: " + ah.dataType;
-
 						if( ah.nameorg == "access_format" || ah.ucd == "meta.code.mime" ) {
 							columnMap.access_format = i;
 						} else if( ah.nameorg == "s_ra" || ah.ucd == "pos.eq.ra;meta.main" || ah.ucd == "pos.eq.ra") {
