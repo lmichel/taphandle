@@ -1,46 +1,39 @@
 /*
- * Some utilities
+ * Some utilities moved to basic.js
  */
-if(!String.prototype.startsWith){
-	String.prototype.startsWith = function (str) {
-		return !this.indexOf(str);
-	};
-};
-if(!String.prototype.endsWith){
-	String.prototype.endsWith = function(suffix) {
-		return this.indexOf(suffix, this.length - suffix.length) !== -1;
-	};
-};
-
-if(!String.prototype.hashCode){
-	String.prototype.hashCode = function(){
-		var hash = 0;
-		if (this.length == 0) return code;
-		for (var i = 0; i < this.length; i++) {
-			var char = this.charCodeAt(i);
-			hash = 31*hash+char;
-			hash = hash & hash; 
-		}
-		return hash;
-	};
-};
-if(!String.prototype.trim){
-	String.prototype.trim = function(chaine){
-		return chaine.replace(/^\s+|\s+$/g,"");
-	} ;
-};
-
-function trim(chaine) {
-	return chaine.replace(/^\s+|\s+$/g,"");
-}
-
-function isNumber(val) {
-	var exp = new RegExp("^[+-]?[0-9]*[.]?[0-9]*([eE][+-]?[0-9]+)?$","m"); 
-	return exp.test(val);
-}
-
-var decimaleRegexp = new RegExp("^[+-]?[0-9]*[.][0-9]*([eE][+-]?[0-9]+)?$","m"); 
-var bibcodeRegexp  = new RegExp(/^[12][089]\d{2}[A-Za-z][A-Za-z0-9&][A-Za-z0-9&.]{2}[A-Za-z0-9.][0-9.][0-9.BCRU][0-9.]{2}[A-Za-z0-9.][0-9.]{4}[A-Z:.]$/);	
+//if(!String.prototype.startsWith){
+//	String.prototype.startsWith = function (str) {
+//		return !this.indexOf(str);
+//	};
+//};
+//if(!String.prototype.endsWith){
+//	String.prototype.endsWith = function(suffix) {
+//		return this.indexOf(suffix, this.length - suffix.length) !== -1;
+//	};
+//};
+//
+//if(!String.prototype.hashCode){
+//	String.prototype.hashCode = function(){
+//		var hash = 0;
+//		if (this.length == 0) return code;
+//		for (var i = 0; i < this.length; i++) {
+//			var char = this.charCodeAt(i);
+//			hash = 31*hash+char;
+//			hash = hash & hash; 
+//		}
+//		return hash;
+//	};
+//};
+//if(!String.prototype.trim){
+//	String.prototype.trim = function(chaine){
+//		return chaine.replace(/^\s+|\s+$/g,"");
+//	} ;
+//};
+//
+//function trim(chaine) {
+//	return chaine.replace(/^\s+|\s+$/g,"");
+//}
+//
 
 /**
  * Singleton encapsulating the formating function 
@@ -66,9 +59,9 @@ ValueFormator = function() {
 			/*
 			 * To be send to the the datalink processor to setup possible cutout services
 			 */
-			var fovObject = {s_ra: (columnMap.s_ra != -1)? columnMap.s_ra: 9999 ,
-					s_dec: (columnMap.s_dec != -1)? columnMap.s_dec: 9999 ,
-							s_fov: (columnMap.s_fov != -1)? columnMap.s_fov: 9999 };
+			var fovObject = {s_ra: (columnMap.s_ra != -1)?  parseFloat(values[columnMap.s_ra]) : 9999 ,
+					        s_dec: (columnMap.s_dec != -1)? parseFloat(values[columnMap.s_dec]): 9999 ,
+							s_fov: (columnMap.s_fov != -1)?parseFloat( values[columnMap.s_fov]): 9999 };
 			/*
 			 * The mime type is specified: we can take into account the type of response withpout requesting the HTTP header
 			 */
@@ -81,7 +74,7 @@ ValueFormator = function() {
 				} else if( access_format.startsWith("image/") || access_format.startsWith("text/") ){
 					tDdNode.html("");
 					addInfoControl(columnName, tdNode, value);
-					addPreviewControl(columnName, tdNode, fileName);	
+					addPreviewControl(columnName, tdNode, value, fileName);	
 					addCartControl(columnName, tdNode, value, secureMode);
 				} else  {
 					/*
@@ -115,8 +108,7 @@ ValueFormator = function() {
 		 * TODO :add SAMP message to Aladin : script.aladin.send
 		 */
 		if( value.match(/^((position)|(region)|(polygon))/i) ) {
-			tdNode.html("<a title='STC Region (click to expand)' class='dl_stc' href='#'  onclick='Modalinfo.info(\"" + value + "\", \"STC Region\");'></a>");
-			tdNode.append("<a class='dl_samp' title='Broadcast to SAMP'   href='#' onclick='WebSamp_mVc.fireSendAladinScript(\"" +value + "\"); return false;'/></a>");
+			addSTCRegionControl(tdNode, value);
 		} else if( value.startsWith("Array") ) {
 			tdNode.html("<a title='Data array(click to expand)' class='dl_dataarray' href='#'  onclick='Modalinfo.info(\"" + value + "\", \"Data Array\");'></a>");
 		} else if( decimaleRegexp.test(value)){
@@ -133,7 +125,8 @@ ValueFormator = function() {
 	var addDownloadControl = function(columnName, tdNode, url, secureMode, contentEncoding){
 		var target = (contentEncoding == "")? "": "target=blank";				
 		var dl_class = (secureMode)? "dl_securedownload": 'dl_download';
-		tdNode.append("<a class='" + dl_class + "' " + target + " title='Download Data' href='javascript:void(0);' onclick='PageLocation.changeLocation(\"" + url + "\");'></a>");
+		var x = "<a class='" + dl_class + "' " + target + " title='Download Data' href='javascript:void(0);' onclick='PageLocation.changeLocation(\"" + url + "\");'></a>";
+		tdNode.append(x);
 	};	
 	var addCartControl = function(columnName, tdNode, url, secureMode){
 		if( secureMode ){
@@ -148,7 +141,9 @@ ValueFormator = function() {
 	};	
 	var addPreviewControl = function(columnName, tdNode, url, fileName){
 		var title = fileName + " preview";
-		tdNode.append("<a class='dl_download' title='Data preview' href='javascript:void(0);' onclick='Modalinfo.openIframePanel(\"" + url + "\", \"", title + "\");'></a>");
+		var x = "<a class='dl_download' title='Data preview' href='javascript:void(0);' onclick='Modalinfo.openIframePanel(\"" + url + "\", \"" + title + "\");'></a>";
+		tdNode.append(x);
+		
 	};	
 	var addDatalinkControl = function(url, tdNode, fovObject){
 		tdNode.append("<a class='dl_datalink' title='Get LinkedData'/></a>");
@@ -156,6 +151,14 @@ ValueFormator = function() {
 			DataLinkBrowser.startCompliantBrowser(url, "forwardxmlresource", fovObject);
 		});
 	};
+	var addSTCRegionControl = function(tdNode, stcRegion) {
+		var region = new STCRegion(stcRegion);
+		tdNode.html("<a title='STC Region (click to expand)' class='dl_stc' href='#'></a>");
+		tdNode.first("a").click(function() {
+			Modalinfo.showSTCRegion(region);
+		})
+		tdNode.append("<a class='dl_samp' title='Broadcast to SAMP'   href='#' onclick='WebSamp_mVc.fireSendAladinScript(\"" + region.getAladinScript() + "\"); return false;'/></a>");				
+	}
 	/**
 	 * Get the URL infos asynchronously: formating must be achieved inside the callback
 	 */
@@ -197,7 +200,10 @@ ValueFormator = function() {
 					} else if( k == 'nokey' &&  v.match('401')  ) {
 						secureMode = true;
 					}
-				});				
+				});		
+				if( fileName == "" ){
+					fileName = url.split("/").pop();
+				}
 				/*
 				 * Put the right controls according to the context
 				 */
@@ -209,10 +215,10 @@ ValueFormator = function() {
 					addInfoControl(columnName, tdNode, url);
 					addDownloadControl(columnName, tdNode, url, secureMode, contentEncoding);
 					addCartControl(columnName, tdNode, url, secureMode);
-					addSampControl(columnName, tdNode, url, secureMode, sampMType, fileName);
-				} else if( urlInfo.access_format.startsWith("image/") || urlInfo.access_format.startsWith("text/") ){
+					addSampControl(columnName, tdNode, url, sampMType, fileName);
+				} else if( contentType.startsWith("image/") || contentType.startsWith("text/") ){
 					addInfoControl(columnName, tdNode, url);
-					addPreviewControl(columnName, tdNode, fileName);	
+					addPreviewControl(columnName, tdNode,url,  fileName);	
 					addCartControl(columnName, tdNode, url, secureMode);
 				} else {
 					addInfoControl(columnName, tdNode, url);
