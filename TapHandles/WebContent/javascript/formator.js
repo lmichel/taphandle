@@ -74,7 +74,7 @@ ValueFormator = function() {
 				} else if( access_format.startsWith("image/") || access_format.startsWith("text/") ){
 					tDdNode.html("");
 					addInfoControl(columnName, tdNode, value);
-					addPreviewControl(columnName, tdNode, fileName);	
+					addPreviewControl(columnName, tdNode, value, fileName);	
 					addCartControl(columnName, tdNode, value, secureMode);
 				} else  {
 					/*
@@ -125,7 +125,8 @@ ValueFormator = function() {
 	var addDownloadControl = function(columnName, tdNode, url, secureMode, contentEncoding){
 		var target = (contentEncoding == "")? "": "target=blank";				
 		var dl_class = (secureMode)? "dl_securedownload": 'dl_download';
-		tdNode.append("<a class='" + dl_class + "' " + target + " title='Download Data' href='javascript:void(0);' onclick='PageLocation.changeLocation(\"" + url + "\");'></a>");
+		var x = "<a class='" + dl_class + "' " + target + " title='Download Data' href='javascript:void(0);' onclick='PageLocation.changeLocation(\"" + url + "\");'></a>";
+		tdNode.append(x);
 	};	
 	var addCartControl = function(columnName, tdNode, url, secureMode){
 		if( secureMode ){
@@ -140,7 +141,9 @@ ValueFormator = function() {
 	};	
 	var addPreviewControl = function(columnName, tdNode, url, fileName){
 		var title = fileName + " preview";
-		tdNode.append("<a class='dl_download' title='Data preview' href='javascript:void(0);' onclick='Modalinfo.openIframePanel(\"" + url + "\", \"", title + "\");'></a>");
+		var x = "<a class='dl_download' title='Data preview' href='javascript:void(0);' onclick='Modalinfo.openIframePanel(\"" + url + "\", \"" + title + "\");'></a>";
+		tdNode.append(x);
+		
 	};	
 	var addDatalinkControl = function(url, tdNode, fovObject){
 		tdNode.append("<a class='dl_datalink' title='Get LinkedData'/></a>");
@@ -197,7 +200,10 @@ ValueFormator = function() {
 					} else if( k == 'nokey' &&  v.match('401')  ) {
 						secureMode = true;
 					}
-				});				
+				});		
+				if( fileName == "" ){
+					fileName = url.split("/").pop();
+				}
 				/*
 				 * Put the right controls according to the context
 				 */
@@ -209,10 +215,10 @@ ValueFormator = function() {
 					addInfoControl(columnName, tdNode, url);
 					addDownloadControl(columnName, tdNode, url, secureMode, contentEncoding);
 					addCartControl(columnName, tdNode, url, secureMode);
-					addSampControl(columnName, tdNode, url, secureMode, sampMType, fileName);
-				} else if( urlInfo.access_format.startsWith("image/") || urlInfo.access_format.startsWith("text/") ){
+					addSampControl(columnName, tdNode, url, sampMType, fileName);
+				} else if( contentType.startsWith("image/") || contentType.startsWith("text/") ){
 					addInfoControl(columnName, tdNode, url);
-					addPreviewControl(columnName, tdNode, fileName);	
+					addPreviewControl(columnName, tdNode,url,  fileName);	
 					addCartControl(columnName, tdNode, url, secureMode);
 				} else {
 					addInfoControl(columnName, tdNode, url);
