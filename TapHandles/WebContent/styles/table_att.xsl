@@ -20,9 +20,16 @@
     </xsl:function>
 	
 <xsl:template match="vosi:tableset | tableset">
-<xsl:for-each select="schema/table"><xsl:if test="name = 'TABLENAME' ">
+<!-- 
+Table name can be either tableName or schema.tableName 
+but the variable TABLENAME is always given as schema.tableName 
+At the ends, we want  name = schema.tableName 
+-->
+<xsl:for-each select="schema/table"><xsl:if test="name = 'TABLENAME' or ends-with('TABLENAME', name)">
+
 {&quot;nodekey&quot;: &quot;NODEKEY&quot;,
-&quot;table&quot;: &quot;<xsl:value-of select="name" />&quot;,
+<!--  &quot;table&quot;: &quot;<xsl:value-of select="name" />&quot;, -->
+&quot;table&quot;: &quot;TABLENAME&quot;,
 &quot;attributes&quot;: [
 
 <xsl:for-each select="column">
