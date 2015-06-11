@@ -204,7 +204,7 @@ jQuery.extend({
 				+ operator + ") = " + bcomp;
 			}
 			else {
-				return andor + ' ' + quoteTableName(table) + "." + ahName  + ' ' + operator + ' ' + operand;
+				return andor + ' ' + table.quoteTableName() + "." + ahName  + ' ' + operator + ' ' + operand;
 			}
 		};
 		this.getTable = function(attrQuoted) {	
