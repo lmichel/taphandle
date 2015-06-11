@@ -51,8 +51,16 @@ public class ZipMap extends RootClass {
 		for( Entry<String, Set<ZipEntryRef>> e: zipMap.entrySet() ){
 			String node = e.getKey();
 			String nodeDir = baseDir + File.separator + node;
-			if( ! isWorkingDirectoryValid(nodeDir) ) {
-				throw new TapException("Cannot acces to " + nodeDir);
+			/*
+			 * In this case, the map entry only cntains URLs to be downloaded
+			 * Just prepar  the directory
+			 */
+			if( node.equalsIgnoreCase("undefined")){
+				validWorkingDirectory(nodeDir);
+			} else {
+				if( ! isWorkingDirectoryValid(nodeDir) ) {
+					throw new TapException("Cannot acces to " + nodeDir);
+				}
 			}
 			Set<ZipEntryRef> zers = e.getValue();
 			LinkedHashSet<ZipEntryRef> statusZers = new LinkedHashSet<ZipEntryRef>();
@@ -67,10 +75,10 @@ public class ZipMap extends RootClass {
 		}
 	}
 	private void prepareUrlFile(ZipEntryRef zer, String nodeDir, String reportDir) throws Exception {
-//		URL url = new URL( "http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/getPlane/-7998075010220172211?RUNID=efx7xacfz0uvmsl4" );
-//		URLConnection conn = url.openConnection(); 
-//		conn.getHeaderFields()
-		
+		//		URL url = new URL( "http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/getPlane/-7998075010220172211?RUNID=efx7xacfz0uvmsl4" );
+		//		URLConnection conn = url.openConnection(); 
+		//		conn.getHeaderFields()
+
 		// Send the request
 		URL url = new URL(zer.getUri());
 		URLConnection conn = url.openConnection();
@@ -133,7 +141,7 @@ public class ZipMap extends RootClass {
 		bos.close();
 		statusZers.add(new ZipEntryRef(ZipEntryRef.JOB, zer.getName(), fcopyName));
 	}
-	
+
 	public static void main(String[] args) throws Exception {
 		URL url = new URL( "http://obs-he-lm:8888/XCATDR3/getproduct?obsid=0113060201&dtype=flatfiles&prd=P0113060201M2S003STSPLT8004.PDF" );
 		URLConnection conn = url.openConnection(); 
