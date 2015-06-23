@@ -45,12 +45,23 @@ function initFunctions () {
 			, upload: {url: "uploadposlist", postHandler: function(retour){alert("postHandler " + retour);}}
 			, queryView: adqlQueryView});
 
-
-		$("input#node_selector").keypress(function(event) {
+		var ins = $("input#node_selector");
+		ins.keypress(function(event) {
 			if (event.which == '13') {
-				dataTreeView.fireNewNodeEvent($('#node_selector').val());
+				var val = $('#node_selector').val();
+				/*
+				 * Avoid to take a keyword as a service 
+				 */
+				if( val.startWith("http"))
+					dataTreeView.fireNewNodeEvent($('#node_selector').val());
 			}
-		});
+		});			
+		ins.one("click",function() {
+			$(this).css('color','black');
+			$(this).css('font-style','');
+			$(this).attr('value','');
+		});		
+
 	};
 
 	this.initDataTree = function() {
@@ -67,21 +78,6 @@ function initFunctions () {
 						if( id == null || (streePath = data.o.attr("id").split(';')).length < 3 ) {
 							Modalinfo.info("Meta data only available for tables: ("  +  streePath + ")", 'User Input Error');
 						} else {
-//							var treePath = {nodekey: streePath[0]
-//							, schema: streePath[1]
-//							, tableorg: streePath[2]
-//							, table: streePath[2].split('.').pop()};
-//							var s = streepath[2].split('.').shift();
-//							var p = streepath[2].indexOf(".");
-//							if( p > -1 ) s = streepath[2].substring(p+1);
-//							else s = streepath[2]
-////							
-//							
-//							var treePath = {nodekey: streepath[0]
-//							, schema: streepath[1]
-//							, tableorg: streepath[2]
-//							, table: s};
-//							alert(JSON.stringify(treePath));
 							var parsedTreePath = streePath[2].getTreepath();
 							var treePath = {nodekey: streePath[0]
 							, schema: streePath[1]
@@ -125,11 +121,6 @@ function initFunctions () {
 				Modalinfo.info("Query can only be applied on one data category or one data class: ("  +  treePath + ")", 'User Input Error');
 			} else {
 				var fTreePath = {nodekey: treePath[0], schema: treePath[1], tableorg: treePath[2], table: treePath[2].split('.').pop() };
-//				var s = treePath[2].split('.').shift();
-//				var p = treePath[2].indexOf(".");
-//				if( p > -1 ) s = treePath[2].substring(p+1);
-//				else s = treePath[2];
-							
 				var parsedTreePath = treePath[2].getTreepath();
 				fTreePath = {nodekey: treePath[0]
 				, schema: treePath[1]
