@@ -52,7 +52,7 @@ function initFunctions () {
 				/*
 				 * Avoid to take a keyword as a service 
 				 */
-				if( val.startWith("http"))
+				if( val.startsWith("http"))
 					dataTreeView.fireNewNodeEvent($('#node_selector').val());
 			}
 		});			
