@@ -53,11 +53,13 @@ resourceLoader = function() {
 	                  , "datatable.css"
 	                  , "simplemodal.css"
 	                  , "aladin.min.css"
+	                  , "bootstrap/bootstrap.css"
+	                  , "bootstrap/bootstrap.css.map"
 	                  ];
 
 	var css = new Array();// global list of CSS to load
 	var CssOver = false; // true when all CSS are loaded (can start JS loading)
-
+	
 	var checkBaseUrl = function() {
 
 		/*

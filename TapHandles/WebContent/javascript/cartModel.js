@@ -14,7 +14,11 @@ jQuery.extend({
 			listeners.push(list);
 		};
 		this.addJobResult = function(treepath, jobid) {
-			var nodekey = treepath.nodekey;
+			if (treepath.nodekey == undefined) {
+				var nodekey = treepath;
+			} else {
+				var nodekey = treepath.nodekey;
+			}			
 			var entry;
 			if( (entry = cartData[nodekey]) == undefined ) {
 				cartData[nodekey] = {jobs: new Array(), urls: new Array()};
@@ -52,7 +56,13 @@ jQuery.extend({
 			}			
 		};
 		this.addUrl = function(treepath, url) {
-			var nodekey = treepath.nodekey;
+			console.log(treepath);
+			if (treepath.nodekey == undefined) {
+				var nodekey = treepath;
+			}
+			else {
+				var nodekey = treepath.nodekey;
+			}
 			var entry;
 //			var ch  = url.split("/");
 //			var name = ch[ch.length - 1].replace(/[^\w]/, "_");

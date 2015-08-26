@@ -31,8 +31,9 @@ jQuery.extend({
 
 
 		this.submitQuery = function(){
+			console.log("iiiiiiiiiiiiiiiiiiiiiiiii");
 			if( dataTreeView.treePath == null) {
-				Modalinfo.error("No data node seelcted: canot process any query\nSelect the data table table you want to query in the 'Tap Nodes' panel\nand ClickClick on it");
+				Modalinfo.error("No data node selected: cannot process any query\nSelect the data table table you want to query in the 'Tap Nodes' panel\nand ClickClick on it");
 				return;
 			}
 			Processing.show("Run job");

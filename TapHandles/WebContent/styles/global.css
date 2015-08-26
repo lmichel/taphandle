@@ -8,15 +8,12 @@
 }
 
 
-html, body {
-	width:		100%;
-	height:		100%;					
+html, body {			
 	padding:	0;
 	margin:		0;
-	overflow: auto;
 }
 
-div {
+/* div {
 	background-color: white;
 	border-width: 1px;
 	border-style: solid;
@@ -26,7 +23,7 @@ div {
 	border-top-left-radius: 4px 4px;
 	border-top-right-radius: 4px 4px;
 	overflow: none;
-}
+} */
 
 span, p, option, select {
 	font-size: small;
@@ -185,7 +182,7 @@ a.accept {
 	width: 0px;
 	overflow: visible;
 	padding: 4px 0 4px 90px;
-	background: transparent url(../images/submit.png) bottom left
+	background: transparent url(../images/submit_90.png) bottom left
 		no-repeat;
 	vertical-align: middle;
 }
@@ -476,7 +473,7 @@ a:active.sesame {
 
 .pagetitlepath {
 	font-style: normal;
-	color: lightblue; 
+	color: #5bc0de; 
 	font-weight: bold;
 	font-size: 150%
 }
@@ -557,12 +554,32 @@ a:active.votable {
 	opacity: 0.8;
 }
 
+a.contact {
+	display: inline-block;
+	width: 0px;
+	overflow: visible;
+	padding: 16px 0px 16px 38px;
+	background: transparent url(../images/contact_38.png) center left no-repeat;
+	margin-right: 1px;
+}
+
+a.bookmark {
+	display: inline-block;
+	width: 0px;
+	overflow: visible;
+	padding: 16px 0px 16px 38px;
+	background: transparent url(../images/bookmark_38.png) center left no-repeat;
+	margin-right: 1px;
+}
+
 a.zip {
 	display: inline-block;
 	width: 0px;
 	overflow: visible;
 	padding: 16px 0px 16px 38px;
-	background: transparent url(../images/groscaddy.png) center left no-repeat;
+	/* background: transparent url(../images/groscaddy.png) center left no-repeat; */
+	background: transparent url(../images/cart_38.png) center left no-repeat;
+	margin-right: 1px;
 }
 a.zip_failed {
 	display: inline-block;
@@ -746,8 +763,11 @@ a.dl_stc {
 	width: 0px;
 	overflow: visible;
 	padding: 9px 0px 9px 23px;
-	background: transparent url(../images/STC.png) center left
+	/* background: transparent url(../images/STC.png) center left
+		no-repeat; */
+	background: transparent url(../images/stc_23.png) center left
 		no-repeat;
+	margin-right: 1px;
 }
 a:hover.dl_stc {
 	filter: alpha(opacity = 50);
@@ -784,8 +804,11 @@ a.dl_samp {
 	width: 0px;
 	overflow: visible;
 	padding: 9px 0px 9px 23px;
-	background: transparent url(../images/dl_ivoa.png) center left
+	/* background: transparent url(../images/dl_ivoa.png) center left
+		no-repeat; */
+	background: transparent url(../images/ivoa_23.png) center left
 		no-repeat;
+	margin-right: 1px;
 }
 a:hover.dl_samp {
 	filter: alpha(opacity = 50);
@@ -803,8 +826,11 @@ a.dl_download {
 	width: 0px;
 	overflow: visible;
 	padding: 9px 0px 9px 23px;
-	background: transparent url(../images/dl_download.png) center left
-		no-repeat;
+	/* background: transparent url(../images/dl_download.png) center left
+		no-repeat; */
+	background: transparent url(../images/download_23.png) center left
+	no-repeat;
+	margin-right: 1px;
 }
 a:hover.dl_download {
 	filter: alpha(opacity = 50);
@@ -840,8 +866,11 @@ a.dl_cart {
 	width: 0px;
 	overflow: visible;
 	padding: 9px 0px 9px 23px;
-	background: transparent url(../images/dl_cart.png) center left
+	/* background: transparent url(../images/dl_cart.png) center left
+		no-repeat; */
+	background: transparent url(../images/cart_23.png) center left
 		no-repeat;
+	margin-right: 1px;
 }
 a:hover.dl_cart {
 	filter: alpha(opacity = 50);
@@ -878,8 +907,11 @@ a.dl_info {
 	width: 0px;
 	overflow: visible;
 	padding: 9px 0px 9px 23px;
-	background: transparent url(../images/dl_info.png) center left
+	/*background: transparent url(../images/dl_info.png) center left
+		no-repeat;*/
+	background: transparent url(../images/info_23.png) center left
 		no-repeat;
+	margin-right: 1px;	
 }
 a:hover.dl_info {
 	filter: alpha(opacity = 50);
@@ -915,11 +947,11 @@ a:active.dl_datalink {
  * Page header style
  */
  
-div#banner {
+/* div#banner {
 	height: 70px;
 	vertical-align: middle;
 }
-
+ */
 div#pagetitle {
 	width: 300px;
 	margin-left: 150px;
@@ -1001,18 +1033,72 @@ div#treepane {
 
 div#treedisp {
 	background-color: whiteSmoke;
-	height: 80%;
+	height: 100%;
 	overflow: auto;
 	border-width: 0px;
 	width: auto;
 }
-/*
-div#resultpane {
-	overflow: visible;
-	border-width: 0px;
-	height: 80%px;
-	width: 80%; 
-}*/
+
+div#resultpane{
+	padding-bottom: 30px;
+	padding-left: 35px;
+	padding-right: 25px;
+	position: relative;
+	overflow-x: auto;
+}
+
+div#queryformpane {
+	border-top: 1px solid #c6c6c6;
+	height: 330px;
+	padding-left: 15px;
+}
+
+div#result {
+	border-left: 1px solid #c6c6c6;
+	position: relative;	
+}
+
+div#result.col-xs-10 {
+	padding:0px !important;
+}
+
+div#toggle-tree {
+    position: absolute;
+    padding: 4px;
+	top: 23px;
+	left: -19px;
+	border-bottom-left-radius: 4px;
+	border-bottom-right-radius: 4px;
+    -moz-transform: rotate(-90deg); /* For Firefox<16.0 */
+	-ms-transform: rotate(-90deg); /* For IE9 only */
+	-webkit-transform: rotate(-90deg); /* For Safari, Chrome, iOS */
+	-o-transform: rotate(-90deg); /* For Opera<12.10 */
+	transform: rotate(-90deg); /* For all other CSS3 compatible major browser */
+}
+
+div#toggle-query {
+    position: absolute;
+    padding: 4px;
+    left: 6px;
+    bottom: 330px;
+	border-top-left-radius: 4px;
+	border-top-right-radius: 4px;
+}
+
+div#toggle-tree, div#toggle-query {
+	background: #5bc0de;
+	color: white;
+	z-index: 1;
+}
+
+.pres {
+	width: 90%; 
+	text-align: center; 
+	position: absolute; 
+	top: 50%; 
+	font-size: 21px;
+}
+
 /*
  * Right-side element of the splitter.
  */

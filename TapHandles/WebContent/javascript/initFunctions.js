@@ -19,15 +19,77 @@ function initFunctions () {
 		dataTreeView = new DataTreeView();
 	};
 
+//	this.initLayout = function() {
+//		$.alerts.overlayOpacity = 0.5;
+//		$.alerts.overlayColor = '#000';
+//		/*
+//		 * layout plugin, requires JQuery 1.7 or higher
+//		 * Split the bottom div in 3 splitters divs.
+//		 */		
+//		layoutPane = $('#accesspane').layout();
+//		layoutPane.sizePane("south", "50%");
+//	};
+	
 	this.initLayout = function() {
-		$.alerts.overlayOpacity = 0.5;
-		$.alerts.overlayColor = '#000';
-		/*
-		 * layout plugin, requires JQuery 1.7 or higher
-		 * Split the bottom div in 3 splitters divs.
-		 */		
-		layoutPane = $('#accesspane').layout();
-		layoutPane.sizePane("south", "50%");
+		
+		// Define the height of the div knowing the banner take 70px and the query editor 330px
+		$("#treepane").height($(window).height()-100);
+		$("#resultpane").height($(window).height()-400);
+		
+		// Change the height of the div if the window is resized
+		$( window ).resize(function() {
+			$("#treepane").height($(window).height()-100);
+			if ($("#queryformpane").is(":visible")) {
+				$("#resultpane").height($(window).height()-400);
+			} else {
+				$("#resultpane").height($(window).height()-100);
+			}
+		});
+		
+		// Show/Hide the tree div and adjust the position of toggle div
+		$("#toggle-tree").click(function(){
+			$("#treepane").toggle();
+			if ($("#result").hasClass("col-xs-10")) {
+				$("#result").removeClass("col-xs-10").addClass("col-xs-12");
+				$("#toggle-tree").text("Show tree");
+				$("#toggle-tree").css("left","-22px");
+				$("#toggle-query").css("left","20px");
+			} else {
+				$("#result").removeClass("col-xs-12").addClass("col-xs-10");
+				$("#toggle-tree").text("Hide tree");
+				$("#toggle-tree").css("left","-19px");
+				$("#toggle-query").css("left","22px");
+				
+			}		
+		});
+		
+		// Show/Hide the query editor div and adjust the position of toggle div
+		$("#toggle-query").click(function(){
+			$("#queryformpane").toggle();
+			if ($("#queryformpane").is(":visible")) {
+				$("#toggle-query").text("Hide query");
+				$("#resultpane").height($(window).height()-420);
+				$("#toggle-query").css("bottom","330px");
+			} else {
+				$("#toggle-query").text("Show query");
+				$("#resultpane").height($(window).height()-100);
+				$("#toggle-query").css("bottom","0px");
+			}
+		});
+		
+		// Manage which div have to be displayed if there is the paramater url in the url
+		if (getUrlParameter("url") != undefined) {
+			$("body").removeClass("with-bg");
+			$(".content-panel").show();
+			$("#toggle-query").trigger( "click" );
+			$("#queryformpane").hide();	
+			$("#toggle-query").hide();
+			PageLocation.confirmBeforeUnlaod();
+		}
+		else {
+			$("body").addClass("with-bg");
+			$(".home-panel").show();
+		}
 	};
 
 	this.initNodeAccess = function() {
@@ -41,6 +103,12 @@ function initFunctions () {
 			
 		tapConstraintEditor = QueryConstraintEditor.tapConstraintEditor({parentDivId: 'tapwhere'
 			, formName: 'tapFormName'
+			, sesameUrl:"sesame"
+			, upload: {url: "uploadposlist", postHandler: function(retour){alert("postHandler " + retour);}}
+			, queryView: adqlQueryView});
+		
+		tapPosSelector = QueryConstraintEditor.tapPosSelector({ parentDivId: 'tapwhereposition'
+			, formName:'tapPosName'
 			, sesameUrl:"sesame"
 			, upload: {url: "uploadposlist", postHandler: function(retour){alert("postHandler " + retour);}}
 			, queryView: adqlQueryView});
@@ -67,7 +135,7 @@ function initFunctions () {
 	this.initDataTree = function() {
 		dataTree = $("div#treedisp").jstree({
 			"json_data"   : {"data" : [ {  "attr"     : { "id"   : "rootid", "title": "Repository for uploaded tables (Not implemented yet)" },
-				"data"        : { "title"   : "Goodies" , "attr": {"id": "goodies"}}}]}  , 
+				"data"        : { "icon": "images/folder.png", "title"   : "Goodies" , "attr": {"id": "goodies"}}}]}  , 
 				"plugins"     : [ "themes", "json_data", "dnd", "crrm"],
 				"rules" : {"deletable" : "all"},
 				"dnd"         : {"drop_target" : "#resultpane,#taptab,#showquerymeta",
@@ -89,10 +157,10 @@ function initFunctions () {
 									ViewState.fireDoubleClickOK(treePath);
 						            _paq.push(['trackPageView', 'saada TapHandle/dropresult/' + streePath[0]]);
 									return;
-								} else if(parent.attr('id') == "showquerymeta" ) {
+								/*} else if(parent.attr('id') == "showquerymeta" ) {
 									resultPaneView.fireShowMetaNode(treePath);	
 						            _paq.push(['trackPageView', 'saada TapHandle/dropmeta/' + streePath[0]]);
-								return;
+								return;*/
 								} else if(  parent.attr('id') == "taptab") {
 									ViewState.fireDragOnQueryForm(treePath);
 						            _paq.push(['trackPageView', 'saada TapHandle/dropquery/' + streePath[0]]);
@@ -139,6 +207,7 @@ function initFunctions () {
 			dataTreeView.fireNewNodeEvent(unescape(defaultUrl));
 		}
 		Out.setdebugModeFromUrl();
+
 	};
 
 	this.initQueryForm = function() {

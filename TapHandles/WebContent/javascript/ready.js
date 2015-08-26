@@ -19,6 +19,7 @@ var cartView ;
 var adqlQueryView ;
 var tapColumnSelector;
 var tapConstraintEditor;
+var tapPosSelector;
 /*
  * Using a Jquery bind() here has a strange behaviour...
  * http://stackoverflow.com/questions/4458630/unable-to-unbind-the-window-beforeunload-event-in-jquery
@@ -49,6 +50,6 @@ $().ready(function() {
 	whenReady.initDataTree();
 	whenReady.initQueryForm();
 	whenReady.initSamp();
-	PageLocation.confirmBeforeUnlaod();
+	//PageLocation.confirmBeforeUnlaod();
 });
 

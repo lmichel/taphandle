@@ -20,9 +20,12 @@ jQuery.extend({
 		this.addListener = function(list){
 			listeners.push(list);
 		};
+		
+		var aborted = false;
 
 		this.fireAddJobResult = function(treepath, jobid) {
 			Processing.show("Result of job " + treepath + "." + jobid + " added to the cart");
+			aborted = false;
 			$.each(listeners, function(i){
 				listeners[i].controlAddJobResult(treepath, jobid);
 			});
@@ -30,6 +33,7 @@ jQuery.extend({
 			Processing.hide();
 			};
 		this.fireRemoveJobResult = function(nodekey, jobid) {
+			aborted = false;
 			$.each(listeners, function(i){
 				listeners[i].controlRemoveJobResult(nodekey, jobid);
 			});
@@ -37,6 +41,7 @@ jQuery.extend({
 		};
 		this.fireAddUrl = function(nodekey, url) {
 			Processing.show("Data returned by " + url + " added to the cart");
+			aborted = false;
 			$.each(listeners, function(i){
 				listeners[i].controlAddUrl(nodekey, url);
 			});
@@ -44,6 +49,7 @@ jQuery.extend({
 			this.resetJobControl();
 		};
 		this.fireRemoveUrl = function(nodekey, url) {
+			aborted = false;
 			$.each(listeners, function(i){
 				listeners[i].controlRemoveUrl(nodekey, url);
 			});
@@ -58,6 +64,7 @@ jQuery.extend({
 			});
 		};
 		this.fireCleanCart = function(tokens) {
+			aborted = false;
 			$.each(listeners, function(i){
 				listeners[i].controleCleanCart(tokens);
 			});
@@ -105,24 +112,31 @@ jQuery.extend({
 			};
 		
 		this.fireCheckArchiveCompleted = function() {
-			var phase = that.fireGetJobPhase();
-			var jobspan = $('#cartjob_phase');
-			jobspan.attr('class', phase.toLowerCase());
-			jobspan.text(phase);
-			if( phase == 'nojob') {
-				$('.zip').css("border", "0px");
+			if (!aborted) {
+				var phase = that.fireGetJobPhase();
+				var jobspan = $('#cartjob_phase');
+				jobspan.attr('class', phase.toLowerCase());
+				jobspan.text(phase);
+				if( phase == 'nojob') {
+					$('.zip').css("border", "0px");
+				}
+				else if( phase == 'EXECUTING') {
+					$('.zip').css("border", "2px solid orange");
+					setTimeout("cartView.fireCheckArchiveCompleted();", 1000);
+				}
+				else if( phase == 'COMPLETED') {
+					$('.zip').css("border", "2px solid green");
+					$('#detaildiv_submit').attr("disabled", true);
+					$('#detaildiv_download').removeAttr("disabled");
+				}
+				else {
+					$('.zip').css("border", "2px solid red");
+				}
 			}
-			else if( phase == 'EXECUTING') {
-				$('.zip').css("border", "2px solid orange");
-				setTimeout("cartView.fireCheckArchiveCompleted();", 1000);
-			}
-			else if( phase == 'COMPLETED') {
+			else {
 				$('.zip').css("border", "2px solid green");
 				$('#detaildiv_submit').attr("disabled", true);
 				$('#detaildiv_download').removeAttr("disabled");
-			}
-			else {
-				$('.zip').css("border", "2px solid red");
 			}
 		};
 
@@ -130,7 +144,7 @@ jQuery.extend({
 			$('#detaildiv').remove();
 			if ($('#detaildiv').length == 0) {
 				$(document.documentElement).append(
-				"<div id=detaildiv style='display: none;'></div>");
+				"<div id=detaildiv style='width: 99%; display: none;'></div>");
 			}
 			var empty = true;
 			for( var nodekey in cartData) {
@@ -145,9 +159,9 @@ jQuery.extend({
 			var table = '';
 			//var phase = that.fireGetJobPhase();
 
-			table += '<h2><img src="images/groscaddy.png"> Shopping Cart</h2>';
+			//table += '<h2><img src="images/groscaddy.png"> Shopping Cart</h2>';
 			table += '<div id=table_div></div>';
-			table += "<h4 id=\"cartjob\" class='detailhead'> <img src=\"images/tdown.png\">Processing status</h4>";
+			table += "<p id=\"cartjob\" class='chapter'> <img src=\"images/tdown.png\">Processing status</p>";
 			//table += '<br><span>Current Job Status</span> <span id=cartjob_phase class="' + phase.toLowerCase() + '">' + phase + '</span><BR>';
 			table += '<br><span>Current Job Status</span> <span id=cartjob_phase class=""></span><BR>';
 			table += "<span>Manage Content</span> <input type=button id=detaildiv_clean value='Remove Unselected Items'>";			
@@ -156,12 +170,13 @@ jQuery.extend({
 			table += "<input type=button id=detaildiv_abort value='Abort'><br>";			
 			table += "<span>Get the Result</span> <input type=button id=detaildiv_download value='Download Cart' disabled='disabled'>";			
 
-			$('#detaildiv').html(table);
-			var modalbox = $('#detaildiv').modal();
-			$("#simplemodal-container").css('height', 'auto'); 
-			$("#simplemodal-container").css('width', 'auto'); 
-			$(window).trigger('resize.simplemodal'); 
-
+//			$('#detaildiv').html(table);
+//			var modalbox = $('#detaildiv').modal();
+//			$("#simplemodal-container").css('height', 'auto'); 
+//			$("#simplemodal-container").css('width', 'auto'); 
+//			$(window).trigger('resize.simplemodal'); 
+			
+			Modalinfo.dataPanel('<img src="images/cart_38.png"> Shopping Cart' , table, null, "white");		
 			this.setTableDiv(cartData);
 
 			$('#detaildiv_clean').click( function() {
@@ -174,16 +189,20 @@ jQuery.extend({
 			} );
 			$('#detaildiv_cleanall').click( function() {
 				that.fireCleanCart("");
-				modalbox.close();
+				Modalinfo.close($(this).parent().attr("id"));
 				return false;
 			} );
 			$('#detaildiv_submit').click( function() {
+				aborted = false;
 				that.fireStartArchiveBuilding();
 				return false;
 			} );
 			$('#detaildiv_abort').click( function() {
-				that.fireKillArchiveBuilding();
-				that.fireCheckArchiveCompleted();
+				if (aborted == false) {
+					aborted = true;
+					that.fireKillArchiveBuilding();
+					//that.fireCheckArchiveCompleted();
+				}
 				return false;
 			} );
 
@@ -209,7 +228,7 @@ jQuery.extend({
 				return;
 			}
 			for( var nodekey in cartData) {
-				table += "<h4 id=\"mappedmeta\" class='detailhead'> <img src=\"images/tdown.png\">Node  " + nodekey + " </h4>";
+				table += "<p id=\"mappedmeta\" class='chapter'> <img src=\"images/tdown.png\">Node  " + nodekey + " </p>";
 				table += "<div class='detaildata'>";
 				table += "<table width=99% cellpadding=\"0\" cellspacing=\"0\" border=\"0\"  id=\"folder_" + nodekey +"\" class=\"display\"></table>";
 				table += "</div>";
@@ -217,6 +236,7 @@ jQuery.extend({
 			$('#table_div').html(table);
 			for( var nodekey in cartData) {
 				var folder = cartData[nodekey];
+				var tableId = "folder_" + nodekey;
 				var aaData = new Array();
 				for( var i=0 ; i<folder.jobs.length ; i++) {
 					aaData[aaData.length] = ["<INPUT TYPE=CHECKBOX checked name=\"" + nodekey + " job " + i + "\" value=" + i +">"
@@ -226,18 +246,34 @@ jQuery.extend({
 					aaData[aaData.length] = ["<INPUT TYPE=CHECKBOX checked name=\"" + nodekey + " url " + i + "\" value=" + i +">"
 					                         ,  "URL", "<span>" + folder.urls[i].name + "</span>", folder.urls[i].uri];
 				}
-				folderTables[folderTables.length] = $('#folder_' + nodekey).dataTable(
-						{
-							"aoColumns" : [{sTitle: "Keep/Discard"}, {sTitle: "Data Source"},{sTitle: "Resource Name"},{sTitle: "Resource URI"}],
-							"aaData" : aaData,
-							"bPaginate" : false,
-							"bInfo" : false,
-							"aaSorting" : [],
-							"bSort" : false,
-							"bFilter" : false,
-							"bAutoWidth" : true,
-							"bDestroy": true
-						});
+				
+				var options = {
+					"aoColumns" : [{sTitle: "Keep/Discard"}, {sTitle: "Data Source"},{sTitle: "Resource Name"},{sTitle: "Resource URI"}],
+					"aaData" : aaData,
+					"bPaginate" : false,
+					"bInfo" : false,
+					"aaSorting" : [],
+					"bSort" : false,
+					"bFilter" : false,
+					"bAutoWidth" : true,
+					"bDestroy": true
+				};
+				
+				folderTables[folderTables.length] = CustomDataTable.create(tableId, options);
+				
+//				folderTables[folderTables.length] = $('#folder_' + nodekey).dataTable(
+//						{
+//							"aoColumns" : [{sTitle: "Keep/Discard"}, {sTitle: "Data Source"},{sTitle: "Resource Name"},{sTitle: "Resource URI"}],
+//							"aaData" : aaData,
+//							"bPaginate" : false,
+//							"bInfo" : false,
+//							"aaSorting" : [],
+//							"bSort" : false,
+//							"bFilter" : false,
+//							"bAutoWidth" : true,
+//							"bDestroy": true
+//						});
+				
 				var oTable = folderTables[folderTables.length-1];
 			    /* Apply the jEditable handlers to the table */
 			    $('span', oTable.fnGetNodes()).editable( 
@@ -265,6 +301,7 @@ jQuery.extend({
 			        "height": "1.33em", 
 			        "width": "16em"}
 			    );
+			    Modalinfo.center();
 			}	
 		};
 	}

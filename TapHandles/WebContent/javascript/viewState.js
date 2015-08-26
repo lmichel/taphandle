@@ -78,6 +78,7 @@ ViewState = function() {
 		/*
 		 * Connect the interface to the selected node
 		 */
+		console.log(dataTreePath);
 		setPath(dataTreePath);			
 		tapView.fireTreeNodeEvent(dataTreePath, true);	
 	};
@@ -102,7 +103,7 @@ ViewState = function() {
 		cleanQuery(dataTreePath);
 		setForm(dataTreePath);
 		setPath(dataTreePath);
-		resultPaneView.fireExpandForm();
+		//resultPaneView.fireExpandForm();
 
 	};
 	/**
@@ -138,7 +139,7 @@ ViewState = function() {
 	 */
 	var fireSubmitKO = function(dataTreePath) {
 		cleanData(dataTreePath);
-		resultPaneView.fireExpandForm();
+		//resultPaneView.fireExpandForm();
 	};
 	/**
 	 * Recall a successful job
@@ -164,7 +165,7 @@ ViewState = function() {
 		setForm(dataTreePath);
 		setQuery(dataTreePath, query);
 		setPath(dataTreePath);
-		resultPaneView.fireExpandForm();
+		//resultPaneView.fireExpandForm();
 	};
 	
 	/*

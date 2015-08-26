@@ -232,7 +232,7 @@ jQuery.extend({
 			layoutPane.sizePane("south", height);
 			//	$("div#accesspane").trigger("resize",[ height]);		
 		};
-		this.fireExpandForm= function() {
+		/*this.fireExpandForm= function() {
 			var height = $(window).height() ;
 			var icon = $('#formexpender').css("background-image");
 			if( icon.match("screen_up") == null ) {
@@ -242,7 +242,7 @@ jQuery.extend({
 				layoutPane.sizePane("south", height);
 			}
 			//	$("div#accesspane").trigger("resize",[ height]);		
-		};
+		};*/
 
 		this.fireRemoveAllJobs= function() {
 			Modalinfo.confirm("Do you really want to remove all jobs?"
@@ -282,31 +282,44 @@ jQuery.extend({
 			table += "<table width=99% cellpadding=\"0\" cellspacing=\"0\" border=\"0\"  id=\"detailtable\" class=\"display\"></table>";
 			table += "</div>";
 
-
 			if ($('#detaildiv').length == 0) {
 				$(document.documentElement).append(
 				"<div id=detaildiv style='width: 99%; display: none;'></div>");
 			}
-//			$('#detaildiv').html(table);
-			Modalinfo.dataPanel(title, table, null);
-			$('#detailtable').dataTable(
-					{
-						"aoColumns" : jsdata.attributes.aoColumns,
-						"aaData" : jsdata.attributes.aaData,
-						//	"sDom" : '<"top"f>rt<"bottom">',
-						"bPaginate" : false,
-						"aaSorting" : [],
-						"bSort" : false,
-						"bFilter" : true,
-						"bAutoWidth" : true
-					});
-//			$('#detaildiv').modal(title, table, null);
 
+			Modalinfo.dataPanel(title, table, null);
+			
+			var options = {
+					"aoColumns" : jsdata.attributes.aoColumns,
+					"aaData" : jsdata.attributes.aaData,
+					"bPaginate" : false,
+					"aaSorting" : [],
+					"bSort" : false,
+					"bFilter" : true,
+					"bAutoWidth" : true
+				};
+				
+			var positions = [
+     			{ "name": 'filter',
+     	 		  "pos" : "top-left"
+     	 		}
+     	 	];
+				
+			CustomDataTable.create("detailtable", options, positions);
+			Modalinfo.center();
 		};
 
 		this.showTapResult = function(treepath, jid, jsdata, attributeHandlers) {
 			var table = "<table cellpadding=\"0\" cellspacing=\"0\" border=\"1\"  id=\"datatable\" class=\"display\"></table>";
-			$("#resultpane").html(table);
+			
+			var job = ( !treepath.jobid || treepath.jobid == "")? "": '&gt;'+ treepath.jobid;
+			
+			$("#resultpane").prepend('<p id="title-table" class="pagetitlepath"></p>');
+			if (treepath.schema != undefined && treepath.table != undefined) {
+				$("#title-table").html('&nbsp;' + treepath.nodekey + '&gt;' + treepath.schema + '&gt;'+ treepath.table + job);
+			}
+			
+			$("#resultpane").append(table);
 //			var nb_cols = jsdata.aoColumns.length;
 //			for( var r=0 ; r<jsdata.aaData.length ; r++) {
 //			var line = jsdata.aaData[r];
@@ -315,6 +328,7 @@ jQuery.extend({
 //			//line[l] = formatValue(jsdata.aoColumns[l].sTitle, num);
 //			}
 //			}
+			
 			attributeHandlers = tapConstraintEditor.getAttributeHandlers();
 			var aoColumns = new Array();
 			var columnMap = {access_format: -1, s_ra: -1, s_dec: -1, s_fov: -1, currentColumn: -1};
@@ -359,12 +373,11 @@ jQuery.extend({
 				}
 				aoColumns[i] = {sTitle: '<span title="' + title + '">' + jsdata.aoColumns[i].sTitle + '</span>'};
 			}
-
-			$('#datatable').dataTable({
+			
+			var options = {
 				"aLengthMenu": [5, 10, 25, 50, 100],
 				"aoColumns" : aoColumns,
 				"aaData" : jsdata.aaData,
-				//"sDom" : '<"top"f>rt',
 				"bPaginate" : true,
 				"aaSorting" : [],
 				"bSort" : false,
@@ -385,7 +398,52 @@ jQuery.extend({
 					}
 					return nRow;
 				}
-			} );
+			};
+			
+			var positions = [
+     			{ "name": "pagination",
+     			  "pos": "bottom-left"
+     			},
+     			{ "name": "length",
+     	 	      "pos": "top-left"
+     	 		},
+     			{ "name": 'filter',
+     	 		  "pos" : "top-right"
+     	 		},
+     			{ "name": "information",
+     	 	      "pos" : "bottom-right"
+     	 	 	}
+     	 	];
+			
+			CustomDataTable.create("datatable", options, positions);
+			
+
+//			$('#datatable').dataTable({
+//				"aLengthMenu": [5, 10, 25, 50, 100],
+//				"aoColumns" : aoColumns,
+//				"aaData" : jsdata.aaData,
+//				//"sDom" : '<"top"f>rt',
+//				"bPaginate" : true,
+//				"aaSorting" : [],
+//				"bSort" : false,
+//				"bFilter" : true,
+//				"fnRowCallback": function( nRow, aData, iDisplayIndex ) {
+//					for( var c=0 ; c<aData.length ; c++ ) {
+//						var copiedcolumnMap = jQuery.extend(true, {}, columnMap);
+//						var colName = $(this.fnSettings().aoColumns[c].sTitle).text();;
+//						/*
+//						 * Makes sure the mime type is for the current column 
+//						 */
+//						if( colName != "access_url" ) {
+//							copiedcolumnMap.access_format = -1;
+//						}
+//						copiedcolumnMap.currentColumn = c;
+//						//formatValue(this.fnSettings().aoColumns[c].sTitle, aData[c], $('td:eq(' + c + ')', nRow));
+//						ValueFormator.formatValue(colName, aData, $('td:eq(' + c + ')', nRow), copiedcolumnMap);
+//					}
+//					return nRow;
+//				}
+//			} );
 
 			$('#datatable span').tooltip( { 
 				track: true, 
@@ -397,8 +455,17 @@ jQuery.extend({
 				// extraClass: "pretty fancy", 
 				top: -15, 
 				left: 5 	
-			});	
-		};;
+			});
+			
+			$("#datatable_wrapper").css("overflow", "hidden");
+			
+			// Shows query panel
+			if (!$("#queryformpane").is(":visible")) {
+				$("#toggle-query").trigger( "click" );
+				$("#queryformpane").show();	
+				$("#toggle-query").show();
+			}
+		};
 
 		this.displayResult = function(dataJSONObject) {
 		};

@@ -67,8 +67,24 @@ DataTreeView.prototype = {
 					Processing.hide();
 				}
 			});
+			
+			$("body").removeClass("with-bg");
+			$(".home-panel").hide();
+			$(".content-panel").show();
+			
+			// Hide the query panel to permits the result panel to be bigger
+			if ($("#queryformpane").is(":visible") && $("#resultpane").find("table").length == 0) {
+				$("#toggle-query").trigger( "click" );
+			}
+			
+			// Hide the query panel if the user didnt open a table
+			if ($("#resultpane").find("table").length == 0) {
+				$("#queryformpane").hide();	
+				$("#toggle-query").hide();
+			}
 		},
 		fireBuildTree: function(jsdata) {
+			Processing.show("Waiting for the constrution of the tree");
 			this.capabilities = {supportSyncQueries: true
 					, supportAsyncQueries: (jsdata.asyncsupport == "true")?true: false
 							, supportJoin: true
@@ -93,10 +109,11 @@ DataTreeView.prototype = {
 			$("div#treedisp").jstree("create"
 					, $("div#treedisp")
 					, false
-					, {"data" : {"icon": "images/Database.png", "attr":{"id": jsdata.nodekey, "title": description}, "title" : jsdata.nodekey},
+					, {"data" : {"icon": "images/Database2.png", "attr":{"id": jsdata.nodekey, "title": /*description*/ "Double click to filter the visible tables"}, "title" : jsdata.nodekey},
 						"state": "closed"}
 					,false
-					,true);       
+					,true);  
+			
 			/*
 			 * Create first the first level tree (schemas)
 			 */
@@ -106,17 +123,18 @@ DataTreeView.prototype = {
 
 				var schemaName = jsdata.schemas[i].name;				
 				if(schemaName.match(/TAP_SCHEMA/i) ) {
-					icon = "images/Redcube.png";
+					icon = "images/Redcube2.png";
 					description = "Schema containing the description of the published tables";
 				} else if(schemaName.match(/ivoa/i) ) {
-					icon =  "images/Greencube.png";
+					icon =  "images/Greencube2.png";
 					description = "Tables matching IVOA data models (e.g. ObsCore)";
 				} else {
-					icon =  "images/Bluecube.png";
+					icon =  "images/Bluecube2.png";
 					if( description == "") {
 						description = "No Description Available";
 					}
 				}
+				description += "\n Double click to filter the tables";
 				$("div#treedisp").jstree("create"
 						, $("#" + jsdata.nodekey)
 						, false
@@ -142,10 +160,11 @@ DataTreeView.prototype = {
 					if( description == "") {
 						description = "No Description Available";
 					}
+					description += "\n Double click or drag and drop to display it"
 					$("div#treedisp").jstree("create"
 							, root
 							, false
-							, {"data"  : {"icon": "images/SQLTable.png", "attr":{"id": id_table, "title": description}, "title" : table.name},
+							, {"data"  : {"icon": "images/SQLTable2.png", "attr":{"id": id_table, "title": description, "class":"icon-table"}, "title" : table.name},
 								"state": "closed",
 								"attr" : {"id": id_table}
 							}
@@ -168,6 +187,31 @@ DataTreeView.prototype = {
 			if( msg != "" ) {
 				Modalinfo.info(msg + "\n\nDouble click on the '" + jsdata.nodekey + "' node to make you own selection");
 			}
+			
+			$("div#treedisp").find("li").each(function() {
+				if ($(this).attr("id") != undefined && $(this).find(".metadata").length == 0) {
+					var splited = $(this).attr("id").split(';');
+					if (splited.length >= 3) {
+						$(this).find("ins:first").after("<img class='metadata' src='images/metadata.png' title='Show metadata (Does not work with Vizier)'/>");
+						$(this).find("ins:first").next("img").click(function() {
+							var parsedTreePath = splited[2].getTreepath();
+							var treePath = {nodekey: splited[0]
+							, schema: splited[1]
+							, tableorg: splited[2]
+							, table: parsedTreePath.table};
+							
+							resultPaneView.fireShowMetaNode(treePath);
+						});
+						
+						$(this).find("ins:first").click(function() {
+							$(this).next().next().dblclick();
+						});
+					}
+				}
+			});
+			$("#"+jsdata.nodekey).before("<img class='metadata' src='images/metadata.png' title='Click to get more info' onclick='dataTreeView.showNodeInfos();'/>");
+			this.setTitlePath({nodekey: jsdata.nodekey});
+			Processing.hide();
 		},
 
 		fireTreeNodeEvent:function(dataTreePath, andsubmit) {
@@ -199,7 +243,7 @@ DataTreeView.prototype = {
 				$("div#treedisp").jstree("create"
 						, $("#" + id_schema)
 						, false // position
-						, {"data"  : {"icon": "images/SQLTable.png", "attr":{"id": jsdata.table, "title": "description"}, "title" : jsdata.table},
+						, {"data"  : {"icon": "images/SQLTable2.png", "attr":{"id": jsdata.table, "title": "description"}, "title" : jsdata.table},
 							"state": "closed"
 						}
 						,false// callback
@@ -271,24 +315,34 @@ DataTreeView.prototype = {
 			Out.info("title " + treepath);
 			this.treePath = treepath;
 			var tp = $('#titlepath');
-			var span = '<span style="font-style: normal; color: #888;font-size: x-small ; background-color:';
+			var span = '<span style="font-style: normal; font-size: x-small ; background-color:';
 			tp.html('');
 			if( treepath) {
-				var job = ( !treepath.jobid || treepath.jobid == "")? "": '&gt;'+ treepath.jobid;
-				tp.append(span
+				if ($("#info-"+treepath.nodekey).length == 0) {
+					$("#"+treepath.nodekey).after('<span id="info-'+treepath.nodekey+'"></span>');
+					
+					if (nodeFilterView.getFilter(treepath.nodekey) != null && nodeFilterView.getFilter(treepath.nodekey) != undefined) {
+						$("#info-"+treepath.nodekey).after('<span class="node-filter">'+nodeFilterView.getFilter(treepath.nodekey)+'</span>');
+					}
+				}
+				else {
+					$("#info-"+treepath.nodekey).html("");
+				}
+				var span_info = $("#info-"+treepath.nodekey);
+				
+				span_info.append(span
 						+ ((this.capabilities.supportSyncQueries== true)?'lightgreen': 'salmon') 
 						+ ';" title="' + ((this.capabilities.supportSyncQueries== true)?'S': 'Does not s') + 'upport synchronous queries">S</span>');
-				tp.append(span
+				span_info.append(span
 						+ ((this.capabilities.supportJoin== true)?'lightgreen': 'salmon')
 						+ ';" title="' + ((this.capabilities.supportJoin== true)?'S': 'Does not s')+ 'upport ADQL joins">J</span>');
-				tp.append(span
+				span_info.append(span
 						+ ((this.capabilities.supportAsyncQueries == true)?'lightgreen': 'salmon') 
 						+ ';" title="' + ((this.capabilities.supportAsyncQueries == true)?'S': 'Does not s')+ 'upport asynchronous queries">A</span>');
-				tp.append(span
+				span_info.append(span
 						+ ((this.capabilities.supportUpload == true)?'lightgreen': 'salmon') 
 						+ ';" title="' + ((this.capabilities.supportUpload == true)?'S': 'Does not s')+ 'upport table upload">U</span>');
-				tp.append('<a href="#" style="font-style: normal; font-size: x-small ; background-color: lightblue;" title="Click to get more info" onclick="dataTreeView.showNodeInfos();"> ? </a>');
-				tp.append('&nbsp;' + treepath.nodekey + '&gt;' + treepath.schema + '&gt;'+ treepath.table + job);
+													
 			}
 		},
 		showNodeInfos: function () {
@@ -296,7 +350,7 @@ DataTreeView.prototype = {
 			Modalinfo.infoObject(report, "Node " + this.treePath.nodekey);
 		},
 		getBookmark: function() {
-			var np = window.location.href.split('?')[0].replace(/\/$/, "");;
+			var np = window.location.href.split('?')[0].replace(/\/$/, "");
 			return (this.info != null)?np + "?url=" + escape(this.info.url): np;
 		}
 };

@@ -130,7 +130,7 @@ jQuery.extend({
 					+ jobDescription.treepath.schema + '.' 
 					+ jobDescription.treepath.table + ': job ' + id + '</span>');
 			$('#' + id).append('&nbsp;<span id=' + id + '_phase class="' + phase.toLowerCase() + '">' + phase + '</span>');
-			$('#' + id).append('<select id=' + id + '_actions style="font-size: small;"></select>');
+			$('#' + id).append('<select class="select-job" id=' + id + '_actions style="font-size: small;"></select>');
 			for( var i=0 ; i<actions.length ; i++ ) {
 				$('#' + id + '_actions').append('<option value="' + actions[i] + '">' +  actions[i] + '</option>');
 			}

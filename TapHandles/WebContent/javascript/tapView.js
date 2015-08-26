@@ -24,6 +24,7 @@ jQuery.extend({
 			// set to generate errors
 			///adqlQueryView.fireAddConstraint("tap", "limit", ['sfsfsfsdfds']);
 			tapConstraintEditor.fireSetTreepath(treepath);
+			tapPosSelector.fireSetTreepath(treepath);
 			tapColumnSelector.fireSetTreepath(treepath, ((andsubmit)? this.fireSubmitQueryEvent: null));
 
 		};

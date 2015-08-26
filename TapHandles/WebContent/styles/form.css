@@ -254,7 +254,6 @@ div#cf1 {
 	padding-right: 0px;
 	padding-bottom: 0px;
 	padding-left: 5px;
-	height: 220px;
 }
 
 #tapwhere {
@@ -263,7 +262,16 @@ div#cf1 {
 	padding-right: 0px;
 	padding-bottom: 0px;
 	padding-left: 5px;
-	height: 230px;
+	width: 100%;
+	overflow: hidden;
+}
+
+#tapwhereposition {
+	background: white;
+	padding-top: 5px;
+	padding-right: 0px;
+	padding-bottom: 0px;
+	padding-left: 5px;
 	width: 100%;
 	overflow: hidden;
 }
@@ -386,9 +394,10 @@ textarea#patterntext {
 #tapjobs {
 	width: 850px;
 	height: 160px;
-	border-width: 1px;
-	border-color: dimgray;
-	overflow: auto
+	overflow: auto;
+	border: 1px solid #CCC;
+	border-radius: 3px;
+	padding: 3px;
 }
 
 .sapcapability {
@@ -436,7 +445,9 @@ a.closekw {
 	width: 0px;
 	overflow: visible;
 	padding: 0px 0px 0px 16px;
-	background: transparent url(../images/small_trash.png) bottom left
+	/* background: transparent url(../images/small_trash.png) bottom left
+		no-repeat; */
+	background: transparent url(../images/trash.png) bottom left
 		no-repeat;
 	vertical-align: middle;
 }
