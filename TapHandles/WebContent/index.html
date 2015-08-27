@@ -8,7 +8,7 @@
 <link href='http://fonts.googleapis.com/css?family=Oswald' rel='stylesheet' type='text/css'>
 
 <script type="text/javascript" src="jsimport/jquery-1.7.2.js"></script>
-<script>var useDebugResources = true; var productionMode=false;</script>
+<script>var useDebugResources = true; var productionMode=true;</script>
 <script type="text/javascript" src="javascript/loader.js"></script>
 <script type="text/javascript" src="javascript/packedLoader.js"></script>
 
@@ -53,15 +53,6 @@
 				"javascript/resize.js" ]);
 		resourceLoader.loadAll();
 		
-		$(function() {
-			var np = window.location.href.split('?')[0].replace(/\/$/, "");
-			$(".3xmm-link").attr("href", np+"?url=http%3A//xcatdb.u-strasbg.fr/3xmm/tap/")
-			$(".cadc-link").attr("href", np+"?url=http%3A//www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap/")
-			$(".gavo-link").attr("href", np+"?url=http%3A//dc.zah.uni-heidelberg.de/__system__/tap/run/tap/")
-			$(".vizier-link").attr("href", np+"?url=http%3A//tapvizier.u-strasbg.fr/TAPVizieR/tap/")
-			$(".simbad-link").attr("href", np+"?url=http%3A//simbad.u-strasbg.fr/simbad/sim-tap/")
-			$(".planet-link").attr("href", np+"?url=http%3A//voparis-tap.obspm.fr/__system__/tap/run/tap/")
-		});	
 	}
 </script>
 
@@ -85,159 +76,19 @@
 		<a href="javascript:void(0);" title='Open the shopping cart' class='zip bouton' onclick='cartView.fireOpenCart();' id='zipbutton'></a>
 		<a id="sampIndicator" onclick="WebSamp_mVc.fireJustConnect();" class="sampOff bouton" href="#" title="SampStatus"></a>
 	</div>
-<!-- 	<div id='banner' class="levelonediv" >
-		&nbsp;<a href="http://code.google.com/p/tap-handles/" title="Taphandle project page" target="_blank" class='logo'></a> &nbsp;&nbsp;
-		<div id='pagetitle' style='width: 100%'><span class='pagetitle'>TAPHandle</span>
-			<input type='text' title="Enter a URL or a nickname of a TAP service. A suggestion list appears once one character has been typed"
-			id='node_selector' class='inputvalue' style="font-size: small;font-family: courier; width: 400px; position: relative; bottom: 5;" />
-			<span class='help'>Node Selector</span>
-			    <a class='help' href="javascript:void(0);" title="Contact the developper" 
-				onclick='Modalinfo.info("Send an Email to \n laurent.michel@astro.unistra.fr", "Bookmark");'>@</a>
-			    <a class='help' href="javascript:void(0);" title="Bookmark the TAP node you are connected to" 
-				onclick='Modalinfo.info("Bookmark the following URL <b>\n" + dataTreeView.getBookmark() + " </b>\nto connect TapHandle on the current node at starting time.", "contact");'>b</a>
-		
-			<div id='externaltools' style='position: relative;'> 
-			
-				<a href="javascript:void(0);" class="formexpender" title="Expand query form" 
-				onclick='resultPaneView.fireSwitchForm();' id='formexpender'></a>
-		
-				<a href="javascript:void(0);" id='showquerymeta' title='Show Metadata (Does not work with Vizier)' class='question'></a>
-				<a href="javascript:void(0);" title='Download the results of the current job in a VOTable'
-				class=votable onclick='resultPaneView.fireDownloadVOTable();'></a> 		
-				<a href="javascript:void(0);" title='Open the shopping cart'
-				class='zip' onclick='cartView.fireOpenCart();' id='zipbutton'></a> 		
-				<a href="javascript:void(0);" title='Connect a SAMP hub. (The SAMP hub must be started first e.g. by starting Aladin)' 
-				class=samp id=sampconnector ></a> 
-				<a href="javascript:void(0);" title='Send the data selection to SAMP clients' 
-				class=ivoa  style='visibility: hidden;'></a>
-				<a id="sampIndicator" onclick="WebSamp_mVc.fireJustConnect();" class="sampOff" href="#" title="SampStatus"></a>
-				<span class='pagetitlepath' id='titlepath'></span>
-			</div>
-			
-		</div>
-	</div> -->
 
-<!-- <div id="accesspane">
-	<div id="resultpane"  class="pane ui-layout-center">
-		<h2 class="home">&nbsp;1- Connect a TAP Service</h2>
-		<ul>
-			<li class="home" style="font-size: large;">Select the TAP service you want to connect with in the <b>Node Selector</b> field.</li>
-			<li class="home" style="font-size: large;">Type <b>free text</b> and follow the GAVO TAP registry <b>suggestions</b>.</li>
-			<li class="home" style="font-size: large;">Or type a <b>full URL</b>.</li>
-			<li class="home" style="font-size: large;"><b>Double click</b> on a <b>service node</b> to filter the table set.</li>
-		</ul>
-		<h2 class="home">&nbsp;2- Access both data and meta-data</h2>
-		<ul>
-			<li class="home" style="font-size: large;"><b>Double click</b> on a table icon on the resource tree to see its content.</li>
-			<li class="home" style="font-size: large;"><b>Click </b>on <img src="./images/screen_down.png"></img> to expend/reduce the query editor.</li>
-			<li class="home" style="font-size: large;"><b>Drop a table leaf </b> from the resource tree on <img src="./images/question.png"></img> to display the column description.</li>
-		</ul>
-		<h3 class="home">&nbsp;News </h3>
-		<ul>
-			 li class=help style="font-size: large;">(05/2013) Data link demo. Open 
-			<a style="font-size: small;" href='#' onclick='dataTreeView.fireNewNodeEvent(unescape("http://xcatdb.unistra.fr/3xmm/tap"));'>XMM</a>
-			or
-			<a style="font-size: small;" href='#' onclick='dataTreeView.fireNewNodeEvent(unescape("http://beta.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap"));'>CADC</a> Demo Node
-			</li
-			<li class="home" style="font-size: large;">(06/2015) Support of Datalink 1.0, display of STC regions with Aladin(s)</li>
-            <li class="home" style="font-size: large;">(03/2015) Job results bigger than 1Mb and older than one hour are removed every night</li>
-			<li class="home" style="font-size: large;">(03/2015) Support of reverse joins: If the join A to B is declared in the TAP schema, then TapHandle add the B to A join.</li>
-			<li class="help" style="font-size: small;">(09/2014) General Improvement of the interface.</li>
-			<li class="help" style="font-size: small;">(02/2013) Browse the registry with the node selector</li>
-			<li class="help" style="font-size: small;">(12/2012) Connect Samp with the Web Samp Profile</li>
-			<li class="help" style="font-size: small;">(11/2012) Query Vizier with the real names for both tables and columns</li>
-			<li class="help" style="font-size: small;">Recent fixes:<i>Download facility, Metadata window, Cookie manager</i> </li>
-		</ul>
-		<h3 class="home">&nbsp;Credit and Contact</h3>
-		<ul>
-			<li class="help" style="font-size: large;list-style-type:none">
-				<a target='_blank' href="http://www.france-ov.org/"><img border="0px" height="64px" src="./images/ovfrance.jpg"></img></a>
-				<a target='_blank' href="http://www.insu.cnrs.fr/"><img border="0px" height="64px" src="./images/insu.jpg"></img></a>
-				<a target='_blank' href="http://www.unistra.fr/index.php?id=accueil"><img border="0px" height="64px" src="./images/uds.jpg"></img></a>
-				<a target='_blank' href="http://astro.unistra.fr/"><img border="0px" height="64px" src="./images/obs.jpg"></img></a>
-				<a target='_blank' href="http://xmmssc-www.star.le.ac.uk/"><img border="0px" height="64px" src="./images/ssc.png" title="XMM-Newton SSC"></img></a>
-			</li>
-			<li class="help" style="font-size: small;list-style-type:none">
-				laurent.michel [at] astro.unistra.fr
-			</li>
-		</ul>
-	</div>
-	
-	  SOUTH: query forms
-	
-	<div id="queryformpane"  class="pane ui-layout-south" >
-		 
-			SUBMIT panel 
-		
-		<div id='formpanemenu' style="float: left; text-align: center ;width: 91; border-style: hidden;">
-			<div style="text-align: center ;padding: 5px; border-style: hidden;">
-				<a href="javascript:void(0);" class='accept' id='submitquery' title='Execute the query as shown in the "plain text query" tab'></a>
-				<hr/>
-			</div> 
-			<div style="text-align: left ;padding: 5px; text-align: center; border-style: hidden; ">
-				<span class='help'>Result Limit</span><br/>
-				<input type='text' id='qlimit' class='numinputvalue'  title='Set the max number of returned rows'
-	        	style="font-size: small;font-family: Arial, Helvetica, sans-serif;" value='100'/><hr/>  
-			</div>
-		</div>
-		 
-			Query form
-				
-		<div style="background-color: white;height: 260px; width:900px; margin-left:105px">
-			<div id="taptab" class='querytab' style="border-width:0">
-				<ul style="height: 32px;">
-	        		<li><a href="#tapselect" title="Set up the SELECT clause of the query"><span>Select What</span></a></li>
-	        		<li><a href="#tapwhere"  title="Set up the WHERE clause of the query"><span>Where</span></a></li>
-	        		<li><a href="#tapwhereposition"  title="Set up the WHERE position clause of the query"><span>Position</span></a></li>
-	        		<li><a href="#taptext"   title="Current query on ADQL text"><span>Plain Text Query</span></a></li>
-	        		<li><a href="#tapjob"    title="Acces to the jobs attached to the current session"><span>Job Control</span></a></li>
-	    		</ul>
-	    		Columns selection
-	    		<div id="tapselect" class='queryformtab'>
-	    		</div>  
-	    		keywords selection
-	    		<div id="tapwhere" class='queryformtab' > 					
-				</div>
-				<div id="tapwhereposition" class='queryformtab' > 					
-				</div>
-	    		 Query text
-	    		<div id="taptext" class='queryformtab' >	
-					<textarea id=adqltext class="querytext"></textarea>
-				</div>	
-				 job panel		
-				<div id="tapjob">        
-					 <div style="background: white;">
-	 					<span class='help'>List of UWS jobs</span>
-	 					<a title="Remove all jobs" href="javascript:void(0);" class='closekw' onclick="resultPaneView.fireRemoveAllJobs();"></a>
-	 				</div>
-	        		<div id="tapjobs" ></div>      							    	
-				</div>	
-	    	</div>
-		</div>
-	</div>
-	
-	     WEST: Data Tree 
-	
-	<div id="treepane" class="pane ui-layout-west" style="width: 300;">
-		<div style="border-style: hidden; vertical-align: middle;">
-			<span class='help' title='Select TAP nodes with the node selector on the top of the page'>Tap Nodes  
-			</span>
-		</div>
-		<div id="treedisp" style="background-color: white">
-		</div>
-	</div>
-</div> -->
+
 <div class="container presentation home-panel">
-    <div class="row">
+    <div class="row" >
         <div class="col-md-4">
             <div class="thumbnail">
 	            <div style="text-align:center;">
 	                <img class="magnifying-glass" />
 	            </div>
                 <div class="caption">
-                    <h3>Search our databases</h3>
-                    <p>Type free text and follow the GAVO TAP registry suggestions or type a full URL in the search field above.</p>
-                	<br/>
+                    <h3>Search your TAP service</h3>
+                    <p>Type free text and follow the GAVO TAP registry suggestions or type a full URL in the search field above.<br/><br/></p>
+                	
                 </div>
             </div>
         </div>
@@ -247,24 +98,24 @@
                 	<img class="rocket" />
                 </div>
                 <div class="caption">
-                    <h3>Explore your results</h3>
+                    <h3>Explore the database content</h3>
                     <p>Double click on a table icon on the resource tree to see its content. Look below: there is a query form! You can filter your results whith what you need. </p>
                 </div>
             </div>
         </div>
-         <div class="col-md-4">
+         <div class="col-md-4" >
             <div class="thumbnail">
             	<div style="text-align:center;">
                 	<img class="beaker" />
                 </div>
                 <div class="caption">
                     <h3>Enjoy!</h3>
-                    <p>We hope you have found what you want. Now you can use it!</p>
-                <br/>
+                    <p>We hope you have found what you want.<br/><br/><br/></p>
                 </div>
             </div>
         </div>
     </div>
+    
     <div class="row">
         <div class="col-md-12">
             <div class="famous-div">
@@ -291,6 +142,17 @@
                         <a class="planet-link"><p class="famous">VO Planet - Paris</p></a>
                     </div>
                 </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <a class="heasarch-link"><p class="famous">HEASARCH</p></a>
+                    </div>
+                    <div class="col-md-4">
+                        <a class="chandra-link"><p class="famous">Chandra Archive</p></a>
+                    </div>
+                    <div class="col-md-4">
+                        <a class="sdss-link"><p class="famous">SDSS QSO & Galaxies</p></a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -299,6 +161,16 @@
             <div class="news">
                 <h3>News</h3>
                     <ul class="timeline">
+        <li><!---Time Line Element--->
+          <div class="timeline-badge down"><i class="fa fa-thumbs-down"></i></div>
+          <div class="timeline-panel">
+            <div class="timeline-heading">
+              <p class="timeline-title">Graphical re-design</p>
+            </div>
+            <div class="timeline-body"><!---Time Line Body&Content--->
+              <p>08/2015 </p>
+            </div>
+          </div>
         <li><!---Time Line Element--->
           <div class="timeline-badge up"><i class="fa fa-thumbs-up"></i></div>
           <div class="timeline-panel">
@@ -393,11 +265,11 @@
                     <img border="0px" height="64px" src="http://saada.unistra.fr/taphandle/images/ssc.png" title="XMM-Newton SSC"/>
                 </div>
                 <img class="credit-icon" 
-                onClick="Modalinfo.info('','Credits')"/>
+                onClick="Modalinfo.info('Laurent MICHEL (Project Manager - SSC XMM-Newton)\nMireille LOUYS (CDS)\nFrancois BONNAREL (CDS)\nPauline KOBERSI (ENSIIE, Strasbourg 2015)','Contributors')"/>
                 <img class="contact-icon"
                 onClick="Modalinfo.info('You can contact me at:\nlaurent.michel [at] astro.unistra.fr','Contact')"/>
                 <img class="about-icon" 
-                onClick="Modalinfo.info('','More')"/>
+                onClick="Modalinfo.iframePanel('help/taphandle.html', 'More about TapHandle')"/>
             </div>
         </div>
     </div>
@@ -415,48 +287,8 @@
 		<div id="toggle-tree">Hide tree</div>
 		<div id="toggle-query">Hide query</div>
 		<div id="resultpane">
-			<p class="pres">Choose a database in the left menu then select the table you want!</p>
-			<!-- <ul>
-				<li class="home" style="font-size: large;">Select the TAP service you want to connect with in the <b>Node Selector</b> field.</li>
-				<li class="home" style="font-size: large;">Type <b>free text</b> and follow the GAVO TAP registry <b>suggestions</b>.</li>
-				<li class="home" style="font-size: large;">Or type a <b>full URL</b>.</li>
-				<li class="home" style="font-size: large;"><b>Double click</b> on a <b>service node</b> to filter the table set.</li>
-			</ul>
-			<h2 class="home">&nbsp;2- Access both data and meta-data</h2>
-			<ul>
-				<li class="home" style="font-size: large;"><b>Double click</b> on a table icon on the resource tree to see its content.</li>
-				<li class="home" style="font-size: large;"><b>Click </b>on <img src="./images/screen_down.png"></img> to expend/reduce the query editor.</li>
-				<li class="home" style="font-size: large;"><b>Drop a table leaf </b> from the resource tree on <img src="./images/question.png"></img> to display the column description.</li>
-			</ul>
-			<h3 class="home">&nbsp;News </h3>
-			<ul>
-				 li class=help style="font-size: large;">(05/2013) Data link demo. Open 
-				<a style="font-size: small;" href='#' onclick='dataTreeView.fireNewNodeEvent(unescape("http://xcatdb.unistra.fr/3xmm/tap"));'>XMM</a>
-				or
-				<a style="font-size: small;" href='#' onclick='dataTreeView.fireNewNodeEvent(unescape("http://beta.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap"));'>CADC</a> Demo Node
-				</li
-				<li class="home" style="font-size: large;">(06/2015) Support of Datalink 1.0, display of STC regions with Aladin(s)</li>
-	            <li class="home" style="font-size: large;">(03/2015) Job results bigger than 1Mb and older than one hour are removed every night</li>
-				<li class="home" style="font-size: large;">(03/2015) Support of reverse joins: If the join A to B is declared in the TAP schema, then TapHandle add the B to A join.</li>
-				<li class="help" style="font-size: small;">(09/2014) General Improvement of the interface.</li>
-				<li class="help" style="font-size: small;">(02/2013) Browse the registry with the node selector</li>
-				<li class="help" style="font-size: small;">(12/2012) Connect Samp with the Web Samp Profile</li>
-				<li class="help" style="font-size: small;">(11/2012) Query Vizier with the real names for both tables and columns</li>
-				<li class="help" style="font-size: small;">Recent fixes:<i>Download facility, Metadata window, Cookie manager</i> </li>
-			</ul>
-			<h3 class="home">&nbsp;Credit and Contact</h3>
-			<ul>
-				<li class="help" style="font-size: large;list-style-type:none">
-					<a target='_blank' href="http://www.france-ov.org/"><img border="0px" height="64px" src="./images/ovfrance.jpg"></img></a>
-					<a target='_blank' href="http://www.insu.cnrs.fr/"><img border="0px" height="64px" src="./images/insu.jpg"></img></a>
-					<a target='_blank' href="http://www.unistra.fr/index.php?id=accueil"><img border="0px" height="64px" src="./images/uds.jpg"></img></a>
-					<a target='_blank' href="http://astro.unistra.fr/"><img border="0px" height="64px" src="./images/obs.jpg"></img></a>
-					<a target='_blank' href="http://xmmssc-www.star.le.ac.uk/"><img border="0px" height="64px" src="./images/ssc.png" title="XMM-Newton SSC"></img></a>
-				</li>
-				<li class="help" style="font-size: small;list-style-type:none">
-					laurent.michel [at] astro.unistra.fr
-				</li>
-			</ul> -->
+			<p class="pres">Choose a database in the left panel then select the table you want!</p>
+
 		</div>
 		<div id="queryformpane" >
 			<!--  

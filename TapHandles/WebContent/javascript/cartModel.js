@@ -56,7 +56,6 @@ jQuery.extend({
 			}			
 		};
 		this.addUrl = function(treepath, url) {
-			console.log(treepath);
 			if (treepath.nodekey == undefined) {
 				var nodekey = treepath;
 			}

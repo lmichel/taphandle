@@ -13,12 +13,21 @@
 ##########################
 # Script Resources
 #########################      
+workspaceDir="/home/michel/workspace"
+
 outputDir="../WebContent/min/packed" # directory where both packed JS and CSS are stored 
 packedCSS=$outputDir/packedCSS.css    # name of the file containing the packed CSS
 packedJS=$outputDir/packedJS.js       # name of the file containing the packed JS
 imageDir="../WebContent/images"      # Directory from where the 3XMM images must be copied 
 imageOutput="../WebContent/min/images" # Directory where the 3XMM images must be copied 
-workspaceDir="/home/michel/workspace"
+iconsDir="$workspaceDir/jsresources/WebContent/saadajsbasics/icons"      # Directory from where the icons must be copied 
+iconsOutput="../WebContent/min/icons" # Directory where the 3XMM icons must be copied 
+fontsDir="$workspaceDir/jsresources/WebContent/saadajsbasics/styleimports/fonts"      # Directory from where the icons must be copied 
+fontsOutput="../WebContent/min/fonts" # Directory where the 3XMM icons must be copied 
+
+echo "========== remove packed files ======================="
+rm $outputDir/packedCSS.css
+rm $outputDir/packedJS.css
 #
 # List of jsresources JS objects
 # MVC template for names:
@@ -113,7 +122,7 @@ function  packCSS() {
 	for item in "${fileList[@]}"
 	do
 		echo pack $inputDir/$item to $outputDir/packedCSS.css
-		echo "/************  $inputDir/$item ********************/" >> $outputDir/packedCSS.css|
+		echo "/************ 3333 $inputDir/$item ********************/" >> $outputDir/packedCSS.css
  		cat $inputDir/$item >> $outputDir/packedCSS.css|| exit 1
 	done
 }	
@@ -144,17 +153,25 @@ packCSS "$workspaceDir/jsresources/WebContent/saadajsbasics/styleimports" \
 	"datatable.css" \
 	"simplemodal.css"\
 	"aladin.min.css"
+
 	
 packCSS "$workspaceDir/jsresources/WebContent/saadajsbasics/styles"\
     "basics.css" \
     "domain.css" 
 
+
 packCSS "../WebContent/styles/" \
     "global.css" \
-    "form.css"
+    "form.css" \
+    "home.css"
     
 packCSS "../WebContent/styleimport/" \
     "jsonSuggest.css" 
+    
+packCSS "$workspaceDir/jsresources/WebContent/saadajsbasics/styleimports/bootstrap" \
+    "bootstrap.css" \
+	"bootstrap.css.map"
+    
 
 echo "=========== Minify JS files"
 rm -f $packedJS
@@ -212,6 +229,19 @@ pack
 
 echo "=========== Copy images"
 cp $imageDir/*    $imageOutput"/" || exit 1
+
+echo "=========== Copy JS resource images"
+cp $workspaceDir/jsresources/WebContent/saadajsbasics/images/*    ../WebContent/min/images"/" || exit 1
+
+echo "=========== Copy bootstrap.css.map"
+cp "$workspaceDir/jsresources/WebContent/saadajsbasics/styleimports/bootstrap/bootstrap.css.map" ../WebContent/min/packed|| exit 1
+
+echo "=========== Copy icons"
+rsync -av --exclude=".*" $iconsDir/* $iconsOutput"/" || exit 1
+
+echo "=========== Copy Bootstrap fonts"
+rsync -av --exclude=".*" $fontsDir/* $fontsOutput"/" || exit 1
+
 
 echo "=========== Packing is over"
 exit

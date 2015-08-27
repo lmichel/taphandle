@@ -31,7 +31,20 @@ function initFunctions () {
 //	};
 	
 	this.initLayout = function() {
+		Out.info("Activate popular sites access");
+		var np = window.location.href.split('?')[0].replace(/\/#?$/, "");
+		Out.info("Base URL = " + np);
+		$(".3xmm-link").attr("href", np+"?url=http%3A//xcatdb.u-strasbg.fr/3xmm/tap/")
+		$(".cadc-link").attr("href", np+"?url=http%3A//www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap/")
+		$(".gavo-link").attr("href", np+"?url=http%3A//dc.zah.uni-heidelberg.de/__system__/tap/run/tap/")
+		$(".vizier-link").attr("href", np+"?url=http%3A//tapvizier.u-strasbg.fr/TAPVizieR/tap/")
+		$(".simbad-link").attr("href", np+"?url=http%3A//simbad.u-strasbg.fr/simbad/sim-tap/")
+		$(".planet-link").attr("href", np+"?url=http%3A//voparis-tap.obspm.fr/__system__/tap/run/tap/")
+		$(".heasarch-link").attr("href", np+"?url=http%3A//heasarc.gsfc.nasa.gov/xamin/vo/tap/")
+		$(".chandra-link").attr("href", np+"?url=http%3A//cda.harvard.edu/cxctap/")
+		$(".sdss-link").attr("href", np+"?url=http%3A//ia2-tap.oats.inaf.it:8080/wgetap/")
 		
+
 		// Define the height of the div knowing the banner take 70px and the query editor 330px
 		$("#treepane").height($(window).height()-100);
 		$("#resultpane").height($(window).height()-400);
@@ -135,7 +148,7 @@ function initFunctions () {
 	this.initDataTree = function() {
 		dataTree = $("div#treedisp").jstree({
 			"json_data"   : {"data" : [ {  "attr"     : { "id"   : "rootid", "title": "Repository for uploaded tables (Not implemented yet)" },
-				"data"        : { "icon": "images/folder.png", "title"   : "Goodies" , "attr": {"id": "goodies"}}}]}  , 
+				"data"        : { "icon": "images/folder.png", "title"   : "Goodies (not used yet)" , "attr": {"id": "goodies"}}}]}  , 
 				"plugins"     : [ "themes", "json_data", "dnd", "crrm"],
 				"rules" : {"deletable" : "all"},
 				"dnd"         : {"drop_target" : "#resultpane,#taptab,#showquerymeta",
@@ -176,6 +189,7 @@ function initFunctions () {
 				}
 		}); // end of jstree
 
+		$("a#goodies").attr("class", "help").css("color", "grey");
 		dataTree.bind("dblclick.jstree", function (e, data) {
 			var node = $(e.target).closest("li");
 			var id = node[0].id; //id of the selected node					
@@ -204,7 +218,10 @@ function initFunctions () {
 		 */
 		var defaultUrl  =  (RegExp('url=' + '(.+?)(&|$)').exec(location.search)||[,null])[1];
 		if( defaultUrl != null ) {
+			Processing.show("Connecting " + defaultUrl);
 			dataTreeView.fireNewNodeEvent(unescape(defaultUrl));
+            _paq.push(['trackPageView', 'saada TapHandle/paramURL/' + defaultUrl]);
+			//Processing.hide();
 		}
 		Out.setdebugModeFromUrl();
 

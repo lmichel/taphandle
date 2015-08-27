@@ -78,7 +78,6 @@ ViewState = function() {
 		/*
 		 * Connect the interface to the selected node
 		 */
-		console.log(dataTreePath);
 		setPath(dataTreePath);			
 		tapView.fireTreeNodeEvent(dataTreePath, true);	
 	};

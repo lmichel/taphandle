@@ -51,13 +51,29 @@ if(!String.prototype.trim){
 	} ;
 };
 
+// Gets an url parameter by name
+var getUrlParameter = function getUrlParameter(sParam) {
+    var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+        sURLVariables = sPageURL.split('&'),
+        sParameterName,
+        i;
+
+    for (i = 0; i < sURLVariables.length; i++) {
+        sParameterName = sURLVariables[i].split('=');
+
+        if (sParameterName[0] === sParam) {
+            return sParameterName[1] === undefined ? true : sParameterName[1];
+        }
+    }
+};
+
 function isNumber(val) {
 	var exp = new RegExp("^[+-]?[0-9]*[.]?[0-9]*([eE][+-]?[0-9]+)?$","m"); 
 	return exp.test(val);
 }
 
-var decimaleRegexp = new RegExp("^[+-]?[0-9]*[.][0-9]*([eE][+-]?[0-9]+)?$","m"); 
-var bibcodeRegexp  = new RegExp(/^[12][089]\d{2}[A-Za-z][A-Za-z0-9&][A-Za-z0-9&.]{2}[A-Za-z0-9.][0-9.][0-9.BCRU][0-9.]{2}[A-Za-z0-9.][0-9.]{4}[A-Z:.]$/);	
+var decimaleRegexp = new RegExp("^[+-]?[0-9]*[.][0-9]*([eE][+-]?[0-9]+)?$","m");
+var bibcodeRegexp  = new RegExp(/^[12][089]\d{2}[A-Za-z][A-Za-z0-9&][A-Za-z0-9&.]{2}[A-Za-z0-9.][0-9.][0-9.BCRU][0-9.]{2}[A-Za-z0-9.][0-9.]{4}[A-Z:.]$/);
 
 /**
  * return the last node of file pathname
@@ -252,7 +268,7 @@ if (!String.prototype.getTreepath) {
 }
 
 /**
- * Basic sky geometry fucntions
+ * Basic sky geometry functions
  */
 SkyGeometry = function() {
 	/**
@@ -301,127 +317,1438 @@ var rootUrl = "http://" + window.location.hostname +  (location.port?":"+locatio
  */
 var zIndexModalinfo = 3000;
 var zIndexProcessing = 4000;
+
 /*
  * Types supported by the previewer based on iframes
  */
 var previewTypes = ['text', 'ascii', 'html', 'gif', 'png', 'jpeg', 'jpg', 'pdf'];
+var imageTypes = ['gif', 'png', 'jpeg', 'jpg'];
 
-
-/*****************************************************************************************************
- * Object managing printer features
- */
-Printer = function() {
-	/*
-	 * Public functions
-	 */
-	var getPrintButton = function(divToPrint) {
-		var retour =  "<a href='#' onclick='Printer.printDiv(\"" + divToPrint + "\");' class='printer'></a>";
-		return retour;
-	};
-	var getSmallPrintButton = function(divToPrint) {
-		var retour =  "<a href='#' onclick='Printer.printDiv(\"" + divToPrint + "\");' class='dlprinter'></a>";
-		return retour;
-	};
-	var insertPrintButton = function(divToPrint, divHost) {
-		$("#" + divHost).append(printer.getPrintButton(divToPrint));
-	};
-	var printDiv = function(divSelect) {
-		var ele = $('#' + divSelect);
-		if( !ele ) {
-			Modalinfo.error("PRINT: the element " + divSelect +" doesn't exist");
-		} else {
-			Out.infoMsg(ele);
-			ele.print();
-		}		
-	};
-	/*
-	 * exports
-	 */
-	var pblc = {};
-	pblc.getPrintButton  = getPrintButton;
-	pblc.getSmallPrintButton  = getSmallPrintButton;
-	pblc.insertPrintButton = insertPrintButton;
-	pblc.printDiv = printDiv;
-	return pblc;
-}();
-
-/*****************************************************************************************************
- * Object opening a modal window centered on the screen and not draggable.
- * The content of the box must often be set after the box is open in order to have it accessible in the DOM.
- * In this case the real size must be computed again after the content is totally set.
- * -open: open the modal box
- * -resize: resize it according its real content.
- */
-Modalpanel = function() {
-	var divId = 'modalpanediv';
+Modalinfo = function(){
+	var divId = "modaldiv";
 	var divSelect = '#' + divId;
-	var height = 0;
-	var width = 0;
-	/*
-	 * Private methods
-	 */
-	var initDiv = function() {
-		if( $(divSelect).length != 0){	 
-			$(divSelect).remove();
-		}		
-		$(document.documentElement).append("<div id=" + divId + " style='overflow: auto;display: none; width: auto;height: auto;'></div>");
-	}; 
-	/*
-	 * Public methods
-	 */
-	var open = function(innerDivHtml, modalParams) {
-		Out.debug("Open Modal Box");
-		initDiv();
-		$(divSelect).html(innerDivHtml);
-		/*
-		 * Build the modal
-		 */
-		$(divSelect).modal(modalParams);	
-		resize();
-	};
-	var resize = function(){
-		var heighthMax = $(window).height()*0.9;
-		var widthMax = $(window).width()*0.9;
-		/*
-		 * Take the size of the content
-		 */
-		height =  $(divSelect).height();
-		width = $(divSelect).width();
-		/*
-		 * Limit the size of the container to the maximum size allowed
-		 */
-		if(height > heighthMax) {
-			$(divSelect).css("height", heighthMax);
-			height = heighthMax;
+	
+	var getTitle = function (replacement, title){
+		if( title == undefined ) {
+			return replacement;
+		} else {
+			return title;
 		}
-		if(width > widthMax) {
-			$(divSelect).css("width", widthMax);
-			width = widthMax;
-		}			
-		Out.debug("Resize Modal Box to " +  (8+ width) + "px x " + (8+ height) + "px");
-		/*
-		 * Resize it to fits the size constraints
-		 * Add 8px for the borders: avoids double scroll-bars
-		 */
-		var smc = $("#simplemodal-container");
-		smc.css('height', (8+ height)); 
-		smc.css('width', (8+ width)); 
-		$(window).trigger('resize.simplemodal'); 
 	};
-	/*
-	 * exports
+	
+	var formatMessage = function(message) {
+		var retour = "<p>" + message.replace(/\n/g, "<BR>") + "</p>";
+		return retour;
+	};
+	
+	/**
+	 * Return the content of the object x as a user readable string
 	 */
-	var pblc = {};
-	pblc.open = open;
-	pblc.resize = resize;
-	return pblc;
+	var dump = function (x, indent) {
+		var indent = indent || '';
+		var s = '';
+		if (Array.isArray(x)) {
+			s += '[';
+			for (var i=0; i<x.length; i++) {
+				s += dump(x[i], indent);
+				if (i < x.length-1) s += ', ';
+			}
+			s +=']';
+		} else if (x === null) {
+			s = 'NULL';
+		} else switch(typeof x) {
+		case 'undefined':
+			s += 'UNDEFINED';
+			break;
+		case 'object':
+			//s += "{ ";
+			var first = true;
+			for (var p in x) {
+				if (!first) s += indent + '  ';
+				else s += "\n" + indent+ '  ';
+				if( p != "id" && p != "$" ) s += '<b>'+ p + '</b>: ';
+				s += dump(x[p], indent + '  ');
+				if( p != "id" && p != "$" ) s += "\n";
+				else s += " " ;
+				first = false;
+			}
+			//s += indent +'}';
+			break;
+		case 'boolean':
+			s += (x) ? 'TRUE' : 'FALSE';
+			break;
+		case 'number':
+			s += x;
+			break;
+		case 'string':
+			if( x.lastIndexOf("http", 0) === 0 ) 
+				x = decodeURIComponent(x);
+			if( x.match(/\s/))
+				s += '"' + x + '"';
+			else 
+				s += x;
+			break;
+		case 'function':
+			s += '<FUNCTION>';
+			break;
+		default:
+			s += x;
+		break;
+		}
+//		s = s.replace(/{/g,'');
+//		s = s.replace(/}/g,'');
+		return s;
+	};
+	
+	// Permits to generate id for the various dialogs
+	var last_id = 0;
+	
+	var nextId = function(){
+		last_id++;
+		return "modal-"+last_id;
+	};
+	
+	/**
+	 * Set the black shadow for a dialog
+	 * @id: id of the dialog
+	 */
+	var setShadow = function(id){
+		var z_modal = $("#"+id).parent(".ui-dialog").zIndex();
+		if($("#shadow").length == 0) {
+			$('body').append('<div id="shadow" pos="'+id+'"></div>');
+			$('#shadow').zIndex(z_modal-1);
+    	}
+		else {
+			$('body').append('<div class="shadow" pos="'+id+'"></div>');
+			$('div[pos="'+id+'"]').zIndex(z_modal-1);
+		}
+	};
+	
+	/**
+	 * Create the dialog
+	 * @id: id of the dialog
+	 * @resizable: boolean, tell if the dialog can be resizable
+	 * @title: string, title of the dialog
+	 * @content: string, content of the dialog
+	 * @min_size: integer, set a minimal size for the dialog if defined
+	 */
+	var setModal = function(id, resizable, title, content, min_size){
+		if (content == undefined) {
+			$('body').append("<div id='"+id+"' title='" + title + "' class='custom-modal'> </div>");
+		}
+		else {
+			$('body').append("<div id='"+id+"' title='" + title + "' class='custom-modal'>" + content + "</div>");
+		}
+		
+	    if (resizable){
+	    	$("#"+id).dialog();
+	    }
+	    else {
+	    	if (min_size != undefined) {
+	    		$("#"+id).dialog({
+			        resizable: false,
+			        minWidth: min_size,
+			        position: { my: "center", at: "top", of: window }
+			    });
+	    	}
+	    	else {
+	    		$("#"+id).dialog({
+			        resizable: false,
+			        width: "auto",
+			        height: "auto"
+			    });
+	    	}
+	    }
+	};
 
+	// Return the id of the last modal in the page
+	var findLastModal = function(){
+		var id_last_modal = -1;
+		$("div[id^='modal-']").each(function() {
+			var tmp = $(this).attr('id').substring(6);
+			if (tmp > id_last_modal && isNumber(tmp)){
+				id_last_modal = $(this).attr('id').substring(6);
+			}
+		});
+		if (id_last_modal != -1) {
+			return "modal-"+id_last_modal;
+		} else {
+			id_last_modal = undefined;
+			return id_last_modal;
+		}
+	};
+	
+	/**
+	 * Remove the shadow of a dialog
+	 * @id: id of the dialog
+	 */
+	var removeShadow = function(id){
+		$('div[pos="'+id+'"]').remove();
+	};
+	
+	/**
+	 * Remove the dialog
+	 * @id: id of the dialog
+	 */
+	var removeModal = function(id){
+		$("#"+id).remove();
+	};
+	
+	/**
+	 * When dialog is closed, remove it and its shadow and buttons
+	 * @id: id of the dialog
+	 */
+	var close = function(id){
+		if (id != undefined) {
+			removeShadow(id);
+			removeModal(id);
+			removeBtn(id);
+		}
+	};
+	
+	/**
+	 * Remove the div of buttons with the class btndialog
+	 * @id: id of the dialog
+	 */
+	var removeBtn = function(id){
+		$('div[btndialog="'+id+'"]').remove();
+	};
+	
+	/**
+	 * Permits to call the function close when we click on the shadow of a dialog or click on its cross
+	 * @id: id of the dialog
+	 */
+	var whenClosed = function(id){
+		$('div[pos="'+id+'"]').click(function() {
+	        close(id);
+	    });
+	    $("#"+id).prev("div").find("a.ui-dialog-titlebar-close.ui-corner-all").click(function() {
+	        close(id);
+	    });
+	};
+	
+	// Permits to close a dialog when we press escape
+	$(document).keydown(function(e) {
+	    if (e.keyCode == 27) {
+	    	if($("#shadow").length != 0) {
+				close(findLastModal());
+	    	}
+	   }
+	});
+	
+	/**
+	 * Add the div of buttons with the class btndialog
+	 * @id: id of the dialog
+	 */
+	var addBtnDialog = function(id) {
+		$("#"+id).append('<div class="btn-dialog" btndialog="'+id+'"></div>');
+	};
+	
+	/**
+	 * Add html before the title, used for add glyphicon
+	 * @id: id of the dialog
+	 * @icon: html content
+	 */
+	var addIconTitle = function(id, icon) {
+		$("#"+id).prev("div").find("span").prepend(icon);
+	};
+	
+	/**
+	 * Add img before the title with a predefined size
+	 * @id: id of the dialog
+	 * @img: url of the img
+	 * @url: link to follow when img is clicked
+	 */
+	var addImgIconTitle = function(id, img, url) {
+		$("#"+id).prev("div").find("span").prepend(' <a href="'+url+'" target="_blank"><img src="'+img+'" alt="Img" class="img-title"></a>');
+	};
+	
+	/**
+	 * Add img after the title with a predefined class
+	 * @id: id of the dialog
+	 * @class_img: class to display the img
+	 * @url: link to follow when img is clicked
+	 */
+	var addImgLinkTitle = function(id, class_img, url) {
+		$("#"+id).prev("div").find("span").append(' <a href="'+url+'" target="_blank" class="'+class_img+'"></a>');
+	};
+	
+	/**
+	 * Add img before the title with personalized size
+	 * @id: id of the dialog
+	 * @class_img: class to display the img
+	 * @url: link to follow when img is clicked
+	 */
+	var addLogoTitle = function(id, class_img, url) {
+		$("#"+id).prev("div").find("span").prepend('<a href="'+url+'" target="_blank" class="'+class_img+'"></a>');
+	};
+	
+	/**
+	 * Add a button "Ok" with a handler in the buttons div
+	 * @id: id of the dialog
+	 * @handler: handler of the button
+	 */
+	var addBtnOk = function(id, handler) {
+		if (handler == undefined ) {
+			var hdl = function(){
+				alert("No attached Handler");
+			}
+		}
+		else {
+			var hdl = handler;
+		}
+		$('div[btndialog="'+id+'"]').append(
+			$('<a class="btn btn-sm btn-default">Ok</a>').click(function() {
+				close(id);
+				hdl();
+			})
+		);
+	};
+	
+	/**
+	 * Add a button "Cancel" which close the dialog in the buttons div
+	 * @id: id of the dialog
+	 */
+	var addBtnCancel = function(id) {
+		$('div[btndialog="'+id+'"]').append(
+				$('<a class="btn btn-sm btn-warning">Cancel</a>').click(function() {
+					close(id);
+				})
+		);
+	};
+	
+	/**
+	 * Create an info dialog
+	 * @content: string, content of the dialog
+	 * @title: string, title of the dialog
+	 */
+	var info = function(content, title) {
+		var id_modal = nextId();
+		setModal(id_modal, false, getTitle("Information", title), formatMessage(content));
+		addIconTitle(id_modal, '<span class="glyphicon glyphicon-info-sign"></span>');
+		setShadow(id_modal);
+		whenClosed(id_modal);
+	};
+	
+	/**
+	 * Create an info object dialog
+	 * @content: string, content of the dialog
+	 * @title: string, title of the dialog
+	 */
+	var infoObject = function (object, title) {
+		var id_modal = nextId();
+		setModal(id_modal, false, getTitle("INFO", title), '<pre>' + dump(object, '  ') + '</pre>');
+		addIconTitle(id_modal, '<span class="glyphicon glyphicon-info-sign"></span>');
+		setShadow(id_modal);
+		whenClosed(id_modal);
+	};
+	
+	/**
+	 * Create a confirm dialog with buttons ok and cancel
+	 * @content: string, content of the dialog
+	 * @title: string, title of the dialog
+	 */
+	var confirm = function (content, handler, title) {
+		var id_modal = nextId();
+		setModal(id_modal, false, getTitle("Confirmation", title), formatMessage(content));
+		addIconTitle(id_modal, '<span class="glyphicon glyphicon-ok-sign"></span>');
+		addBtnDialog(id_modal);
+		addBtnOk(id_modal, handler);
+		addBtnCancel(id_modal);
+		setShadow(id_modal);
+		whenClosed(id_modal);
+	};
+	
+	/**
+	 * Create an error dialog
+	 * @content: string, content of the dialog
+	 * @title: string, title of the dialog
+	 */
+	var error = function(content, title) {
+		var id_modal = nextId();
+		setModal(id_modal, false, getTitle("Error", title), formatMessage(content));
+		addIconTitle(id_modal, '<span class="glyphicon glyphicon-remove-sign"></span>');
+		setShadow(id_modal);
+		whenClosed(id_modal);
+	};
+	
+	/**
+	 * Create an upload dialog
+	 * Files can be added with the normal way and with drag & drop 
+	 * @title: string, title of the dialog
+	 * @url: url of the form
+	 * @description: string, description of the form
+	 * @handler: action to do if file upload success
+	 * @beforehandler: action to do before submit the form
+	 * @extraParamers: table, hidden input to add to the form
+	 */
+	var uploadForm = function (title, url, description, handler, beforeHandler, extraParamers) {
+		var id_modal = nextId();
+		var htmlForm = '<form id="upload-form" class="form-horizontal" target="_sblank" action="' + url + '" method="post"'
+		+  'enctype="multipart/form-data">';
+		if( extraParamers != null) {
+			for( var i=0 ; i<extraParamers.length ; i++ ) 
+				htmlForm += "<input type='hidden'  name='" + extraParamers[i].name + "'  value='" + extraParamers[i].value + "'>";
+		}
+		htmlForm += '<div class="align-center">'
+			+'<input class="stdinput custom-file" id="uploadPanel_filename" type="file" name="file"/>'
+			+ '<p class="overflow info-upload"></p>'
+			+ '<p id="upload_status"></p>'
+			+ '<p class="form-description"></p>'
+			+ '</div>'
+			+ '<p id="infos"></p>'
+			+ '<div class="align-center">'
+			+ '<input disabled type="submit" value="Upload" class="custom-submit"/>'
+			+ '</div>'
+			+ '</form>';
+		setModal(id_modal, false, title, htmlForm);
+		addIconTitle(id_modal,'<span class="glyphicon glyphicon-file"></span>');
+		setShadow(id_modal);
+		whenClosed(id_modal);
+		// Permits drag & drop
+		$("#"+id_modal).find(".custom-file").on("dragover drop", function(e) {
+			e.preventDefault();
+		}).on("drop", function(e) {
+			$("#"+id_modal).find(".custom-file")
+			.prop("files", e.originalEvent.dataTransfer.files)
+			.closest("form");
+			$("input").prop('disabled', false);
+		});
+
+		$("#"+id_modal).find(".custom-file").change(function() {            
+			$("#"+id_modal).find(".custom-file").fadeTo('slow', 0.3, function(){}).delay(800).fadeTo('slow', 1);
+			$("input").prop('disabled', false);
+			var filename = this.value.xtractFilename().filename;
+			$("#"+id_modal).find(".info-upload").text(filename);     
+		});
+
+
+		if( description != null ) {
+			$("#"+id_modal).find(".form-description").html(description);
+			//$('#upload-form .form-description').html(description);
+		}
+		$("#"+id_modal).find('#upload-form').ajaxForm({
+			beforeSubmit: function() {
+				if(beforeHandler != null ) {
+					beforeHandler();
+				}
+			},
+			success: function(e) {
+				if( Processing.jsonError(e, "Upload Position List Failure") ) {
+					close(id_modal);
+					return;
+				} else {
+					$("#upload_status").html("Uploaded");
+					$("#upload_status").css("color","green");
+					var retour = {retour: e, path : $("#"+id_modal).find('#uploadPanel_filename').val().xtractFilename()};
+
+					if( handler != null) {
+						handler(retour);
+					}
+					// If no handler, displays infos in the dialog
+					else {
+						var display_retour = dump(retour).replace(/\n/g, "<br />");
+						display_retour = display_retour.replace(/^<br\s*\/?>|<br\s*\/?>$/g,'');
+						$("#infos").html(display_retour);	
+					}
+				}
+			}
+		});
+	};
+
+	
+	/**
+	 * Create an Iframe dialog
+	 * @id: id of the dialog
+	 * @url: url of the content we want to display
+	 */
+	var setIframePanel = function (id, url, title) {
+		if (title != undefined) {
+			$('body').append("<div id='"+id+"' title='" + title + "' class='custom-modal'> </div>");
+		} else {
+			$('body').append("<div id='"+id+"' title='Preview of " + url + "' class='custom-modal'> </div>");
+		}
+		$("#"+id).dialog({
+	        resizable: false
+	    });
+		
+		$("#"+id).append('<iframe src="'+url+'" iframeid="'+id+'">Waiting on server response...</iframe>');		
+		
+		$("#"+id).dialog( "option", "height", $(window).height());
+		$("#"+id).dialog( "option", "width", "80%");	
+		$("#"+id).dialog( "option", "position", { my: "center", at: "center", of: window } );	
+	};
+	
+	/**
+	 * Used to display an img in the iframe dialog if the iframe content is an img
+	 * @id: id of the dialog
+	 * @url: url of the img we want to display
+	 */
+	var setImagePanel = function (id, url, title) {
+		if (title != undefined) {
+			$('body').append("<div id='"+id+"' title='" + title + "' class='custom-modal img-panel'> </div>");
+		} else {
+			$('body').append("<div id='"+id+"' title='Preview of " + url + "' class='custom-modal img-panel'> </div>");
+		}
+		
+		$("#"+id).dialog({
+	        resizable: false
+	    });
+
+		$("#"+id).append('<img imgpanelid="'+id+'" src="'+url+'"\>');
+		
+		$('img[imgpanelid="'+id+'"]').load(function(){
+			setSize(id);
+		});
+		
+	};
+	
+	// Used to adjust the size of the dialog with the image's size
+	var setSize = function(id) {
+		var h = $("#"+id).prop("scrollHeight");
+		var w = $("#"+id).prop("scrollWidth");
+		var width = w+30;
+		var height = h+60;
+		$("#"+id).dialog( "option", "height", height);
+		$("#"+id).dialog( "option", "width", width);
+		$("#"+id).dialog( "option", "position", { my: "center", at: "center", of: window } );	
+	};
+	
+	/**
+	 * Test if an url comes from the same domain
+	 * @url: url we want to test
+	 */
+	function testSameOrigin(url) {
+	    var loc = window.location;
+	    var a = document.createElement('a');
+
+	    a.href = url;
+
+	    return a.hostname == loc.hostname &&
+	           a.port == loc.port &&
+	           a.protocol == loc.protocol;
+	};
+	
+	/**
+	 * You cannot catch errors that occur in an iframe with a different origin. 
+	 * Those errors are occurring in a different context which is not your parent page.
+	 */
+	
+	/**
+	 * Create an iframe dialog
+	 * @url: string, the url content we want to show
+	 * @img: boolean, tell if the content is an img
+	 */
+	var openIframePanel = function (content, img) {
+		var id_modal = nextId();
+		
+		if (content.url != undefined) {
+			var url = content.url;
+			var title = content.title;
+		} else {
+			var url = content;
+			var title = undefined;
+		}
+		
+		/*
+		 * Open an iframe with an adpated size if img is defined
+		 */
+		if (img != undefined && img == true) {
+			setImagePanel(id_modal, url, title);
+		}
+		else {
+			setIframePanel(id_modal, url, title);
+		}
+		addImgLinkTitle(id_modal, 'floppy', url);
+		$("#"+id_modal).prev("div").find("span").find(".img-title").click(function() {
+	        Pagelocation.changeLocation(url);
+	    });
+		
+		setShadow(id_modal);
+		whenClosed(id_modal);
+	};
+	
+	/**
+	 * Create an iframe dialog if the url comes from the same domain
+	 * Otherwise, open a new page
+	 * @url: string, the url content we want to show
+	 * @img: boolean, tell if the content is an img
+	 */
+	var openIframeCrossDomainPanel = function(content, img) {
+		var id_modal = nextId();
+		
+		if (content.url != undefined) {
+			var url = content.url;
+			var title = content.title;
+		} else {
+			var url = content;
+			var title = undefined;
+		}
+		
+		if (testSameOrigin(url)) {
+		/*
+		 * Open an iframe with an adpated size if img is defined
+		 */
+			if (img != undefined && img == true) {
+				setImagePanel(id_modal, url, title);
+			}
+			else {
+				setIframePanel(id_modal, url, title);
+			}
+			addImgLinkTitle(id_modal, 'floppy', url);
+			$("#"+id_modal).prev("div").find("span").find(".img-title").click(function() {
+		        Pagelocation.changeLocation(url);
+		    });
+			setShadow(id_modal);
+			whenClosed(id_modal);	
+		} else {
+			PageLocation.changeLocation(url);
+		}
+	};
+	
+//	var openIframePanel = function (url) {
+//		var id_modal = nextId();
+//		var is_img = false;
+//		//setModal(id_modal, false, "Preview of "+url);
+//		
+//		/*
+//		 * try to get information about the data returned by the URL
+//		 */
+//		$.ajax({
+//			type: 'GET',
+//			async: false,
+//			url:url,
+//			complete: function (XMLHttpRequest, textStatus) {
+//				var fileName = url;
+//				var type = "undef";
+//				var headers = XMLHttpRequest.getAllResponseHeaders();
+//				var ls = headers.split(/\n/g);
+//				/*
+//				 * Extract both filename and content type from the http header
+//				 */
+//				for( var i=0 ; i<ls.length ; i++) {
+//					var l = ls[i];
+//					if( l.startsWith("Content-Disposition") ) {
+//						var res = /filename=(.*)/.exec(l);
+//						if( res ) fileName = res[1].replace(/\"/g, '');
+//					} else if( l.startsWith("Content-Type") ) {
+//						var res = /Content-Type:\s*(.*)/.exec(l);
+//						if( res ) type = res[1].replace(/\"/g, '');
+//					}
+//				}
+//				/*
+//				 * Open an iframe if the content type can be displayed.
+//				 * Let the browser do in any others cases
+//				 */
+//				for( var t=0 ; t<previewTypes.length ; t++ ) {
+//					if( type.match(previewTypes[t]) ) {
+//						
+//						for (var i = 0; i < imageTypes.length; i++) {
+//							if(previewTypes[t].match(imageTypes[i])) {
+//								is_img = true;
+//							}
+//						}
+//						if (is_img) {
+//							setImagePanel(id_modal, url);
+//						}
+//						else {
+//							setIframePanel(id_modal, url);
+//						}
+//					
+//						addImgLinkTitle(id_modal, 'saadajsbasics/images/floppy.png', url);
+//						$("#"+id_modal).prev("div").find("span").find(".img-title").click(function() {
+//					        Pagelocation.changeLocation(url);
+//					    });
+//						setShadow(id_modal);
+//						whenClosed(id_modal);
+//						return;
+//					}
+//				}
+//				PageLocation.changeLocation(url, fileName);
+//			}
+//		});
+//	};
+	
+	// Create a simbad dialog
+	var simbad = function (pos) {
+		Processing.show("Waiting on Simbad Response");
+		$.getJSON("simbadtooltip", {pos: pos}, function(jsdata) {
+			Processing.hide();
+			if( Processing.jsonError(jsdata, "Simbad Tooltip Failure") ) {
+				return;
+			} else {
+				var table = "";
+//				if( jsdata.aaData.length > 0 ) {
+//					table += ("<img src='http://alasky.u-strasbg.fr/cgi/simbad-thumbnails/get-thumbnail.py?name=" 
+//							+ encodeURIComponent((jsdata.aaData[0])[0]) + "'/>");
+//				} else {
+//					table +="<span class='help'>No vignette available</span>";
+//				}
+				table += '<table cellpadding="0" cellspacing="0" border="0"  id="simbadtable" class="display table"></table>';
+				var id_modal = nextId();
+				//setModal(id_modal, false, getTitle("Confirmation", title), formatMessage(content));
+				setModal(id_modal, false, "Simbad Summary for Position " 
+						+ pos 
+						+ "<a class=simbad target=blank href=\"http://simbad.u-strasbg.fr/simbad/sim-coo?Radius=1&Coord=" 
+						+ encodeURIComponent(pos) + "\"></a>"
+						, table, 1000);
+				setShadow(id_modal);
+				whenClosed(id_modal);
+				
+				$("#"+id_modal).css("overflow","hidden");
+				
+				var options = {
+					"aoColumns" : jsdata.aoColumns,
+					"aaData" : jsdata.aaData,
+					"bPaginate" : true,
+					"sPaginationType": "full_numbers",
+					"aaSorting" : [],
+					"bSort" : false,
+					"bFilter" : true,
+					"bAutoWidth" : true,
+					"bDestroy" : true
+				};
+				
+				var img;
+				
+				if( jsdata.aaData.length > 0 ) {
+					img = '<img src="http://alasky.u-strasbg.fr/cgi/simbad-thumbnails/get-thumbnail.py?name=' 
+							+ encodeURIComponent((jsdata.aaData[0])[0]) + '"/>';
+				} else {
+					img = '<span class="help">No vignette available</span>';
+				}
+				
+				var position = [
+	     			{ "name": img,
+	     			  "pos": "top-left"
+	     			},
+	     			{ "name": "filter",
+	     	 			  "pos": "top-right"
+	     	 		},
+	     			{ "name": 'information',
+	     	 			  "pos" : "bottom-left"
+	     	 		},
+	     			{ "name": "pagination",
+	     	 	 		  "pos" : "bottom-center"
+	     	 	 	},
+	     	 		{ "name": " ",
+	     	 	 		  "pos" : "bottom-right"
+	     	 	 	}
+	     	 	];
+				
+				CustomDataTable.create("simbadtable", options, position);
+				
+				// Put the filter just above the table
+				$("#"+id_modal).find(".dataTables_filter").css("margin-top","34%");
+				$("#"+id_modal).dialog( "option", "position", { my: "center", at: "center", of: window } );
+			}
+		});
+	};
+	
+	this.regionEditor = null;
+	
+	// Create a region dialog
+	region = function (handler, points) {
+		var id_modal = nextId();
+			$(document.documentElement).append('<div id="'+id_modal+'" class="aladin-lite-div" style="width: 400px; height: 400px"></div>');
+			this.regionEditor = new RegionEditor_mVc  (id_modal, handler, points); 
+			this.regionEditor.init();
+			$('#'+id_modal).dialog({ width: 'auto'
+					, dialogClass: 'd-maxsize'
+						, title: "Sky Region Editor (beta)" 		  
+							, zIndex: zIndexModalinfo
+			});
+			
+			setShadow(id_modal);
+			whenClosed(id_modal);
+		/*
+		 * For the Aladin command panel to be on the top layer: so it is enable to get all events
+		 */
+		$(".aladin-box").css("z-index", (9999));
+		this.regionEditor.setInitialValue(points);
+	}
+	
+	// Close the region dialog
+	var closeRegion  = function (){
+		$('div[pos="'+$('.aladin-lite-div').attr("id")+'"]').remove();
+		$('.aladin-lite-div').remove();
+	}
+	
+	// Used by the stc region dialog to create it
+	var commandPanelAsync = function (title, htmlContent, openHandler, closeHandler) {
+		var id_modal = nextId();
+		$('body').append("<div id='"+id_modal+"' class='aladin-lite-stcdiv'></div>");
+		var chdl = ( closeHandler == null )? function(ev, ui)  {}: closeHandler;
+		var ohdl = ( openHandler == null )? function(ev, ui)  {}: openHandler;
+		$("#"+id_modal).html(htmlContent);
+		$("#"+id_modal).dialog({resizable: false
+			, width: 'auto'
+				, title: title
+				, close: chdl
+				, open: ohdl
+				});
+		setShadow(id_modal);
+		whenClosed(id_modal);
+	};
+	
+	// Create a STC Region dialog
+	var showSTCRegion = function (stcRegion) {	
+		var divAladin = "aladin-lite-stcdiv";
+		var html = "<textarea readonly style='resize: vertical; width:100%;' rows='6' >" + stcRegion.stcString + "</textarea><br><div id='" + divAladin + "' style='width: 400px; height: 400px'></div>";
+		commandPanelAsync("STC Region Viewer", html, function(){
+			var aladin = A.aladin('#' + divAladin
+					, {showControl: true
+				       , cooFrame: "ICRS"
+				       , survey: "P/DSS2/color"
+				       , showFullscreenControl: false
+				       , showFrame: false
+				       , showGotoControl: false
+				       , target: stcRegion.raCenter + ' ' + stcRegion.decCenter
+				       , fov: (2*stcRegion.size)
+				       });
+			/**
+             * Using both timeout and zoom forward avoid AL to loop on a error as AL is open for the 2nd time
+             */
+            setTimeout(function() {
+                    var overlay = A.graphicOverlay({color: 'red', lineWidth: 2});
+                    aladin.increaseZoom();
+                    var overlay = A.graphicOverlay({color: 'red', lineWidth: 2});
+                    aladin.addOverlay(overlay);
+                    overlay.addFootprints(A.polygon(stcRegion.points));             
+                    $(".aladin-box").css("z-index", (9999));
+                    }, 500);
+            });
+	};
+	
+	// Class for the datapanel
+	var divClass        = 'modalinfodiv';
+	var divSelect = '.' + divClass;
+	
+	// Create a dialog which can display html and have personalized handler on close
+	var dataPanel = function (title, htmlContent, closeHandler, bgcolor) {		
+		if($(divSelect).length != 0){
+			$(divSelect).html('');
+			$(divSelect).html(htmlContent);
+			
+			$(divSelect).css("background-color", bgcolor);
+			
+			var chdl = ( closeHandler == null )? function(ev, ui)  {$(divSelect).html("");}: closeHandler;
+			$(divSelect).on( "dialogclose", chdl);
+			$('div[pos="'+$(divSelect).attr("id")+'"]').on("click", chdl);
+			
+			var ii = $(divSelect).attr("id");
+			var last = findLastModal();
+			$(document).on("keydown", function(e) { 
+				if (e.keyCode == 27) { 
+					if (last == ii) {
+						chdl();
+					}
+				} 
+			});
+		}
+		else {
+			// Permits to the dialog to be in foreground
+			var new_zindex = 9999;
+			if ($(".modalresult").length != 0) {
+				new_zindex = $(".modalresult").zIndex() + 10;
+			}
+			var id_modal = nextId();
+			$(document.documentElement).append('<div id="'+id_modal+'" class="'+divClass+'" style="display: none; width: auto; hight: auto;"></div>');
+			
+			var chdl = ( closeHandler == null )? function(ev, ui)  {$("#"+id_modal).html("");}: closeHandler;
+			if( bgcolor != null ) {
+				$("#"+id_modal).css("background-color", bgcolor);
+			}
+			$("#"+id_modal).html(htmlContent);
+			$("#"+id_modal).dialog({ width: 'auto'
+					, dialogClass: 'd-maxsize'
+						, title: title
+						, fluid: true
+						, close: chdl
+						, resizable: false});
+			
+
+			// Adjust the size of the panel to be responsive
+			if ($("#"+id_modal).find("h2").find("#detailhisto").length) {
+				if ($(window).width() >= 1000) {
+					$("#"+id_modal).dialog( "option", "width", 1000 );
+					center();
+				}
+				else {
+					fluidDialog();
+				}
+			}
+			
+			$("#"+id_modal).zIndex(new_zindex);	
+			$('div[pos="'+$(divSelect).attr("id")+'"]').on("click", chdl);
+			
+			var ii = $(divSelect).attr("id");
+			var last = findLastModal();
+			$(document).on("keydown", function(e) { 
+				if (e.keyCode == 27) {
+					if (last == ii) {
+						chdl();
+					}
+				} 
+			});
+			setShadow(id_modal);
+			whenClosed(id_modal);
+		}
+	};
+	
+	var closeDataPanel = function() {
+		close($(divSelect).attr("id"));
+	};
+	
+	/**
+	 * These next functions are used to make a panel responsive
+	**/
+	
+	// Run function on all dialog opens
+	$(document).on("dialogopen", ".ui-dialog", function (event, ui) {
+	    fluidDialog();
+	});
+
+	// Remove window resize namespace
+	$(document).on("dialogclose", ".ui-dialog", function (event, ui) {
+	    $(window).off("resize.responsive");
+	});
+	
+	// Manage the responsive side of some dialogs
+	var fluidDialog = function fluidDialog() {
+	    var $visible = $(".ui-dialog:visible");
+	    // each open dialog
+	    $visible.each(function () {
+	        var $this = $(this);
+	        var dialog = $this.find(".ui-dialog-content").data("dialog");
+	        // if fluid option == true
+	        if (dialog.options.maxWidth && dialog.options.width) {
+	            // fix maxWidth bug
+	            $this.css("max-width", dialog.options.maxWidth);
+	            //reposition dialog
+	            dialog.option("position", dialog.options.position);
+	        }
+
+	        if (dialog.options.fluid) {
+	            // namespace window resize
+	            $(window).on("resize.responsive", function () {
+	                var wWidth = $(window).width();
+	                // check window width against dialog width
+	                if (wWidth < dialog.options.maxWidth + 50) {
+	                    // keep dialog from filling entire screen
+	                    $this.css("width", "90%");
+	                    
+	                }
+	              //reposition dialog
+	              dialog.option("position", dialog.options.position);
+	            });
+	        }
+
+	    });
+	}
+	
+	var getHtml = function() {
+		return $(divSelect).html();
+	};
+	
+	// Puts the datapanel in the center of the window
+	var center = function() {
+		var parent = $(divSelect).parent();
+		parent.css("position","absolute");
+		parent.css("top", Math.max(0, (($(window).height() - parent.outerHeight()) / 2) + 
+				$(window).scrollTop()) + "px");
+		parent.css("left", Math.max(0, (($(window).width() - parent.outerWidth()) / 2) + 
+				$(window).scrollLeft()) + "px");
+	};
+	
+	var pblc = {};
+	pblc.nextId = nextId;
+	pblc.findLastModal = findLastModal;
+	pblc.setShadow = setShadow;
+	pblc.whenClosed = whenClosed;
+	pblc.setModal = setModal;
+	pblc.close = close;
+	pblc.info = info;
+	pblc.infoObject = infoObject;
+	pblc.confirm = confirm;
+	pblc.error = error;
+	pblc.uploadForm = uploadForm;
+	pblc.openIframePanel = openIframePanel;
+	pblc.openIframeCrossDomainPanel = openIframeCrossDomainPanel;
+	pblc.iframePanel = openIframePanel;
+	pblc.simbad = simbad;
+	pblc.region = region;
+	pblc.closeRegion = closeRegion;
+	pblc.showSTCRegion = showSTCRegion;
+	pblc.dataPanel = dataPanel;
+	pblc.closeDataPanel = closeDataPanel;
+	pblc.fluidDialog = fluidDialog;
+	pblc.getHtml = getHtml;
+	pblc.center = center;
+	
+	return pblc;
+	
 }();
 
-/******************************************************************
- * This objet opens a modal panel just beneath the standard modal panel 
- * That way, it remains open when the Modalinfo panel closes
- */
+ModalResult = function() {
+	/**
+	 * These next functions are used to build a result panel
+	 * The main @param "content" of these function is an object with this structure:
+	 * {
+	 *    header: {
+	 *      histo: {
+	 *        prev: handler,
+	 *        next: handler
+	 *      },
+	 *      title: {
+	 *        label: "Title"
+	 *      },
+	 *      icon: {
+	 *        classIcon: "class",
+     *        handler: handler
+	 *      }
+	 *    },
+	 *    chapters: [
+	 *    {
+	 *       id: "Observation",
+     *       label: "Observation - Unique Detection Parameters",
+	 *       url: 'url',
+     *       searchable: true,
+     *       params: {
+	 *         oid: "1"
+	 *       }
+	 *    },
+	 *    ... as many as you need
+	 *    ]
+	 * }
+	 * url can be replaced by "data" contening aaColumns and aaData for the datatable
+	 *  
+	**/
+	
+	// The class of the result panel
+	var resultClass = "modalresult";
+	var resultSelect = '.' + resultClass;
+	
+	// Creation of the history array
+	// Will be an array of objects with this structure : {place: .., id: .., content: ..}
+	var histo = new Array();
+	
+	// Current element in the history the user is in
+	var current_histo = {};
+	
+	// Number of elements, used to define a place for each element in the history 
+	var nb = 0;
+	
+	/**
+	 * Return the content which has to be displayed in the h2 of the panel: the title and the icon if necessary
+	**/
+	var getTitle = function(content) {
+		var title='';
+
+		if (content.title != undefined) {
+			if (content.icon != undefined) {
+				title += '<div class="col-xs-11">'+content.title.label+'</div><div class="col-xs-1"><a onclick="'+content.icon.handler+'" class='+content.icon.classIcon+'></a></div>';
+			}
+			else {
+				title += '<div class="col-xs-12">'+content.title.label+'</div>';
+			}
+		} else {
+			if (content.icon != undefined) {
+				title += '<div class="col-xs-11">Details</div><div class="col-xs-1"><a onclick="'+content.icon.handler+'" class='+content.icon.classIcon+'></a></div>';
+			}
+			else {
+				title += '<div class="col-xs-12">Details</div>';
+			}
+		}
+		
+		return title;
+	};
+	
+	/**
+	 * Set the pagination in the title of the panel
+	 * @id: if of the panel 
+	**/
+	var addHistoTitle = function(id) {
+		$("#"+id).prev("div").find("span.ui-dialog-title").prepend('<a id="qhistoleft" href="javascript:void(0);" onclick="ModalResult.prevHisto()" class=greyhistoleft></a>'
+				+ '<span class="nbpages"></span>'
+				+ '<a id="qhistoright" href="javascript:void(0);" onclick="ModalResult.nextHisto()" class=greyhistoright></a>');
+	};
+	
+	/**
+	 * Set the differents chapters of the panel
+	 * @selector: jQuery element, element where we want to add chapters
+	 * @content: object, contains the chapters
+	**/
+	var getChapters = function(selector, content) {
+		for (i = 0; i < content.chapters.length; i++) {
+			$(selector).append('<p class="chapter" id="'+content.chapters[i].id+'"><img src=\"images/tright.png\">'
+					+content.chapters[i].label+'</p>'
+					+'<div class="detaildata"></div>');
+			
+			var temp = content.chapters[i];
+		
+			$("#"+content.chapters[i].id).click({content_click: temp}, function(e){
+				openChapterPanel(e.data.content_click);
+			});
+
+		}
+	};
+	
+	/**
+	 * Change the directions of chapter arrows
+	**/
+	function switchArrow(id) {
+		var image = $('#'+id+'').find('img').attr('src');
+		if (image == 'images/tdown.png') {
+			$('#'+id+'').find('img').attr('src', 'images/tright.png');
+		} else if (image == 'images/tright.png') {
+			$('#'+id+'').find('img').attr('src', 'images/tdown.png');
+		}
+	}
+	
+	/**
+	 * Load the content of a chapter and display it on the screen
+	 * If chapter was already loaded, only display it
+	 * @chapter: object, contains a chapter with its info
+	**/
+	/*var openChapterPanel = function(chapter) {
+		Out.info(chapter.id);
+		var div = $('#' + chapter.id).next('.detaildata');
+		if (div.html().length > 0) {
+			div.slideToggle(500);
+			switchArrow(chapter.id);
+		} else if(chapter.url != undefined && chapter.url != null){
+			Processing.show("Fetching data");
+			$.getJSON(chapter.url, chapter.params , function(data) {
+				Processing.hide();
+				if( Processing.jsonError(data, chapter.url) ) {
+					return;
+				} else {
+					showDataArray(chapter.id, data, chapter.searchable);
+					switchArrow(chapter.id);
+					ModalResult.center();
+				}
+			});
+		}
+		else if (chapter.data != undefined && chapter.data != null) {
+			showDataArray(chapter.id, chapter.data, chapter.searchable);	
+			switchArrow(chapter.id);
+			ModalResult.center();
+		}
+	};*/
+	
+	/**
+	 * Make the datatable of that panel visible. If there is no datatable, the url is invoked
+	 * and the datatable is created 
+	 * @param chapter   : Id of H4 banner of the table
+	 * @param url       : service providing the JSON data fedding the datatable
+	 * @param OID       : saada oid of the considered record
+	 * @param searchable: set a search field if true 
+	 */
+	var openChapterPanel = function(chapter) {
+		Out.info(chapter);
+		var div = $('#' + chapter.id).next('.detaildata');
+		if (div.html().length > 0) {
+			div.slideToggle(500);
+			switchArrow(chapter.id);
+		} else if(chapter.url != null ){
+			Processing.show("Fetching data");
+			$.getJSON(chapter.url, {oid: chapter.params.oid} , function(data) {
+				Processing.hide();
+				if( Processing.jsonError(data, chapter.url) ) {
+					return;
+				} else {
+					showDataArray(chapter.id, data, chapter.searchable);
+					switchArrow(chapter.id);
+					Modalinfo.center();
+				}
+			});
+		} else if (chapter.data != undefined && chapter.data != null) {
+			showDataArray(chapter.id, chapter.data, chapter.searchable);	
+			switchArrow(chapter.id);
+			ModalResult.center();
+		}
+	};
+	
+	/**
+	 *  Build a data table from the Josn data
+	 *  @param divid     : Id of H4 banner of the table
+	 *  @param jsdata    : JSON data readable for the datatable
+	 *  @param withFilter: set a search field if true 
+	 */
+	var showDataArray = function(divid, jsdata, withFilter) {
+		if ( jsdata.length != undefined ){
+			var div = ($('#' + divid).next('.detaildata'));
+			var dom = (withFilter)?'<"top"f>rt' : 'rt';
+			for (var i=0; i<jsdata.length; i++){
+				var id = "detail" + i + divid + "table";
+				div.append("<table id="
+						+ id
+						+ "  width=100% cellpadding=\"0\" cellspacing=\"0\" border=\"0\"  class=\"display\"></table>");
+
+				var options = {
+						"aoColumns" : jsdata[i].aoColumns,
+						"aaData" : jsdata[i].aaData,
+						"sDom" : dom,
+						"bPaginate" : false,
+						"aaSorting" : [],
+						"bSort" : false,
+						"bFilter" : withFilter
+				};
+
+				var positions = [
+				                 { "name": "filter",
+				                	 "pos": "top-left"
+				                 }];
+
+				CustomDataTable.create(id, options, positions);
+			}
+			div.slideToggle(0);
+		}
+
+		else {
+			var id = "detail" + divid + "table";
+			var div = $('#' + divid).next('.detaildata');
+			var dom = (withFilter)?'<"top"f>rt' : 'rt';
+			div.html("<table id="
+					+ id
+					+ "  width=100% cellpadding=\"0\" cellspacing=\"0\" border=\"0\"  class=\"display\"></table>");
+			
+			var options = {
+					"aoColumns" : jsdata.aoColumns,
+					"aaData" : jsdata.aaData,
+					"sDom" : dom,
+					"bPaginate" : false,
+					"aaSorting" : [],
+					"bSort" : false,
+					"bFilter" : withFilter
+			};
+
+			var positions = [
+			                 { "name": "filter",
+			                	 "pos": "top-left"
+			                 }];
+			
+			CustomDataTable.create(id, options, positions);
+			div.slideToggle(0);
+		};
+	};
+	
+	/**
+	 * Change the style of filter input
+	 * @id: id of the chapter
+	**/
+	var changeFilter = function(id) {
+		var label_filter = $('input[aria-controls="'+id+'"]').parent("label");
+		label_filter.each(function(){
+			$(this).prepend('<div class="form-group no-mg-btm">');
+			$(this).find(".form-group").append('<div class="input-group">');
+			$(this).find(".input-group").append('<div class="input-group-addon input-sm"><span class="glyphicon glyphicon-search"></span></div>');
+			$(this).find("input").appendTo($(this).find(".input-group"));		
+			$(this).find("input").addClass("form-control filter-result input-sm");
+			$(this).find("input").attr("placeholder", "Search");
+		});	
+	};
+	
+	/**
+	 * Add the content of a result panel in the history
+	**/
+	var addToHisto = function(content, oid) {
+		var isIn = false;
+		var current;
+		
+		if (histo.length == 0) {
+			histo.push({place: nb, id: oid, content: content});
+			current_histo = {place: nb, id: oid, content: content};
+			nb++;
+		}
+		else if (histo[histo.length - 1].id != oid) {
+			histo.push({place: nb, id: oid, content: content});
+			current_histo = {place: nb, id: oid, content: content};
+			nb++;
+		}
+	};
+	
+	/**
+	 * Display the previous content in the history
+	 * If no previous content, display the last
+	**/
+	var prevHisto = function() {
+		if( current_histo.place <= 0 ) {
+			current_histo = histo[histo.length - 1];
+			resultPanel(current_histo.content, null, "white");
+		} else {
+			var prev = current_histo.place - 1;
+			current_histo = histo[prev];
+			resultPanel(current_histo.content, null, "white");
+		}
+		majHisto();
+		return;
+	};
+	
+	/**
+	 * Display the next content in the history
+	 * If no next content, display the first
+	**/
+	var nextHisto = function() {
+		if( current_histo.place >= (histo.length - 1) ) {
+			current_histo = histo[0];
+			resultPanel(current_histo.content, null, "white");
+		}
+		else {
+			var next = current_histo.place + 1;
+			current_histo = histo[next];
+			resultPanel(current_histo.content, null, "white");
+		}
+		majHisto();
+		return;
+	};
+	
+	/**
+	 * Display the position in the histo / size of histo
+	 */
+	var majHisto = function() {
+		var true_index = current_histo.place + 1;
+		var pages = true_index+"/"+histo.length;
+		$("#qhistoleft").next("span").html(pages);
+	}
+	
+	
+	/**
+	 * Build the result panel
+	 * @content: object, containing the infos to build a result panel
+	 * @closHandler: action to do when result panel is closed 
+	 * @bgcolor: background-color of the result panel
+	 * @add: boolean, tells if this result panel is open for the first time
+	 * @param add is false if the function is called by the history's functions
+	**/
+	var resultPanel = function (content, closeHandler, bgcolor, add) {
+		// If the result panel already exists, only change its content
+		if($(resultSelect).length != 0){
+			$(resultSelect).html('');
+			
+			if( bgcolor != null ) {
+				$("#"+id_modal).css("background-color", bgcolor);
+			}
+			
+			// Set the handler wanted to be exectued when the panel is closed
+			var chdl = ( closeHandler == null )? function(ev, ui)  {$(resultSelect).html("");}: closeHandler;		
+			$(resultSelect).on( "dialogclose", function (event, ui) {            
+										            if (event.originalEvent) {
+										                chdl();
+										            }
+										        });
+			$('div[pos="'+$(resultSelect).attr("id")+'"]').on("click", chdl);
+			
+			// Set the content of the h2 of the panel
+			$(resultSelect).append('<h2><div id="detailhisto" class="row">'+getTitle(content.header)+'</div></h2>');
+			getChapters(resultSelect, content);
+			
+			if (add) {
+				addToHisto(content, content.chapters[0].params.oid);
+			};
+			
+			if (content.header.histo != undefined) {
+				addHistoTitle(id_modal, content.header.histo.prev, content.header.histo.next);
+				majHisto();
+			}
+			
+			content.chapters.forEach(function(chap) {
+			    changeFilter(chap.id);
+			});
+			
+			
+			jQuery(".detaildata").each(function(i) {$(this).hide();});
+		}
+		// If it doesn't exist, building of a new result panel
+		else {
+			var id_modal = Modalinfo.nextId();
+			$(document.documentElement).append('<div id="'+id_modal+'" class="'+resultClass+'" style="display: none; width: auto; hight: auto;"></div>');
+			
+			var chdl = ( closeHandler == null )? function(ev, ui)  {$("#"+id_modal).html("");}: closeHandler;
+			if( bgcolor != null ) {
+				$("#"+id_modal).css("background-color", bgcolor);
+			}
+			
+			$("#"+id_modal).append('<h2><div id="detailhisto" class="row">'+getTitle(content.header)+'</div></h2>');
+			getChapters("#"+id_modal, content);
+			
+			$("#"+id_modal).dialog({ width: 'auto'
+					, dialogClass: 'd-maxsize'
+						, resizable: false
+						, closeOnEscape: true
+				        , close: function (event, ui) {            
+				            if (event.originalEvent) {
+				                chdl();
+				                Modalinfo.close(Modalinfo.findLastModal());
+				            }
+				        }
+						, width: 'auto' // overcomes width:'auto' and maxWidth bug
+				        , maxWidth: 1000
+						, fluid: true
+						, open: function(event, ui){
+							   // Put the content in the history
+							   addToHisto(content, content.chapters[0].params.oid);
+					           Modalinfo.fluidDialog();
+				        }});
+			
+			jQuery(".detaildata").each(function(i) {$(this).hide();});
+			if (content.header.histo != undefined) {
+				addHistoTitle(id_modal, content.header.histo.prev, content.header.histo.next);
+				majHisto();
+			}
+			
+			content.chapters.forEach(function(chap) {
+			    changeFilter(chap.id);
+			});
+			
+			
+			// Adjust the size of the panel to be responsive
+			if ($("#"+id_modal).find("h2").find("#detailhisto").length) {
+				if ($(window).width() >= 1000) {
+					$("#"+id_modal).dialog( "option", "width", 1000 );
+					center();
+				}
+				else {
+					Modalinfo.fluidDialog();
+				}
+			}
+			
+			// Set the handler wanted to be executed when the panel is closed
+			$('div[pos="'+$(resultSelect).attr("id")+'"]').on("click", chdl);
+					
+			Modalinfo.setShadow(id_modal);
+			Modalinfo.whenClosed(id_modal);
+		}
+	};
+	
+	var getHtml = function() {
+		return $(resultSelect).html();
+	};
+	
+	/**
+	 * Puts the resultpanel in the center of the window
+	**/
+	var center = function() {
+		var parent = $(resultSelect).parent();
+		parent.css("position","absolute");
+		parent.css("top", Math.max(0, (($(window).height() - parent.outerHeight()) / 2) + 
+				$(window).scrollTop()) + "px");
+		parent.css("left", Math.max(0, (($(window).width() - parent.outerWidth()) / 2) + 
+				$(window).scrollLeft()) + "px");
+	};
+	
+	var pblc = {};
+	pblc.prevHisto = prevHisto;
+	pblc.nextHisto = nextHisto;
+	pblc.changeFilter = changeFilter;
+	pblc.resultPanel = resultPanel;
+	pblc.getHtml = getHtml;
+	pblc.center = center;
+	
+	return pblc;
+}();
+
 Modalcommand = function() {
 	var divId     = 'modalcommanddiv';
 	var divSelect = '#' + divId;
@@ -429,10 +1756,6 @@ Modalcommand = function() {
 	 * Privates functions
 	 */
 	var initDiv = function() {
-		/*
-		 * The div must be re-built at any time because 
-		 * FF an Opera keep the wider size used before
-		 */
 		if( $(divSelect).length != 0){		
 			$(divSelect).remove();
 		}		
@@ -445,8 +1768,7 @@ Modalcommand = function() {
 		initDiv();
 		var chdl = ( closeHandler == null )? function(ev, ui)  {}: closeHandler;
 		$(divSelect).html(htmlContent);
-		$(divSelect).dialog({ modal: true
-			, resizable: false
+		$(divSelect).dialog({resizable: false
 			, width: 'auto'
 				, title: title 			                      
 				, zIndex: (zIndexModalinfo -1)
@@ -460,8 +1782,7 @@ Modalcommand = function() {
 		var chdl = ( closeHandler == null )? function(ev, ui)  {}: closeHandler;
 		var ohdl = ( openHandler == null )? function(ev, ui)  {}: openHandler;
 		$(divSelect).html(htmlContent);
-		$(divSelect).dialog({ modal: true
-			, resizable: false
+		$(divSelect).dialog({resizable: false
 			, width: 'auto'
 				, title: title 			                      
 				, zIndex: (zIndexModalinfo -1)
@@ -485,338 +1806,6 @@ Modalcommand = function() {
 }();
 
 /*****************************************************************************************************
- * Object opening any types of dialog boxes
- */
-Modalinfo = function() {
-	var divId        = 'modalinfodiv';
-	var divIdCnt =  divId + '_contnt';
-	var divSelect = '#' + divId;
-	/*
-	 * Iframes are pushed on another div because they can not have interaction 
-	 * with the current modal panel
-	 */
-	var iframeId     = 'iframeInfodiv';
-	var iframeSelect = '#' + iframeId;
-	/*
-	 * Popup panel can be open from  dialog
-	 */
-	var popupId     = 'popupInfodiv';
-	var popupSelect = '#' + popupId;
-	/*
-	 * Privates functions
-	 */
-	var initDiv = function() {
-		/*
-		 * The div must be re-built at any time because 
-		 * FF an Opera keep the wider size used before
-		 */
-		if( $(divSelect).length != 0){		
-			$(divSelect).remove();
-		}		
-		$(document.documentElement).append("<div id=" + divId + " style='display: none; width: auto; hight: auto;'></div>");
-	}; 
-	var initIframeDiv = function() {
-		/*
-		 * The div must be re-built at any time because 
-		 * FF an Opera keep the wider size used before
-		 */
-		if( $(iframeSelect).length != 0){		
-			$(iframeSelect).remove();
-		}		
-		$(document.documentElement).append("<div id=" + iframeId + " style='display: none; width: auto; hight: auto;'>Waiting for server response...</div>");
-	}; 
-	var initPopupDiv = function() {
-		/*
-		 * The div must be re-built at any time because 
-		 * FF an Opera keep the wider size used before
-		 */
-		if( $(popupSelect).length != 0){		
-			$(popupSelect).remove();
-		}		
-		$(document.documentElement).append("<div id=" + popupId + " style='display: none; width: auto; hight: auto;'></div>");
-	}; 
-	var formatMessage = function(message) {
-		var retour = "<span class=alert>" + message.replace(/\n/g, "<BR>") + "</span>";
-		return retour;
-	};
-	var buildStandardPopup = function(logoClass, title, formatedMessage) {
-		initPopupDiv();
-		$(popupSelect).html("<div class=" + logoClass 
-				+ "></div><div style='display: inline;'><span class=help>" 
-				+ formatedMessage+ "</span></div>");
-		$(popupSelect).dialog({  maxWidth: '50%'
-			, width : 'auto'
-				, title: title
-				, resizable: false
-				, modal: true
-				, zIndex: zIndexModalinfo});
-
-	};
-	var getTitle = function (replacement, title, content){
-		if( title == undefined ) {
-			return replacement;
-		} else {
-			return title;
-		}
-	};
-	/**
-	 * Return the content of the object x as a user readable string
-	 */
-	var dump = function (x, indent) {
-		var indent = indent || '';
-		var s = '';
-		if (Array.isArray(x)) {
-			s += '[';
-			for (var i=0; i<x.length; i++) {
-				s += dump(x[i], indent);
-				if (i < x.length-1) s += ', ';
-			}
-			s +=']';
-		} else if (x === null) {
-			s = 'NULL';
-		} else switch(typeof x) {
-		case 'undefined':
-			s += 'UNDEFINED';
-			break;
-		case 'object':
-			s += "{ ";
-			var first = true;
-			for (var p in x) {
-				if (!first) s += indent + '  ';
-				else s += "\n" + indent+ '  ';
-				if( p != "id" && p != "$" ) s += p + ': ';
-				s += dump(x[p], indent + '  ');
-				if( p != "id" && p != "$" ) s += "\n";
-				else s += " " ;
-				first = false;
-			}
-			s += indent +'}';
-			break;
-		case 'boolean':
-			s += (x) ? 'TRUE' : 'FALSE';
-			break;
-		case 'number':
-			s += x;
-			break;
-		case 'string':
-			if( x.lastIndexOf("http", 0) === 0 ) 
-				x = decodeURIComponent(x);
-			if( x.match(/\s/))
-				s += '"' + x + '"';
-			else 
-				s += x;
-			break;
-		case 'function':
-			s += '<FUNCTION>';
-			break;
-		default:
-			s += x;
-		break;
-		}
-		return s;
-	};
-	/*
-	 * Public functions
-	 */
-	var dataPanel = function (title, htmlContent, closeHandler, bgcolor) {
-		initDiv();
-		var chdl = ( closeHandler == null )? function(ev, ui)  {$(divSelect).html("");}: closeHandler;
-		if( bgcolor != null ) {
-			$(divSelect).css("background-color", bgcolor);
-		}
-		$(divSelect).html(htmlContent);
-		$(divSelect).dialog({ modal: true
-			// , resizable: false
-			, width: 'auto'
-				//, maxHeight: '1000px'    
-				, dialogClass: 'd-maxsize'
-
-					, title: title 		  
-					, zIndex: zIndexModalinfo
-					, close: chdl});
-	};
-	/**
-	 * htmlCOntent is used to fill the div whereas url is called when the view s expended toanother tab
-	 */
-	var urlDataPanel = function (title, htmlContent, url, closeHandler, bgcolor) {
-		initDiv();
-		var chdl = ( closeHandler == null )? function(ev, ui)  {$(divSelect).html("");}: closeHandler;
-		if( bgcolor != null ) {
-			$(divSelect).css("background-color", bgcolor);
-		}
-		var stitle =  "<span>Preview of " 
-			+ title 
-			+ " <a class=dldownload href='#' onclick='PageLocation.changeLocation(&quot;" 
-			+ url + "&quot;, &quot;" + title 
-			+ "&quot;);' title='Open in a new tab or download' style='display: inline-block;'></a></span>";
-		$(divSelect).html(htmlContent);
-		$(divSelect).dialog({ modal: true
-			// , resizable: false
-			, width: 'auto'
-				//, maxHeight: '1000px'    
-				, dialogClass: 'd-maxsize'
-
-					, title: stitle 		  
-					, zIndex: zIndexModalinfo
-					, close: chdl});
-	};
-
-	var openIframePanel = function (url, title) {
-		initIframeDiv();
-		var fileName = url;
-		var fullTitle =  "<span>Preview of " 
-			+ ((!title)? fileName: title) 
-			+ " <a class=dldownload href='#' onclick='PageLocation.changeLocation(&quot;" 
-			+ url + "&quot;, &quot;" + fileName 
-			+ "&quot;);' title='Open in a new tab or download' style='display: inline-block;'></a></span>";
-		$(iframeSelect).html("<iframe style='width: 98%; height: 98%;'>Waiting on server response...</iframe>");
-		$(iframeSelect).dialog({ modal: true
-			, resizable: true
-			, width: ($(window).width()*0.9)
-			, height: ($(window).height()*0.9)
-			, title: fullTitle	                      
-			, zIndex: zIndexModalinfo
-			, close: function(){$(iframeSelect).html("");} // avoid the src to be called again
-		});
-		//$(iframeSelect + " iframe").attr("src", "data:text/html;charset=utf-8," + escape("Waiting on server response..."));
-
-//		$(iframeSelect + " iframe").on("load", function () {
-//		alert("loxade " + $(this).length);
-//		});
-		$(iframeSelect + " iframe").attr("src", url);
-	};
-
-	var iframePanel = function (url) {
-		var that=this;
-		/*
-		 * try to get information about the data returned by the URL
-		 */
-		$.ajax({
-			type: 'GET',
-			async: false,
-			url:url,
-			complete: function (XMLHttpRequest, textStatus) {
-				var fileName = url;
-				var type = "undef";
-				var headers = XMLHttpRequest.getAllResponseHeaders();
-				var ls = headers.split(/\n/g);
-				/*
-				 * Extract both filename and content type from the http header
-				 */
-				for( var i=0 ; i<ls.length ; i++) {
-					var l = ls[i];
-					if( l.startsWith("Content-Disposition") ) {
-						var res = /filename=(.*)/.exec(l);
-						if( res ) fileName = res[1].replace(/\"/g, '');
-					} else if( l.startsWith("Content-Type") ) {
-						var res = /Content-Type:\s*(.*)/.exec(l);
-						if( res ) type = res[1].replace(/\"/g, '');
-					}
-				}
-				/*
-				 * Open an iframe if the content type can be displayed.
-				 * Let the browser do in any others cases
-				 */
-				for( var t=0 ; t<previewTypes.length ; t++ ) {
-					if( type.match(previewTypes[t]) ) {
-						that.openIframePanel(url);
-						return;
-					} 
-				}
-				Out.info("Mime type " + type + " not recognized; open a tab");
-				PageLocation.changeLocation(url, fileName);
-			}
-		});
-	};			
-
-	var info = function (content, title) {
-		Out.info("Info Popup " + content);
-		buildStandardPopup("infologo", getTitle("INFO", title), formatMessage(content));
-	};
-	var infoObject = function (object, title) {
-		Out.info("Object Info Popup ");
-		buildStandardPopup("infologo", getTitle("INFO", title), '<pre>\n\n\n\n' + dump(object, '  ') + '<pre>');
-	};
-	var confirm = function(content, handler, title) {
-		Out.info("Confirm Popup " + content);
-		var hdl = (handler == undefined )? function(){alert("No attached Handler");}: handler;
-		buildStandardPopup("confirmlogo",getTitle("CONFIRMATION", title), formatMessage(getTitle(content)));
-		$(popupSelect).dialog( "option"
-				, "buttons"
-				, [ { text: "Cancel", click: function() { $( this ).dialog( "close" );} }
-				, { text: "Ok"    , click: function() { $( this ).dialog( "close" ); hdl();} }]);
-	};
-	var error = function (content, title) {
-		Out.info("Error Popup " + content);
-		buildStandardPopup("warninglogo", getTitle("ERROR", title), formatMessage(content));
-	};
-	var getHtml = function() {
-		return $(divSelect).html();
-	};
-	var center = function() {
-
-		var parent = $(divSelect).parent();
-		parent.css("position","absolute");
-		parent.css("top", Math.max(0, (($(window).height() - parent.outerHeight()) / 2) + 
-				$(window).scrollTop()) + "px");
-		parent.css("left", Math.max(0, (($(window).width() - parent.outerWidth()) / 2) + 
-				$(window).scrollLeft()) + "px");
-	};
-	var close = function() {
-		$(divSelect).dialog("close");
-	};
-
-	var resize = function(){
-		var heighthMax = $(window).height()*0.9;
-		var widthMax = $(window).width()*0.9;
-		var ctnt = $("#" + divIdCnt);
-		/*
-		 * Take the size of the content
-		 */
-		height =  ctnt.height();
-		width = ctnt.width();
-		/*
-		 * Limit the size of the container to the maximum size allowed
-		 */
-		if(height > heighthMax) {
-			ctnt.css("height", heighthMax);
-			height = heighthMax;
-		}
-		if(width > widthMax) {
-			ctnt.css("width", widthMax);
-			width = widthMax;
-		}			
-		Out.debug("Resize Modal Box to " +  (8+ width) + "px x " + (8+ height) + "px");
-		/*
-		 * Resize it to fits the size constraints
-		 * Add 8px for the borders: avoids double scroll-bars
-		 */
-		var smc = $("#modalinfodiv");
-		smc.css('height', (8+ height)); 
-		smc.css('width', (8+ width)); 
-		$(window).trigger('resize.simplemodal'); 
-	};
-
-	/*
-	 * exports
-	 */
-	var pblc = {};
-	pblc.dataPanel = dataPanel;
-	pblc.urlDataPanel = urlDataPanel;
-	pblc.iframePanel = iframePanel;
-	pblc.openIframePanel = openIframePanel;
-	pblc.info    = info;
-	pblc.infoObject    = infoObject;
-	pblc.confirm = confirm;
-	pblc.error   = error;
-	pblc.getHtml   = getHtml;
-	pblc.center   = center;
-	pblc.close   = close;
-	pblc.resize   = resize;
-	return pblc;
-}();
-
-/*****************************************************************************************************
  * Object showing AJAX callback progress
  */
 Processing  = function() {
@@ -824,13 +1813,18 @@ Processing  = function() {
 	 * public functions
 	 */
 	var openTime = -1;	
-	var jsonError = function (jsondata, msg) {
+	var jsonError = function (jsondata, msg, custom_msg) {
 		if( jsondata == undefined || jsondata == null ) {
 			Modalinfo.error("JSON ERROR: " + msg + ": no data returned" );
 			return true;
 		}
 		else if( jsondata.errormsg != null) {
-			Modalinfo.error("JSON ERROR: " + msg + ": "  + jsondata.errormsg);
+			if (custom_msg == undefined) {
+				Modalinfo.error("JSON ERROR: " + msg + ": "  + jsondata.errormsg);
+			}
+			else {
+				Modalinfo.error(custom_msg);
+			}
 			return true;
 		}	
 		return false;
@@ -897,7 +1891,6 @@ Processing  = function() {
 	pblc.showAndHide = showAndHide;
 	return pblc;
 }();
-
 
 /*****************************************************************************************************
  * Console functions:
@@ -1020,7 +2013,44 @@ Out = function() {
 	return pblc;
 }();
 
-//Processing.show("Load scripts");
+/*****************************************************************************************************
+ * Object managing printer features
+ */
+Printer = function() {
+	/*
+	 * Public functions
+	 */
+	var getPrintButton = function(divToPrint) {
+		var retour =  "<a href='#' onclick='Printer.printDiv(\"" + divToPrint + "\");' class='printer'></a>";
+		return retour;
+	};
+	var getSmallPrintButton = function(divToPrint) {
+		var retour =  "<a href='#' onclick='Printer.printDiv(\"" + divToPrint + "\");' class='dlprinter'></a>";
+		return retour;
+	};
+	var insertPrintButton = function(divToPrint, divHost) {
+		$("#" + divHost).append(printer.getPrintButton(divToPrint));
+	};
+	var printDiv = function(divSelect) {
+		var ele = $('#' + divSelect);
+		if( !ele ) {
+			Modalinfo.error("PRINT: the element " + divSelect +" doesn't exist");
+		} else {
+			Out.infoMsg(ele);
+			ele.print();
+		}		
+	};
+	/*
+	 * exports
+	 */
+	var pblc = {};
+	pblc.getPrintButton  = getPrintButton;
+	pblc.getSmallPrintButton  = getSmallPrintButton;
+	pblc.insertPrintButton = insertPrintButton;
+	pblc.printDiv = printDiv;
+	return pblc;
+}();
+
 /*****************************************************************************************************
  * Download class 
  * Location had to be renamed PageLocation to avoid a conflict with AladinLite
@@ -2495,13 +3525,18 @@ WebSamp_Mvc = function(appName, iconUrl, description) {
 	jss.addListener = addListener;
 	jss.registerToHub = function() {
 		if( !connector.connection )  {
-			if( noHub ) connector.register();
+			if( noHub ) 
+				connector.register();
 		} else {
 			Out.info("Attempt to connect, but already connected");
 		}
 		return {HubRunning: !noHub};    	
 	};
-	jss.unregisterToHub    = function() {connector.unregister();};
+	jss.unregisterToHub    = function() {connector.unregister();
+										/*
+										 * Givee a delay to the last XHTTP request to complete
+										 */
+	                                     setTimeout(function() {noHub = true;}, 2000);};
 	jss.isConnected        = function() {return ((connector.connection)? true: false);};
 	jss.notifyTrackerReply = notifyTrackerReply;
 	jss.notifyHubError = notifyHubError;
@@ -2613,11 +3648,12 @@ WebSamp_mVc = function() {
 		if (modalOpen == false) {
 			modalOpen = true;			
 		}
+		if( mode != SLEEPING){
 		Modalinfo.dataPanel("Samp Info"
 				, getElement('').html()
 				, function() {
 					WebSamp_mVc.fireCloseModal();
-				});
+				});}
 	};
 	/*************************************************************************************************
 	 * Information display out (private)
@@ -2857,7 +3893,7 @@ WebSamp_mVc = function() {
 		requete = {type: "voreport"
 			, param: reportUrl
 			, mtype: (mtype == null)?null: mtype
-					, name: (name == null)?null: name};			
+			, name: (name == null)?null: name};			
 		Out.info("Send report" + JSON.stringify(requete));
 		if (!fireIsConnected()) {
 			fireRegisterToHub();
@@ -3027,7 +4063,7 @@ WebSamp_mVc = function() {
 		}
 		waitForHub = true;
 		showConnectionOff();
-		setIvoaIcon();			
+		setIvoaIcon();
 		showHupLauncher();
 		setTimeout(WebSamp_mVc.fireRegisterToHubAttempt, REGISTERDELAY);
 	};		
@@ -3764,9 +4800,15 @@ KWSimpleConstraint_mVc.prototype = {
 			var that = this;
 			$('#' + this.constListId).append("<div class='kwConstraint' id=" + this.rootId + " style='overflow: hidden;'>");
 			var baseSelector  = '#' + this.constListId + ' div[id="' + this.rootId + '"]';
-			var rootDiv = $(baseSelector);
+			var rootDiv = $(baseSelector);		
+			
 			rootDiv.append('&nbsp;<a id="' + this.rootId + '_close" href="javascript:void(0);" class=closekw title="Remove this Constraint"></a>&nbsp;');
-			rootDiv.append('<span id="' + this.rootId + '_name" style="float: left;width: 190px">' + this.getAhName(ah) + '</span>&nbsp;');
+			rootDiv.append('<span id="' + this.rootId + '_name" style="float: left;">' + this.getAhName(ah) + '</span>&nbsp;');
+			
+			if(this.rootId.endsWith("_rafield") || this.rootId.endsWith("_decfield")) {
+				$(".kwConstraint#"+this.rootId).css("display","inline");
+			}
+			
 			$('#' + this.constListId).append("</div>");	
 
 			var closeInput = $('#' + this.constListId + ' a[id="' + this.rootId + '_close"]');
@@ -3782,7 +4824,15 @@ KWSimpleConstraint_mVc.prototype = {
 			return this.listener.controlGetADQL(attQuoted);
 		},	
 		fireEnterEvent : function(andor, operator, operand, unit){
+			var valInput   = $('#' + this.constListId + ' input[id="' + this.rootId + '_val"]');
 			this.listener.controlEnterEvent(andor, operator, operand, unit);
+			valInput.parents(".constdiv:first").find("span").each(function(){
+				$(this).css("font-weight", "normal");
+			});		
+			valInput.prevAll("span[id$='_name']").css("font-weight", "bold" );
+			if ($('#' + this.constListId).closest("fieldset").next("div").find("span:last").css("color") === 'rgb(0, 128, 0)') {
+				$('#' + this.constListId).closest("fieldset").next("div").find("span:last").prepend(valInput.prevAll("span[id$='_name']").text()+" ");
+			}
 		},
 		fireRemoveAndOr :  function() {
 			$('#' + this.rootId + "_andor" ).remove();
@@ -3883,7 +4933,7 @@ KWConstraint_mVc.prototype = Object.create(KWSimpleConstraint_mVc.prototype, {
 				rootDiv.append(select);
 
 				rootDiv.append('<input type=text id="' + this.rootId 
-						+ '_val" class=inputvalue style="width:100px; font-size: small;font-family: courier;" value="' 
+						+ '_val" class="inputvalue form-control input-sm" style="display: inline-block; height: 21px; width:100px; font-size: small;font-family: courier;" value="' 
 						+ default_value + '">');
 				if( range != undefined && range.values.length>0 ){
 					this.loadRange( '#' + this.constListId + ' input[id="' + this.rootId + '_val"]',range);
@@ -3943,11 +4993,12 @@ KWConstraint_mVc.prototype = Object.create(KWSimpleConstraint_mVc.prototype, {
 				that.fireEnterEvent(andorInputOpt.text()
 						, $(opSelected).text()
 						, this.value);
+
 			});
 			valInput.on('input', function(event) {
 				that.fireEnterEvent(andorInputOpt.text()
 						, $(opSelected).text()
-						, this.value);
+						, this.value);			
 			});
 			this.fireEnterEvent(andorInputOpt.text()
 					, $(opSelected).text()
@@ -3982,9 +5033,9 @@ KWConstraint_mVc.prototype = Object.create(KWSimpleConstraint_mVc.prototype, {
 		value: function(fault){
 			var d = $('#' + this.constListId + ' div[id="' + this.rootId + '"]');
 			if( fault ) {
-				d.css("background-color", "pink");
+				d.addClass("background-error");
 			} else {
-				d.css("background-color", "");
+				d.removeClass("background-error");
 			}
 		}
 	},
@@ -4058,14 +5109,14 @@ UCDConstraint_mVc.prototype = Object.create(KWConstraint_mVc.prototype, {
 			rootDiv.append(select);
 
 			rootDiv.append('<input type=text id="' + this.rootId 
-					+ '_val" class=inputvalue style=\"width:140px; font-size: small;font-family: courier;\" value="' 
+					+ '_val" class="inputvalue form-control input-sm" style="width:140px; display: inline-block; height: 21px; font-size: small;font-family: courier;" value="' 
 					+ default_value + '">');
 			if( range != undefined && range.values.length>0 ){
 				this.loadRange(valSelector,range);
 			}
 
-			rootDiv.append('<input title="units" style="width:100px; margin:2px;" type=text id="' + this.rootId  
-					+ '_unit" class=inputvalue style=\"font-size: small;font-family: courier;\" value="' 
+			rootDiv.append('<input title="units" style="width:100px; margin:2px; display: inline-block; height: 21px;" type=text id="' + this.rootId  
+					+ '_unit" class="inputvalue form-control input-sm"  style="font-size: small; font-family: courier;" value="' 
 					+ supportedUnits[0].text + '">');
 			var opSelected = '#' + this.constListId + ' select[id="' + this.rootId + '_op"] option:selected';
 			var opInput    = $('#' + this.constListId + ' select[id="' + this.rootId + '_op"]');
@@ -4174,9 +5225,9 @@ PosConstraint_mVc.prototype = Object.create(KWConstraint_mVc.prototype, {
 			var rootDiv = $('#' + this.constListId + ' #' + this.rootId);
 			var str = this.fireGetADQL();
 			str = (str.length > 48)? (str.substring(0, 47) + "..."): str;
+			rootDiv.append('&nbsp;<a id=' + this.rootId + '_close href="javascript:void(0);" class=closekw title="Remove this Constraint"></a>');
 			rootDiv.append('<span id=' + this.rootId + '_name>' +  str + '</span>');
 
-			rootDiv.append('&nbsp;<a id=' + this.rootId + '_close href="javascript:void(0);" class=closekw title="Remove this Constraint"></a>');
 			$('#' + this.constListId).append("</div>");	
 
 			$('#' + this.constListId + ' #' +  this.rootId + "_close").click(function() {
@@ -4230,7 +5281,7 @@ CatalogueConstraint_mVc.prototype = Object.create(KWConstraint_mVc.prototype, {
 				rootDiv.append(select);
 
 				rootDiv.append('<input type=text id="' + this.rootId 
-						+ '_val" class=inputvalue style="width:100px; font-size: small;font-family: courier;" value="' 
+						+ '_val" class="inputvalue form-control input-sm" style="width:100px; font-size: small;font-family: courier; display: inline-block; height: 21px;" value="' 
 						+ default_value + '"> <span>arcsec</span>');
 			}
 			$('#' + this.constListId).append("</div>");	
@@ -4312,7 +5363,7 @@ CrossidConstraint_mVc.prototype = Object.create(CatalogueConstraint_mVc.prototyp
 				rootDiv.append(select);
 
 				rootDiv.append('<input type=text id="' + this.rootId 
-						+ '_val" class=inputvalue style="width: 80px; font-size: small;font-family: courier;" value="' 
+						+ '_val" class="inputvalue form-control input-sm" style="display: inline-block; height: 21px; width: 80px; font-size: small;font-family: courier;" value="' 
 						+ default_value + '"> <span>%</span>');
 			}
 			$('#' + this.constListId).append("</div>");	
@@ -4567,9 +5618,9 @@ VizierKeywords_mVc.prototype = {
 				var name = data[set].setName;
 				var kws  = data[set].keywords;
 				html += '<fieldset  style="float: left;">\n'
-					  + '  <legend>' + name + '&nbsp;<a name="' + name + '" class=closekw  href="javascript:void(0);" title="Unselect all items"></a></legend>\n';
+					  + '  <legend style="margin-bottom: 0px; border-bottom: 0px;">' + name + '&nbsp;<a name="' + name + '" class=closekw  href="javascript:void(0);" title="Unselect all items"></a></legend>\n';
 				
-				html += '<select name="' + name + '"  style=\"background-color: white;\" multiple="multiple" size="7" width="100%">';
+				html += '<select name="' + name + '"  style=\"background-color: white;\" multiple="multiple" size="7" width="100%" class="form-control">';
 				for ( var i=0; i<kws.length; i++){
 					html += '<option title="' + name + '" value="'+kws[i]+'">'+kws[i]+'</option>';
 				}
@@ -4638,7 +5689,7 @@ OrderBy_mVc = function(parentDivId, formName, constContainerId, orderByHandler){
 	this.draw = function() {
 		$('#' + constContainerId).append('<div class=orderby>'
 				+ '<input id=' + orderById 
-				+ ' class="orderby" type="text" value="Order By" disabled="disabled">'
+				+ ' class="orderby form-control" style="display: inline-block;" type="text" value="Order By" disabled="disabled">'
 				+ '<label> desc <input id=' + orderByDesId + ' type="radio" name="OrderBy" value="desc"> </label>'
 				+ '<label>asc <input id=' + orderByAscId + ' type="radio" name="OrderBy" value="asc" checked> </label>'	
 				+ '<a href="javascript:void(0);" id=' + orderByDrop + ' class=closekw title="Reset OrderBy"></a>'			
@@ -4681,20 +5732,18 @@ console.log('=============== >  OrderBy_v.js ');
 /**
  * COne Search form View
  * 
- * @param params: JS object with the following fields
- * 	parentDivId: ID of the parent div
- *  formName   : Name of the current form
- *  frames     : Arrays of the supported frames
- *  urls   : JS object containing handlers processing events:
- *        sesameURL : name resolver
- *        uploadURL : Handle the upload of position lists
+ * @param params:
+ *            JS object with the following fields parentDivId: ID of the parent
+ *            div formName : Name of the current form frames : Arrays of the
+ *            supported frames urls : JS object containing handlers processing
+ *            events: sesameURL : name resolver uploadURL : Handle the upload of
+ *            position lists
  */
-function ConeSearch_mVc(params){
+function ConeSearch_mVc(params) {
 	this.editor = params.editor;
 	this.parentDivId = params.parentDivId;
 	this.formName = params.formName;
-	this.frames = params.frames,
-	this.sesameURL = params.urls.sesameURL;
+	this.frames = params.frames, this.sesameURL = params.urls.sesameURL;
 	this.uploadURL = params.urls.uploadURL;
 	this.cooFieldId = this.formName + "_CScoofield";
 	this.radiusFieldId = this.formName + "_CSradiusfield";
@@ -4708,126 +5757,168 @@ function ConeSearch_mVc(params){
  * Methods prototypes
  */
 ConeSearch_mVc.prototype = {
-		/**
-		 * Draw the field container
-		 */
-		draw : function() {
-			if( this.frames == null || this.frames .length == 0 ) {
-				this.frames = ['ICRS'];
-			}
-			var html = '<fieldset class=fieldiv style="display: inline; float: left;height: 130px;">'
+	/**
+	 * Draw the field container
+	 */
+	draw : function() {
+		if (this.frames == null || this.frames.length == 0) {
+			this.frames = [ 'ICRS' ];
+		}
+		var html = '<fieldset class="fieldiv col-sm-6" style="width:320px;">'
 				+ '  <legend> Cone Search Setup </legend>'
-				+ '     <div style="background: transparent;">'
-				+ '       <span style="text-align: right; display: inline-block; width: 7em;">Coord/Name</span>'
-				+ '       <input type=text id="' + this.cooFieldId + '" class=inputvalue  size=18 />'
-				+ '       <a href="javascript:void(0);" id="' + this.sesameId + '" title="Invoke the CDS name resolver" class=sesame></a>'
-				+ '       <br>'
-				+ '       <span style="text-align: right; display: inline-block; width: 7em;">Radius(arcmin)</span>'
-				+ '       <input type=text id="' + this.radiusFieldId + '" class=inputvalue style="width: 135px;" value="1" />'
-				+ '      <br>'
-				+ '      <span style="text-align: right; display: inline-block; width: 7em;">System</span>'
-				+ '      <select id="' + this.frameSelectId + '" >'
-				+ '      </select>'
-				+ '      <br><span id=' + this.regionId + ' class="datafield activehover">Draw a Search Region</span> <br>'
-				+ '      <input type=button id="' + this.uploadId + '" value="Upload Position List"/>'
-				+ '      <div style="display: inline; float: right;"><span class=help id="uploadresult"></span></div>'
-				+ '    </div>'
-				+ '</fieldset>';
-			$('#' + this.parentDivId).append(html);
-			var s = $('#' + this.frameSelectId);
-			for( var i=0 ; i<this.frames.length ; i++  ) {
-				s.append('<option value=' + this.frames[i] + '>' +this.frames[i] + '</option>');
+				+ '     <form style="background: transparent;" class="form-horizontal">'
+				+ '		  <div class="form-group">'
+				+ '         <label class="col-sm-4 control-label">Coord/Name</label>'
+				+ '         <div class="col-sm-6" style="padding-right: 5px;">'
+				+ '           <input type=text id="'
+				+ this.cooFieldId
+				+ '" class="inputvalue form-control input-sm"/>'
+				+ '		    </div>'
+				+ '		    <div class="col-sm-2" style="padding-left: 1px;">'
+				+ '           <a href="javascript:void(0);" id="'
+				+ this.sesameId
+				+ '" title="Invoke the CDS name resolver" class="sesame-small"></a>'
+				+ '       </div></div>'
+				+ '		  <div class="form-group">'
+				+ '         <label class="col-sm-4 control-label">Radius(arcmin)</label>'
+				+ '         <div class="col-sm-8">'
+				+ '           <input type=text id="'
+				+ this.radiusFieldId
+				+ '" class="inputvalue form-control input-sm" value="1" />'
+				+ '       </div></div>'
+				+ '		  <div class="form-group" style="margin-bottom: 5px;">'
+				+ '         <label class="col-sm-4 control-label">System</label>'
+				+ ' 	    <div class="col-sm-8">'
+				+ '        	  <select id="'
+				+ this.frameSelectId
+				+ '" class="form-control input-sm">'
+				+ '      	  </select>'
+				+ '       </div></div>'
+				+ '       <div><span id='
+				+ this.regionId
+				+ ' class="action activehover" style="margin-right: 10px; float:none;">Draw a Search Region</span>'
+				+ '       <span id="'
+				+ this.uploadId
+				+ '" class="action activehover" style="float:none;">Upload Position List</span></div>'
+				+ '       <div style="display: inline; float: right;"><span class=help id="uploadresult"></span></div>'
+				+ '       </div>' + '</fieldset>';
+		$('#' + this.parentDivId).append(html);
+		var s = $('#' + this.frameSelectId);
+		for (var i = 0; i < this.frames.length; i++) {
+			s.append('<option value=' + this.frames[i] + '>' + this.frames[i]
+					+ '</option>');
+		}
+
+		this.setUploadForm();
+		this.setSesameForm();
+	},
+	setRegionForm : function(handler) {
+		var that = this;
+		$('#' + this.regionId).click(function() {
+			var dv = null;
+			if (that.editor) {
+				dv = that.editor.getDefaultValue();
 			}
-			this.setUploadForm();
-			this.setSesameForm();
-		},
-		setRegionForm: function(handler) {
-			var that = this;
-			$('#' + this.regionId). click(function() {
-				var dv = null;
-				if( that.editor ){
-					dv = that.editor.getDefaultValue();
-				}
-				Modalinfo.region(handler
-						, dv
-//						,  [84.24901652054093, -5.640882748140112,83.34451837951998, -6.103216341255678,83.60897420186223, -4.553808802262613]
-				);});
-		},
-		setUploadForm: function() {
-			var that = this;
-			var handler = ( this.uploadURL != null )
-			? function() {Modalinfo.uploadForm("Upload a list of position"
-					, that.uploadURL
-					, "Upload a CSV position list<br>Error are in arcmin"
-					, function(returnedPath){				
+			Modalinfo.region(handler, dv
+			// , [84.24901652054093, -5.640882748140112,83.34451837951998,
+			// -6.103216341255678,83.60897420186223, -4.553808802262613]
+			);
+		});
+	},
+	setUploadForm : function() {
+		var that = this;
+		var handler = (this.uploadURL != null) ? function() {
+			Modalinfo.uploadForm("Upload a list of position", that.uploadURL,
+					"Upload a CSV position list<br>Error are in arcmin",
+					function(returnedPath) {
 						var msg;
-						if( returnedPath.retour.name != undefined && returnedPath.retour.size != undefined ) {
-							msg = " File " + returnedPath.retour.name  + ' uploaded<br>' + returnedPath.retour.positions + ' positions';
+						if (returnedPath.retour.name != undefined
+								&& returnedPath.retour.size != undefined) {
+							msg = " File " + returnedPath.retour.name
+									+ ' uploaded<br>'
+									+ returnedPath.retour.positions
+									+ ' positions';
 						} else {
 							msg = JSON.stringify(returnedPath.retour);
 						}
 						$('span#uploadresult').html(msg);
-						that.editor.firePoslistUpload(returnedPath.path.filename);
+						that.editor.firePoslistUpload(returnedPath.path.filename, $('#' + that.radiusFieldId).val());
 						Modalinfo.close();
-					}
-					, function(){$('span#uploadresult').text('');});
-			} 
-			: function(){Modalinfo.info("Upload not implemented yet");};
-			$('#' + this.uploadId).click(handler) ;
+					}, function() {
+						$('span#uploadresult').text('');
+					});
+		} : function() {
+			Modalinfo.info("Upload not implemented yet");
+		};
+		$('#' + this.uploadId).click(handler);
 
-		},
-		setSesameForm: function() {
-			var inputfield = $('#' + this.cooFieldId);
-			var handler = ( this.sesameURL != null )
-			? function() {			
-				Processing.show("Waiting on SESAME response");
-				$.getJSON("sesame", {object: inputfield.val() }, function(data) {
-					Processing.hide();
-					if( Processing.jsonError(data, "Sesame failure") ) {
-						return;
-					} else {
-						inputfield.val(data.alpha + ' ' + data.delta);
+	},
+	setSesameForm : function() {
+		var that = this;
+		var inputfield = $('#' + this.cooFieldId);
+		var handler = (this.sesameURL != null) ? function() {
+			Processing.show("Waiting on SESAME response");
+			$.getJSON("sesame", {
+				object : inputfield.val()
+			}, function(data) {
+				Processing.hide();
+				if (Processing.jsonError(data, "Sesame failure", "Name "+inputfield.val()+" cannot be resolved")) {
+					return;
+				} else {
+					inputfield.val(data.alpha + ' ' + data.delta);
+					if (that.editor != undefined) {
+						that.editor.listener.controlAttributeEvent(that.editor.fieldListView.getSearchParameters(), that.editor.constListId);
+						$("#" + that.editor.constListId + " span.help").attr("style","display:none;");
+						that.editor.fieldListView.resetPosition();
 					}
-				});}
-			:  function(){Modalinfo.info("name resolver not implemented yet");};
-
-			$('#' + this.sesameId).click(handler) ;
-		},
-		hasSearchParameters: function() {
-			var coo = $('#' + this.cooFieldId).val();
-			var radius= $('#' + this.radiusFieldId).val();
-			if( coo.trim() == "" || isNaN(radius) ) {
-				return false;				
-			} else {
-				return true;
-			}
-		},
-		getSearchParameters: function() {
-			var coo = $('#' + this.cooFieldId).val();
-			var radius= $('#' + this.radiusFieldId).val();
-			var frame = $('#' + this.frameSelectId + '  option:selected').text();
-			if( coo.trim() == "" ) {
-				Modalinfo.error("No coordinates given");
-				return null;
-			}else if( isNaN(radius) ) {
-				Modalinfo.error("Radius field requires a numerical value");
-				return null;				
-			} else {
-				return {type: "cone", position: coo, radius: radius, frame: frame};
-			}
-		},
-		resetPosition: function(){
-			$('#' + this.cooFieldId).val("");
+				}
+			});
+		} : function() {
+			Modalinfo.info("name resolver not implemented yet");
+		};
+		$('#' + this.sesameId).click(handler);
+		
+	},
+	hasSearchParameters : function() {
+		var coo = $('#' + this.cooFieldId).val();
+		var radius = $('#' + this.radiusFieldId).val();
+		if (coo.trim() == "" || isNaN(radius)) {
+			return false;
+		} else {
+			return true;
 		}
+	},
+	getSearchParameters : function() {
+		var coo = $('#' + this.cooFieldId).val();
+		var radius = $('#' + this.radiusFieldId).val();
+		var frame = $('#' + this.frameSelectId + '  option:selected').text();
+		if (coo.trim() == "") {
+			Modalinfo.error("No coordinates given");
+			return null;
+		} else if (isNaN(radius)) {
+			Modalinfo.error("Radius field requires a numerical value");
+			return null;
+		} else {
+			return {
+				type : "cone",
+				position : coo,
+				radius : radius,
+				frame : frame
+			};
+		}
+	},
+	resetPosition : function() {
+		$('#' + this.cooFieldId).val("");
+	}
 };
-
 
 /**
  * Used for merged catalogues 3XMM
+ * 
  * @param params
  * @returns {SimplePos_mVc}
  */
-function SimplePos_mVc(params){
+function SimplePos_mVc(params) {
 	ConeSearch_mVc.call(this, params);
 	this.queryView = params.queryView;
 };
@@ -4835,328 +5926,532 @@ function SimplePos_mVc(params){
 /**
  * Method overloading
  */
-SimplePos_mVc.prototype = Object.create(ConeSearch_mVc.prototype, {
-	/**
-	 * Draw the field container
-	 */
-	draw : {
-		value: function() {
-			var that = this;
-			if( this.frames == null || this.frames .length == 0 ) {
-				this.frames = ['ICRS'];
-			}
-			var html = '<div style="background: transparent;  float: left;">'
-				+ '       <span style="text-align: right; display: inline-block; width: 7em;">Coord/Name</span>'
-				+ '       <input type=text id="' + this.cooFieldId + '" class=inputvalue  size=18 />'
-				+ '       <a href="javascript:void(0);" id="' + this.sesameId + '" title="Invoke the CDS name resolver" class=sesame></a>'
-				+ '       <span>Radius(arcmin)</span>'
-				+ '       <input type=text id="' + this.radiusFieldId + '" class=inputvalue style="width: 40px;" value="1" />'
-				+ '      <span>System</span>'
-				+ ((this.frames != null)? '      <select id="' + this.frameSelectId + '" >':'')
-				+ '      </select>'
-				+ '      <input type=button id="' + this.uploadId + '" value="Upload Position List"   />'
-				+ '      <div style="width: 110px; height: 30px; float: right; display: inline; overflow: hidden;">'
-				+ '         <span class=help id="uploadresult"></span>'
-				+ '      </div>'
-				+ '    </div>';
-			$('#' + this.parentDivId).append(html);
-			var s = $('#' + this.frameSelectId);
-			for( var i=0 ; i<this.frames.length ; i++  ) {
-				s.append('<option value=' + this.frames[i] + '>' +this.frames[i] + '</option>');
-			}
-			this.setUploadForm();
-			this.setSesameForm();
+SimplePos_mVc.prototype = Object
+		.create(
+				ConeSearch_mVc.prototype,
+				{
+					/**
+					 * Draw the field container
+					 */
+					draw : {
+						value : function() {
+							var that = this;
+							if (this.frames == null || this.frames.length == 0) {
+								this.frames = [ 'ICRS' ];
+							}
+							var html = '<div style="background: transparent;"  class="form-inline">'
+									+ '		  <div class="form-group">'
+									+ '         <label style="margin-left:7px;">Coord/Name</span>'
+									+ '         <input type=text id="'
+									+ this.cooFieldId
+									+ '" class="inputvalue form-control input-sm"/>'
+									+ '       	<a href="javascript:void(0);" id="'
+									+ this.sesameId
+									+ '" title="Invoke the CDS name resolver" class="sesame-small"></a>'
+									+ '       </div>'
+									+ '		  <div class="form-group">'
+									+ '         <label style="margin-right: 7px;">Radius(arcmin)</label>'
+									+ '         <input type=text id="'
+									+ this.radiusFieldId
+									+ '" class="inputvalue form-control input-sm" style="width: 40px;" value="1" />'
+									+ '       </div>'
+									+ '		  <div class="form-group">'
+									+ '         <label style="margin-right: 7px;">System</label>'
+									+ ((this.frames != null) ? '      <select class="form-control input-sm" id="'
+											+ this.frameSelectId + '" >'
+											: '')
+									+ '         </select>'
+									+ '       </div>'
+									+ '       <div class="form-group" style="margin-top: 6px;">'
+									+ '			<span id='
+									+ this.regionId
+									+ ' class="datafield activehover" style="float: none;margin-left: 10px;">Draw a Search Region</span>'
+									+ '         <span class="datafield activehover help-block" id="'
+									+ this.uploadId
+									+ '" style="float: none;margin-left: 10px;">Upload Position List</span>'
+									+ '       </div></div>'
+									+ '      <div style="overflow: hidden; float:right;">'
+									+ '         <span class=help id="uploadresult"></span>'
+									+ '      </div>';
+							$('#' + this.parentDivId).append(html);
+							var s = $('#' + this.frameSelectId);
+							for (var i = 0; i < this.frames.length; i++) {
+								s.append('<option value=' + this.frames[i]
+										+ '>' + this.frames[i] + '</option>');
+							}
+							this.setUploadForm();
+							this.setSesameForm();
+							
+							that.setRegionForm(
+									function(data){
+										if( data.userAction ){
+											if( data.region.size.x > 5 || data.region.size.y > 5) {
+													Modalinfo.error("The region size can't exceeded 5 deg. \nIts actual size is " + JSON.stringify(data.region.size));
+											} else { 
+												if( data && data.userAction && data.isReady ) {
+													var rq = '';
+													if( data.region.format == "array2dim") {
+														rq = '';
+														for( var i=0 ; i<(data.region.points.length - 1) ; i++ ) {
+															if( i > 0 ) rq += " ";
+															rq += data.region.points[i][0] + " " + data.region.points[i][1];
+														}
 
-			$('#' + this.cooFieldId ).keyup(function(event) {
-				if ( event.which == 13 ) {
-					event.preventDefault();
-				} else{
-					that.readAndUpdate();
-				}
-			});
-			$('#' + this.cooFieldId ).click(function(event) {
-				that.readAndUpdate();
-			});
-			$('#' + this.radiusFieldId ).keyup(function(event) {
-				if ( event.which == 13 ) {
-					event.preventDefault();
-				} else{
-					that.readAndUpdate();
-				}
-			});
-			$('#' + this.radiusFieldId ).click(function(event) {
-				that.readAndUpdate();
-			});
-			$('#' + this.frameSelectId ).change(function(event) {
-				that.readAndUpdate();
-			});
-		}
-	},	
-	readAndUpdate:{
-		value: function() {
-			var coo = $('#' + this.cooFieldId).val();
-			var radius= $('#' + this.radiusFieldId).val();
-			var frame = $('#' + this.frameSelectId + '  option:selected').text();
-			this.updateQuery(coo, radius, frame);
-		}
-	},
-	setUploadForm : {
-		value : function() {
-			var that = this;
-			var handler = ( this.uploadURL != null )
-			? function() {Modalinfo.uploadForm("Upload a list of position"
-					, that.uploadURL
-					, "Upload a CSV position list<br>Error are in arcmin"
-					, function(returnedPath){				
-						var msg;
-						if( returnedPath.retour.name != undefined && returnedPath.retour.size != undefined ) {
-							msg = returnedPath.retour.name  + ' uploaded, ' + returnedPath.retour.positions + ' positions';
-						} else {
-							msg = JSON.stringify(returnedPath.retour);
+													} else if( data.region.format == "array") {
+														rq = '';
+														for( var i=0 ; i<data.region.points.length  ; i++ ) {
+															if( i > 0 ) rq += " ";
+															rq += data.region.points[i];
+														}
+
+													} else {
+														Modalinfo.error(data.region.format + " not supported region format");
+													}
+													
+													if( rq != '' ) {
+														var radius = $('#' + that.radiusFieldId).val();
+														var frame = $(
+																'#' + that.frameSelectId
+																		+ '  option:selected').text();
+														that.updateQueryRegion(rq, radius, frame);
+														Modalinfo.closeRegion();
+													}
+												}
+											}
+										}
+									});
+
+							$('#' + this.cooFieldId).keyup(function(event) {
+								if (event.which == 13) {
+									event.preventDefault();
+								} else {
+									that.readAndUpdate();
+								}
+							});
+							$('#' + this.cooFieldId).click(function(event) {
+								that.readAndUpdate();
+							});
+							$('#' + this.radiusFieldId).keyup(function(event) {
+								if (event.which == 13) {
+									event.preventDefault();
+								} else {
+									that.readAndUpdate();
+								}
+							});
+							$('#' + this.radiusFieldId).click(function(event) {
+								that.readAndUpdate();
+							});
+							$('#' + this.frameSelectId).change(function(event) {
+								that.readAndUpdate();
+							});
 						}
-						$('#' + that.parentDivId + ' span#uploadresult').html(msg);
-						$('#' + that.cooFieldId).val("poslist:" + returnedPath.retour.name);
-						$('#' + that.radiusFieldId).val("0");
-						that.readAndUpdate();
+					},
+					readAndUpdate : {
+						value : function() {
+							var coo = $('#' + this.cooFieldId).val();
+							var radius = $('#' + this.radiusFieldId).val();
+							var frame = $(
+									'#' + this.frameSelectId
+											+ '  option:selected').text();
+							this.updateQuery(coo, radius, frame);
+						}
+					},
+					setUploadForm : {
+						value : function() {
+							var that = this;
+							var handler = (this.uploadURL != null) ? function() {
+								Modalinfo
+										.uploadForm(
+												"Upload a list of position",
+												that.uploadURL,
+												"Upload a CSV position list<br>Error are in arcmin",
+												function(returnedPath) {
+													var msg;
+													if (returnedPath.retour.name != undefined
+															&& returnedPath.retour.size != undefined) {
+														msg = returnedPath.retour.name
+																+ ' uploaded, '
+																+ returnedPath.retour.positions
+																+ ' positions';
+													} else {
+														msg = JSON
+																.stringify(returnedPath.retour);
+													}
+													$(
+															'#'
+																	+ that.parentDivId
+																	+ ' span#uploadresult')
+															.html(msg);
+													$('#' + that.cooFieldId)
+															.val(
+																	"poslist:"
+																			+ returnedPath.retour.name);
+													$('#' + that.radiusFieldId)
+															.val("0");
+													that.readAndUpdate();
+												}, function() {
+													$('span#uploadresult')
+															.text('');
+												});
+							}
+									: function() {
+										Modalinfo
+												.info("Upload not implemented yet");
+									};
+							$('#' + this.uploadId).click(handler);
+
+						}
+					},
+					setSesameForm : {
+						value : function() {
+							var that = this;
+							var inputfield = $('#' + this.cooFieldId);
+							var handler = (this.sesameURL != null) ? function() {
+								Processing.show("Waiting on SESAME response");
+								$.getJSON("sesame", {
+									object : inputfield.val()
+								}, function(data) {
+									Processing.hide();
+									if (Processing.jsonError(data,
+											"Sesame failure")) {
+										that.updateQuery('', '', null);
+										return;
+									} else {
+										inputfield.val(data.alpha + ' '
+												+ data.delta);
+										that.readAndUpdate();
+									}
+								});
+							}
+									: function() {
+										Modalinfo
+												.info("name resolver not implemented yet");
+									};
+
+							$('#' + this.sesameId).click(handler);
+						}
+					},
+					updateQuery : {
+						value : function(coord, radius, frame) {
+							if (this.queryView != null) {
+								this.queryView.fireDelConstraint(this.formName,
+										"position");
+								if (coord != '' && radius != '') {
+									this.queryView
+											.fireAddConstraint(
+													this.formName,
+													"position",
+													'    isInCircle("'
+															+ coord
+															+ '", '
+															+ radius
+															+ ', '
+															+ ((frame == "FK5") ? "J2000"
+																	: (frame == "FK4") ? "J1950"
+																			: '-')
+															+ ', ' + frame
+															+ ')');
+								}
+							} else {
+								Out.info("No query view");
+							}
+						}
+					},
+					updateQueryRegion : {
+						value : function(coord, radius, frame) {
+							if (this.queryView != null) {
+								this.queryView.fireDelConstraint(this.formName,
+										"position");
+								if (coord != '' && radius != '') {
+									this.queryView
+											.fireAddConstraint(
+													this.formName,
+													"position",
+													'    isInRegion("'
+															+ coord
+															+ '", '
+															+ radius
+															+ ', '
+															+ ((frame == "FK5") ? "J2000"
+																	: (frame == "FK4") ? "J1950"
+																			: '-')
+															+ ', ' + frame
+															+ ')');
+								}
+							} else {
+								Out.info("No query view");
+							}
+						}
+					},
+					fireClearAllConst : {
+						value : function() {
+							var that = this;
+							$('#' + this.cooFieldId).val('');
+							that.readAndUpdate();
+						}
 					}
-					, function(){$('span#uploadresult').text('');});
-			} 
-			: function(){Modalinfo.info("Upload not implemented yet");};
-			$('#' + this.uploadId).click(handler) ;
-
-		}
-	},
-	setSesameForm : {
-		value : function() {
-			var that = this;
-			var inputfield = $('#' + this.cooFieldId);
-			var handler = ( this.sesameURL != null )
-			? function() {			
-				Processing.show("Waiting on SESAME response");
-				$.getJSON("sesame", {object: inputfield.val() }, function(data) {
-					Processing.hide();
-					if( Processing.jsonError(data, "Sesame failure") ) {
-						that.updateQuery('', '', null);
-						return;
-					} else {
-						inputfield.val(data.alpha + ' ' + data.delta);
-						that.readAndUpdate();
-					}
-				});}
-			:  function(){Modalinfo.info("name resolver not implemented yet");};
-
-			$('#' + this.sesameId).click(handler) ;
-		}
-	},
-	updateQuery : {
-		value: function(coord, radius, frame) {
-			if( this.queryView != null ) {
-				this.queryView.fireDelConstraint(this.formName, "position");
-				if( coord != '' && radius != '' ){
-					this.queryView.fireAddConstraint(this.formName
-							, "position"
-							, '    isInCircle("' + coord + '", ' + radius + ', ' 
-							+ ((frame == "FK5")? "J2000":
-								(frame == "FK4")? "J1950": '-')
-								+ ', ' + frame + ')');
-				}
-			} else {
-				Out.info("No query view");
-			}
-		}
-	},
-	fireClearAllConst: {
-		value: function() {
-			var that = this;
-			$('#' + this.cooFieldId).val('');
-			that.readAndUpdate();
-		}
-	}
-});
-
+				});
 
 /**
- * Used for Taphandle
- * params.postUploadHandler is invoked after the upload succeed
- * It recieved the an object as parameter {name: filename, size: filesize, positions: num of valid positions}
+ * Used for Taphandle params.postUploadHandler is invoked after the upload
+ * succeed It recieved the an object as parameter {name: filename, size:
+ * filesize, positions: num of valid positions}
+ * 
  * @param params
  * @returns {SimplePos_mVc}
  */
-function TapSimplePos_mVc(params){
+function TapSimplePos_mVc(params) {
 	SimplePos_mVc.call(this, params);
-	this.handler = this.editor.fireInputCoordEvent;		
-	this.postUploadHandler= params.postUploadHandler;
-	this.uploadedFile = ""; 
+	this.handler = this.editor.fireInputCoordEvent;
+	this.postUploadHandler = params.postUploadHandler;
+	this.uploadedFile = "";
 };
 
 /**
  * Method overloading
  */
-TapSimplePos_mVc.prototype = Object.create(SimplePos_mVc.prototype, {
-	/**
-	 * Draw the field container
-	 */
-	draw : {
-		value: function() {
-			var that = this;
-			if( this.frames == null || this.frames .length == 0 ) {
-				this.frames = ['ICRS'];
-			}
-			var html = '<div style="background: transparent; position: absolute; top: 0px; left: 0px; width: 460px; height: 55px">'
-				+ '       <span class=help style="text-align: right; display: inline-block; width: 7em;">Coord/Name</span>'
-				+ '       <input type=text id="' + this.cooFieldId + '" class=inputvalue  size=18 />'
-				+ '       <a href="javascript:void(0);" id="' + this.sesameId + '" title="Invoke the CDS name resolver" class=sesame></a>'
-				+ '       <span class=help >System</span>'
-				+ ((this.frames != null)? '      <select id="' + this.frameSelectId + '" >':'')
-				+ '      </select>'
-				+ '       <br><span class=help >Radius(arcmin)</span>'
-				+ '       <input type=text id="' + this.radiusFieldId + '" class=inputvalue style="width: 40px;" value="1" />'
-				+ '       <input class=stackconstbutton id="' + this.stackId + '" type="button"/>'
-				+ '       <input type=button id="' + this.uploadId + '" value="Upload Position List" disabled title="Not implemented yet (wait for next release)"/>'
-				+ '       <div style="width: 150px; height: 30px; position: absolute; top: 25px; left: 295px; overflow: hidden; background-color: whitesmoke;">'
-				+ '            <span class=help id="uploadresult"></span>'
-				+ '       </div>'
-				+ ' </div>';
-			$('#' + this.parentDivId).append(html);
-			var s = $('#' + this.frameSelectId);
-			for( var i=0 ; i<this.frames.length ; i++  ) {
-				s.append('<option value=' + this.frames[i] + '>' +this.frames[i] + '</option>');
-			}
-			this.setUploadForm();
-			this.setSesameForm();
-			$('#' + this.stackId ).click(function() {
-				that.readAndUpdate();				
-			});
-			$('#' + this.cooFieldId ).keyup(function(event) {
-				if ( event.which == 13 ) {
-					that.readAndUpdate();
-				}
-			});
-//			$('#' + this.cooFieldId ).click(function(eventObject) {
-//			that.readAndUpdate();
-//			});
-			$('#' + this.radiusFieldId ).keyup(function(event) {
-				if ( event.which == 13 ) {
-					that.readAndUpdate();
-				}
-			});
-//			$('#' + this.radiusFieldId ).click(function(eventObject) {
-//			that.readAndUpdate();
-//			});
-			$('#' + this.frameSelectId ).change(function(event) {
-				that.readAndUpdate();
-			});
-		}
-	},	
-	readAndUpdate:{
-		value: function() {
-			this.uploadedFile = "";
-			var coo = $('#' + this.cooFieldId).val();
-			var radius= $('#' + this.radiusFieldId).val();
-			var frame = $('#' + this.frameSelectId + '  option:selected').text();
-			if( coo.length == 0 ) {
-				Modalinfo.error("No coordinates given", "input error");
-			} else if( radius.length == 0 ) {
-				Modalinfo.error("No radius given", "input error");
-			} else if( !$.isNumeric(radius)  ) {
-				Modalinfo.error("Radius must be numeric", "input error");
-			} else {
-				var rd = coo.split(/\s+/);
-				if( coo.startsWith('poslist:')  ) {
-					this.uploadedFile = coo.replace('poslist:','');
-					this.editor.fireInputCoordEvent(coo, null, radius, frame);				
-				} else if( rd.length != 2 ) {
-					Modalinfo.error("Coordinates must be separataed with a blank", "input error");					
-				} else if( !$.isNumeric(rd[0]) ||!$.isNumeric(rd[1])  ) {
-					Modalinfo.error("Radius must be numeric", "input error");
-				} else {					
-					this.editor.fireInputCoordEvent(rd[0], rd[1], radius, frame);
-				}
-			}
-		}
-	},
-	setUploadForm : {
-		value : function() {
-			var that = this;
-			var handler = ( this.uploadURL != null )
-			? function() {
-				var radius= $('#' + that.radiusFieldId).val();
-				if( radius == "" ){
-					Modalinfo.error("Radius must be set");
-				} else	if( that.editor.isReadyToUpload() ) {
-					Modalinfo.uploadForm("Upload a list of position"
-							, that.uploadURL
-							, "Upload a CSV position list (ra dec or object name)"
-							, function(returnedPath){				
-								var msg;
-								if( returnedPath.retour.name != undefined && returnedPath.retour.positions != undefined ) {
-									msg = returnedPath.retour.name  + ' uploaded, ' + returnedPath.retour.positions + ' positions';
-									$('#' + that.cooFieldId).val("poslist:" + returnedPath.retour.name);
-									$('#' + that.parentDivId + ' span#uploadresult').html(msg);
+TapSimplePos_mVc.prototype = Object
+		.create(
+				SimplePos_mVc.prototype,
+				{
+					/**
+					 * Draw the field container
+					 */
+					draw : {
+						value : function() {
+							var that = this;
+							if (this.frames == null || this.frames.length == 0) {
+								this.frames = [ 'ICRS' ];
+							}
+							var html = '<div>'
+									+ ' <div class="tapPos">'
+									+ '       <span class=help style="display: inline-block; width: 7em; margin-right: 0px;">Coord/Name</span>'
+									+ '       <input type=text id="'
+									+ this.cooFieldId
+									+ '" class=inputvalue  size=18 />'
+									+ '       <a href="javascript:void(0);" id="'
+									+ this.sesameId
+									+ '" title="Invoke the CDS name resolver" class="sesame-small"></a>'
+									+ '       <span class=help >System</span>'
+									+ ((this.frames != null) ? '      <select id="'
+											+ this.frameSelectId + '" >'
+											: '')
+									+ '      </select>'
+									+ ' </div>'
+									+ ' <div class="tapPos">'
+									+ '       <span class=help style="margin-right:3px;">Radius(arcmin)</span>'
+									+ '       <input type=text id="'
+									+ this.radiusFieldId
+									+ '" class=inputvalue style="width: 40px;" value="1" />'
+									+ '       <input class=stackconstbutton id="'
+									+ this.stackId
+									+ '" type="button"/>'
+									+ '       <input type=button id="'
+									+ this.uploadId
+									+ '" value="Upload Position List" disabled title="Not implemented yet (wait for next release)"/>'
+									+ '</div>'
+									+ '       <div>'
+									+ '            <span class=help id="uploadresult"></span>'
+									+ '       </div>' + ' </div>';
+							$('#' + this.parentDivId).append(html);
+							var s = $('#' + this.frameSelectId);
+							for (var i = 0; i < this.frames.length; i++) {
+								s.append('<option value=' + this.frames[i]
+										+ '>' + this.frames[i] + '</option>');
+							}
+							this.setUploadForm();
+							this.setSesameForm();
+							$('#' + this.stackId).click(function() {
+								that.readAndUpdate();
+							});
+							$('#' + this.cooFieldId).keyup(function(event) {
+								if (event.which == 13) {
 									that.readAndUpdate();
-									if( that.postUploadHandler !=null ) {
-										that.postUploadHandler( returnedPath.retour);
-									}
-									Modalinfo.close();
+								}
+							});
+							// $('#' + this.cooFieldId
+							// ).click(function(eventObject) {
+							// that.readAndUpdate();
+							// });
+							$('#' + this.radiusFieldId).keyup(function(event) {
+								if (event.which == 13) {
+									that.readAndUpdate();
+								}
+							});
+							// $('#' + this.radiusFieldId
+							// ).click(function(eventObject) {
+							// that.readAndUpdate();
+							// });
+							$('#' + this.frameSelectId).change(function(event) {
+								that.readAndUpdate();
+							});
+						}
+					},
+					readAndUpdate : {
+						value : function() {
+							this.uploadedFile = "";
+							var coo = $('#' + this.cooFieldId).val();
+							var radius = $('#' + this.radiusFieldId).val();
+							var frame = $(
+									'#' + this.frameSelectId
+											+ '  option:selected').text();
+							if (coo.length == 0) {
+								Modalinfo.error("No coordinates given",
+										"input error");
+							} else if (radius.length == 0) {
+								Modalinfo.error("No radius given",
+										"input error");
+							} else if (!$.isNumeric(radius)) {
+								Modalinfo.error("Radius must be numeric",
+										"input error");
+							} else {
+								var rd = coo.split(/\s+/);
+								if (coo.startsWith('poslist:')) {
+									this.uploadedFile = coo.replace('poslist:',
+											'');
+									this.editor.fireInputCoordEvent(coo, null,
+											radius, frame);
+								} else if (rd.length != 2) {
+									Modalinfo
+											.error(
+													"Coordinates must be separataed with a blank",
+													"input error");
+								} else if (!$.isNumeric(rd[0])
+										|| !$.isNumeric(rd[1])) {
+									Modalinfo.error("Radius must be numeric",
+											"input error");
 								} else {
-									Modalinfo.error(JSON.stringify(returnedPath), "Upload Failure");
+									this.editor.fireInputCoordEvent(rd[0],
+											rd[1], radius, frame);
 								}
 							}
-							, function(){$('span#uploadresult').text('');}
-							, [{name: 'radius', value: radius}]);
-				}
-			} 
-			: function(){Modalinfo.info("Upload not implemented yet");};
-			$('#' + this.uploadId).click(handler) ;
+						}
+					},
+					setUploadForm : {
+						value : function() {
+							var that = this;
+							var handler = (this.uploadURL != null) ? function() {
+								var radius = $('#' + that.radiusFieldId).val();
+								if (radius == "") {
+									Modalinfo.error("Radius must be set");
+								} else if (that.editor.isReadyToUpload()) {
+									Modalinfo
+											.uploadForm(
+													"Upload a list of position",
+													that.uploadURL,
+													"Upload a CSV position list (ra dec or object name)",
+													function(returnedPath) {
+														var msg;
+														if (returnedPath.retour.name != undefined
+																&& returnedPath.retour.positions != undefined) {
+															msg = returnedPath.retour.name
+																	+ ' uploaded, '
+																	+ returnedPath.retour.positions
+																	+ ' positions';
+															$(
+																	'#'
+																			+ that.cooFieldId)
+																	.val(
+																			"poslist:"
+																					+ returnedPath.retour.name);
+															$(
+																	'#'
+																			+ that.parentDivId
+																			+ ' span#uploadresult')
+																	.html(msg);
+															that
+																	.readAndUpdate();
+															if (that.postUploadHandler != null) {
+																that
+																		.postUploadHandler(returnedPath.retour);
+															}
+															Modalinfo.close();
+														} else {
+															Modalinfo
+																	.error(
+																			JSON
+																					.stringify(returnedPath),
+																			"Upload Failure");
+														}
+													}, function() {
+														$('span#uploadresult')
+																.text('');
+													}, [ {
+														name : 'radius',
+														value : radius
+													} ]);
+								}
+							}
+									: function() {
+										Modalinfo
+												.info("Upload not implemented yet");
+									};
+							$('#' + this.uploadId).click(handler);
 
-		}
-	},
-	setSesameForm : {
-		value : function() {
-			var that = this;
-			var inputfield = $('#' + this.cooFieldId);
-			var handler = ( this.sesameURL != null )
-			? function() {			
-				Processing.show("Waiting on SESAME response");
-				$.getJSON("sesame", {object: inputfield.val() }, function(data) {
-					Processing.hide();
-					if( Processing.jsonError(data, "Sesame failure") ) {
-						that.updateQuery('', '', null);
-						return;
-					} else {
-						inputfield.val(data.alpha + ' ' + data.delta);
-						that.readAndUpdate();
+						}
+					},
+					setSesameForm : {
+						value : function() {
+							var that = this;
+							var inputfield = $('#' + this.cooFieldId);
+							var handler = (this.sesameURL != null) ? function() {
+								Processing.show("Waiting on SESAME response");
+								$.getJSON("sesame", {
+									object : inputfield.val()
+								}, function(data) {
+									Processing.hide();
+									if (Processing.jsonError(data,
+											"Sesame failure")) {
+										that.updateQuery('', '', null);
+										return;
+									} else {
+										inputfield.val(data.alpha + ' '
+												+ data.delta);
+										that.readAndUpdate();
+									}
+								});
+							}
+									: function() {
+										Modalinfo
+												.info("name resolver not implemented yet");
+									};
+
+							$('#' + this.sesameId).click(handler);
+						}
+					},
+					updateQuery : {
+						value : function(coord, radius, frame) {
+							if (this.queryView != null) {
+								this.queryView.fireDelConstraint(this.formName,
+										"position");
+								if (coord != '' && radius != '') {
+									this.queryView
+											.fireAddConstraint(
+													this.formName,
+													"position",
+													'    isInCircle("'
+															+ coord
+															+ '", '
+															+ radius
+															+ ', '
+															+ ((frame == "FK5") ? "J2000"
+																	: (frame == "FK4") ? "J1950"
+																			: '-')
+															+ ', ' + frame
+															+ ')');
+								}
+							} else {
+								Out.info("No query view");
+							}
+						}
+					},
+					fireClearAllConst : {
+						value : function() {
+							$('#' + this.cooFieldId).val('');
+							that.readAndUpdate();
+						}
 					}
-				});}
-			:  function(){Modalinfo.info("name resolver not implemented yet");};
-
-			$('#' + this.sesameId).click(handler) ;
-		}
-	},
-	updateQuery : {
-		value: function(coord, radius, frame) {
-			if( this.queryView != null ) {
-				this.queryView.fireDelConstraint(this.formName, "position");
-				if( coord != '' && radius != '' ){
-					this.queryView.fireAddConstraint(this.formName
-							, "position"
-							, '    isInCircle("' + coord + '", ' + radius + ', ' 
-							+ ((frame == "FK5")? "J2000":
-								(frame == "FK4")? "J1950": '-')
-								+ ', ' + frame + ')');
-				}
-			} else {
-				Out.info("No query view");
-			}
-		}
-	},
-	fireClearAllConst: {
-		value: function() {
-			$('#' + this.cooFieldId).val('');
-			that.readAndUpdate();
-		}
-	}
-});
+				});
 
 console.log('=============== >  ConeSearch_v.js ');
 
@@ -5180,31 +6475,51 @@ ConstList_mVc = function(parentDivId, formName, constContainerId, removeAllHandl
 	/**
 	 *  parentDiv: JQuery DOM node of the container
 	 */
-	this.draw = function() {
+	this.draw = function(isPos, isADQL) {
 //		$("#" + constContainerId).append('<div class=constdiv ><fieldset class="constraintlist" id="' + constListId	+  '">'
 //				+ '<legend class=help>List of Active Constraints <a href="javascript:void(0);" id=' + delConstListId + ' class=closekw title="Remove all constraints"></a></legend>'
 //				+ '<span class=help>Click on a <input class="stackconstbutton" type="button"> button to append,<br>the constraint to the list</span>'
 //				+ '</fieldset>'
 //				+ '<span style="font-style: italic;color: lightgray;">QL stmt </span><span style="height: 18;" class=typomsg_ok id=' + typoMsgId + '></span>'
 //				+ '</div>');
+
+		if (isPos != undefined && isPos != null) {
+			var h = isPos["fieldset"];
+			var h2 = isPos["div"];
+		} else {
+			var h = "185px";
+			var h2 = "150px"
+		}
+		
+		if (isADQL != undefined && isADQL) {
+			var w = "100%"
+		} else {
+			var w = "450px"
+		}
+		
 		$("#" + constContainerId).append(
 				
 				
-				  '<div class=constdiv class="constraintlist" style="width: 100%">'
-				+ '    <fieldset style="height: 100px; background-color: whitesmoke;">'
+				  '<div class=constdiv style="width: '+w+'">'
+				+ '    <fieldset style="background-color: #f2f2f2; height:'+h+';">'
 				+ '        <legend class=help>List of Active Constraints <a href="javascript:void(0);" id=' + delConstListId + ' class=closekw style="float: none;" title="Remove all constraints"></a></legend>'
-				+ '        <div  style="overflow: auto;height: 90px; background-color: transparent; width: 100%" id="' + constListId	+  '"><span class=help>Click on a <input class="stackconstbutton" type="button"> button to append,<br>the constraint to the list</span></div>'
+				+ '        <div  style="overflow: auto; height:'+h2+'; background-color: transparent; width: 100%" id="' + constListId	+  '"><span class=help>Click on a <input class="stackconstbutton" type="button"> button to append,<br>the constraint to the list</span></div>'
 
 				//+ '        <span class=help>Click on a <input class="stackconstbutton" type="button"> button to append,<br>the constraint to the list</span>'
 				+ '    </fieldset>'
 				+ '    <div>'
-				+ '      <span style="font-style: italic;color: lightgray;">QL stmt </span><span style="height: 18;" class=typomsg_ok id=' + typoMsgId + '></span>'
+				+ '      <span class="ql">QL stmt </span><span style="height: 18;" class=typomsg_ok id=' + typoMsgId + '></span>'
 				+ '    </div>'
 				+ '</div>');
 		
+		if (isPos) {
+			$("#div-"+parentDivId).appendTo($("#"+typoMsgId).parent());
+		}
+		
 		$('#' + delConstListId).click(function() {
 			removeAllHandler();
-		});		
+		});	
+		
 		return constListId;
 	};
 	
@@ -5212,10 +6527,11 @@ ConstList_mVc = function(parentDivId, formName, constContainerId, removeAllHandl
 		$("#"+ typoMsgId).each(function() {
 			if(fault) {
 				$(this).attr('class', 'typomsg_ko');
+				$(this).text(msg);
 			} else {
-				$(this).attr('class', 'typomsg_ok');					
+				$(this).attr('class', 'typomsg_ok');	
+				$(this).text(msg);
 			}
-			$(this).text(msg);
 		});
 	};
 	this.isTypoGreen= function(){
@@ -5286,9 +6602,12 @@ FieldList_mVc.prototype = {
 			var that = this;
 			this.attributesHandlers = new Array();
 			this.parentDiv.html('<div class=fielddiv><div class="fieldlist" id="' + this.fieldListId
-					+  '"></div><input id="' 
-					+ this.fieldFilterId
-					+  '" class="fieldfilter" type="text" value="Kw Filter" size=15 style="font-style: italic; color: LightGray"/></div>');
+					+  '"></div>'
+					+ ' <div class="form-group" style="width:347px; margin-bottom:8px; margin-top:8px;"><div class="input-group"><div class="input-group-addon input-sm"><span class="glyphicon glyphicon-search"></span></div>'
+					+ ' <input id="' + this.fieldFilterId +  '" class="form-control input-sm" type="text" placeholder="Search"/></div></div>');
+			
+			$("#"+this.fieldListId).closest(".fielddiv").css("padding","3px");
+			
 			$('#' + this.fieldFilterId).keyup(function() {
 				that.filterPattern = new RegExp($(this).val(), 'i');
 				that.fireFilter();
@@ -5329,6 +6648,7 @@ FieldList_mVc.prototype = {
 			+"<td class='attlist help'>" + ah.type +"</td>"
 			+"<td class='attlist help'>" + ah.unit +"</td>"
 			;
+
 			if( this.orderByHandler != null ) {
 				row += "<td class='attlist attlistcmd'>"
 					+"<input id=order_" + id + " title=\"Click to order the query result by this field\" class=\"orderbybutton\" type=\"button\" ></input>"
@@ -5390,7 +6710,7 @@ FieldList_mVc.prototype = {
 						this.dataTreePath
 						, function() {
 							var ahm = MetadataSource.ahMap(that.dataTreePath);
-							var table  = "<table id=" + that.fieldTableId + " style='width: 100%; border-spacing: 0px; border-collapse:collapse'></table>";
+							var table  = "<table id=" + that.fieldTableId + " class='table' style='width: 100%; border-spacing: 0px; border-collapse:collapse'></table>";
 							$('#' + that.fieldListId).html(table);
 							for( var k=0 ; k<ahm.length ; k++) {
 								var ah = ahm[k];
@@ -5499,7 +6819,7 @@ UcdFieldList_mVc.prototype = Object.create(FieldList_mVc.prototype, {
 					this.dataTreePath
 					, function() {
 						var ahm = MetadataSource.ahMap(that.dataTreePath);
-						var table  = "<table id=" + that.fieldTableId + " style='width: 100%; border-spacing: 0px; border-collapse:collapse'></table>";
+						var table  = "<table id=" + that.fieldTableId + " style='width: 100%; border-spacing: 0px; border-collapse:collapse' class='table'></table>";
 						$('#' + that.fieldListId).html(table);
 						for( var k=0 ; k<ahm.length ; k++) {
 							var ah = ahm[k];
@@ -5535,10 +6855,14 @@ CatalogueList_mVc.prototype = Object.create(FieldList_mVc.prototype, {
 		value: function() {
 			var that = this;
 			this.attributesHandlers = new Array();
-			this.parentDiv.html('<div class=fielddiv><div class="fieldlist" id="' + this.fieldListId
-					+  '"></div><input id="' 
-					+ this.fieldFilterId
-					+  '" class="fieldfilter" type="text" value="Kw Filter" size=15 style="font-style: italic; color: LightGray"/></div>');
+			this.parentDiv.html('<div class=fielddiv>'
+					+ '<div class="fieldlist" id="' + this.fieldListId
+					+  '"></div>'
+					+ ' <div class="form-group" style="width:347px; margin-bottom:8px; margin-top:8px;"><div class="input-group"><div class="input-group-addon input-sm"><span class="glyphicon glyphicon-search"></span></div>'
+					+ ' <input id="' + this.fieldFilterId +  '" class="form-control input-sm" type="text" placeholder="Search"/></div></div>');
+			
+			$("#"+this.fieldListId).closest(".fielddiv").css("padding","3px");
+			
 			$('#' + this.fieldFilterId).keyup(function() {
 				that.filterPattern = new RegExp($(this).val(), 'i');
 				that.fireFilter();
@@ -5580,7 +6904,7 @@ CatalogueList_mVc.prototype = Object.create(FieldList_mVc.prototype, {
 					+"</td>";
 			}
 			row += "</tr>"; 
-			$('#' + this.fieldTableId).css('table-layout', 'fixed');
+			$('#' + this.fieldTableId).css('table-layout', 'auto');
 			$('#' + this.fieldTableId).append(row);
 			if( this.stackHandler != null ){
 				$('#stack_' + id ).click(function() {that.stackHandler($(this).closest("tr").attr("id"));});
@@ -5612,7 +6936,7 @@ CatalogueList_mVc.prototype = Object.create(FieldList_mVc.prototype, {
 				var ah = ahs[i];
 				this.attributesHandlers[ah.CLASSNAME] = ah;
 			}
-			var table  = "<table id=" + this.fieldTableId + " style='width: 100%; border-spacing: 0px; border-collapse:collapse'></table>";
+			var table  = "<table id=" + this.fieldTableId + " style='width: 100%; border-spacing: 0px; border-collapse:collapse' class='table'></table>";
 			$('#' + this.fieldListId).html(table);
 			for( var i in this.attributesHandlers  ) {
 				this.displayField(this.attributesHandlers[i]);
@@ -5660,7 +6984,7 @@ CatalogueList_mVc.prototype = Object.create(FieldList_mVc.prototype, {
 
 function TapColList_mVc(parentDivId, formName, handlers, sessionID){
 	FieldList_mVc.call(this, parentDivId, formName, handlers);
-	this.tableSeclectId = parentDivId + "_tableSelect";
+	this.tableselectid = parentDivId + "_tableSelect";
 	this.joinedTableLoaded = false;
 };
 
@@ -5673,12 +6997,17 @@ TapColList_mVc.prototype = Object.create(FieldList_mVc.prototype, {
 		value: function() {
 			var that = this;
 			this.attributesHandlers = new Array();
-			this.parentDiv.html('<div class=fielddiv><div class="fieldlist" id="' + this.fieldListId +  '" style="height: 155px"></div>'
-					+ '  <div  style="position:absolute;width: 350px; top: 170px; left: 0px;height: 25px">'
-					+ '       <input id="' + this.fieldFilterId +  '" class="fieldfilter" type="text" value="Kw Filter" size=15 style="font-style: italic; color: LightGray"/>'
-					+ '        <select id="' + this.tableSeclectId +  '"  class="table_filter"  style="width: 150px">'
-					+ '        </select>'
-					+ '  </div>');
+			this.parentDiv.html('<div class="fielddiv">'
+					+ '<div class="fieldlist" id="' + this.fieldListId +  '" style="height: 175px"></div>'
+					+ ' <div class="form-group" style="width:347px; margin-bottom:8px; margin-top:8px;"><div class="input-group"><div class="input-group-addon input-sm"><span class="glyphicon glyphicon-search"></span></div>'
+					+ ' <input id="' + this.fieldFilterId +  '" class="form-control input-sm" type="text" placeholder="Search"/></div></div>'
+					+ '  <div  style="width: 350px; margin: 3px;">'
+					+ '		   <div class="form-group form-inline"><label for="tapColEditor_tableSelect">Join with table:</label>'
+					+ '        <select id="' + this.tableselectid +  '"  class="table_filter form-control input-sm"  style="width: 250px">'
+					+ '        </select></div>'
+					+ ' </div>'
+					+ '  </div>');		
+			
 			$('#' + this.fieldFilterId).keyup(function() {
 				that.filterPattern = new RegExp($(this).val(), 'i');
 				that.fireFilter();
@@ -5694,7 +7023,7 @@ TapColList_mVc.prototype = Object.create(FieldList_mVc.prototype, {
 	setChangeTableHandler: {
 		value: function() {
 			var that = this;
-			$('#' + this.tableSeclectId).change(function() {
+			$('#' + this.tableselectid).change(function() {
 				var to = this.value;
 				var fs = to.split('.');
 				var schema, table;
@@ -5704,11 +7033,12 @@ TapColList_mVc.prototype = Object.create(FieldList_mVc.prototype, {
 					table = fs[1];
 				} else {
 					/*
-					 * If no schema in table name, we suppose the new tablme to belong the same schema
+					 * If no schema in table name, we suppose the new table to belong the same schema
 					 */
 					schema = that.treePath.schema;
 					table = fs[0];
 				}
+				
 				that.changeTable(new DataTreePath({nodekey: that.dataTreePath.nodekey, schema: schema, table: table}));
 			});
 		}
@@ -5717,15 +7047,15 @@ TapColList_mVc.prototype = Object.create(FieldList_mVc.prototype, {
 		value: function(dataTreePath){
 			this.dataTreePath = dataTreePath;
 			$('#' +  this.fieldListId ).html('');
-			$('#' +  this.tableSeclectId ).html('');
+			$('#' +  this.tableselectid ).html('');
 			this.addTableOption(this.dataTreePath );
 			this.changeTable(this.dataTreePath);	
 		}
 	},
 	addTableOption: {
 		value: function(treePath){
-			$('#' + this.tableSeclectId).append('<option>' + treePath.schema + '.' + treePath.table + '</option>');
-			//$('#' + this.tableSeclectId).append('<option>' + treePath.tableorg + '</option>');
+			$('#' + this.tableselectid).append('<option>' + treePath.schema + '.' + treePath.table + '</option>');
+			//$('#' + this.tableselectid).append('<option>' + treePath.tableorg + '</option>');
 		}
 	},
 	changeTable : {
@@ -5756,7 +7086,7 @@ TapColList_mVc.prototype = Object.create(FieldList_mVc.prototype, {
 					this.dataTreePath
 					, function() {
 						var ahm = MetadataSource.ahMap(that.dataTreePath);
-						var table  = "<table id=" + that.fieldTableId + " style='width: 100%; border-spacing: 0px; border-collapse:collapse'></table>";
+						var table  = "<table id=" + that.fieldTableId + " style='width: 100%; border-spacing: 0px; border-collapse:collapse' class='table'></table>";
 						$('#' + that.fieldListId).html(table);
 						that.attributesHandlers = new Array();
 						for( var k=0 ; k<ahm.length ; k++) {
@@ -5771,8 +7101,9 @@ TapColList_mVc.prototype = Object.create(FieldList_mVc.prototype, {
 							}
 							/*
 							 * The same object is used with different columns sets: no cache for joined tables
+							 * uncommented by Pauline
 							 */
-							//that.joinedTableLoaded = true;
+							that.joinedTableLoaded = true;
 						}
 						that.lookForAlphaKeyword();
 						that.lookForDeltaKeyword();
@@ -5805,16 +7136,17 @@ function TapFieldList_mVc(parentDivId, formName, handlers, getTableAttUrl, sessi
 	this.decFieldId = parentDivId + "_decfield";
 	this.alphakw = null;
 	this.deltakw = null;
+	this.radec = handlers.radec;
 
 	this.getTableAttUrl = getTableAttUrl;
-	if( handlers.raHandler == null ){
+	if(this.radec){
 		this.raHandler= function(ah){this.setAlphaKeyword(ah);};
-	} else {
+	} else if (handlers.raHandler != undefined) {
 		this.raHandler= function(ah){this.setAlphaKeyword(ah);handlers.raHandler(ah);};
 	}
-	if( handlers.decHandler == null ){
+	if(this.radec){
 		this.decHandler= function(ah){this.setDeltaKeyword(ah);};
-	} else {
+	} else if (handlers.decHandler != undefined){
 		this.decHandler= function(ah){this.setDeltaKeyword(ah);handlers.decHandler(ah);};
 	}
 };
@@ -5828,19 +7160,29 @@ TapFieldList_mVc.prototype = Object.create(TapColList_mVc.prototype, {
 		value: function() {
 			var that = this;
 			this.attributesHandlers = new Array();
-			this.parentDiv.html('<div class=fielddiv><div class="fieldlist" id="' + this.fieldListId +  '" style="height: 155px"></div>'
-					+ '  <div  style="position:absolute;width: 350px; top: 170px; left: 0px;height: 45px">'
-					+ '    <div style="position:absolute;width: 75px; top: 0px; left: 0px;height: 45px">'
-					+ '       <input id="' + this.fieldFilterId +  '" class="fieldfilter" type="text" value="Kw Filter" size=15 style="font-style: italic; color: LightGray"/>'
-					+ '        <br><select id="' + this.tableSeclectId +  '"  class="table_filter"  style="width: 70px">'
-					+ '        </select>'
-					+ '    </div>'
-					+ '    <div style="position:absolute;width: 260px; top: 0px; left: 80px;height: 45px">'
-					+ '      <span  class=help>ra&nbsp;&nbsp;</span>'
-					+ '      <div id="' + this.raFieldId +  '"  class=radecfield style="top: 0px; left: 20px"/>'
-					+ '      <span class=help style="position:absolute; top: 25px; left: 0px;">dec&nbsp;</span>'
-					+ '      <div id="' + this.decFieldId +  '"  class=radecfield style="top: 20px; left: 20px"/>'
-					+ '    </div>'
+			var radec = "";
+			if (this.radec) {
+				radec += '<div id="div-'+this.raFieldId.substring(0, this.raFieldId.length-8)+'">'
+					+ ' <div>'
+					+ '    <span class="help" style="margin-left:5px;">ra&nbsp;&nbsp;</span>'
+					+ '    <div id="' + this.raFieldId +  '"  style="display:inline-block;"/>'
+					+ ' </div>'
+					+ ' <div>'
+					+ '    <span class="help"  style="margin-left:5px;">dec&nbsp;</span>'
+					+ '    <div id="' + this.decFieldId +  '"  style="display:inline-block;"/>'
+					+ ' </div>'
+					+ ' </div>';
+			}
+			this.parentDiv.html('<div class=fielddiv>'
+					+ ' <div class="fieldlist" id="' + this.fieldListId +  '" style="height: 175px"></div>'
+					+ ' <div class="form-group" style="width:347px; margin-bottom:8px; margin-top: 8px;"><div class="input-group"><div class="input-group-addon input-sm"><span class="glyphicon glyphicon-search"></span></div>'
+					+ ' <input id="' + this.fieldFilterId +  '" class="form-control input-sm" type="text" placeholder="Search"/></div></div>'
+					+ '  <div  style="width: 350px; margin: 3px;">'
+					+ '		   <div class="form-group form-inline"><label for="tapColEditor_tableSelect">Join with table:</label>'
+					+ '        <select id="' + this.tableselectid +  '"  class="table_filter form-control input-sm"  style="width: 250px">'
+					+ '        </select></div>'
+					+ '  </div>'
+					+ radec
 					+ '  </div>');
 			$('#' + this.fieldFilterId).keyup(function() {
 				that.filterPattern = new RegExp($(this).val(), 'i');
@@ -5858,7 +7200,7 @@ TapFieldList_mVc.prototype = Object.create(TapColList_mVc.prototype, {
 		value: function(dataTreePath){
 			this.dataTreePath = dataTreePath;
 			$('#' +  this.fieldListId ).html('');
-			$('#' +  this.tableSeclectId ).html('');
+			$('#' +  this.tableselectid ).html('');
 			$('#' + this.raFieldId).html('');
 			this.alphakw = null;
 			$('#' + this.decFieldId).html('');
@@ -6094,6 +7436,27 @@ DataLink_Mvc.prototype = {
 };
 console.log('=============== >  DataLink_m.js ');
 
+/*
+ * Ontology map for links
+ * http://www.ivoa.net/rdf/datalink/core/2014-10-30/datalink-core-2014-10-30.html
+ */
+var linkVocabulary = [];
+linkVocabulary ["#this"] = "the primary (as opposed to related) data of the identified resource";
+linkVocabulary ["#progenitor"] = "data resources that were used to create this dataset (e.g. input raw data)";
+linkVocabulary ["#derivation"] = "data resources that are derived from this dataset (e.g. output data products)";
+linkVocabulary ["#auxiliary"] = "auxiliary resources";
+linkVocabulary ["#weight"] = "Weight map: resource with array(s) containing weighting values";
+linkVocabulary ["#error"] = "Error map: resource with array(s) containing error values";
+linkVocabulary ["#noise"] = "Noise map: resource with array(s) containing noise values";
+linkVocabulary ["#calibration"] = "Calibration data	resource used to calibrate the primary data";
+linkVocabulary ["#bias"] = "Bias calibration data used to subtract the detector offset level";
+linkVocabulary ["#dark"] = "Dark calibration data used to subtract the accumulated detector dark current";
+linkVocabulary ["#flat"] = "Flat field calibration data	used to calibrate variations in detector sensitivity";
+linkVocabulary ["#preview"] = "low fidelity but easily viewed representation of the data";
+linkVocabulary ["#preview-image"] = "preview of the data as a 2-dimensional image";
+linkVocabulary ["#preview-plot"] = "preview of the data as a plot (e.g. spectrum or light-curve)";
+linkVocabulary ["#proc"] = "Processing server-side data processing result";
+linkVocabulary ["#cutout"] = "Cutout a subsection of the primary data";
 
 /**
  * @param params { parentDivId: 'query_div',baseurl}
@@ -6160,6 +7523,7 @@ DataLink_mVc.prototype = {
 				});
 				html += "<fieldset>";
 				html += "  <legend><span>Link <i>" + productType + "</i> <span></legend>";
+				html += "    <a class='dlinfo' title='Get info about' href='#' onclick='LinkProcessor.fireGetProductInfo(\"" + this.linkInstance.access_url + "\"); return false;'></a>"
 				html += "    <a class=dldownload href='#' onclick='PageLocation.changeLocation(&quot;" + url + "&quot);' title='Download link target'></a>";
 				html += "    <span class=help>" +  semantic + "</span><br>";
 				html += "    <span class=help><b>Product URI:</b> " +  uri + "</span><br>";
@@ -6539,7 +7903,8 @@ Link_mVc.prototype = {
 
 		getSimpleLinkAction: function(){
 			if( this.linkInstance.content_type == "application/x-votable+xml;content=datalink") {
-				return "<a class=dldownload href='#' onclick='DataLinkBrowser.startCompliantBrowser(&quot;" +  this.linkInstance.access_url  + "&quot)' title='Download link target'></a>";
+				return "<a class='dlinfo' title='Get info about' href='#' onclick='LinkProcessor.fireGetProductInfo(\"" + this.linkInstance.access_url + "\"); return false;'></a>"
+				+ "<a class=dldownload href='#' onclick='DataLinkBrowser.startCompliantBrowser(&quot;" +  this.linkInstance.access_url  + "&quot)' title='Download link target'></a>";
 			} else if( this.linkInstance.semantics.endsWith("#preview") ){
 				return "<a class='dlinfo' title='Get info about' href='#' onclick='LinkProcessor.fireGetProductInfo(\"" + this.linkInstance.access_url + "\"); return false;'></a>"
 				+ "<a class=dldownload href='#' onclick='Modalinfo.openIframePanel(&quot;" +  this.linkInstance.access_url  + "&quot)' title='Download link target'></a>";
@@ -6549,7 +7914,8 @@ Link_mVc.prototype = {
 				+ "<a class='dlivoalogo'  href='#' onclick='LinkProcessor.processToSampWithParams(\"" + this.linkInstance.access_url + "\", \"" + this.linkInstance.semantics + "\");' title='broadcast to SAMP'></a>"
 				;
 			} else {
-				return "<a class=dldownload href='#' onclick='Modalinfo.openIframePanel(&quot;" +  this.linkInstance.access_url  + "&quot)' title='Download link target'></a>";	
+				return 	"<a class='dlinfo' title='Get info about' href='#' onclick='LinkProcessor.fireGetProductInfo(\"" + this.linkInstance.access_url + "\"); return false;'></a>"
+				+  "<a class=dldownload href='#' onclick='Modalinfo.openIframePanel(&quot;" +  this.linkInstance.access_url  + "&quot)' title='Download link target'></a>";	
 			}
 		},
 		getHtml : function(){
@@ -6558,7 +7924,7 @@ Link_mVc.prototype = {
 				html += "<fieldset>";
 				html += "  <legend><span title='Click on the link name to toggle'>Link <i>"  + this.linkInstance.semantics + "</i></legend><div class=datalinkform>";
 				html += this.getSimpleLinkAction();
-				html += "    <span class=help>" +  this.linkInstance.description + "</span>";
+				html += this.getDescriptionSpan();
 				html += "</div></fieldset>";
 				return html;
 			} else {
@@ -6568,6 +7934,7 @@ Link_mVc.prototype = {
 				html += "  <legend><span title='Click on the link name to toggle'>Link <i>"  + this.linkInstance.semantics + "</i></legend><div class=datalinkform>";
 				html += "    <a class=dldownload    href='#' onclick='LinkProcessor.processWithParams(\"" + this.linkInstance.access_url + "\", \"" + this.linkInstance.semantics + "\");' title='Download link target'></a>";
 				html += "    <a class='dlivoalogo'  href='#' onclick='LinkProcessor.processToSampWithParams(\"" + this.linkInstance.access_url + "\", \"" + this.linkInstance.semantics + "\");' title='broadcast to SAMP'></a><BR\>";
+				html += this.getDescriptionSpan();
 				for( var i=0 ; i<this.params.length ; i++) {
 					var param = this.params[i];
 					var paramName = param.xml.attr("name") ;
@@ -6617,7 +7984,7 @@ Link_mVc.prototype = {
 							var def =  (paramName.endsWith("MIN"))? min: (paramName.endsWith("MAX"))?max: (min + max)/2;
 							def = (paramType == "int")? Math.round(def) :def ;
 							var scaleMention = (scaleMin.factor != 1)? (" (* " + (1/scaleMin.factor) +")"): "" ;
-							html += "    <span><b>" + paramName + "</b></span> <span class=help>" + description + scaleMention + "</span><br>";
+							html += "    <input type='checkbox' name='" + paramName + "' value='takeit' title='uncheck to ignore the parameter' checked><span><b>" + paramName + "</b></span><span class=help>" + description + scaleMention + "</span><br>";
 							html += '&nbsp;&nbsp;<label for="amount">Value</label>'
 								+ ' <input type="text" name="' + paramName + '" id="' + divId + '" size=10 style="border: 0;font-weight: bold;" value="' + (Math.round(def*1000)/1000) + '"/>'
 								+ ' <intput type=hidden value="' + scaleMin.factor + '" id="' + paramId + '_input_factor">'
@@ -6625,7 +7992,7 @@ Link_mVc.prototype = {
 							this.sliders[sliderId] = {id: divId, type: paramType, min: min, max: max, def: def, scaleFactor: scaleMin.factor};
 
 						} else if( (option = $(values).find("OPTION")).length != 0) {
-							html += "    <span><b>" + paramName + "</b></span> <span class=help>" + description + "</span><br>";
+							html += "    <input type='checkbox' name='" + paramName + "' value='takeit' title='uncheck to ignore the parameter' checked><span><b>" + paramName + "</b></span> <span class=help>" + description + "</span><br>";
 							html += ' <select type="text" name="' + paramName + '" id="' + divId + '">';
 							option.each(function() {
 								var name = $(this).attr("name");
@@ -6639,7 +8006,7 @@ Link_mVc.prototype = {
 
 
 						} else {
-							html += "    <span class=help>" + paramName + " " + description +"</span><br>FREE<br>";
+							html += "    <input type='checkbox' name='takeit' value='takeit' title='uncheck to ignore the parameter' checked><span class=help>" + paramName + " " + description +"</span><br>FREE<br>";
 						}
 					} 
 				}
@@ -6758,7 +8125,7 @@ Link_mVc.prototype = {
 							Processing.hide();
 						}
 						, 1000);
-					
+
 					}
 				}
 			}
@@ -6779,7 +8146,26 @@ Link_mVc.prototype = {
 				stringValue = tvalue.toString();
 			}
 			return ({normValue: tvalue, factor: factor});
-		}	
+		},
+		getDescriptionSpan : function() {
+			var html = ""
+			var voc = linkVocabulary[this.linkInstance.semantics];
+			if( voc != undefined ) {
+				html += "    <span class=help>" + voc ;
+			}
+			if( this.linkInstance.description.length > 0 ) {
+				if( html.length > 0 ) {
+					html += "<br>";
+				} else {
+					html += "    <span class=help>";
+				}
+				html += this.linkInstance.description ;
+			}
+			if( html.length > 0 ) {
+				html += "</span><br>";
+			}
+			return html
+		}
 }
 
 /**
@@ -6790,15 +8176,19 @@ LinkProcessor = function() {
 		var fieldset = $("fieldset[name=" + semantic + "]");
 		var params = new Array();
 		fieldset.find("input[type='text']").each(function(){
-			var id = $(this).attr("id");
-			var factorEle = $("#" + id + "_factor");
-			var value;
-			if( factorEle.length == 0 ){
-				value =  $(this).val();
-			} else {
-				value =  $(this).val()/ factorEle.attr("value");
+			var name = $(this).attr("name");
+			if( $(this).parent().children('input[name=' + name + ']').prop('checked') ) {
+				var id = $(this).attr("id");
+				var factorEle = $("#" + id + "_factor");
+				var value;
+				if( factorEle.length == 0 ){
+					value =  $(this).val();
+				} else {
+					value =  $(this).val()/ factorEle.attr("value");
+				}
+
+				params.push(name + "=" + encodeURIComponent(value) );
 			}
-			params.push($(this).attr("name") + "=" + encodeURIComponent(value) );
 		})
 		fieldset.find("select").each(function(){
 			var id = $(this).attr("id");
@@ -6903,7 +8293,7 @@ console.log('=============== >  DataLink_c.js ');
  * @returns {ConstQEditor_Mvc}
  */
 function ConstQEditor_Mvc(){
-	this.listeners = new Array();
+	this.listener = {};
 	this.const_key = 1;
 	this.attributeHandlers = new Array();
 	this.attributeHandlersSearch = new Array();
@@ -6912,8 +8302,8 @@ function ConstQEditor_Mvc(){
 }
 
 ConstQEditor_Mvc.prototype = {
-		addListener : function(list){
-			this.listeners.push(list);
+		addListener : function(listener){
+			this.listener = listener;
 		},
 		loadFields : function(dataTreePath /* instance of DataTreePath */) {
 			var that = this;
@@ -6985,9 +8375,7 @@ ConstQEditor_Mvc.prototype = {
 		},
 		notifyNextListener : function(attr) {
 			var that = this;
-			$.each(this.listeners, function(i){
-				that.listeners[i].nextListener(attr);
-			});
+			this.listener.nextListener(attr);
 		},
 		updateQuery : function() {
 			var that = this;
@@ -6999,9 +8387,7 @@ ConstQEditor_Mvc.prototype = {
 					retour += " " + $.trim(this.editors[e].fireGetADQL());
 				}
 			}
-			$.each(this.listeners, function(i){
-				that.listeners[i].controlUpdateQuery(retour);
-			});
+			this.listener.controlUpdateQuery(retour);
 		},
 		getNumberOfEditor: function() {
 			var retour = 0;
@@ -7012,21 +8398,15 @@ ConstQEditor_Mvc.prototype = {
 		},
 		notifyRunQuery : function() {
 			var that = this;
-			$.each(this.listeners, function(i){
-				that.listeners[i].controlRunQuery();
-			});
+			this.listener.controlRunQuery();
 		},
 		notifyTypoMsg : function(fault, msg){
 			var that = this;
-			$.each(this.listeners, function(i){
-				that.listeners[i].controlTypoMsg(fault, msg) ;
-			});
+			this.listener.controlTypoMsg(fault, msg) ;
 		},
 		notifyFieldsStored: function(){
 			var that = this;
-			$.each(this.listeners, function(i){
-				that.listeners[i].controlFieldsStored(that.attributeHandlersSearch) ;
-			});
+			this.listener.controlFieldsStored(that.attributeHandlersSearch) ;
 		},
 		getAttributeHandlers: function() {
 			return this.attributeHandlers;
@@ -7109,9 +8489,7 @@ UcdQEditor_Mvc.prototype = Object.create(ConstQEditor_Mvc.prototype, {
 					if( and == "" ) and = "\n        AND " ;
 				}
 			}
-			$.each(this.listeners, function(i){
-				that.listeners[i].controlUpdateQuery(retour);
-			});
+			this.listener.controlUpdateQuery(retour);
 		}
 	}
 });
@@ -7147,9 +8525,7 @@ UcdPatternEditor_Mvc.prototype = Object.create(UcdQEditor_Mvc.prototype, {
 				+ "    AssUCD{" + retour + "}\n"
 				+ "  }";
 			}
-			$.each(this.listeners, function(i){
-				that.listeners[i].controlUpdateQuery(retour);
-			});
+			this.listener.controlUpdateQuery(retour);
 		} 
 	}
 });
@@ -7235,9 +8611,7 @@ PosQEditor_Mvc.prototype = Object.create(ConstQEditor_Mvc.prototype, {
 					retour += "    " + this.editors[e].fireGetADQL();
 				}
 			}
-			$.each(this.listeners, function(i){
-				that.listeners[i].controlUpdateQuery(retour);
-			});
+			this.listener.controlUpdateQuery(retour);
 		}
 	},
 	getDefaultValue : {
@@ -7344,9 +8718,7 @@ CatalogueQEditor_Mvc.prototype = Object.create(ConstQEditor_Mvc.prototype, {
 					sq += "    matchPattern { " + this.relationName + "," + q+ "}";
 				}
 			}
-			$.each(this.listeners, function(i){
-				that.listeners[i].controlUpdateQuery(sq);
-			});
+			this.listener.controlUpdateQuery(sq);
 		} 
 	}
 });
@@ -7453,10 +8825,7 @@ tapColSelector_Mvc.prototype = Object.create(ConstQEditor_Mvc.prototype, {
 	notifyAddTableOption: {
 		value: function(treePath){
 			var that = this;
-			$.each(this.listeners, function(i){
-				that.listeners[i].controlAddTableOption(treePath);
-			});
-
+			this.listener.controlAddTableOption(treePath);
 		}
 	},
 	processAttributeHandlerEvent : {
@@ -7468,9 +8837,7 @@ tapColSelector_Mvc.prototype = Object.create(ConstQEditor_Mvc.prototype, {
 				first = false;
 				break;
 			}
-			$.each(this.listeners, function(i){
-				currentTreePath  = that.listeners[i].controlCurrentTreePath();
-			});
+			currentTreePath  = this.listener.controlCurrentTreePath();
 			var divKey = this.constEditorRootId + ah.nameattr + this.const_key;
 			Out.debug("mv constraint " + ah.nameattr + " to #" + this.constListId);
 			var v = new TapKWSimpleConstraint_mVc({divId: divKey
@@ -7537,9 +8904,7 @@ tapColSelector_Mvc.prototype = Object.create(ConstQEditor_Mvc.prototype, {
 			if( q.length == 0 ) {
 				q = ["*"];
 			}
-			$.each(this.listeners, function(i){
-				that.listeners[i].controlUpdateQuery(q, joins);
-			});
+			this.listener.controlUpdateQuery(q, joins);
 		}
 	}
 });
@@ -7560,9 +8925,7 @@ tapQEditor_Mvc.prototype = Object.create(tapColSelector_Mvc.prototype, {
 				first = false;
 				break;
 			}
-			$.each(this.listeners, function(i){
-				currentTreePath  = that.listeners[i].controlCurrentTreePath();
-			});
+			currentTreePath  = this.listener.controlCurrentTreePath();
 
 			var divKey = this.constEditorRootId + ah.nameattr + this.const_key;
 			Out.debug("mv constraint " + ah.nameattr + " to #" + this.constListId);
@@ -7587,9 +8950,7 @@ tapQEditor_Mvc.prototype = Object.create(tapColSelector_Mvc.prototype, {
 				first = false;
 				break;
 			}
-			$.each(this.listeners, function(i){
-				currentTreePath  = that.listeners[i].controlCurrentTreePath();
-			});
+			currentTreePath  = this.listener.controlCurrentTreePath();
 			var defValue = '';
 			var nameAh = '';
 			if( ra.startsWith('poslist:')) {
@@ -7662,9 +9023,126 @@ tapQEditor_Mvc.prototype = Object.create(tapColSelector_Mvc.prototype, {
 					} 
 				}
 			}
-			$.each(this.listeners, function(i){
-				that.listeners[i].controlUpdateQuery(retour, joins);
-			});
+			this.listener.controlUpdateQuery(retour, joins);
+		}
+	}
+});
+
+function tapPosQEditor_Mvc(){
+	tapColSelector_Mvc.call(this);
+};
+/**
+ * 
+ */
+tapPosQEditor_Mvc.prototype = Object.create(tapColSelector_Mvc.prototype, {
+	processAttributeHandlerEvent : {
+		value: function(ah, constListId){
+			var that = this;
+			var first = true;
+			var currentTreePath = null;
+			for( k in this.editors ) {
+				first = false;
+				break;
+			}
+			currentTreePath  = this.listener.controlCurrentTreePath();
+
+			var divKey = this.constEditorRootId + ah.nameattr + this.const_key;
+			Out.debug("mv constraint " + ah.nameattr + " to #" + this.constListId);
+			var v = new TapKWConstraint_mVc({divId: divKey
+				, constListId: constListId
+				, isFirst: first
+				, attributeHandler: ah
+				, editorModel: this
+				, defValue: ''
+					, treePath: jQuery.extend({}, currentTreePath)});
+			this.editors[divKey] = v;
+			v.fireInit();
+			this.const_key++;
+		}
+	},
+	processInputCoord: {
+		value: function(ra, dec, radius, frame, rakw, deckw, constListId) {
+			var that = this;
+			var first = true;
+			var currentTreePath = null;
+			for( k in this.editors ) {
+				first = false;
+				break;
+			}
+			currentTreePath  = this.listener.controlCurrentTreePath();
+			var defValue = '';
+			var nameAh = '';
+			if( ra.startsWith('poslist:')) {
+				defValue = 'list params,'+ radius;
+				nameAh = 'POSLIST:' + ra.replace('poslist:','');;
+			} else {
+				defValue = ra + ',' + dec + ','+ radius;
+				nameAh = 'POSITION';				
+			}
+			var divKey = this.constEditorRootId + "ADQLPos" + this.const_key;
+			var v = new TapKWConstraint_mVc({divId: divKey
+				, constListId:  constListId
+				, isFirst: first
+				, editorModel : this
+				, attributeHandler: {nameattr: nameAh
+					, nameorg: nameAh
+					, "type" : "ADQLPos"
+						, "ucd" : "adql.coor.columns"
+							, "utype" : ""
+								, "unit" : "deg"
+									, "description" :  rakw + " " + deckw}
+			, defValue: defValue
+			, treePath: jQuery.extend({}, currentTreePath)});
+			this.editors[divKey] = v;
+			v.fireInit();
+			this.const_key++;			
+		}
+	},
+	updateQuery : {
+		value: function() {
+			var that = this;
+			var retour= "    ";
+			// queried table path
+			var st = this.dataTreePath.schema + "." + this.dataTreePath.table;
+			var joins = new Array();
+			/*
+			 * Merge all constraints
+			 */
+			for( var e in this.editors) {
+				var ed = this.editors[e];
+				var q =  ed.fireGetADQL();
+				if( retour.length > 96 ) retour += "\n    ";
+				if( q != null ) {
+					retour += this.editors[e].fireGetADQL() + ' ';
+					// Path of the table targeted by he current constraint
+					var tt = ed.treePath.schema + "." + ed.treePath.table;
+					// if constraint not applied to the queried table: join
+					if( tt != st ) {
+						for(var i=0 ;  i<this.joinKeys.length ; i++ ) {
+							var lt = this.joinKeys[i].target_datatreepath.schema + "." + this.joinKeys[i].target_datatreepath.table;
+							if( lt == tt) {
+								joins[tt] = this.joinKeys[i];
+							}
+						}
+						// if the targetted table is an uploaded file: crosmatch 	
+					} else if( ed.fieldName.startsWith("POSLIST") ) {
+						joins[tt] = {target_table: "upload." + ed.fieldName.replace('POSLIST:',''), target_column: "", source_column: ""};
+					}
+				}
+			}
+			if( this.orderBy != "" ) {
+				var fs = this.orderBy.split('.');
+				var tt = fs[0] + "." + fs[1] ;
+				if( tt != st ) {
+					for(var i=0 ;  i<this.joinKeys.length ; i++ ) {
+						var lt = this.joinKeys[i].target_datatreepath.schema + "." + this.joinKeys[i].target_datatreepath.table;
+						if( lt == tt) {
+							joins[tt] = this.joinKeys[i];
+						}
+					} 
+				}
+			}
+			this.listener.controlUpdateQuery(retour, joins);
 		}
 	}
 });
@@ -7690,7 +9168,7 @@ function ConstQEditor_mVc(params /*{parentDivId,formName,queryView}*/){
 	/**
 	 * who is listening to us?
 	 */
-	this.listeners = new Array();
+	this.listener = {};
 	this.queryView = params.queryView;
 	/**
 	 * DOM references
@@ -7725,13 +9203,14 @@ ConstQEditor_mVc.prototype = {
 		/**
 		 * add a listener to this view
 		 */
-		addListener : function(list){
-			this.listeners.push(list);
+		addListener : function(listener){
+			this.listener = listener;
 		},
 		draw : function() {
 			this.fieldListView.draw();
 			this.parentDiv.append('<div id=' + this.constContainerId + ' style="width: 450px;float: left;background: transparent; display: inline;"></div>');
-			this.constListId = this.constListView.draw();
+			var isPos = {"fieldset":"130px", "div":"102px"};
+			this.constListId = this.constListView.draw(isPos);
 			this.orderByView.draw();
 		},	
 		fireSetTreepath: function(dataTreePath){
@@ -7739,9 +9218,7 @@ ConstQEditor_mVc.prototype = {
 			var that = this;
 			this.dataTreePath = dataTreePath;	
 			this.fieldListView.setDataTreePath(this.dataTreePath);
-			$.each(this.listeners, function(i){
-				that.listeners[i].controlLoadFields(that.dataTreePath);
-			});
+			this.listener.controlLoadFields(that.dataTreePath);
 		},
 		fireOrderBy : function(nameattr){
 			if( nameattr != 'OrderBy' ) {
@@ -7759,31 +9236,23 @@ ConstQEditor_mVc.prototype = {
 		},
 		fireAttributeEvent : function(ahname){
 			var that = this;
-			$.each(this.listeners, function(i){
-				that.listeners[i].controlAttributeEvent(ahname, that.constListId);
-			});
+			this.listener.controlAttributeEvent(ahname, that.constListId);
 			$("#" + this.constListId + " span.help").attr("style","display:none;");
 		},
 		fireClearAllConst : function() {
 			this.constListView.fireClearAllConst();
 			var that = this;
-			$.each(this.listeners, function(i){
-				that.listeners[i].controlClearAllConst();
-			});		
+			this.listener.controlClearAllConst();	
 		},
 		fireClearConst : function(filter) {
 			this.constListView.fireClearConst(filter);
 			var that = this;
-			$.each(this.listeners, function(i){
-				that.listeners[i].controlClearConst(filter);
-			});		
+			this.listener.controlClearConst(filter);	
 		},
 		fireGetNumberOfEditor : function() {
 			var that = this;
 			var retour = 0;
-			$.each(this.listeners, function(i){
-				retour =  that.listeners[i].controlGetNumberOfEditor();
-			});		
+			retour =  this.listener.controlGetNumberOfEditor();	
 			return retour;
 		},
 		printTypoMsg : function(fault, msg){
@@ -7809,9 +9278,7 @@ ConstQEditor_mVc.prototype = {
 		getAttributeHandlers: function(){
 			var that = this;
 			var retour = 0;
-			$.each(this.listeners, function(i){
-				retour =  that.listeners[i].controlGetAttributeHandlers();
-			});		
+			retour =  this.listener.controlGetAttributeHandlers();		
 			return retour;
 		},
 		/*
@@ -7821,9 +9288,7 @@ ConstQEditor_mVc.prototype = {
 		getDefaultValue: function(){
 			var that = this;
 			var retour = 0;
-			$.each(this.listeners, function(i){
-				retour =  that.listeners[i].controlGetDefaultValue();
-			});		
+			retour =  this.listener.controlGetDefaultValue();	
 			return retour;
 		},
 		fieldsStored: function(ahs){
@@ -7858,7 +9323,8 @@ UcdQEditor_mVc.prototype = Object.create(ConstQEditor_mVc.prototype, {
 		value: function() {
 			this.fieldListView.draw();
 			this.parentDiv.append('<div id=' + this.constContainerId + ' style="background: transparent; width:450px;float: left;"></div>');
-			this.constListId = this.constListView.draw();
+			var isPos = {"fieldset":"130px", "div":"102px"};
+			this.constListId = this.constListView.draw(isPos);
 			if( this.help != undefined)
 				$('#' + this.constContainerId).append('<div style="width: 100%;"><span class=spanhelp>' + this.help + '</span></div>');
 		}
@@ -7920,10 +9386,11 @@ PosQEditor_mVc.prototype = Object.create(ConstQEditor_mVc.prototype, {
 		value: function() {
 			var that = this;
 			this.fieldListView.draw();
-			this.parentDiv.append('<div  style="width: 25px; height: 80px;float: left;background: transparent; padding-left: 10px;padding-top: 30px; display: inline;"><input  title="Click to add a search cone" class="stackconstbutton" type="button"></div>');
 			this.parentDiv.append('<div id=' + this.constContainerId + ' style="float: left;background: transparent; display: inline;"></div>');
-			this.constListId = this.constListView.draw();
-			this.parentDiv.find("input.stackconstbutton").click(function() {that.fireAttributeEvent();});
+			$("#"+this.constContainerId).append('<input  title="Click to add a search cone" class="bigarrowbutton" type="button">');
+			var isPos = {"fieldset":"105px","div":"80px"};
+			this.constListId = this.constListView.draw(isPos);
+			this.parentDiv.find("input.bigarrowbutton").click(function() {that.fireAttributeEvent();});
 			this.fieldListView.setRegionForm(
 					function(data){
 						if( data.userAction ){
@@ -7939,6 +9406,27 @@ PosQEditor_mVc.prototype = Object.create(ConstQEditor_mVc.prototype, {
 	},
 	displayFields: { 
 		value: function() {}
+	},
+	setTestForm : function() {
+		var inputfield = $('#' + this.cooFieldId);
+		var handler = (this.sesameURL != null) ? function() {
+			Processing.show("Waiting on SESAME response");
+			$.getJSON("sesame", {
+				object : inputfield.val()
+			}, function(data) {
+				Processing.hide();
+				if (Processing.jsonError(data, "Sesame failure")) {
+					return;
+				} else {
+					inputfield.val(data.alpha + ' ' + data.delta);
+				}
+			});
+		} : function() {
+			Modalinfo.info("name resolver not implemented yet");
+		};
+		$("#poscolumns_CSsesame").parents("#posConstEditor").find("#posConstEditor_constcont").find("input:first").click(handler);
+		$('#' + this.sesameId).click(handler);
+		
 	},
 	updateQuery : { 
 		value:  function(consts) {	
@@ -7978,9 +9466,7 @@ PosQEditor_mVc.prototype = Object.create(ConstQEditor_mVc.prototype, {
 				this.fireClearAllConst();
 				console.log(rq);
 				if( rq != '' ) {
-					$.each(this.listeners, function(i){
-						that.listeners[i].controlAttributeEvent({type: "region", frame: "ICRS", position: rq, radius: 0}, that.constListId);
-					});
+					this.listener.controlAttributeEvent({type: "region", frame: "ICRS", position: rq, radius: 0}, that.constListId);
 					$("#" + this.constListId + " span.help").attr("style","display:none;");
 				}
 				this.fieldListView.resetPosition();
@@ -7990,15 +9476,32 @@ PosQEditor_mVc.prototype = Object.create(ConstQEditor_mVc.prototype, {
 	fireAttributeEvent: { 
 		value: function() {			
 			var that = this;
-			$.each(this.listeners, function(i){
-				that.listeners[i].controlClearConst(".*region.*");
-			});		
+//			this.listener.controlClearConst(".*region.*");	
+//			this.listener.controlAttributeEvent(that.fieldListView.getSearchParameters(), that.constListId);
+//			$("#" + this.constListId + " span.help").attr("style","display:none;");
+//			this.fieldListView.resetPosition();
+			var cooField = this.parentDiv.find("input[id$='CScoofield']");
+			
+			var handler = function(listener, constList, fieldListView) {
+				Processing.show("Waiting on SESAME response");
+				$.getJSON("sesame", {
+					object : cooField.val()
+				}, function(data) {
+					Processing.hide();
+					if (Processing.jsonError(data, "Sesame failure", "Name "+cooField.val()+" cannot be resolved")) {
+						return;
+					} else {
+						cooField.val(data.alpha + ' ' + data.delta);
+						listener.controlClearConst(".*region.*");	
+						listener.controlAttributeEvent(that.fieldListView.getSearchParameters(), that.constListId);
+						$("#" + constList + " span.help").attr("style","display:none;");
+						fieldListView.resetPosition();
+					}
+				});
+			}
+			
+			this.parentDiv.find("input.bigarrowbutton").click(handler(this.listener, this.constListId, this.fieldListView));
 
-			$.each(this.listeners, function(i){
-				that.listeners[i].controlAttributeEvent(that.fieldListView.getSearchParameters(), that.constListId);
-			});
-			$("#" + this.constListId + " span.help").attr("style","display:none;");
-			this.fieldListView.resetPosition();
 		}
 	},
 	fireAttributeAutoEvent: { 
@@ -8009,20 +9512,16 @@ PosQEditor_mVc.prototype = Object.create(ConstQEditor_mVc.prototype, {
 			 */
 			if( this.fireGetNumberOfEditor() <= 1 && this.fieldListView.hasSearchParameters() ) {
 				this.fireClearAllConst();
-				$.each(this.listeners, function(i){
-					that.listeners[i].controlAttributeEvent(that.fieldListView.getSearchParameters(), that.constListId);
-				});
+				this.listener.controlAttributeEvent(that.fieldListView.getSearchParameters(), that.constListId);
 				$("#" + this.constListId + " span.help").attr("style","display:none;");
 			}
 		}
 	},
 	firePoslistUpload: { 
-		value: function(filename) {			
+		value: function(filename, radius) {			
 			var that = this;
 			this.constListView.fireRemoveAllHandler();
-			$.each(this.listeners, function(i){
-				that.listeners[i].controlAttributeEvent({position: "poslist:" + filename, radius: 0, frame: 'ICRS'}, that.constListId);
-			});
+			this.listener.controlAttributeEvent({position: "poslist:" + filename, radius: radius, frame: 'ICRS'}, that.constListId);
 			$("#" + this.constListId + " span.help").attr("style","display:none;");
 		}
 	}
@@ -8050,13 +9549,12 @@ CatalogueQEditor_mVc.prototype = Object.create(ConstQEditor_mVc.prototype, {
 			var that = this;
 			this.fieldListView.draw();
 			this.parentDiv.append('<div id=' + this.constContainerId + ' style="width:450px;float: left;background: transparent; display: inline;"></div>');
-			this.constListId = this.constListView.draw();
+			var isPos = {"fieldset":"131px", "div":"102px"};
+			this.constListId = this.constListView.draw(isPos);
 			$('#' + this.constContainerId).append('<div style="width: 100%;"><span class=spanhelp>' + this.help + '</span></div>');
 			if( !this.fieldsLoaded ) {
-				$.each(this.listeners, function(i){
-					that.listeners[i].controlLoadFields();
-					this.fieldsLoaded = true;
-				});
+				this.listener.controlLoadFields();
+				this.fieldsLoaded = true;
 			}
 		}
 	},		
@@ -8096,13 +9594,12 @@ tapColSelector_mVc.prototype = Object.create(ConstQEditor_mVc.prototype, {
 	draw : { 
 		value: function() {
 			this.fieldListView.draw();
-			this.parentDiv.append('<div  class="editorrightpart">'
+			this.parentDiv.append('<div >'
 					//	+ '<div id=' + this.constPosContainer + '></div>'
-					+ '<div id=' + this.constContainerId + ' style="position: absolute;top: 0px"></div>'
+					+ '<div id=' + this.constContainerId + '></div>'
 					+ '</div>');
-
-
-			this.constListId = this.constListView.draw();
+			var isADQL = true;
+			this.constListId = this.constListView.draw(null, isADQL);
 			this.orderByView.draw();
 		}
 	},
@@ -8121,9 +9618,7 @@ tapColSelector_mVc.prototype = Object.create(ConstQEditor_mVc.prototype, {
 			this.queryView.fireSetTreePath(this.dataTreePath);
 			this.queryView.fireAddConstraint(this.formName, "select", ["*"]);
 			this.orderByView.fireClearAllConst();
-			$.each(this.listeners, function(i){
-				that.listeners[i].controlLoadFields(that.dataTreePath, handler);
-			});
+			this.listener.controlLoadFields(that.dataTreePath, handler);
 			this.fieldListView.setDataTreePath(this.dataTreePath);
 		}
 	},
@@ -8135,9 +9630,7 @@ tapColSelector_mVc.prototype = Object.create(ConstQEditor_mVc.prototype, {
 	fireAttributeEvent :  { 
 		value: function(ahname){
 			var that = this;
-			$.each(this.listeners, function(i){
-				that.listeners[i].controlAttributeHandlerEvent(that.fieldListView.getAttributeHandler(ahname), that.constListId);
-			});
+			this.listener.controlAttributeHandlerEvent(that.fieldListView.getAttributeHandler(ahname), that.constListId);
 			$("#" + this.constListId + " span.help").attr("style","display:none;");
 		}
 	},		
@@ -8159,9 +9652,7 @@ tapColSelector_mVc.prototype = Object.create(ConstQEditor_mVc.prototype, {
 				this.queryView.fireDelConstraint(this.formName, "orderby");
 			}
 			var that = this;
-			$.each(this.listeners, function(i){
-				that.listeners[i].controlOrderBy(tpn);
-			});
+			this.listener.controlOrderBy(tpn);
 
 		}
 	},
@@ -8200,9 +9691,7 @@ function tapQEditor_mVc(params /*parentDivId, formName, sesameUrl, upload { url,
 	this.fieldListView = new TapFieldList_mVc(params.parentDivId
 			, this.formName
 			, {stackHandler: function(ahName){ that.fireAttributeEvent(ahName);}
-	, orderByHandler: function(ahName){ that.fireOrderBy(ahName);}
-	, raHandler: null
-	, decHandler: null}	        
+	, radec: false}	        
 	, params.sessionID
 	);
 	this.fieldListView.setStackTooltip("Click to constrain this field");
@@ -8221,20 +9710,20 @@ tapQEditor_mVc.prototype = Object.create(tapColSelector_mVc.prototype, {
 	draw : { 
 		value: function() {
 			this.fieldListView.draw();
-			this.parentDiv.append('<div  class="editorrightpart">'
+			this.parentDiv.append('<div >'
 					+ '<div id=' + this.constPosContainer + '></div>'
-					+ '<div id=' + this.constContainerId + ' style="position: absolute;top: 55px"></div>'
+					+ '<div id=' + this.constContainerId + '></div>'
 					+ '</div>');
-
 
 //			$("#" +  this.constContainerId).append('<div class=constdiv><fieldset class="constraintlist">'
 //			+ '<legend>Position</legend>'
 //			+ '<span class=help>Click on a <input class="stackconstbutton" type="button"> button to append,<br>the constraint to the list</span>'
 //			+ '</fieldset>'
 //			+ '</div>');
-			this.posEditor.draw();
-			this.constListId = this.constListView.draw();
-			this.orderByView.draw();
+			//this.posEditor.draw();
+			var isADQL = true;
+			this.constListId = this.constListView.draw(null, isADQL);
+			//this.orderByView.draw();
 		}
 	},
 	displayFields: { 
@@ -8248,9 +9737,7 @@ tapQEditor_mVc.prototype = Object.create(tapColSelector_mVc.prototype, {
 	fireAttributeEvent :  { 
 		value: function(ahname){
 			var that = this;
-			$.each(this.listeners, function(i){
-				that.listeners[i].controlAttributeHandlerEvent(that.fieldListView.getAttributeHandler(ahname), that.constListId);
-			});
+			this.listener.controlAttributeHandlerEvent(that.fieldListView.getAttributeHandler(ahname), that.constListId);
 			$("#" + this.constListId + " span.help").attr("style","display:none;");
 		}
 	},		
@@ -8267,10 +9754,123 @@ tapQEditor_mVc.prototype = Object.create(tapColSelector_mVc.prototype, {
 				Modalinfo.error("DEC field not set");
 				return;
 			}
-			$.each(this.listeners, function(i){
-				that.listeners[i].controlInputCoord(ra, dec, radius, frame
+			this.listener.controlInputCoord(ra, dec, radius, frame
 						, rakw, deckw, that.constListId);
-			});
+			$("#" + this.constListId + " span.help").attr("style","display:none;");
+		}
+	},
+	updateQuery  :  { 
+		value:function(consts, joins) {	
+			if( this.queryView != null ) {
+				this.queryView.fireAddConstraint(this.formName, "column", consts, joins);
+			} else {
+				Out.info("No Query View:" + JSON.stringify(consts));
+			}
+		}
+	},
+	isReadyToUpload :  { 
+		value:function(consts, joins) {	
+			if( this.fieldListView.getRaKeyword().length == '' || this.fieldListView.getDeltaKeyword() == '' ) {
+				Modalinfo.error("Both RA and DEC fields must be set");
+				return false;
+			}
+			return true;
+		}
+	},
+	getUploadedFile: {
+		value: function(){
+			return this.posEditor.uploadedFile;
+		}
+	}
+});
+
+/**
+ * @param parentDivId
+ * @param formName
+ * @param queryview
+ * @param getTableAttUrl
+ * @param sesameUrl
+ * @param upload: {url,  postHandler: called on success}
+ * @param sessionID
+ * @param help
+ * @returns {tapPosQEditor_mVc}
+ */
+function tapPosQEditor_mVc(params /*parentDivId, formName, sesameUrl, upload { url, postHandler}, queryView, currentNode }*/){
+	tapColSelector_mVc.call(this, params);
+	var that = this;
+	this.fieldListView = new TapFieldList_mVc(params.parentDivId
+			, this.formName
+			, {stackHandler: null
+	, orderByHandler: null
+	, raHandler: null
+	, decHandler: null
+	, radec: true}	        
+	, params.sessionID
+	);
+	this.fieldListView.setStackTooltip("Click to constrain this field");
+	this.posEditor = new TapSimplePos_mVc({editor: this
+		, parentDivId: this.constPosContainer
+		, formName: this.formName
+		, frames: null
+		, urls: {sesameURL: params.sesameUrl, uploadURL:params.upload.url}
+	, postUploadHandler: params.upload.postHandler
+	});
+};
+/**
+ * Method overloading
+ */
+tapPosQEditor_mVc.prototype = Object.create(tapColSelector_mVc.prototype, {	
+	draw : { 
+		value: function() {
+			this.fieldListView.draw();
+			this.parentDiv.append('<div>'
+					+ '<div id=' + this.constPosContainer + '></div>'
+					+ '<div id=' + this.constContainerId + '></div>'
+					+ '</div>');
+
+//			$("#" +  this.constContainerId).append('<div class=constdiv><fieldset class="constraintlist">'
+//			+ '<legend>Position</legend>'
+//			+ '<span class=help>Click on a <input class="stackconstbutton" type="button"> button to append,<br>the constraint to the list</span>'
+//			+ '</fieldset>'
+//			+ '</div>');
+			this.posEditor.draw();
+			
+			var isPos = {"fieldset":"inherit", "div":"102px"};
+			var isADQL = true;
+			this.constListId = this.constListView.draw(isPos, isADQL);
+			//this.orderByView.draw();
+		}
+	},
+	displayFields: { 
+		value: function(attributesHandlers){
+			this.fieldListView.displayFields(attributesHandlers);
+			this.fieldListView.lookForAlphaKeyword();
+			this.fieldListView.lookForDeltaKeyword();
+			return;
+		}
+	},
+	fireAttributeEvent :  { 
+		value: function(ahname){
+			var that = this;
+			this.listener.controlAttributeHandlerEvent(that.fieldListView.getAttributeHandler(ahname), that.constListId);
+			$("#" + this.constListId + " span.help").attr("style","display:none;");
+		}
+	},		
+	fireInputCoordEvent :  { 
+		value : function(ra, dec, radius, frame){
+			var that = this;
+			var rakw = this.fieldListView.getRaKeyword();
+			if( rakw.length == '' ) {
+				Modalinfo.error("RA field not set");
+				return;
+			}
+			var deckw = this.fieldListView.getDeltaKeyword();
+			if( deckw.length == '' ) {
+				Modalinfo.error("DEC field not set");
+				return;
+			}
+			this.listener.controlInputCoord(ra, dec, radius, frame
+						, rakw, deckw, that.constListId);
 			$("#" + this.constListId + " span.help").attr("style","display:none;");
 		}
 	},
@@ -8527,6 +10127,9 @@ ADQLTextEditor_Mvc.prototype = Object.create(QueryTextEditor_Mvc.prototype, {
 				this.addConstraintToArray(label, constraints, this.colConst) ;
 			} else if( type == "orderby" && constraints.length > 0) {
 				this.obConst = [{label:label, constraints: constraints[0]}];
+			} else if( type == "position") {
+				this.delConst(label,this.posConst);
+				this.addConstraintToArray(label, constraints, this.posConst) ;
 			} else if( type == "kwconst") {
 				this.delConst(label, this.kwConst);
 				this.addConstraintToArray(label, constraints, this.kwConst) ;
@@ -8658,6 +10261,8 @@ JoinKeyMap.prototype = {
 			if( jk == null ){
 				this.keyMap[key] = {joinKey: joinKey, origins: [origin]};
 			} else {
+				console.log(this.keyMap[key]);
+				var ors = jk.origins;
 				var index = ors.indexOf(origin);
 				if (index == -1) {
 					jk.origins.push(origin);
@@ -8717,7 +10322,7 @@ QueryTextEditor_mVc.prototype = {
 			this.listener = list;
 		},
 		draw : function(){
-			this.parentDiv.html('<textarea id="' + this.textareaid + '" class="querytext" id="Catalogue"></textarea>');
+			this.parentDiv.html('<textarea id="' + this.textareaid + '" class="querytext" id="Catalogue"></textarea><p class="help">Widgets do not reflect the query anymore after you modified it directly</p>');
 			this.displayQuery("");
 		},
 		fireGetQuery: function() {
@@ -10075,7 +11680,7 @@ RegionEditor_mVc.prototype = {
 			$('#' + this.parentDivId).append('<div id="' + this.parentDivId + '_aladin" style="width: 390px; height: 320px;"></div><div id="' + this.parentDivId + '_button"></div>');
 				this.aladin = $.aladin('#' + this.parentDivId + '_aladin'
 					, {showControl: true, 
-				      fov: 0.5, 
+				      fov: 0.55, 
 				      target: "orion", 
 				      cooFrame: "ICRS", 
 				      survey: "P/DSS2/color", 
@@ -10084,6 +11689,7 @@ RegionEditor_mVc.prototype = {
 				      showGotoControl: false});
 			//this.aladin.setImageSurvey("P/XMM/PN/color");
 			this.aladin.setImageSurvey("P/DSS2/color");
+			
 			this.parentDiv = this.aladin.getParentDiv();
 			$('#' + this.parentDivId).css("position", "relative");
 			// création du canvas pour éditeur régions
@@ -10247,10 +11853,19 @@ RegionEditor_mVc.prototype = {
 					Modalinfo.error("Polygone format " + points.type + " not understood");
 					return;
 				}
+
 				this.setBrowseMode();
 				this.controller.DeleteOverlay()
 				this.controller.setPoligon(pts);
 			}
+			/*
+			 * Fix for the errors when we open a new region editor
+			 */
+			var that = this;
+	           setTimeout(function() {
+                   that.aladin.increaseZoom();
+                   that.aladin.decreaseZoom();
+                   }, 500);
 
 		},
 		setBrowseMode: function() {
@@ -11084,7 +12699,7 @@ MetadataSource = function() {
 /**
  * Modalinfo extension opening a popup with a Simbad summary for the given solution
  */
-Modalinfo.simbad = function (pos) {
+/*Modalinfo.simbad = function (pos) {
 	Processing.show("Waiting on Simbad Response");
 	$.getJSON("simbadtooltip", {pos: pos}, function(jsdata) {
 		Processing.hide();
@@ -11119,7 +12734,7 @@ Modalinfo.simbad = function (pos) {
 			$("#simbadtable_info").css("width","30%");
 		}
 	});
-};
+};*/
 
 
 /**		
@@ -11137,57 +12752,57 @@ Modalinfo.simbad = function (pos) {
  * value (saadaql or array) and value is the data string wich will be parsed
  */
 Modalinfo.regionEditor = null;
-Modalinfo.region = function (handler, points) {	
-	if( $('#aladin-lite-div').length == 0){		
-		$(document.documentElement).append('<div id="aladin-lite-div" style="width: 400px; height: 400px"></div>');
-		this.regionEditor = new RegionEditor_mVc  ("aladin-lite-div", handler, points); 
-		this.regionEditor.init();
-		$('#aladin-lite-div').dialog({ modal: true
-			, width: 'auto'
-				, dialogClass: 'd-maxsize'
-					, title: "Sky Region Editor (beta)" 		  
-						, zIndex: zIndexModalinfo
-		});	
-	} else {
-		/*
-		 * Has already been created, just reopen it
-		 */
-		$('#aladin-lite-div').dialog('open');
-	}
-	/*
-	 * For the Aladin command panel to be on the top layer: so it is enable to get all events
-	 */
-	$(".aladin-box").css("z-index", (9999));
-	this.regionEditor.setInitialValue(points);
-}
+//Modalinfo.region = function (handler, points) {	
+//	if( $('#aladin-lite-div').length == 0){		
+//		$(document.documentElement).append('<div id="aladin-lite-div" style="width: 400px; height: 400px"></div>');
+//		this.regionEditor = new RegionEditor_mVc  ("aladin-lite-div", handler, points); 
+//		this.regionEditor.init();
+//		$('#aladin-lite-div').dialog({ modal: true
+//			, width: 'auto'
+//				, dialogClass: 'd-maxsize'
+//					, title: "Sky Region Editor (beta)" 		  
+//						, zIndex: zIndexModalinfo
+//		});	
+//	} else {
+//		/*
+//		 * Has already been created, just reopen it
+//		 */
+//		$('#aladin-lite-div').dialog('open');
+//	}
+//	/*
+//	 * For the Aladin command panel to be on the top layer: so it is enable to get all events
+//	 */
+//	$(".aladin-box").css("z-index", (9999));
+//	this.regionEditor.setInitialValue(points);
+//}
 
 /**
  * close the region editor , hide it instead
  */
-Modalinfo.closeRegion  = function (){
-	$('#aladin-lite-div').dialog('close');
-}
+//Modalinfo.closeRegion  = function (){
+//	$('#aladin-lite-div').dialog('close');
+//}
 
-Modalinfo.showSTCRegion = function (stcRegion) {	
-	var divAladin = "aladin-lite-stcdiv";
-	var html = "<textarea readonly style='width:100%;' rows='6' >" + stcRegion.stcString + "</textarea><br><div id='" + divAladin + "' style='width: 400px; height: 400px'></div>";
-	Modalcommand.commandPanelAsync("STC Region Viewer", html, function(){
-		var aladin = A.aladin('#' + divAladin
-				, {showControl: true
-			       , cooFrame: "ICRS"
-			       , survey: "P/DSS2/color"
-			       , showFullscreenControl: false
-			       , showFrame: false
-			       , showGotoControl: false
-			       , target: stcRegion.raCenter + ' ' + stcRegion.decCenter
-			       , fov: (2*stcRegion.size)
-			       });
-		var overlay = A.graphicOverlay({color: 'red', lineWidth: 2});
-		aladin.addOverlay(overlay);
-		overlay.addFootprints(A.polygon(stcRegion.points));		
-		$(".aladin-box").css("z-index", (9999));
-		});	
-}
+//Modalinfo.showSTCRegion = function (stcRegion) {	
+//	var divAladin = "aladin-lite-stcdiv";
+//	var html = "<textarea readonly style='width:100%;' rows='6' >" + stcRegion.stcString + "</textarea><br><div id='" + divAladin + "' style='width: 400px; height: 400px'></div>";
+//	Modalcommand.commandPanelAsync("STC Region Viewer", html, function(){
+//		var aladin = A.aladin('#' + divAladin
+//				, {showControl: true
+//			       , cooFrame: "ICRS"
+//			       , survey: "P/DSS2/color"
+//			       , showFullscreenControl: false
+//			       , showFrame: false
+//			       , showGotoControl: false
+//			       , target: stcRegion.raCenter + ' ' + stcRegion.decCenter
+//			       , fov: (2*stcRegion.size)
+//			       });
+//		var overlay = A.graphicOverlay({color: 'red', lineWidth: 2});
+//		aladin.addOverlay(overlay);
+//		overlay.addFootprints(A.polygon(stcRegion.points));		
+//		$(".aladin-box").css("z-index", (9999));
+//		});	
+//}
 
 /**
  * Used to debug the isseu with multiple aladin instance running at the same time
@@ -11223,7 +12838,7 @@ Modalinfo.regionForAMDebugging = function (handler, points) {
  * - beforeHandler is called before the download starts
  * - extraParamers: [{name, value}]: List of hidden parameters to be set with in addition to the file upload
  */
-Modalinfo.uploadForm = function (title, url, description, handler, beforeHandler, extraParamers) {
+/*Modalinfo.uploadForm = function (title, url, description, handler, beforeHandler, extraParamers) {
 	var htmlForm = '<form id="uploadPanel" target="_sblank" action="' + url + '" method="post"'
 	+  'enctype="multipart/form-data">';
 	if( extraParamers != null) {
@@ -11258,7 +12873,7 @@ Modalinfo.uploadForm = function (title, url, description, handler, beforeHandler
 			}
 		}
 	});
-};
+};*/
 
 /**
  * Singleton object wrapping the creation of query editor forms
@@ -11365,6 +12980,7 @@ QueryConstraintEditor = function() {
 		view.draw();
 		return view;
 	};
+	
 	var tapColumnSelector = function (params /*{parentDivId, formName, queryView, currentNode}*/) {
 		var parentdiv = $('#' + params.parentDivId);
 		if( !parentdiv.length) {
@@ -11376,6 +12992,7 @@ QueryConstraintEditor = function() {
 		view.draw();
 		return view;
 	};
+
 	var tapConstraintEditor = function (params /*parentDivId, formName, sesameUrl, upload { url, postHandler}, queryView, currentNode }*/) {
 		var parentdiv = $('#' + params.parentDivId);
 		if( !parentdiv.length) {
@@ -11387,6 +13004,19 @@ QueryConstraintEditor = function() {
 		view.draw();
 		return view;
 	};
+	
+	var tapPosSelector = function (params) {
+		var parentdiv = $('#' + params.parentDivId);
+		if( !parentdiv.length) {
+			Modalinfo.error("Div #" + params.parentDivId + " not found");
+			return ;
+		}
+		var view  = new tapPosQEditor_mVc(params /*parentDivId, formName, sesameUrl, upload { url, postHandler}, queryView, currentNode }*/);
+		new ConstQEditor_mvC(view, new tapPosQEditor_Mvc());
+		view.draw();
+		return view;
+	}
+	
 	var queryTextEditor= function (params) {
 		var parentdiv = $('#' + params.parentDivId);
 		if( !parentdiv.length) {
@@ -11428,6 +13058,7 @@ QueryConstraintEditor = function() {
 	pblc.crossidConstraintEditor = crossidConstraintEditor;
 	pblc.tapConstraintEditor = tapConstraintEditor;
 	pblc.tapColumnSelector = tapColumnSelector;
+	pblc.tapPosSelector = tapPosSelector;
 	pblc.queryTextEditor = queryTextEditor;
 	pblc.adqlTextEditor = adqlTextEditor;
 	return pblc;
@@ -11469,6 +13100,252 @@ DataLinkBrowser = function() {
 	pblc.startCompliantBrowser = startCompliantBrowser;
 	return pblc;
 }();
+
+
+CustomDataTable = function () {
+	// Used to add custom content
+	var custom = 0;
+	var custom_array = [];
+	
+	/**
+	 * Create a dataTable
+	 * @param options are the parameters of the dataTable like:
+	 * options = {
+	 				"aoColumns" : columns,
+	 				"aaData" : rows,
+	 				"bPaginate" : true,
+	 				"bSort" : true,
+	 				"bFilter" : true
+	 			  };
+	  * @param position tells what components to add with the table and their position
+	  * 6 positions available: top-left, top-center, top-right, bottom-left, bottom-center, bottom-right
+	  * 5 basic components available: filter, length, pagination, information, processing
+	  * var position = [
+ 			{ "name": "pagination",
+ 			  "pos": "top-left"
+ 			},
+ 			{ "name": "length",
+ 	 			  "pos": "top-center"
+ 	 		},
+ 			{ "name": "<p>DataTable</p>",
+ 			  "pos" : "top-center"
+ 			},
+ 			{ "name": 'filter',
+ 	 			  "pos" : "bottom-center"
+ 	 		},
+ 			{ "name": "information",
+ 	 	 		  "pos" : "bottom-right"
+ 	 	 	}
+ 	 	];
+	**/
+	var create = function(id, options, position) {
+		// Remove filter label and next previous label
+		if (options["sPaginationType"] != undefined) {
+			if (options["sPaginationType"] === "full_numbers") {
+				options = addSimpleParameter(options, "oLanguage", {"sSearch": ""});
+			}
+		}
+		else {
+			options = addSimpleParameter(options, "oLanguage", {"sSearch": "", "oPaginate": { "sNext": "", "sPrevious": "" }});
+		}
+		
+		// Positioning the elements
+		if (position != undefined) {
+			options = addSimpleParameter(options, "sDom", changePosition(position));
+		}				
+		
+		var table = $('#' + id).dataTable(options);
+		
+		// Adding the custom content
+		if (position != undefined) {
+			custom_array.forEach(function(element) {
+				 $("div.custom"+element.pos).html(element.content);
+			});
+			ModalResult.changeFilter(id);
+		}
+		
+		$('#' + id + "_wrapper").css("overflow","inherit");
+		return table;
+	};
+	
+	/**
+	 * Add a parameter to the @options of the dataTable
+	 * @options: object, options of the dataTable
+	 * @parameter: name of the parameter
+	 * @value: value of the parameter
+	**/
+	var addSimpleParameter = function(options, parameter, value) {
+		options[parameter] = value;		
+		return options;
+	}
+	
+	/**
+	 * Create the dom according to the components and positions asked
+	 * @position: object, indicate the position of the different elements
+	**/
+	var changePosition = function(position) {
+		var dom = '';	
+		var top_left = [];
+		var top_center = [];
+		var top_right = [];
+		var bot_left = [];
+		var bot_center = [];
+		var bot_right = [];
+		
+		position.forEach(function(element) {
+			switch (element.pos) {
+			    case "top-left":
+			    	top_left.push(getDomName(element.name));
+			        break;
+			    case "top-center":
+			    	top_center.push(getDomName(element.name));
+			        break;
+			    case "top-right":
+			    	top_right.push(getDomName(element.name));
+			        break;
+			    case "bottom-left":
+			    	bot_left.push(getDomName(element.name));
+			        break;
+			    case "bottom-center":
+			    	bot_center.push(getDomName(element.name));
+			        break;
+			    case "bottom-right":
+			    	bot_right.push(getDomName(element.name));
+			        break;
+			}
+		});	
+		
+		// Search the number of position asked for which row to know the size of the div columns
+		var nb_top = 0;
+		if (top_left.length > 0) {
+			nb_top++;
+		}
+		if (top_center.length > 0) {
+			nb_top++;
+		}
+		if (top_right.length > 0) {
+			nb_top++;
+		}
+		nb_top = Math.floor(12/nb_top);
+		
+		var nb_bot = 0;
+		if (bot_left.length > 0) {
+			nb_bot++;
+		}
+		if (bot_center.length > 0) {
+			nb_bot++;
+		}
+		if (bot_right.length > 0) {
+			nb_bot++;
+		}
+		nb_bot = Math.floor(12/nb_bot);
+		
+		if (nb_top > 0) {
+			dom += '<"row"'
+		}
+		
+		if (top_left.length > 0) {
+			dom += '<"txt-left col-xs-'+nb_top+'"';
+			top_left.forEach(function(element) {
+				dom += '<"side-div"'+element+'>';
+			});
+			dom += ">";
+		}
+		if (top_center.length > 0) {
+			dom += '<"txt-center col-xs-'+nb_top+'"';
+			top_center.forEach(function(element) {
+				dom += '<"side-div"'+element+'>';
+			});
+			dom += ">";
+		}
+		if (top_right.length > 0) {
+			dom += '<"txt-right col-xs-'+nb_top+'"';
+			top_right.forEach(function(element) {
+				dom += '<"side-div"'+element+'>';
+			});
+			dom += ">";
+		}
+		
+		if (nb_top > 0) {
+			dom += ">";
+		}
+		
+		dom += '<"custom-dt" rt>'
+			
+		if (nb_bot > 0) {
+			dom += '<"row"';
+		}	
+		
+		if (bot_left.length > 0) {
+			dom += '<"txt-left col-xs-'+nb_bot+'"';
+			bot_left.forEach(function(element) {
+				dom += '<"side-div"'+element+'>';
+			});
+			dom += ">";
+		}
+		if (bot_center.length > 0) {
+			dom += '<"txt-center col-xs-'+nb_bot+'"';
+			bot_center.forEach(function(element) {
+				dom += '<"side-div"'+element+'>';
+			});
+			dom += ">";
+		}
+		if (bot_right.length > 0) {
+			dom += '<"txt-right col-xs-'+nb_bot+'"';
+			bot_right.forEach(function(element) {
+				dom += '<"side-div"'+element+'>';
+			});
+			dom += ">";
+		}
+		
+		if (nb_bot > 0) {
+			dom += ">";
+		}
+		
+		return dom;
+	}
+	
+	/**
+	 * Return the real dom name of the basic components and create div for the custom ones
+	 * @name: explicit name of a basic component or name of a custom one
+	**/
+	var getDomName = function(name) {
+		var dom_name;
+		
+		switch (name) {
+		    case "filter":
+		        dom_name = "f";
+		        break;
+		    case "pagination":
+		        dom_name = "p";
+		        break;
+		    case "information":
+		        dom_name = "i";
+		        break;
+		    case "length":
+		    	dom_name = "l";
+		        break;
+		    case "processing":
+		    	dom_name = "r";
+		        break;
+		    default:
+		    	// If it's not a basic component, create a div with a unique class
+		    	dom_name = '<"custom'+custom+'">';
+		    	// Push the element in an array in order to add it later thanks to its unique class
+		    	custom_array.push({"content": name, "pos": custom});
+		    	custom++;
+		    	break;
+		}
+		
+		return dom_name;
+	}
+	
+	var pblc = {};
+	pblc.create = create;
+	
+	return pblc;
+}();
+
 
 console.log('=============== >  domain.js ');
 
@@ -47996,7 +49873,7 @@ ValueFormator = function() {
 				} else if( access_format.startsWith("image/") || access_format.startsWith("text/") ){
 					tDdNode.html("");
 					addInfoControl(columnName, tdNode, value);
-					addPreviewControl(columnName, tdNode, fileName);	
+					addPreviewControl(columnName, tdNode, value, fileName);	
 					addCartControl(columnName, tdNode, value, secureMode);
 				} else  {
 					/*
@@ -48047,7 +49924,8 @@ ValueFormator = function() {
 	var addDownloadControl = function(columnName, tdNode, url, secureMode, contentEncoding){
 		var target = (contentEncoding == "")? "": "target=blank";				
 		var dl_class = (secureMode)? "dl_securedownload": 'dl_download';
-		tdNode.append("<a class='" + dl_class + "' " + target + " title='Download Data' href='javascript:void(0);' onclick='PageLocation.changeLocation(\"" + url + "\");'></a>");
+		var x = "<a class='" + dl_class + "' " + target + " title='Download Data' href='javascript:void(0);' onclick='PageLocation.changeLocation(\"" + url + "\");'></a>";
+		tdNode.append(x);
 	};	
 	var addCartControl = function(columnName, tdNode, url, secureMode){
 		if( secureMode ){
@@ -48058,11 +49936,13 @@ ValueFormator = function() {
 	};	
 	var addSampControl = function(columnName, tdNode, url, sampMType, fileName){
 		tdNode.append("<a class='dl_samp'     title='Broadcast to SAMP'   href='#' onclick='WebSamp_mVc.fireSendVoreport(\"" 
-				+ url + "\",\"" + sampMType + "\", \"" + fileName + "\"); return false;'/></a>");
+				+ url + "\",\"" + sampMType + "\", " + fileName + "); return false;'/></a>");
 	};	
 	var addPreviewControl = function(columnName, tdNode, url, fileName){
 		var title = fileName + " preview";
-		tdNode.append("<a class='dl_download' title='Data preview' href='javascript:void(0);' onclick='Modalinfo.openIframePanel(\"" + url + "\", \"", title + "\");'></a>");
+		var x = "<a class='dl_download' title='Data preview' href='javascript:void(0);' onclick='Modalinfo.openIframePanel(\"" + url + "\", \"" + title + "\");'></a>";
+		tdNode.append(x);
+		
 	};	
 	var addDatalinkControl = function(url, tdNode, fovObject){
 		tdNode.append("<a class='dl_datalink' title='Get LinkedData'/></a>");
@@ -48119,7 +49999,10 @@ ValueFormator = function() {
 					} else if( k == 'nokey' &&  v.match('401')  ) {
 						secureMode = true;
 					}
-				});				
+				});		
+				if( fileName == "" ){
+					fileName = url.split("/").pop();
+				}
 				/*
 				 * Put the right controls according to the context
 				 */
@@ -48131,10 +50014,10 @@ ValueFormator = function() {
 					addInfoControl(columnName, tdNode, url);
 					addDownloadControl(columnName, tdNode, url, secureMode, contentEncoding);
 					addCartControl(columnName, tdNode, url, secureMode);
-					addSampControl(columnName, tdNode, url, secureMode, sampMType, fileName);
-				} else if( urlInfo.access_format.startsWith("image/") || urlInfo.access_format.startsWith("text/") ){
+					addSampControl(columnName, tdNode, url, sampMType, fileName);
+				} else if( contentType.startsWith("image/") || contentType.startsWith("text/") ){
 					addInfoControl(columnName, tdNode, url);
-					addPreviewControl(columnName, tdNode, fileName);	
+					addPreviewControl(columnName, tdNode,url,  fileName);	
 					addCartControl(columnName, tdNode, url, secureMode);
 				} else {
 					addInfoControl(columnName, tdNode, url);
@@ -48546,7 +50429,7 @@ jQuery.extend({
 			layoutPane.sizePane("south", height);
 			//	$("div#accesspane").trigger("resize",[ height]);		
 		};
-		this.fireExpandForm= function() {
+		/*this.fireExpandForm= function() {
 			var height = $(window).height() ;
 			var icon = $('#formexpender').css("background-image");
 			if( icon.match("screen_up") == null ) {
@@ -48556,7 +50439,7 @@ jQuery.extend({
 				layoutPane.sizePane("south", height);
 			}
 			//	$("div#accesspane").trigger("resize",[ height]);		
-		};
+		};*/
 
 		this.fireRemoveAllJobs= function() {
 			Modalinfo.confirm("Do you really want to remove all jobs?"
@@ -48596,31 +50479,44 @@ jQuery.extend({
 			table += "<table width=99% cellpadding=\"0\" cellspacing=\"0\" border=\"0\"  id=\"detailtable\" class=\"display\"></table>";
 			table += "</div>";
 
-
 			if ($('#detaildiv').length == 0) {
 				$(document.documentElement).append(
 				"<div id=detaildiv style='width: 99%; display: none;'></div>");
 			}
-//			$('#detaildiv').html(table);
-			Modalinfo.dataPanel(title, table, null);
-			$('#detailtable').dataTable(
-					{
-						"aoColumns" : jsdata.attributes.aoColumns,
-						"aaData" : jsdata.attributes.aaData,
-						//	"sDom" : '<"top"f>rt<"bottom">',
-						"bPaginate" : false,
-						"aaSorting" : [],
-						"bSort" : false,
-						"bFilter" : true,
-						"bAutoWidth" : true
-					});
-//			$('#detaildiv').modal(title, table, null);
 
+			Modalinfo.dataPanel(title, table, null);
+			
+			var options = {
+					"aoColumns" : jsdata.attributes.aoColumns,
+					"aaData" : jsdata.attributes.aaData,
+					"bPaginate" : false,
+					"aaSorting" : [],
+					"bSort" : false,
+					"bFilter" : true,
+					"bAutoWidth" : true
+				};
+				
+			var positions = [
+     			{ "name": 'filter',
+     	 		  "pos" : "top-left"
+     	 		}
+     	 	];
+				
+			CustomDataTable.create("detailtable", options, positions);
+			Modalinfo.center();
 		};
 
 		this.showTapResult = function(treepath, jid, jsdata, attributeHandlers) {
 			var table = "<table cellpadding=\"0\" cellspacing=\"0\" border=\"1\"  id=\"datatable\" class=\"display\"></table>";
-			$("#resultpane").html(table);
+			
+			var job = ( !treepath.jobid || treepath.jobid == "")? "": '&gt;'+ treepath.jobid;
+			
+			$("#resultpane").prepend('<p id="title-table" class="pagetitlepath"></p>');
+			if (treepath.schema != undefined && treepath.table != undefined) {
+				$("#title-table").html('&nbsp;' + treepath.nodekey + '&gt;' + treepath.schema + '&gt;'+ treepath.table + job);
+			}
+			
+			$("#resultpane").append(table);
 //			var nb_cols = jsdata.aoColumns.length;
 //			for( var r=0 ; r<jsdata.aaData.length ; r++) {
 //			var line = jsdata.aaData[r];
@@ -48629,6 +50525,7 @@ jQuery.extend({
 //			//line[l] = formatValue(jsdata.aoColumns[l].sTitle, num);
 //			}
 //			}
+			
 			attributeHandlers = tapConstraintEditor.getAttributeHandlers();
 			var aoColumns = new Array();
 			var columnMap = {access_format: -1, s_ra: -1, s_dec: -1, s_fov: -1, currentColumn: -1};
@@ -48673,12 +50570,11 @@ jQuery.extend({
 				}
 				aoColumns[i] = {sTitle: '<span title="' + title + '">' + jsdata.aoColumns[i].sTitle + '</span>'};
 			}
-
-			$('#datatable').dataTable({
+			
+			var options = {
 				"aLengthMenu": [5, 10, 25, 50, 100],
 				"aoColumns" : aoColumns,
 				"aaData" : jsdata.aaData,
-				//"sDom" : '<"top"f>rt',
 				"bPaginate" : true,
 				"aaSorting" : [],
 				"bSort" : false,
@@ -48699,7 +50595,52 @@ jQuery.extend({
 					}
 					return nRow;
 				}
-			} );
+			};
+			
+			var positions = [
+     			{ "name": "pagination",
+     			  "pos": "bottom-left"
+     			},
+     			{ "name": "length",
+     	 	      "pos": "top-left"
+     	 		},
+     			{ "name": 'filter',
+     	 		  "pos" : "top-right"
+     	 		},
+     			{ "name": "information",
+     	 	      "pos" : "bottom-right"
+     	 	 	}
+     	 	];
+			
+			CustomDataTable.create("datatable", options, positions);
+			
+
+//			$('#datatable').dataTable({
+//				"aLengthMenu": [5, 10, 25, 50, 100],
+//				"aoColumns" : aoColumns,
+//				"aaData" : jsdata.aaData,
+//				//"sDom" : '<"top"f>rt',
+//				"bPaginate" : true,
+//				"aaSorting" : [],
+//				"bSort" : false,
+//				"bFilter" : true,
+//				"fnRowCallback": function( nRow, aData, iDisplayIndex ) {
+//					for( var c=0 ; c<aData.length ; c++ ) {
+//						var copiedcolumnMap = jQuery.extend(true, {}, columnMap);
+//						var colName = $(this.fnSettings().aoColumns[c].sTitle).text();;
+//						/*
+//						 * Makes sure the mime type is for the current column 
+//						 */
+//						if( colName != "access_url" ) {
+//							copiedcolumnMap.access_format = -1;
+//						}
+//						copiedcolumnMap.currentColumn = c;
+//						//formatValue(this.fnSettings().aoColumns[c].sTitle, aData[c], $('td:eq(' + c + ')', nRow));
+//						ValueFormator.formatValue(colName, aData, $('td:eq(' + c + ')', nRow), copiedcolumnMap);
+//					}
+//					return nRow;
+//				}
+//			} );
 
 			$('#datatable span').tooltip( { 
 				track: true, 
@@ -48711,8 +50652,17 @@ jQuery.extend({
 				// extraClass: "pretty fancy", 
 				top: -15, 
 				left: 5 	
-			});	
-		};;
+			});
+			
+			$("#datatable_wrapper").css("overflow", "hidden");
+			
+			// Shows query panel
+			if (!$("#queryformpane").is(":visible")) {
+				$("#toggle-query").trigger( "click" );
+				$("#queryformpane").show();	
+				$("#toggle-query").show();
+			}
+		};
 
 		this.displayResult = function(dataJSONObject) {
 		};
@@ -48891,6 +50841,7 @@ jQuery.extend({
 		 */
 		var listeners = new Array();
 
+		var filter = new Array();
 		/**
 		 * add a listener to this view
 		 */
@@ -48902,55 +50853,89 @@ jQuery.extend({
 			$.each(listeners, function(i) {
 				listeners[i].controlGetFilteredNodes(node);
 			});
+			
+			if (this.getFilter(node) != null) {
+				filter = this.changeFilter(node, $("#nodeFilter").val());
+			} else {
+				filter.push({node: node, filter: $("#nodeFilter").val()});
+			}
+			
+			Modalinfo.closeDataPanel();
 		};
+		
+		this.getFilter = function(node) {
+			var f = null;
+			filter.forEach(function(element) {
+			    if (element.node === node) {
+			    	f = element.filter;
+			    }
+			});
+			return f;
+		}
+		
+		this.changeFilter = function(node, new_filter) {
+			filter.forEach(function(element) {
+			    if (element.node === node) {
+			    	element.filter = new_filter;
+			    }
+			});
+			return filter;
+		}
 		/**
 		 * Open a modal box allowing to select the tables of the node which must be displayed in the tree
 		 * @param node
 		 */
 		this.fireOpenSelectorWindow = function(node) {
-
-			var table = '<h2><span>Table Selector for node  <i>' + node + '</i></span></h2>'
-			+ "<div class='detaildata'>"
-			+ "    <div class='detaildata' style='width: 60%; height: 60px;display: inline;float:left;overflow: hidden;'>"
-			+ "        <span class=help>Give a filter on catalogue name or description:"
-			+ "        <br> - The filter is a RegExp case unsensitive."
-			+ "        <br> - Type [RETURN] to apply"
-			+ "        </span>"
-			+ "    </div>"
-			+ "    <div class='detaildata' style='width: 39%; height: 45px;display: inline;float:right; padding-top:15px;'>"
-			+ "        <input id=nodeFilter type=texte width=24 style='background-color: whitesmoke;'>"
-			+ "    </div>"
-			+ "    <hr><p class=help>The number of selected tables returned by the server is limited to 100 in any case.<p>"
-			+ "    <div id=nodeFilterList class='detaildata' style='border: 1px black solid; background-color: whitesmoke; width: 90%; height: 380px; overflow: auto;margin : auto;position:relative'></div>"
-			+ "    <p class=help>Unselect the tables you not want to access"
-			+ "    (<a href='#' onclick=\"$('#nodeFilterList input').attr('checked', 'true');$('#nodeFilterList li').attr('class', 'tableSelected');\">select</a> /"
-			+ "     <a href='#' onclick=\"$('#nodeFilterList input').removeAttr('checked');$('#nodeFilterList li').attr('class', 'tableNotSelected');\">unselect</a> all)<br>"
-			+ "    Caution: You cannot refine your selection once it is accepted (Version 1.1)<p><hr>"
-			+ "    <input type=button value='accept' onclick='nodeFilterView.fireGetFilteredNodes(\"" + node + "\");' style='font-weight: bold;'>"
-			+ "    <span class=help>(Type [ESC] to close the window)</span>"
-			+ "    </div>"
-			+ "</div>";
-
-			if ($('#detaildiv').length == 0) {
-				$(document.documentElement).append(
-				"<div id=detaildiv style='width: 99%; display: none;'></div><hr>");
+			// For goodies node
+			if (node === "goodies") {
+				Modalinfo.error("Goodies are not implemented yet.")
+			} else {
+				var table = "<div class='detaildata'>"
+				+ "    <div class='detaildata' style='width: 60%; display: inline; overflow: hidden;'>"
+				+ "        <span class=help>Give a filter on catalogue name or description:"
+				+ "        <br> - The filter is a RegExp case unsensitive."
+				+ "        <br> - Type [RETURN] to apply"
+				+ "        <br> The number of selected tables returned by the server is limited to 100 in any case."
+				+ "        </span>"
+				+ "    </div>"
+				+ "    <div class='detaildata' style='height: 45px;display: inline;float:right; padding-top:15px; margin-right: 15px;'>"
+				+ "        <input id=nodeFilter type=texte width=24 class='form-control input-sm'>"
+				+ "    </div>"
+				+ "    <div id=nodeFilterList class='detaildata' style='border: 1px black solid; background-color: whitesmoke; width: 100%; height: 380px; overflow: auto; position:relative'></div>"
+				+ "    <p class=help>Unselect the tables you not want to access"
+				+ "    (<a href='#' onclick=\"$('#nodeFilterList input').attr('checked', 'true');$('#nodeFilterList li').attr('class', 'tableSelected');\">select</a> /"
+				+ "     <a href='#' onclick=\"$('#nodeFilterList input').removeAttr('checked');$('#nodeFilterList li').attr('class', 'tableNotSelected');\">unselect</a> all)<br>"
+				+ "    Caution: You cannot refine your selection once it is accepted (Version 1.1)<p><hr>"
+				+ "    <input type=button value='Accept' onclick='nodeFilterView.fireGetFilteredNodes(\"" + node + "\");' style='font-weight: bold;'>"
+				+ "    <span class=help>(Type [ESC] to close the window)</span>"
+				+ "    </div>"
+				+ "</div>";
+	
+//				if ($('#detaildiv').length == 0) {
+//					$(document.documentElement).append(
+//					"<div id=detaildiv style='width: 99%; display: none;'></div><hr>");
+//				}
+//				$('#detaildiv').html(table);
+//	
+//				$('#detaildiv').modal( { onShow: function(dlg) {
+//					$(dlg.container).css('height','auto').css('width','500px');
+//					}
+//				});
+//				$("#simplemodal-container").css('height', 'auto'); 
+//				$("#simplemodal-container").css('width', 'auto'); 
+				
+				Modalinfo.dataPanel('Table Selector for node  <i>' + node + '</i>', table, null, "white");
+				
+				//$(window).trigger('resize.simplemodal'); 
+				//Processing.show("Filering meta data");
+				$("#nodeFilter").keyup(function(event) {
+					if(event.keyCode != 13) {	            
+						that.applyFilter(node);
+					}
+				});
+				this.applyFilter(node);
+				Modalinfo.center();
 			}
-			$('#detaildiv').html(table);
-
-			$('#detaildiv').modal( { onShow: function(dlg) {
-				$(dlg.container).css('height','auto').css('width','500px');
-				}
-			});
-			$("#simplemodal-container").css('height', 'auto'); 
-			$("#simplemodal-container").css('width', 'auto'); 
-			$(window).trigger('resize.simplemodal'); 
-			//Processing.show("Filering meta data");
-			$("#nodeFilter").keyup(function(event) {
-				if(event.keyCode != 13) {	            
-					that.applyFilter(node);
-				}
-			});
-			this.applyFilter(node);
 		};	
 		
 		this.applyFilter = function(node) {
@@ -48963,7 +50948,6 @@ jQuery.extend({
 					that.fireShowNodeSelection($("#nodeFilterList"), jsdata);
 				}
 			});
-			
 		};
 		/**
 		 * Display in the div the list of selected tables returned by the server 
@@ -48976,7 +50960,7 @@ jQuery.extend({
 				if( sn == "TAP_SCHEMA" || sn == 'tap_schema' ) {
 					continue;
 				}
-				listDiv.append("<span style='float: left; width: 100%; background-color: white; border: 1px solid black'><b>Schema</b> " + sn + "</span>");		
+				listDiv.append("<p class='chapter' style='border: 1px solid #c6c4c4 !important;'><b>Schema</b> " + sn + "</p>");		
 				var list = "<ul class=attlist>";
 				for( var j=0 ; j<schema.tables.length ; j++ ) {
 					var table = schema.tables[j];
@@ -49064,7 +51048,7 @@ jQuery.extend({
 
 		this.submitQuery = function(){
 			if( dataTreeView.treePath == null) {
-				Modalinfo.error("No data node seelcted: canot process any query\nSelect the data table table you want to query in the 'Tap Nodes' panel\nand ClickClick on it");
+				Modalinfo.error("No data node selected: cannot process any query\nSelect the data table table you want to query in the 'Tap Nodes' panel\nand ClickClick on it");
 				return;
 			}
 			Processing.show("Run job");
@@ -49126,13 +51110,13 @@ jQuery.extend({
 		 * Just called at init time to display the job still stored in the session (not working with sessionID in URLs)
 		 */
 		this.refreshJobList= function() {
-			Processing.show("Refresh job list");
+			//Processing.show("Refresh job list");
 			$.getJSON("joblist", {jsessionid: sessionID, FORMAT: "json"}, function(jsondata) {
-				Processing.hide();
+				//Processing.hide();
 				if( Processing.jsonError(jsondata, "Cannot get jobs list") ) {
 					return;
 				}
-				Processing.show("Update Job Status");
+				//Processing.show("Update Job Status");
 				for( var i=0 ; i<jsondata.length ; i++) {
 					var job = jsondata[i];
 					jv  = new $.JobView(job.jobid);
@@ -49145,7 +51129,7 @@ jQuery.extend({
 					}
 					listTimer = setTimeout("tapView.fireUpdateRunningJobList();", 5000);	
 				}
-				Processing.hide();
+				//Processing.hide();
 			});		
 		};
 		this.displayResult = function(jdataTreePath) {
@@ -49210,6 +51194,7 @@ jQuery.extend({
 			// set to generate errors
 			///adqlQueryView.fireAddConstraint("tap", "limit", ['sfsfsfsdfds']);
 			tapConstraintEditor.fireSetTreepath(treepath);
+			tapPosSelector.fireSetTreepath(treepath);
 			tapColumnSelector.fireSetTreepath(treepath, ((andsubmit)? this.fireSubmitQueryEvent: null));
 
 		};
@@ -49817,7 +51802,7 @@ jQuery.extend({
 					+ jobDescription.treepath.schema + '.' 
 					+ jobDescription.treepath.table + ': job ' + id + '</span>');
 			$('#' + id).append('&nbsp;<span id=' + id + '_phase class="' + phase.toLowerCase() + '">' + phase + '</span>');
-			$('#' + id).append('<select id=' + id + '_actions style="font-size: small;"></select>');
+			$('#' + id).append('<select class="select-job" id=' + id + '_actions style="font-size: small;"></select>');
 			for( var i=0 ; i<actions.length ; i++ ) {
 				$('#' + id + '_actions').append('<option value="' + actions[i] + '">' +  actions[i] + '</option>');
 			}
@@ -49993,9 +51978,12 @@ jQuery.extend({
 		this.addListener = function(list){
 			listeners.push(list);
 		};
+		
+		var aborted = false;
 
 		this.fireAddJobResult = function(treepath, jobid) {
 			Processing.show("Result of job " + treepath + "." + jobid + " added to the cart");
+			aborted = false;
 			$.each(listeners, function(i){
 				listeners[i].controlAddJobResult(treepath, jobid);
 			});
@@ -50003,6 +51991,7 @@ jQuery.extend({
 			Processing.hide();
 			};
 		this.fireRemoveJobResult = function(nodekey, jobid) {
+			aborted = false;
 			$.each(listeners, function(i){
 				listeners[i].controlRemoveJobResult(nodekey, jobid);
 			});
@@ -50010,6 +51999,7 @@ jQuery.extend({
 		};
 		this.fireAddUrl = function(nodekey, url) {
 			Processing.show("Data returned by " + url + " added to the cart");
+			aborted = false;
 			$.each(listeners, function(i){
 				listeners[i].controlAddUrl(nodekey, url);
 			});
@@ -50017,6 +52007,7 @@ jQuery.extend({
 			this.resetJobControl();
 		};
 		this.fireRemoveUrl = function(nodekey, url) {
+			aborted = false;
 			$.each(listeners, function(i){
 				listeners[i].controlRemoveUrl(nodekey, url);
 			});
@@ -50031,6 +52022,7 @@ jQuery.extend({
 			});
 		};
 		this.fireCleanCart = function(tokens) {
+			aborted = false;
 			$.each(listeners, function(i){
 				listeners[i].controleCleanCart(tokens);
 			});
@@ -50078,24 +52070,31 @@ jQuery.extend({
 			};
 		
 		this.fireCheckArchiveCompleted = function() {
-			var phase = that.fireGetJobPhase();
-			var jobspan = $('#cartjob_phase');
-			jobspan.attr('class', phase.toLowerCase());
-			jobspan.text(phase);
-			if( phase == 'nojob') {
-				$('.zip').css("border", "0px");
+			if (!aborted) {
+				var phase = that.fireGetJobPhase();
+				var jobspan = $('#cartjob_phase');
+				jobspan.attr('class', phase.toLowerCase());
+				jobspan.text(phase);
+				if( phase == 'nojob') {
+					$('.zip').css("border", "0px");
+				}
+				else if( phase == 'EXECUTING') {
+					$('.zip').css("border", "2px solid orange");
+					setTimeout("cartView.fireCheckArchiveCompleted();", 1000);
+				}
+				else if( phase == 'COMPLETED') {
+					$('.zip').css("border", "2px solid green");
+					$('#detaildiv_submit').attr("disabled", true);
+					$('#detaildiv_download').removeAttr("disabled");
+				}
+				else {
+					$('.zip').css("border", "2px solid red");
+				}
 			}
-			else if( phase == 'EXECUTING') {
-				$('.zip').css("border", "2px solid orange");
-				setTimeout("cartView.fireCheckArchiveCompleted();", 1000);
-			}
-			else if( phase == 'COMPLETED') {
+			else {
 				$('.zip').css("border", "2px solid green");
 				$('#detaildiv_submit').attr("disabled", true);
 				$('#detaildiv_download').removeAttr("disabled");
-			}
-			else {
-				$('.zip').css("border", "2px solid red");
 			}
 		};
 
@@ -50103,7 +52102,7 @@ jQuery.extend({
 			$('#detaildiv').remove();
 			if ($('#detaildiv').length == 0) {
 				$(document.documentElement).append(
-				"<div id=detaildiv style='display: none;'></div>");
+				"<div id=detaildiv style='width: 99%; display: none;'></div>");
 			}
 			var empty = true;
 			for( var nodekey in cartData) {
@@ -50118,9 +52117,9 @@ jQuery.extend({
 			var table = '';
 			//var phase = that.fireGetJobPhase();
 
-			table += '<h2><img src="images/groscaddy.png"> Shopping Cart</h2>';
+			//table += '<h2><img src="images/groscaddy.png"> Shopping Cart</h2>';
 			table += '<div id=table_div></div>';
-			table += "<h4 id=\"cartjob\" class='detailhead'> <img src=\"images/tdown.png\">Processing status</h4>";
+			table += "<p id=\"cartjob\" class='chapter'> <img src=\"images/tdown.png\">Processing status</p>";
 			//table += '<br><span>Current Job Status</span> <span id=cartjob_phase class="' + phase.toLowerCase() + '">' + phase + '</span><BR>';
 			table += '<br><span>Current Job Status</span> <span id=cartjob_phase class=""></span><BR>';
 			table += "<span>Manage Content</span> <input type=button id=detaildiv_clean value='Remove Unselected Items'>";			
@@ -50129,12 +52128,13 @@ jQuery.extend({
 			table += "<input type=button id=detaildiv_abort value='Abort'><br>";			
 			table += "<span>Get the Result</span> <input type=button id=detaildiv_download value='Download Cart' disabled='disabled'>";			
 
-			$('#detaildiv').html(table);
-			var modalbox = $('#detaildiv').modal();
-			$("#simplemodal-container").css('height', 'auto'); 
-			$("#simplemodal-container").css('width', 'auto'); 
-			$(window).trigger('resize.simplemodal'); 
-
+//			$('#detaildiv').html(table);
+//			var modalbox = $('#detaildiv').modal();
+//			$("#simplemodal-container").css('height', 'auto'); 
+//			$("#simplemodal-container").css('width', 'auto'); 
+//			$(window).trigger('resize.simplemodal'); 
+			
+			Modalinfo.dataPanel('<a class="zip-title" href="#"></a> Shopping Cart' , table, null, "white");		
 			this.setTableDiv(cartData);
 
 			$('#detaildiv_clean').click( function() {
@@ -50147,16 +52147,20 @@ jQuery.extend({
 			} );
 			$('#detaildiv_cleanall').click( function() {
 				that.fireCleanCart("");
-				modalbox.close();
+				Modalinfo.close($(this).parent().attr("id"));
 				return false;
 			} );
 			$('#detaildiv_submit').click( function() {
+				aborted = false;
 				that.fireStartArchiveBuilding();
 				return false;
 			} );
 			$('#detaildiv_abort').click( function() {
-				that.fireKillArchiveBuilding();
-				that.fireCheckArchiveCompleted();
+				if (aborted == false) {
+					aborted = true;
+					that.fireKillArchiveBuilding();
+					//that.fireCheckArchiveCompleted();
+				}
 				return false;
 			} );
 
@@ -50182,7 +52186,7 @@ jQuery.extend({
 				return;
 			}
 			for( var nodekey in cartData) {
-				table += "<h4 id=\"mappedmeta\" class='detailhead'> <img src=\"images/tdown.png\">Node  " + nodekey + " </h4>";
+				table += "<p id=\"mappedmeta\" class='chapter'> <img src=\"images/tdown.png\">Node  " + nodekey + " </p>";
 				table += "<div class='detaildata'>";
 				table += "<table width=99% cellpadding=\"0\" cellspacing=\"0\" border=\"0\"  id=\"folder_" + nodekey +"\" class=\"display\"></table>";
 				table += "</div>";
@@ -50190,6 +52194,7 @@ jQuery.extend({
 			$('#table_div').html(table);
 			for( var nodekey in cartData) {
 				var folder = cartData[nodekey];
+				var tableId = "folder_" + nodekey;
 				var aaData = new Array();
 				for( var i=0 ; i<folder.jobs.length ; i++) {
 					aaData[aaData.length] = ["<INPUT TYPE=CHECKBOX checked name=\"" + nodekey + " job " + i + "\" value=" + i +">"
@@ -50199,18 +52204,34 @@ jQuery.extend({
 					aaData[aaData.length] = ["<INPUT TYPE=CHECKBOX checked name=\"" + nodekey + " url " + i + "\" value=" + i +">"
 					                         ,  "URL", "<span>" + folder.urls[i].name + "</span>", folder.urls[i].uri];
 				}
-				folderTables[folderTables.length] = $('#folder_' + nodekey).dataTable(
-						{
-							"aoColumns" : [{sTitle: "Keep/Discard"}, {sTitle: "Data Source"},{sTitle: "Resource Name"},{sTitle: "Resource URI"}],
-							"aaData" : aaData,
-							"bPaginate" : false,
-							"bInfo" : false,
-							"aaSorting" : [],
-							"bSort" : false,
-							"bFilter" : false,
-							"bAutoWidth" : true,
-							"bDestroy": true
-						});
+				
+				var options = {
+					"aoColumns" : [{sTitle: "Keep/Discard"}, {sTitle: "Data Source"},{sTitle: "Resource Name"},{sTitle: "Resource URI"}],
+					"aaData" : aaData,
+					"bPaginate" : false,
+					"bInfo" : false,
+					"aaSorting" : [],
+					"bSort" : false,
+					"bFilter" : false,
+					"bAutoWidth" : true,
+					"bDestroy": true
+				};
+				
+				folderTables[folderTables.length] = CustomDataTable.create(tableId, options);
+				
+//				folderTables[folderTables.length] = $('#folder_' + nodekey).dataTable(
+//						{
+//							"aoColumns" : [{sTitle: "Keep/Discard"}, {sTitle: "Data Source"},{sTitle: "Resource Name"},{sTitle: "Resource URI"}],
+//							"aaData" : aaData,
+//							"bPaginate" : false,
+//							"bInfo" : false,
+//							"aaSorting" : [],
+//							"bSort" : false,
+//							"bFilter" : false,
+//							"bAutoWidth" : true,
+//							"bDestroy": true
+//						});
+				
 				var oTable = folderTables[folderTables.length-1];
 			    /* Apply the jEditable handlers to the table */
 			    $('span', oTable.fnGetNodes()).editable( 
@@ -50238,6 +52259,7 @@ jQuery.extend({
 			        "height": "1.33em", 
 			        "width": "16em"}
 			    );
+			    Modalinfo.center();
 			}	
 		};
 	}
@@ -50322,7 +52344,11 @@ jQuery.extend({
 			listeners.push(list);
 		};
 		this.addJobResult = function(treepath, jobid) {
-			var nodekey = treepath.nodekey;
+			if (treepath.nodekey == undefined) {
+				var nodekey = treepath;
+			} else {
+				var nodekey = treepath.nodekey;
+			}			
 			var entry;
 			if( (entry = cartData[nodekey]) == undefined ) {
 				cartData[nodekey] = {jobs: new Array(), urls: new Array()};
@@ -50360,7 +52386,12 @@ jQuery.extend({
 			}			
 		};
 		this.addUrl = function(treepath, url) {
-			var nodekey = treepath.nodekey;
+			if (treepath.nodekey == undefined) {
+				var nodekey = treepath;
+			}
+			else {
+				var nodekey = treepath.nodekey;
+			}
 			var entry;
 //			var ch  = url.split("/");
 //			var name = ch[ch.length - 1].replace(/[^\w]/, "_");
@@ -50649,8 +52680,29 @@ DataTreeView.prototype = {
 					Processing.hide();
 				}
 			});
+			
+			$("body").removeClass("with-bg");
+			$(".home-panel").hide();
+			$(".content-panel").show();
+			
+			// Hide the query panel to permits the result panel to be bigger
+			if ($("#queryformpane").is(":visible") && $("#resultpane").find("table").length == 0) {
+				$("#toggle-query").trigger( "click" );
+			}
+			
+			// Hide the query panel if the user didnt open a table
+			if ($("#resultpane").find("table").length == 0) {
+				$("#queryformpane").hide();	
+				$("#toggle-query").hide();
+			}
 		},
 		fireBuildTree: function(jsdata) {
+			/*
+			 * Prevent to close the page with data
+			 */
+			PageLocation.confirmBeforeUnlaod();		
+			
+			Processing.show("Waiting for the constrution of the tree");
 			this.capabilities = {supportSyncQueries: true
 					, supportAsyncQueries: (jsdata.asyncsupport == "true")?true: false
 							, supportJoin: true
@@ -50675,10 +52727,11 @@ DataTreeView.prototype = {
 			$("div#treedisp").jstree("create"
 					, $("div#treedisp")
 					, false
-					, {"data" : {"icon": "images/Database.png", "attr":{"id": jsdata.nodekey, "title": description}, "title" : jsdata.nodekey},
+					, {"data" : {"icon": "images/Database2.png", "attr":{"id": jsdata.nodekey, "title": /*description*/ "Double click to filter the visible tables"}, "title" : jsdata.nodekey},
 						"state": "closed"}
 					,false
-					,true);       
+					,true);  
+			
 			/*
 			 * Create first the first level tree (schemas)
 			 */
@@ -50688,17 +52741,18 @@ DataTreeView.prototype = {
 
 				var schemaName = jsdata.schemas[i].name;				
 				if(schemaName.match(/TAP_SCHEMA/i) ) {
-					icon = "images/Redcube.png";
+					icon = "images/Redcube2.png";
 					description = "Schema containing the description of the published tables";
 				} else if(schemaName.match(/ivoa/i) ) {
-					icon =  "images/Greencube.png";
+					icon =  "images/Greencube2.png";
 					description = "Tables matching IVOA data models (e.g. ObsCore)";
 				} else {
-					icon =  "images/Bluecube.png";
+					icon =  "images/Bluecube2.png";
 					if( description == "") {
 						description = "No Description Available";
 					}
 				}
+				description += "\n Double click to filter the tables";
 				$("div#treedisp").jstree("create"
 						, $("#" + jsdata.nodekey)
 						, false
@@ -50724,10 +52778,11 @@ DataTreeView.prototype = {
 					if( description == "") {
 						description = "No Description Available";
 					}
+					description += "\n Double click or drag and drop to display it"
 					$("div#treedisp").jstree("create"
 							, root
 							, false
-							, {"data"  : {"icon": "images/SQLTable.png", "attr":{"id": id_table, "title": description}, "title" : table.name},
+							, {"data"  : {"icon": "images/SQLTable2.png", "attr":{"id": id_table, "title": description, "class":"icon-table"}, "title" : table.name},
 								"state": "closed",
 								"attr" : {"id": id_table}
 							}
@@ -50750,6 +52805,31 @@ DataTreeView.prototype = {
 			if( msg != "" ) {
 				Modalinfo.info(msg + "\n\nDouble click on the '" + jsdata.nodekey + "' node to make you own selection");
 			}
+			
+			$("div#treedisp").find("li").each(function() {
+				if ($(this).attr("id") != undefined && $(this).find(".metadata").length == 0) {
+					var splited = $(this).attr("id").split(';');
+					if (splited.length >= 3) {
+						$(this).find("ins:first").after("<img class='metadata' src='images/metadata.png' title='Show metadata (Does not work with Vizier)'/>");
+						$(this).find("ins:first").next("img").click(function() {
+							var parsedTreePath = splited[2].getTreepath();
+							var treePath = {nodekey: splited[0]
+							, schema: splited[1]
+							, tableorg: splited[2]
+							, table: parsedTreePath.table};
+							
+							resultPaneView.fireShowMetaNode(treePath);
+						});
+						
+						$(this).find("ins:first").click(function() {
+							$(this).next().next().dblclick();
+						});
+					}
+				}
+			});
+			$("#"+jsdata.nodekey).before("<img class='metadata' src='images/metadata.png' title='Click to get more info' onclick='dataTreeView.showNodeInfos();'/>");
+			this.setTitlePath({nodekey: jsdata.nodekey});
+			Processing.hide();
 		},
 
 		fireTreeNodeEvent:function(dataTreePath, andsubmit) {
@@ -50781,7 +52861,7 @@ DataTreeView.prototype = {
 				$("div#treedisp").jstree("create"
 						, $("#" + id_schema)
 						, false // position
-						, {"data"  : {"icon": "images/SQLTable.png", "attr":{"id": jsdata.table, "title": "description"}, "title" : jsdata.table},
+						, {"data"  : {"icon": "images/SQLTable2.png", "attr":{"id": jsdata.table, "title": "description"}, "title" : jsdata.table},
 							"state": "closed"
 						}
 						,false// callback
@@ -50853,24 +52933,34 @@ DataTreeView.prototype = {
 			Out.info("title " + treepath);
 			this.treePath = treepath;
 			var tp = $('#titlepath');
-			var span = '<span style="font-style: normal; color: #888;font-size: x-small ; background-color:';
+			var span = '<span style="font-style: normal; font-size: x-small ; background-color:';
 			tp.html('');
 			if( treepath) {
-				var job = ( !treepath.jobid || treepath.jobid == "")? "": '&gt;'+ treepath.jobid;
-				tp.append(span
+				if ($("#info-"+treepath.nodekey).length == 0) {
+					$("#"+treepath.nodekey).after('<span id="info-'+treepath.nodekey+'"></span>');
+					
+					if (nodeFilterView.getFilter(treepath.nodekey) != null && nodeFilterView.getFilter(treepath.nodekey) != undefined) {
+						$("#info-"+treepath.nodekey).after('<span class="node-filter">'+nodeFilterView.getFilter(treepath.nodekey)+'</span>');
+					}
+				}
+				else {
+					$("#info-"+treepath.nodekey).html("");
+				}
+				var span_info = $("#info-"+treepath.nodekey);
+				
+				span_info.append(span
 						+ ((this.capabilities.supportSyncQueries== true)?'lightgreen': 'salmon') 
 						+ ';" title="' + ((this.capabilities.supportSyncQueries== true)?'S': 'Does not s') + 'upport synchronous queries">S</span>');
-				tp.append(span
+				span_info.append(span
 						+ ((this.capabilities.supportJoin== true)?'lightgreen': 'salmon')
 						+ ';" title="' + ((this.capabilities.supportJoin== true)?'S': 'Does not s')+ 'upport ADQL joins">J</span>');
-				tp.append(span
+				span_info.append(span
 						+ ((this.capabilities.supportAsyncQueries == true)?'lightgreen': 'salmon') 
 						+ ';" title="' + ((this.capabilities.supportAsyncQueries == true)?'S': 'Does not s')+ 'upport asynchronous queries">A</span>');
-				tp.append(span
+				span_info.append(span
 						+ ((this.capabilities.supportUpload == true)?'lightgreen': 'salmon') 
 						+ ';" title="' + ((this.capabilities.supportUpload == true)?'S': 'Does not s')+ 'upport table upload">U</span>');
-				tp.append('<a href="#" style="font-style: normal; font-size: x-small ; background-color: lightblue;" title="Click to get more info" onclick="dataTreeView.showNodeInfos();"> ? </a>');
-				tp.append('&nbsp;' + treepath.nodekey + '&gt;' + treepath.schema + '&gt;'+ treepath.table + job);
+													
 			}
 		},
 		showNodeInfos: function () {
@@ -50878,7 +52968,7 @@ DataTreeView.prototype = {
 			Modalinfo.infoObject(report, "Node " + this.treePath.nodekey);
 		},
 		getBookmark: function() {
-			var np = window.location.href.split('?')[0].replace(/\/$/, "");;
+			var np = window.location.href.split('?')[0].replace(/\/$/, "");
 			return (this.info != null)?np + "?url=" + escape(this.info.url): np;
 		}
 };
@@ -50907,15 +52997,90 @@ function initFunctions () {
 		dataTreeView = new DataTreeView();
 	};
 
+//	this.initLayout = function() {
+//		$.alerts.overlayOpacity = 0.5;
+//		$.alerts.overlayColor = '#000';
+//		/*
+//		 * layout plugin, requires JQuery 1.7 or higher
+//		 * Split the bottom div in 3 splitters divs.
+//		 */		
+//		layoutPane = $('#accesspane').layout();
+//		layoutPane.sizePane("south", "50%");
+//	};
+	
 	this.initLayout = function() {
-		$.alerts.overlayOpacity = 0.5;
-		$.alerts.overlayColor = '#000';
-		/*
-		 * layout plugin, requires JQuery 1.7 or higher
-		 * Split the bottom div in 3 splitters divs.
-		 */		
-		layoutPane = $('#accesspane').layout();
-		layoutPane.sizePane("south", "50%");
+		Out.info("Activate popular sites access");
+		var np = window.location.href.split('?')[0].replace(/\/#?$/, "");
+		Out.info("Base URL = " + np);
+		$(".3xmm-link").attr("href", np+"?url=http%3A//xcatdb.u-strasbg.fr/3xmm/tap/")
+		$(".cadc-link").attr("href", np+"?url=http%3A//www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap/")
+		$(".gavo-link").attr("href", np+"?url=http%3A//dc.zah.uni-heidelberg.de/__system__/tap/run/tap/")
+		$(".vizier-link").attr("href", np+"?url=http%3A//tapvizier.u-strasbg.fr/TAPVizieR/tap/")
+		$(".simbad-link").attr("href", np+"?url=http%3A//simbad.u-strasbg.fr/simbad/sim-tap/")
+		$(".planet-link").attr("href", np+"?url=http%3A//voparis-tap.obspm.fr/__system__/tap/run/tap/")
+		$(".heasarch-link").attr("href", np+"?url=http%3A//heasarc.gsfc.nasa.gov/xamin/vo/tap/")
+		$(".chandra-link").attr("href", np+"?url=http%3A//cda.harvard.edu/cxctap/")
+		$(".sdss-link").attr("href", np+"?url=http%3A//ia2-tap.oats.inaf.it:8080/wgetap/")
+		
+
+		// Define the height of the div knowing the banner take 70px and the query editor 330px
+		$("#treepane").height($(window).height()-100);
+		$("#resultpane").height($(window).height()-400);
+		
+		// Change the height of the div if the window is resized
+		$( window ).resize(function() {
+			$("#treepane").height($(window).height()-100);
+			if ($("#queryformpane").is(":visible")) {
+				$("#resultpane").height($(window).height()-400);
+			} else {
+				$("#resultpane").height($(window).height()-100);
+			}
+		});
+		
+		// Show/Hide the tree div and adjust the position of toggle div
+		$("#toggle-tree").click(function(){
+			$("#treepane").toggle();
+			if ($("#result").hasClass("col-xs-10")) {
+				$("#result").removeClass("col-xs-10").addClass("col-xs-12");
+				$("#toggle-tree").text("Show tree");
+				$("#toggle-tree").css("left","-22px");
+				$("#toggle-query").css("left","20px");
+			} else {
+				$("#result").removeClass("col-xs-12").addClass("col-xs-10");
+				$("#toggle-tree").text("Hide tree");
+				$("#toggle-tree").css("left","-19px");
+				$("#toggle-query").css("left","22px");
+				
+			}		
+		});
+		
+		// Show/Hide the query editor div and adjust the position of toggle div
+		$("#toggle-query").click(function(){
+			$("#queryformpane").toggle();
+			if ($("#queryformpane").is(":visible")) {
+				$("#toggle-query").text("Hide query");
+				$("#resultpane").height($(window).height()-420);
+				$("#toggle-query").css("bottom","330px");
+			} else {
+				$("#toggle-query").text("Show query");
+				$("#resultpane").height($(window).height()-100);
+				$("#toggle-query").css("bottom","0px");
+			}
+		});
+		
+		// Manage which div have to be displayed if there is the paramater url in the url
+		if (getUrlParameter("url") != undefined) {
+			$("body").removeClass("with-bg");
+			$(".content-panel").show();
+			$("#toggle-query").trigger( "click" );
+			$("#queryformpane").hide();	
+			$("#toggle-query").hide();
+			PageLocation.confirmBeforeUnlaod();
+		}
+		else {
+			$("body").addClass("with-bg");
+			$(".home-panel").show();
+		}
 	};
 
 	this.initNodeAccess = function() {
@@ -50932,19 +53097,36 @@ function initFunctions () {
 			, sesameUrl:"sesame"
 			, upload: {url: "uploadposlist", postHandler: function(retour){alert("postHandler " + retour);}}
 			, queryView: adqlQueryView});
+		
+		tapPosSelector = QueryConstraintEditor.tapPosSelector({ parentDivId: 'tapwhereposition'
+			, formName:'tapPosName'
+			, sesameUrl:"sesame"
+			, upload: {url: "uploadposlist", postHandler: function(retour){alert("postHandler " + retour);}}
+			, queryView: adqlQueryView});
 
-
-		$("input#node_selector").keypress(function(event) {
+		var ins = $("input#node_selector");
+		ins.keypress(function(event) {
 			if (event.which == '13') {
-				dataTreeView.fireNewNodeEvent($('#node_selector').val());
+				var val = $('#node_selector').val();
+				/*
+				 * Avoid to take a keyword as a service 
+				 */
+				if( val.startsWith("http"))
+					dataTreeView.fireNewNodeEvent($('#node_selector').val());
 			}
-		});
+		});			
+		ins.one("click",function() {
+			$(this).css('color','black');
+			$(this).css('font-style','');
+			$(this).attr('value','');
+		});		
+
 	};
 
 	this.initDataTree = function() {
 		dataTree = $("div#treedisp").jstree({
 			"json_data"   : {"data" : [ {  "attr"     : { "id"   : "rootid", "title": "Repository for uploaded tables (Not implemented yet)" },
-				"data"        : { "title"   : "Goodies" , "attr": {"id": "goodies"}}}]}  , 
+				"data"        : { "icon": "images/folder.png", "title"   : "Goodies (not used yet)" , "attr": {"id": "goodies"}}}]}  , 
 				"plugins"     : [ "themes", "json_data", "dnd", "crrm"],
 				"rules" : {"deletable" : "all"},
 				"dnd"         : {"drop_target" : "#resultpane,#taptab,#showquerymeta",
@@ -50955,21 +53137,6 @@ function initFunctions () {
 						if( id == null || (streePath = data.o.attr("id").split(';')).length < 3 ) {
 							Modalinfo.info("Meta data only available for tables: ("  +  streePath + ")", 'User Input Error');
 						} else {
-//							var treePath = {nodekey: streePath[0]
-//							, schema: streePath[1]
-//							, tableorg: streePath[2]
-//							, table: streePath[2].split('.').pop()};
-//							var s = streepath[2].split('.').shift();
-//							var p = streepath[2].indexOf(".");
-//							if( p > -1 ) s = streepath[2].substring(p+1);
-//							else s = streepath[2]
-////							
-//							
-//							var treePath = {nodekey: streepath[0]
-//							, schema: streepath[1]
-//							, tableorg: streepath[2]
-//							, table: s};
-//							alert(JSON.stringify(treePath));
 							var parsedTreePath = streePath[2].getTreepath();
 							var treePath = {nodekey: streePath[0]
 							, schema: streePath[1]
@@ -50981,10 +53148,10 @@ function initFunctions () {
 									ViewState.fireDoubleClickOK(treePath);
 						            _paq.push(['trackPageView', 'saada TapHandle/dropresult/' + streePath[0]]);
 									return;
-								} else if(parent.attr('id') == "showquerymeta" ) {
+								/*} else if(parent.attr('id') == "showquerymeta" ) {
 									resultPaneView.fireShowMetaNode(treePath);	
 						            _paq.push(['trackPageView', 'saada TapHandle/dropmeta/' + streePath[0]]);
-								return;
+								return;*/
 								} else if(  parent.attr('id') == "taptab") {
 									ViewState.fireDragOnQueryForm(treePath);
 						            _paq.push(['trackPageView', 'saada TapHandle/dropquery/' + streePath[0]]);
@@ -51000,6 +53167,7 @@ function initFunctions () {
 				}
 		}); // end of jstree
 
+		$("a#goodies").attr("class", "help").css("color", "grey");
 		dataTree.bind("dblclick.jstree", function (e, data) {
 			var node = $(e.target).closest("li");
 			var id = node[0].id; //id of the selected node					
@@ -51013,11 +53181,6 @@ function initFunctions () {
 				Modalinfo.info("Query can only be applied on one data category or one data class: ("  +  treePath + ")", 'User Input Error');
 			} else {
 				var fTreePath = {nodekey: treePath[0], schema: treePath[1], tableorg: treePath[2], table: treePath[2].split('.').pop() };
-//				var s = treePath[2].split('.').shift();
-//				var p = treePath[2].indexOf(".");
-//				if( p > -1 ) s = treePath[2].substring(p+1);
-//				else s = treePath[2];
-							
 				var parsedTreePath = treePath[2].getTreepath();
 				fTreePath = {nodekey: treePath[0]
 				, schema: treePath[1]
@@ -51033,9 +53196,13 @@ function initFunctions () {
 		 */
 		var defaultUrl  =  (RegExp('url=' + '(.+?)(&|$)').exec(location.search)||[,null])[1];
 		if( defaultUrl != null ) {
+			Processing.show("Connecting " + defaultUrl);
 			dataTreeView.fireNewNodeEvent(unescape(defaultUrl));
+            _paq.push(['trackPageView', 'saada TapHandle/paramURL/' + defaultUrl]);
+			//Processing.hide();
 		}
 		Out.setdebugModeFromUrl();
+
 	};
 
 	this.initQueryForm = function() {
@@ -51208,6 +53375,7 @@ var cartView ;
 var adqlQueryView ;
 var tapColumnSelector;
 var tapConstraintEditor;
+var tapPosSelector;
 /*
  * Using a Jquery bind() here has a strange behaviour...
  * http://stackoverflow.com/questions/4458630/unable-to-unbind-the-window-beforeunload-event-in-jquery
@@ -51232,13 +53400,15 @@ var layoutPane;
  * invoked once the page is loaded
  */
 $().ready(function() {
+
 	whenReady.initMVC();
 	whenReady.initLayout();
 	whenReady.initNodeAccess();
 	whenReady.initDataTree();
 	whenReady.initQueryForm();
 	whenReady.initSamp();
-	PageLocation.confirmBeforeUnlaod();
+	//PageLocation.confirmBeforeUnlaod();
+	
 });
 
 
@@ -51348,7 +53518,7 @@ ViewState = function() {
 		cleanQuery(dataTreePath);
 		setForm(dataTreePath);
 		setPath(dataTreePath);
-		resultPaneView.fireExpandForm();
+		//resultPaneView.fireExpandForm();
 
 	};
 	/**
@@ -51384,7 +53554,7 @@ ViewState = function() {
 	 */
 	var fireSubmitKO = function(dataTreePath) {
 		cleanData(dataTreePath);
-		resultPaneView.fireExpandForm();
+		//resultPaneView.fireExpandForm();
 	};
 	/**
 	 * Recall a successful job
@@ -51410,7 +53580,7 @@ ViewState = function() {
 		setForm(dataTreePath);
 		setQuery(dataTreePath, query);
 		setPath(dataTreePath);
-		resultPaneView.fireExpandForm();
+		//resultPaneView.fireExpandForm();
 	};
 	
 	/*

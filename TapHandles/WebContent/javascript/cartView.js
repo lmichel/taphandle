@@ -176,7 +176,7 @@ jQuery.extend({
 //			$("#simplemodal-container").css('width', 'auto'); 
 //			$(window).trigger('resize.simplemodal'); 
 			
-			Modalinfo.dataPanel('<img src="images/cart_38.png"> Shopping Cart' , table, null, "white");		
+			Modalinfo.dataPanel('<a class="zip-title" href="#"></a> Shopping Cart' , table, null, "white");		
 			this.setTableDiv(cartData);
 
 			$('#detaildiv_clean').click( function() {

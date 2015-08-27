@@ -31,7 +31,6 @@ jQuery.extend({
 
 
 		this.submitQuery = function(){
-			console.log("iiiiiiiiiiiiiiiiiiiiiiiii");
 			if( dataTreeView.treePath == null) {
 				Modalinfo.error("No data node selected: cannot process any query\nSelect the data table table you want to query in the 'Tap Nodes' panel\nand ClickClick on it");
 				return;
@@ -95,13 +94,13 @@ jQuery.extend({
 		 * Just called at init time to display the job still stored in the session (not working with sessionID in URLs)
 		 */
 		this.refreshJobList= function() {
-			Processing.show("Refresh job list");
+			//Processing.show("Refresh job list");
 			$.getJSON("joblist", {jsessionid: sessionID, FORMAT: "json"}, function(jsondata) {
-				Processing.hide();
+				//Processing.hide();
 				if( Processing.jsonError(jsondata, "Cannot get jobs list") ) {
 					return;
 				}
-				Processing.show("Update Job Status");
+				//Processing.show("Update Job Status");
 				for( var i=0 ; i<jsondata.length ; i++) {
 					var job = jsondata[i];
 					jv  = new $.JobView(job.jobid);
@@ -114,7 +113,7 @@ jQuery.extend({
 					}
 					listTimer = setTimeout("tapView.fireUpdateRunningJobList();", 5000);	
 				}
-				Processing.hide();
+				//Processing.hide();
 			});		
 		};
 		this.displayResult = function(jdataTreePath) {

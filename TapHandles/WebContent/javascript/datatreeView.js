@@ -84,6 +84,11 @@ DataTreeView.prototype = {
 			}
 		},
 		fireBuildTree: function(jsdata) {
+			/*
+			 * Prevent to close the page with data
+			 */
+			PageLocation.confirmBeforeUnlaod();		
+			
 			Processing.show("Waiting for the constrution of the tree");
 			this.capabilities = {supportSyncQueries: true
 					, supportAsyncQueries: (jsdata.asyncsupport == "true")?true: false

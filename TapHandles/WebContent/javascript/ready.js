@@ -44,6 +44,7 @@ var layoutPane;
  * invoked once the page is loaded
  */
 $().ready(function() {
+
 	whenReady.initMVC();
 	whenReady.initLayout();
 	whenReady.initNodeAccess();
@@ -51,5 +52,6 @@ $().ready(function() {
 	whenReady.initQueryForm();
 	whenReady.initSamp();
 	//PageLocation.confirmBeforeUnlaod();
+	
 });
 
