@@ -83,14 +83,18 @@ jQuery.extend({
 			jobDescription = description;
 			sessionId = description.session;
 			treePath  = description.treepath;
-			id        = description.status.job.jobId;
-			phase     = description.status.job.phase;
-			var parameter = description.status.job.parameters.parameter;
-			for( var i=0 ; i<parameter.length ; i++) {
-				var pi = parameter[i];
-				if( pi.id == "query" || pi.id == "QUERY") {
-					query = pi["$"];
-					break;
+			if( description.status != undefined && description.status.job != undefined ) {
+				id        = description.status.job.jobId;
+				phase     = description.status.job.phase;
+				if( description.status.job.parameters != undefined && description.status.job.parameters.parameter != undefined ) {
+					var parameter = description.status.job.parameters.parameter;
+					for( var i=0 ; i<parameter.length ; i++) {
+						var pi = parameter[i];
+						if( pi.id == "query" || pi.id == "QUERY") {
+							query = pi["$"];
+							break;
+						}
+					}
 				}
 			}
 		};
@@ -142,7 +146,8 @@ jQuery.extend({
 			} else  if( phase == 'ERROR'){
 				countDown = 0;
 				Processing.hide();				
-				Modalinfo.error("\nMESSAGE:\n\n" + jobDescription.status.job.errorSummary.message, treePath.nodekey + ' job ' + treePath.jobid + " failed");
+				//Modalinfo.error("\nMESSAGE:\n\n" + jobDescription.status.job.errorSummary.message, treePath.nodekey + ' job ' + treePath.jobid + " failed");
+				Modalinfo.error(jobDescription.status, + 'Job ' + treePath.jobid + " on node " + treePath.nodekey  + " failed");
 			} else {
 				Processing.hide();
 			}

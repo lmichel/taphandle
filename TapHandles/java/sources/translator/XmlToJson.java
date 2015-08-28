@@ -140,7 +140,7 @@ public class XmlToJson  extends RootClass {
 	public static void translate(String baseDir , String service, String style, NameSpaceDefinition nsDefinition) throws Exception {
 		logger.debug("Translate " +  service + ".xml with "  + style + ".xsl");
 		setVosiNS(baseDir, style, nsDefinition);
-		applyStyle(baseDir + service + ".xml", baseDir + style + ".json", baseDir + style + ".xsl in " + baseDir);
+		applyStyle(baseDir + service + ".xml", baseDir + style + ".json", baseDir + style + ".xsl");
 	}
 
 	/**
@@ -164,6 +164,25 @@ public class XmlToJson  extends RootClass {
 		s.close();
 		fw.close();
 		applyStyle(baseDir  + tablesFile + ".xml", baseDir + tableFileName + ".json", baseDir + tableFileName + ".xsl");
+		File out = new File(baseDir + tableFileName + "_att.json");
+		/*
+		 * If the translation failed, try with the no schema style (astrogrid)
+		 */
+		if( !out.exists() || out.length() == 0 ){
+			logger.info("Translate table description with a noschema style (astrogrid)");
+			setVosiNS(baseDir, "table_noschema", nsDefinition);
+			String styleName = baseDir + "table_noschema.xsl";
+			s = new Scanner(new File(styleName));
+			fw = new PrintWriter(new File( baseDir + tableFileName + ".xsl"));
+			while( s.hasNextLine() ) {
+				String s2 = s.nextLine().replaceAll("TABLENAME", tableName);
+				fw.println(s2);
+			}
+			s.close();
+			fw.close();
+			applyStyle(baseDir  + tablesFile + ".xml", baseDir + tableFileName + ".json", baseDir + tableFileName + ".xsl");
+		}
+
 	}
 
 	/**
@@ -192,6 +211,7 @@ public class XmlToJson  extends RootClass {
 	/**
 	 * Builds a JSON file describing the table tableName to setup query form.
 	 * The table attributes are extracted from the file tablesFile. The .xml suffix is implicit.
+	 * If the regular styme fails, we try the noschema style of the Astrogrid nodes
 	 * @param baseDir      Working directory
 	 * @param tablesFile  Name of the file containing all table metadata
 	 * @param tableName  Name of the table
@@ -211,6 +231,24 @@ public class XmlToJson  extends RootClass {
 		s.close();
 		fw.close();
 		applyStyle(baseDir  + tablesFile + ".xml", baseDir + tableFileName + "_att.json", baseDir + tableFileName + "_att.xsl");
+		File out = new File(baseDir + tableFileName + "_att.json");
+		/*
+		 * If the translation failed, try with the no schema style (astrogrid)
+		 */
+		if( !out.exists() || out.length() == 0 ){
+			logger.info("Translate table att with a noschema style (astrogrid)");
+			setVosiNS(baseDir, "table_att_noschema", nsDefinition);
+			String styleName = baseDir + "table_att_noschema.xsl";
+			s = new Scanner(new File(styleName));
+			fw = new PrintWriter(new File( baseDir + tableFileName + "_att.xsl"));
+			while( s.hasNextLine() ) {
+				String s2 = s.nextLine().replaceAll("TABLENAME", tableName);
+				fw.println(s2);
+			}
+			s.close();
+			fw.close();
+			applyStyle(baseDir  + tablesFile + ".xml", baseDir + tableFileName + "_att.json", baseDir + tableFileName + "_att.xsl");
+		}
 	}
 
 	/**

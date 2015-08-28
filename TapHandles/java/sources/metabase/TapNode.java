@@ -123,7 +123,7 @@ public class TapNode  extends RootClass {
 	 */
 	public void check() throws Exception {
 		this.checkServices();
-		
+
 	}
 	/**
 	 * @return
@@ -324,21 +324,34 @@ public class TapNode  extends RootClass {
 		}
 		logger.debug("check tables");
 		this.getServiceReponse("tables", tablesNS);
+		/*
+		 * Try first to translate with the standard format schema.tables.table
+		 */
 		this.translateServiceReponse("tables", tablesNS);
 		try {
 			this.getFirstTableName();
 		} catch(Exception e){
-			logger.warn("No tables in tables.xml, Try to scan the TAP_SCHEMA");		
+			logger.warn("No tables in tables.xml, try to ignore the schema");		
+			/*
+			 * Try first to translate with the standard format tab:tables.table (services from *.roe.ac.uk)
+			 */
 			try {
-				new TablesReconstructor(this.regMark.getAbsoluteURL(null), this.baseDirectory);
-				this.translateServiceReponse("tables", tablesNS);
-				if( this.getFirstTableName() == null ) {
-					throw new Exception("No tables in tables.xml, is that file compliant with the schema?");
-				} else {
-					logger.info("succeed");
-				}	
-			} catch (Exception e2) {
-				throw new Exception("No valid tables capability: failed to rebuild it from the TAP schema: " + e2);
+				this.translateServiceReponse("tables","tables_noschema", tablesNS);
+				this.getFirstTableName();
+			} catch (Exception e3) {
+
+				try {
+					logger.warn("No tables in tables.xml, Try to scan the TAP_SCHEMA");		
+					new TablesReconstructor(this.regMark.getAbsoluteURL(null), this.baseDirectory);
+					this.translateServiceReponse("tables", tablesNS);
+					if( this.getFirstTableName() == null ) {
+						throw new Exception("No tables in tables.xml, is that file compliant with the schema?");
+					} else {
+						logger.info("succeed");
+					}	
+				} catch (Exception e2) {
+					throw new Exception("No valid tables capability: failed to rebuild it from the TAP schema: " + e2);
+				}
 			}
 		}
 		this.setNodekeyInJsonResponse("tables");		
@@ -356,7 +369,7 @@ public class TapNode  extends RootClass {
 		QueryModeChecker qmc = new QueryModeChecker(this.regMark.getFullUrl(), query, uploadQuery, this.baseDirectory);
 		this.supportSyncMode = qmc.supportSyncMode();
 		this.supportAsyncMode = qmc.supportAsyncMode();
-		
+
 		if( CHECKUPLOAD ) {
 			this.supportUpload = qmc.supportUpload();
 		} else {
@@ -381,12 +394,12 @@ public class TapNode  extends RootClass {
 		}
 		for( int i=0 ; i<jsa.size() ; i++) {
 			JSONArray tbls = (JSONArray) ((JSONObject)(jsa.get(i))).get("tables");
-//			if( tbls.size() == 0 ){
-//				throw new TapException("No table published in node " + this.regMark.getNodeKey());
-//			}
+			//			if( tbls.size() == 0 ){
+			//				throw new TapException("No table published in node " + this.regMark.getNodeKey());
+			//			}
 			if( tbls.size() != 0 ){
 				for( int t=0 ; t<jsa.size() ; t++) {			
-				return  (String) ((JSONObject)(tbls.get(i))).get("name");
+					return  (String) ((JSONObject)(tbls.get(i))).get("name");
 				}
 			}
 		}
@@ -456,6 +469,18 @@ public class TapNode  extends RootClass {
 	private void translateServiceReponse(String service, NameSpaceDefinition namespace) throws Exception {
 		XmlToJson.translate(this.baseDirectory, service, namespace);
 	}
+	/**
+	 * Translate the service response in JSON by using the style sheet .
+	 * Rename the output as service.json
+	 * @param service     either availability, capabilities or tables
+	 * @param style
+	 * @param namespace   Namespace t be used by XSLT
+	 * @throws Exception  If something goes wrong
+	 */
+	private void translateServiceReponse(String service, String style,  NameSpaceDefinition namespace) throws Exception {
+		XmlToJson.translate(this.baseDirectory, service, style, namespace);
+		new File(this.baseDirectory + "/" + style + ".json").renameTo(new File(this.baseDirectory + "/" + service + ".json"));
+	}
 
 	/**
 	 * Write the node key in JSON file if ther is a filed with "NODEKEY" as value.
@@ -470,7 +495,7 @@ public class TapNode  extends RootClass {
 		while( s.hasNextLine() ) {
 			fw.println(s.nextLine().replaceAll("NODEKEY", this.regMark.getNodeKey())
 					.replaceAll("NODEURL", this.regMark.getAbsoluteURL(null))
-			);
+					);
 		}
 		s.close();
 		fw.close();
@@ -488,7 +513,7 @@ public class TapNode  extends RootClass {
 		while( s.hasNextLine() ) {
 			fw.println(s.nextLine().replaceAll("NODEASYNC", Boolean.toString(this.supportAsyncMode))
 					.replaceAll("NODEUPLOAD", Boolean.toString(this.supportUpload()))
-			);
+					);
 		}
 		s.close();
 		fw.close();
@@ -513,7 +538,7 @@ public class TapNode  extends RootClass {
 		 * If there is no attribute in the JSON table description, the service delivers it likley table by table
 		 */
 		if( !isThereJsonTableDesc(tableName) ) {
-			logger.debug("No colmuns found in " + tableFileName + ": make a per table query");
+			logger.debug("No column found in " + tableFileName + ": make a per table query");
 			File fn = new File(productName + ".xml");
 			String noSchemaName = tableName;
 			int pos = noSchemaName.indexOf('.');
@@ -565,7 +590,7 @@ public class TapNode  extends RootClass {
 		 * If there is no attribute in the JSON table description, the service delivers it likley table by table
 		 */
 		if( !isThereJsonTableAtt(tableName) ) {
-			logger.debug("No colmuns found in " + tableFileName + ": make a per table query");
+			logger.debug("No column found in " + tableFileName + ": make a per table query");
 			File fn = new File(productName  +  ".xml");
 			String noSchemaName = tableName;
 			int pos = noSchemaName.indexOf('.');

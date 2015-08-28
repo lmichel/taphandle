@@ -31,13 +31,16 @@ public class TapNodeTest  extends RootClass {
 		try {
 		rm = new RegistryMark("tapnodetest", "ivo://tapnodetest", args[0], "test", false, true);
 		tn = new TapNode(rm, "/tmp/meta");
-		tn.buildJsonTableAttributes("viz2.III/205/catalog");
+		tn.buildJsonTableDescription("PhotoObjDR7");
+		tn.buildJsonTableAttributes("PhotoObjDR7");
 		//tn.buildJsonTableAttributes("III/205/catalog");
 		} catch(Exception e) {
 			e.printStackTrace();
 		} finally {
 			System.out.println(rm.getNodeKey());
-			System.out.println(tn.supportUpload());
+			System.out.println("Sync   " + tn.supportSyncMode());
+			System.out.println("ASync  " + tn.supportAsyncMode());
+			System.out.println("Upload " + tn.supportUpload());
 			
 		}
 	}

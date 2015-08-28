@@ -40,8 +40,9 @@ public class GetTableAtt extends RootServlet implements Servlet {
 			return;
 		}
 		if( schema == null || schema.length() ==  0 ) {
-			reportJsonError(request, response, "gettableatt: no schema specified");
-			return;
+			schema = "";
+			//reportJsonError(request, response, "gettableatt: no schema specified");
+			//return;
 		}
 		// TAP duplicates the schema name in the table name
 		try {
@@ -50,7 +51,12 @@ public class GetTableAtt extends RootServlet implements Servlet {
 				reportJsonError(request, response, "Node " + node + " does not exist");
 				return;
 			}
-			String tbn = schema + "." + table;
+			String tbn;
+			if( schema.length() == 0 || table.startsWith(schema) || table.startsWith("\"" + schema)) {
+				tbn = table;
+			} else  {
+				tbn = schema + "." + table;
+			}
 			tn.buildJsonTableAttributes(tbn);
 			dumpJsonFile("/" + RootClass.WEB_NODEBASE_DIR + "/" + node + "/" + RootClass.vizierNameToFileName(tbn) + "_att.json", response);
 		} catch (Exception e) {
