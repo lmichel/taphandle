@@ -171,4 +171,7 @@ public abstract class JsonUtils {
 		return getParam(param, value, "");
 	}
 
+	public static void main(String[] args ) throws Exception{
+		System.out.println(getValues("/tmp/meta/asyncmodetest_status.json", "href").length);
+	}
 }

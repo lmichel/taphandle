@@ -96,13 +96,18 @@ public class QueryModeChecker extends RootClass {
 						, this.jobID
 						, this.statusFile
 						, this.cookie);
+				boolean resultFound =false;
 				for( String r: resultURLs) {
-					if( r.matches(".*\\.xml.*") ) {
+					//if( r.matches(".*\\.xml.*") ) {
+						resultFound = true;
 						TapAccess.getAsyncJobResultFile(r
 								,  this.workingDirectory
 								, "asyncmodetest.xml"
 								, this.cookie);
-					}
+					//}
+				}
+				if( !resultFound ){
+					throw new Exception("NO result URL in async job response");
 				}
 			} catch(Exception e) {
 				logger.warn(this.endpoint + " do not support queries in asynchronous mode");

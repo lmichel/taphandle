@@ -204,7 +204,7 @@ public class TapNode  extends RootClass {
 
 		this.testCapabilities() ;
 		/*
-		 * DO it again to add capability flags in tables.JSON
+		 * add capability flags in tables.JSON
 		 */
 		this.setCapabilityFlagsInJsonResponse();			
 
@@ -339,7 +339,6 @@ public class TapNode  extends RootClass {
 				this.translateServiceReponse("tables","tables_noschema", tablesNS);
 				this.getFirstTableName();
 			} catch (Exception e3) {
-
 				try {
 					logger.warn("No tables in tables.xml, Try to scan the TAP_SCHEMA");		
 					new TablesReconstructor(this.regMark.getAbsoluteURL(null), this.baseDirectory);
@@ -350,6 +349,7 @@ public class TapNode  extends RootClass {
 						logger.info("succeed");
 					}	
 				} catch (Exception e2) {
+					e2.printStackTrace();
 					throw new Exception("No valid tables capability: failed to rebuild it from the TAP schema: " + e2);
 				}
 			}

@@ -157,14 +157,17 @@ public class XmlToJson  extends RootClass {
 		String tableFileName = RootClass.vizierNameToFileName(tableName);
 		String filename = baseDir + "table.xsl";
 		Scanner s = new Scanner(new File(filename));
+		System.out.println("@@@@@@@@@@@ " + baseDir + tableFileName + ".xsl");
 		PrintWriter fw = new PrintWriter(new File( baseDir + tableFileName + ".xsl"));
 		while( s.hasNextLine() ) {
-			fw.println(s.nextLine().replaceAll("TABLENAME", tableName));
+			String b = s.nextLine();
+			String s2  = b.replaceAll("TABLENAME", tableName);
+			fw.println(s2);
 		}
 		s.close();
 		fw.close();
 		applyStyle(baseDir  + tablesFile + ".xml", baseDir + tableFileName + ".json", baseDir + tableFileName + ".xsl");
-		File out = new File(baseDir + tableFileName + "_att.json");
+		File out = new File(baseDir + tableFileName + ".json");
 		/*
 		 * If the translation failed, try with the no schema style (astrogrid)
 		 */
@@ -223,15 +226,18 @@ public class XmlToJson  extends RootClass {
 		String filename = baseDir + "table_att.xsl";
 		Scanner s = new Scanner(new File(filename));
 		String tableFileName = RootClass.vizierNameToFileName(tableName);
-		PrintWriter fw = new PrintWriter(new File( baseDir + tableFileName + "_att.xsl"));
+		String tablePrefix =  baseDir + tableFileName + "_att";
+		PrintWriter fw = new PrintWriter(new File( tablePrefix + ".xsl"));
+		String qs = tableName.replaceAll("\"", "");
 		while( s.hasNextLine() ) {
-			String s2 = s.nextLine().replaceAll("TABLENAME", tableName);
+			String b = s.nextLine();
+			String s2 = b.replaceAll("TABLENAME", qs);
 			fw.println(s2);
 		}
 		s.close();
 		fw.close();
-		applyStyle(baseDir  + tablesFile + ".xml", baseDir + tableFileName + "_att.json", baseDir + tableFileName + "_att.xsl");
-		File out = new File(baseDir + tableFileName + "_att.json");
+		applyStyle(baseDir  + tablesFile + ".xml", tablePrefix + ".json", tablePrefix + ".xsl");
+		File out = new File(tablePrefix + ".json");
 		/*
 		 * If the translation failed, try with the no schema style (astrogrid)
 		 */
@@ -240,14 +246,14 @@ public class XmlToJson  extends RootClass {
 			setVosiNS(baseDir, "table_att_noschema", nsDefinition);
 			String styleName = baseDir + "table_att_noschema.xsl";
 			s = new Scanner(new File(styleName));
-			fw = new PrintWriter(new File( baseDir + tableFileName + "_att.xsl"));
+			fw = new PrintWriter(new File( tablePrefix + ".xsl"));
 			while( s.hasNextLine() ) {
-				String s2 = s.nextLine().replaceAll("TABLENAME", tableName);
+				String s2 = s.nextLine().replaceAll("TABLENAME", qs);
 				fw.println(s2);
 			}
 			s.close();
 			fw.close();
-			applyStyle(baseDir  + tablesFile + ".xml", baseDir + tableFileName + "_att.json", baseDir + tableFileName + "_att.xsl");
+			applyStyle(baseDir  + tablesFile + ".xml", tablePrefix + ".json", tablePrefix + ".xsl");
 		}
 	}
 
@@ -265,8 +271,9 @@ public class XmlToJson  extends RootClass {
 		Scanner s = new Scanner(new File(filename));
 		String tableFileName = RootClass.vizierNameToFileName(tableName);
 		PrintWriter fw = new PrintWriter(new File( baseDir + tableFileName + "_att.xsl"));
+		String qs = tableName.replace("\"", "");
 		while( s.hasNextLine() ) {
-			fw.println(s.nextLine().replaceAll("TABLENAME", tableName));
+			fw.println(s.nextLine().replaceAll("TABLENAME", qs));
 		}
 		s.close();
 		fw.close();

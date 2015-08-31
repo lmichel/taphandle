@@ -285,7 +285,9 @@ public class RootClass {
 			table = tableName;
 			schema = "";
 		}
-		if( table.matches("^[a-zA-Z0-9][a-zA-Z0-9_]*$" ) ){
+		if( table.startsWith("\"") ){
+			return schema + table;			
+		} else	if( table.matches("^[a-zA-Z0-9][a-zA-Z0-9_]*$" ) ){
 			return schema + table;
 		} else {
 			return schema + '"' + table +'"';
