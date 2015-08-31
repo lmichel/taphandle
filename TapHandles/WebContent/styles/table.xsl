@@ -20,7 +20,7 @@
 
 
 <xsl:template match="vosi:tableset | tableset">
-<xsl:for-each select="schema/table"><xsl:if test="name = 'TABLENAME'">
+<xsl:for-each select="schema/table"><xsl:if  test="name = 'TABLENAME' or ends-with('TABLENAME', name) or ends-with('&quot;TABLENAME&quot;', name)">
 {&quot;nodekey&quot;: &quot;NODEKEY&quot;,
 &quot;table&quot;: &quot;<xsl:value-of select="name" />&quot;,
 &quot;attributes&quot;: 

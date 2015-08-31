@@ -22,7 +22,10 @@
     &quot;description&quot;: &quot;<xsl:for-each select="description"><xsl:value-of select="json:encode-string(.)" /></xsl:for-each>&quot;,
     &quot;tables&quot;: [
     <xsl:for-each select="table"><xsl:if test="position() > 1">,</xsl:if>
+    {&quot;name&quot;: &quot;<xsl:for-each select="name"><xsl:value-of select="json:encode-string(.)" /></xsl:for-each>&quot;,
+    <!--  
         {&quot;name&quot;: &quot;<xsl:value-of select="name" />&quot;,
+        -->
          &quot;description&quot;: &quot;<xsl:for-each select="description"><xsl:value-of select="json:encode-string(.)" /></xsl:for-each>&quot;}</xsl:for-each>
     ]}
 </xsl:for-each>

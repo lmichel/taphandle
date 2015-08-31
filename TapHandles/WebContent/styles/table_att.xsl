@@ -25,11 +25,11 @@ Table name can be either tableName or schema.tableName
 but the variable TABLENAME is always given as schema.tableName 
 At the ends, we want  name = schema.tableName 
 -->
-<xsl:for-each select="schema/table"><xsl:if test="name = 'TABLENAME' or ends-with('TABLENAME', name)">
+<xsl:for-each select="schema/table"><xsl:if test="name = 'TABLENAME' or ends-with('TABLENAME', name) or ends-with('&quot;TABLENAME&quot;', name)" >
 
 {&quot;nodekey&quot;: &quot;NODEKEY&quot;,
 <!--  &quot;table&quot;: &quot;<xsl:value-of select="name" />&quot;, -->
-&quot;table&quot;: &quot;TABLENAME&quot;,
+&quot;table&quot;: &quot;<xsl:value-of select="json:encode-string(name)"/>&quot;,
 &quot;attributes&quot;: [
 
 <xsl:for-each select="column">
