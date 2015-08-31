@@ -42,7 +42,7 @@ function initFunctions () {
 		$(".planet-link").attr("href", np+"?url=http%3A//voparis-tap.obspm.fr/__system__/tap/run/tap/")
 		$(".heasarch-link").attr("href", np+"?url=http%3A//heasarc.gsfc.nasa.gov/xamin/vo/tap/")
 		$(".chandra-link").attr("href", np+"?url=http%3A//cda.harvard.edu/cxctap/")
-		$(".sdss-link").attr("href", np+"?url=http%3A//ia2-tap.oats.inaf.it:8080/wgetap/")
+		$(".sdss-link").attr("href", np+"?url=http://wfaudata.roe.ac.uk/sdssdr9-dsa/TAP/")
 		
 
 		// Define the height of the div knowing the banner take 70px and the query editor 330px
@@ -129,12 +129,12 @@ function initFunctions () {
 		var ins = $("input#node_selector");
 		ins.keypress(function(event) {
 			if (event.which == '13') {
-				var val = $('#node_selector').val();
+				var val = $('#node_selector').val().trim();
 				/*
 				 * Avoid to take a keyword as a service 
 				 */
 				if( val.startsWith("http"))
-					dataTreeView.fireNewNodeEvent($('#node_selector').val());
+					dataTreeView.fireNewNodeEvent(val);
 			}
 		});			
 		ins.one("click",function() {
