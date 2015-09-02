@@ -293,5 +293,22 @@ public class RootClass {
 			return schema + '"' + table +'"';
 		}
 	}
+	
+	/**
+	 * Return a string like schema.table avoiding schema to be duplicated
+	 * @param schema
+	 * @param table
+	 * @return
+	 */
+	public static String getTablePath(String schema, String table){
+		String retour;
+		if( schema.length() == 0 || table.startsWith(schema) || table.startsWith("\"" + schema)) {
+			retour = table;
+		} else  {
+			retour = schema + "." + table;
+		}
+		return retour;
+
+	}
 
 }
