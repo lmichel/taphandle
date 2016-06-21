@@ -243,7 +243,7 @@ public class TapAccess  extends RootClass {
 				, outputfile
 				, cookie
 				, false);
-		logger.debug("Result reveived, start JSON translation");
+		logger.debug("Result retrieved, start JSON translation");
 		XmlToJson.translateResultTable(outputfile, outputfile.replaceAll("xml", "json"));
 		return outputfile.replaceAll("xml", "json");
 	}

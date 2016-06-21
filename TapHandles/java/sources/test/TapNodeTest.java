@@ -31,7 +31,7 @@ public class TapNodeTest  extends RootClass {
 		try {
 		rm = new RegistryMark("tapnodetest", "ivo://tapnodetest", args[0], "test", false, true);
 		tn = new TapNode(rm, "/tmp/meta");
-		tn.buildJsonTableAttributes("viz2.III/205/catalog");
+		//tn.buildJsonTableAttributes("viz2.III/205/catalog");
 		//tn.buildJsonTableAttributes("III/205/catalog");
 		} catch(Exception e) {
 			e.printStackTrace();
