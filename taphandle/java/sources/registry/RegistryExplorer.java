@@ -36,8 +36,8 @@ public class RegistryExplorer extends RootClass {
 	static {
 		try {
 			offRegistryMarks.put("xcatdb"       , new RegistryMark("xcatdb", ""
-					, "http://xcatdb.u-strasbg.fr/3xmm/tap"
-					, "SSC interface of the XMM-Newton catalogue", true, true));
+					, "http://xcatdb.u-strasbg.fr/3xmmdr5/tap"
+					, "SSC interface of the 3XMM-Newton catalogue DR5", true, true));
 			offRegistryMarks.put("vizier"       , new RegistryMark("vizier", ""
 					, "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/"
 					, "CDS Vizier TAP query engine", true, true));
@@ -60,7 +60,7 @@ public class RegistryExplorer extends RootClass {
 					, "http://beta.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap"
 					, "Datalink Service Demonstrator", true, true));
 			offRegistryMarks.put("3xmm"       , new RegistryMark("3xmm", ""
-					, "http://xcatdb.u-strasbg.fr/3xmm/tap"
+					, "http://xcatdb.u-strasbg.fr/3xmmdr5/tap"
 					, "3rd XMM catalogue", true, true));
 		} catch (MalformedURLException e) {
 			logger.equals(e);

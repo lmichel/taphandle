@@ -2120,6 +2120,15 @@ a:hover {
 	color: #86C6E8;
     font-weight:bold;}
     
+.clkdatahelp {
+	color: #86C6E8;
+    font-weight:bold;}
+    
+:hover.clkdatahelp {
+	color: DimGray;
+    font-weight:bold;
+    cursor: pointer}
+    
 .datafield {
 	color: #5bc0de;
     font-weight:bold;
@@ -2241,6 +2250,38 @@ a.dl_samp {
 		no-repeat;
 	margin-right: 1px;
 }
+a.dl_aladin {
+	display: inline-block;
+	width: 0px;
+	overflow: visible;
+	padding: 9px 0px 9px 24px;
+	/* background: transparent url(../images/dl_ivoa.png) center left
+		no-repeat; */
+	background: transparent url(../icons/aladin_23.png) center left
+		no-repeat;
+	margin-right: 1px;
+}
+a:hover.dl_aladin  {	
+	filter: alpha(opacity = 50);
+	opacity: 0.5;
+}
+
+a.dl_viewer {
+	display: inline-block;
+	width: 0px;
+	overflow: visible;
+	padding: 9px 0px 9px 24px;
+	/* background: transparent url(../images/dl_ivoa.png) center left
+		no-repeat; */
+	background: transparent url(../icons/viewer_23.png) center left
+		no-repeat;
+	margin-right: 1px;
+}
+a:hover.dl_viewer  {	
+	filter: alpha(opacity = 50);
+	opacity: 0.5;
+}
+
 a.dlinfo  {	
 	overflow: visible;
 	padding: 8px 0 4px 28px;
@@ -2422,10 +2463,17 @@ div.ui-dialog {
     color: #FA5858;
 }
 
-.glyphicon-info-sign, .glyphicon-ok-sign, .glyphicon-file, .glyphicon-search {
+.glyphicon-info-sign, .glyphicon-ok-sign, .glyphicon-file, .glyphicon-search .fi-graph-trend{
     color: #5bc0de;
 }
-
+/*
+*
+*foundaion
+*/
+.fi-graph-trend{
+    color: #5bc0de;	
+	font-size: 18px;
+}
 .background-error, .kwConstraint .background-error {
 	background-color: pink !important;
 	margin-bottom: 2px;
@@ -3032,7 +3080,7 @@ a.accept {
 	margin-bottom: 10px;
 }
 
-.chapter {
+.chapter , .aa div.xaxisLabel{
 	font-size: medium !important;
 	padding: 1px !important;
 	font-weight: bold !important;

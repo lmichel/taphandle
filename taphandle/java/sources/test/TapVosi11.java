@@ -16,9 +16,9 @@ import resources.RootClass;
  * @author michel
  *
  */
-public class TapVizier  extends RootClass {
+public class TapVosi11  extends RootClass {
 	private static final String baseDir = System.getProperty("java.io.tmpdir") ;
-	private static final String baseUrlN = "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/";
+	private static final String baseUrlN = "http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap/";
 
 	public static void main(String[] args) throws Exception {
 		validWorkingDirectory(baseDir + "/nodebase");
@@ -44,6 +44,7 @@ public class TapVizier  extends RootClass {
 				if( cpt < 5 || cpt >= 5) {
 					System.out.println("    " + cpt + "/" + gen + " " + t.get("name"));
 					tn.buildJsonTableAttributes((String)t.get("name"));
+					System.exit(1);
 				}
 			}
 		}	

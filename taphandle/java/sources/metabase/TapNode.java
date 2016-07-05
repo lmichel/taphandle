@@ -3,6 +3,7 @@ package metabase;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.InputStream;
@@ -21,6 +22,8 @@ import java.util.regex.Pattern;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+
+import com.sun.media.jfxmedia.logging.Logger;
 
 import registry.RegistryMark;
 import resources.RootClass;
@@ -597,7 +600,13 @@ public class TapNode  extends RootClass {
 			if( pos > 0 ) {
 				noSchemaName = noSchemaName.substring(pos + 1);
 			}
-			String outputFilename = this.getServiceReponse("tables/" + noSchemaName, tablesNS);
+			String outputFilename = null;
+			try {
+				outputFilename = this.getServiceReponse("tables/" + noSchemaName, tablesNS);
+			} catch(FileNotFoundException e){
+				logger.debug("Vosi 1.1");
+				outputFilename = this.getServiceReponse("tables/" + tableName, tablesNS);
+			}
 			if( ! (new File(outputFilename)).renameTo(fn) ) {
 				throw new TapException("Cannot rename " + fn.getAbsolutePath() + " to " + outputFilename );
 			}
