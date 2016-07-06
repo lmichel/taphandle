@@ -198,7 +198,7 @@ public class TapNode  extends RootClass {
 	 * @throws Exception If one service does not respond properly
 	 */
 	private void checkServices() throws Exception {
-		this.checkAvailability();		
+
 		logger.debug("NS for availability " + availabilityNS);
 		this.checkCapability() ;
 		logger.debug("NS for capability " + capabilityNS.getNsName());
@@ -357,7 +357,8 @@ public class TapNode  extends RootClass {
 				}
 			}
 		}
-		this.setNodekeyInJsonResponse("tables");		
+		this.setNodekeyInJsonResponse("tables");	
+		this.setDataTreePathInTables();
 		this.supportTables = true;
 	}
 
@@ -378,7 +379,7 @@ public class TapNode  extends RootClass {
 		} else {
 			this.supportUpload = false;
 		}
-		if( !this.supportSyncMode && !this.supportSyncMode ){
+		if( !this.supportSyncMode && !this.supportAsyncMode ){
 			throw new TapException("No query mode supported (neither sync nor async)");
 		}
 	}
@@ -506,6 +507,34 @@ public class TapNode  extends RootClass {
 	}
 
 	/**
+	 * Insert into tables.json the fields pathname and tablename, both extracted from the full path. 
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+	private void setDataTreePathInTables() throws Exception{
+		String filename = this.baseDirectory  + "tables.json";
+        JSONParser parser = new JSONParser();
+        Object obj = parser.parse(new FileReader(filename));
+
+        JSONObject jsonObject = (JSONObject) obj;
+        JSONArray schemas = (JSONArray) jsonObject.get("schemas");
+        for( int s=0 ; s<schemas.size() ; s++){
+        	JSONObject schema = (JSONObject) schemas.get(s);
+            JSONArray tables = (JSONArray) schema.get("tables");
+            for( int t=0 ; t<tables.size() ; t++){
+            	JSONObject table = (JSONObject) tables.get(t);
+            	DataTreePath dtp = new DataTreePath((String)(table.get("name")), (String)(table.get("description")));
+            	table.put("tablename", dtp.getTableName());
+            	table.put("pathname", dtp.getPathName());
+             }
+        }
+    	FileWriter fw = new FileWriter(filename);
+    	fw.write(jsonObject.toJSONString());
+    	fw.close();
+
+
+	}
+	/**
 	 * @param service
 	 * @throws Exception
 	 */
@@ -581,10 +610,11 @@ public class TapNode  extends RootClass {
 	 * @param tableName  Name of the table
 	 * @throws Exception If something goes wrong
 	 */
+	@SuppressWarnings("unchecked")
 	synchronized public void buildJsonTableAttributes(String tableName) throws Exception {
 		String tableFileName = RootClass.vizierNameToFileName(tableName);
 		String productName = this.baseDirectory + tableFileName + "_att";
-		if( new File(tableFileName + ".json").exists()) {
+		if( new File(productName + ".json").exists()) {
 			return;
 		}
 		logger.debug("JSON file " + tableFileName + ".json not found: build it");
@@ -612,8 +642,21 @@ public class TapNode  extends RootClass {
 			}
 			XmlToJson.translateTableAttributes(this.baseDirectory, tableName, tablesNS);	
 			fn.delete();
-			(new File(this.baseDirectory + tableFileName  +  "_att.xsl")).delete();
+			(new File(productName  +  ".xsl")).delete();
 		}
+		/*
+		 * Insert pathname and tablename in json file
+		 * 
+		 */
+        JSONParser parser = new JSONParser();
+        Object obj = parser.parse(new FileReader(productName + ".json"));
+        JSONObject jsonObject = (JSONObject) obj;
+    	DataTreePath dtp = new DataTreePath((String)(jsonObject.get("table")), "");
+    	jsonObject.put("tablename", dtp.getTableName());
+    	jsonObject.put("pathname", dtp.getPathName());
+    	FileWriter fw = new FileWriter(productName + ".json");
+    	fw.write(jsonObject.toJSONString());
+    	fw.close();
 	}		
 
 	/**
