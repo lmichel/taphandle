@@ -6,6 +6,9 @@ package resources;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -142,15 +145,24 @@ public class RootClass {
 		try {
 			Properties prop = new Properties(); 
 			prop.load(RootClass.class.getClassLoader().getResourceAsStream("taphandle.properties"));
-			if( "true".equals(prop.getProperty("init.node")) ) {
+			String p = prop.getProperty("init.node");
+			if( "true".equals(p) ) {
 				noinit = false;
-			} 
-			if( "true".equals(prop.getProperty("upload.check")) ) {
+			} else if( "false".equals(p) ) {
+				noinit = true;
+			}
+			p = prop.getProperty("upload.check");
+			if( "true".equals(p) ) {
 				checkupload = true;
-			} 
-			if( "true".equals(prop.getProperty("include.join")) ) {
+			} else if( "false".equals(p) ) {
+				checkupload = false;
+			}
+			p = prop.getProperty("include.join");
+			if( "true".equals(p) ) {
 				includejoin = true;
-			} 
+			} else if( "false".equals(p) ) {
+				includejoin = false;
+			}
 		} 
 		catch (IOException ex) {
 			ex.printStackTrace();
@@ -248,20 +260,25 @@ public class RootClass {
 	}
 
 	/**
-	 * Convert a Vizier table name to something acceptable for a filenamz
+	 * Convert a Vizier table name to something acceptable for a filename.
+	 * remove surrouding quotes and apply an URL like encoding
 	 * @param vizierName
 	 * @return
+	 * @throws UnsupportedEncodingException 
 	 */
-	public static String vizierNameToFileName(String vizierName) {
-		return vizierName.replaceAll("/", "v_v");
+	public static String vizierNameToFileName(String vizierName) throws UnsupportedEncodingException {
+		return URLEncoder.encode(vizierName.replaceAll("\"",  ""), "UTF-8");
+		//return vizierName.replaceAll("/", "v_v");
 	}
 	/**
-	 * Convert a filename to the Vizier table table name it comes from
+	 * Convert a filename to the Vizier table name it is issued
 	 * @param fileName
 	 * @return
+	 * @throws UnsupportedEncodingException 
 	 */
-	public static String fileNameToVizierName(String fileName) {
-		return fileName.replaceAll("v_v", "/");
+	public static String fileNameToVizierName(String fileName) throws UnsupportedEncodingException {
+		return URLDecoder.decode(fileName, "UTF-8");
+		//return fileName.replaceAll("v_v", "/");
 	}
 
 	/**
