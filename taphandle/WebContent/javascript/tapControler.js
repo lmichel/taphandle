@@ -17,8 +17,8 @@ jQuery.extend({
 				controlRemoveJob: function(id) {
 					model.removeJob(id);
 				},
-				controlDisplayResult: function(jdataTreePath){
-					model.displayResult(jdataTreePath);
+				controlDisplayResult: function(dataTreePath){
+					model.displayResult(dataTreePath);
 				}
 		};
 		view.addListener(vlist);

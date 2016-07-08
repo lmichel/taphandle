@@ -13,11 +13,11 @@ jQuery.extend({
 		this.addListener = function(list){
 			listeners.push(list);
 		};
-		this.addJobResult = function(treepath, jobid) {
-			if (treepath.nodekey == undefined) {
-				var nodekey = treepath;
+		this.addJobResult = function(dataTreePath, jobid) {
+			if (dataTreePath.nodekey == undefined) {
+				var nodekey = dataTreePath;
 			} else {
-				var nodekey = treepath.nodekey;
+				var nodekey = dataTreePath.nodekey;
 			}			
 			var entry;
 			if( (entry = cartData[nodekey]) == undefined ) {
@@ -35,8 +35,8 @@ jQuery.extend({
 				cartData[nodekey].jobs[i] = {name: jobid, uri: jobid};			
 			}
 		};
-		this.removeJobResult = function(treepath, jobid) {
-			var nodekey = treepath.nodekey;
+		this.removeJobResult = function(dataTreePath, jobid) {
+			var nodekey = dataTreePath.nodekey;
 			var entry;
 			if( (entry = cartData[nodekey]) == undefined ) {
 				//Modalinfo.info("There is no data associated with node " + nodekey + " in the cart", "input Error");
@@ -55,12 +55,12 @@ jQuery.extend({
 			//	Modalinfo.info("Job " + nodekey + "." + jobid+ " not found in the cart", "input Error");
 			}			
 		};
-		this.addUrl = function(treepath, url) {
-			if (treepath.nodekey == undefined) {
-				var nodekey = treepath;
+		this.addUrl = function(dataTreePath, url) {
+			if (dataTreePath.nodekey == undefined) {
+				var nodekey = dataTreePath;
 			}
 			else {
-				var nodekey = treepath.nodekey;
+				var nodekey = dataTreePath.nodekey;
 			}
 			var entry;
 //			var ch  = url.split("/");
@@ -81,8 +81,8 @@ jQuery.extend({
 				cartData[nodekey].urls[i] = {name: name, uri: url};			
 			}			
 		};
-		this.removeUrl = function(treepath, url) {
-			var nodekey = treepath.nodekey;
+		this.removeUrl = function(dataTreePath, url) {
+			var nodekey = dataTreePath.nodekey;
 			var entry;
 			if( (entry = cartData[nodekey]) == undefined ) {
 				Modalinfo.info("There is no data associated with node " + nodekey + " in the cart", "input Error");
@@ -99,7 +99,6 @@ jQuery.extend({
 						return;
 					}
 				}
-				//Modalinfo.info("URL not found in from the cart", "input Error");
 			}						
 		};
 		this.cleanCart = function(tokenArray) {

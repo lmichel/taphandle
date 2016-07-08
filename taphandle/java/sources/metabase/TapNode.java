@@ -12,6 +12,7 @@ import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Scanner;
@@ -22,8 +23,6 @@ import java.util.regex.Pattern;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-
-import com.sun.media.jfxmedia.logging.Logger;
 
 import registry.RegistryMark;
 import resources.RootClass;
@@ -207,7 +206,7 @@ public class TapNode  extends RootClass {
 
 		this.testCapabilities() ;
 		/*
-		 * add capability flags in tables.JSON
+		 * add capability flags (UPLOAD ASYNC) and in tables.JSON
 		 */
 		this.setCapabilityFlagsInJsonResponse();			
 
@@ -418,19 +417,19 @@ public class TapNode  extends RootClass {
 	 */
 	private String getServiceReponse(String service, NameSpaceDefinition nsDefinition) throws Exception {
 		//Pattern pattern  = Pattern.compile("(?i)(?:.*(xmlns(?:\\:\\w+)?=\\\"http\\:\\/\\/www\\.ivoa\\.net\\/.*" + service + "[^\\\"]*\\\").*)");
-		Pattern pattern  = Pattern.compile(".*xmlns(?::\\w+)?=(\"[^\"]*(?i)(?:" + service + ")[^\"]*\").*");
+		Pattern NS_PATTERN  = Pattern.compile(".*xmlns(?::\\w+)?=(\"[^\"]*(?i)(?:" + service + ")[^\"]*\").*");
 		logger.debug("Connect " + this.regMark.getAbsoluteURL(null) + service);
 		URLConnection conn = TapAccess.getUrlConnection(new URL(this.regMark.getAbsoluteURL(null) + service));
 		InputStream is = conn.getInputStream();
 		BufferedReader in = new BufferedReader(new InputStreamReader(is));
 
 		String inputLine;
-		String outputFileName = this.baseDirectory + RootClass.vizierNameToFileName(service) + ".xml";
+		String outputFileName = this.baseDirectory +  URLEncoder.encode(service, "UTF-8") + ".xml";
 		BufferedWriter bfw = new BufferedWriter(new FileWriter(outputFileName));
 		boolean found = false;
 		while ((inputLine = in.readLine()) != null) {
 			if( !found ) {
-				Matcher m = pattern.matcher(inputLine);
+				Matcher m = NS_PATTERN.matcher(inputLine);
 				if (m.matches()) {				
 					nsDefinition.init("xmlns:vosi=" + m.group(1)) ;
 					found = true;
@@ -506,6 +505,8 @@ public class TapNode  extends RootClass {
 		(new File(filename + ".new")).renameTo(new File(filename));	
 	}
 
+
+
 	/**
 	 * Insert into tables.json the fields pathname and tablename, both extracted from the full path. 
 	 * @throws Exception
@@ -513,24 +514,23 @@ public class TapNode  extends RootClass {
 	@SuppressWarnings("unchecked")
 	private void setDataTreePathInTables() throws Exception{
 		String filename = this.baseDirectory  + "tables.json";
-        JSONParser parser = new JSONParser();
-        Object obj = parser.parse(new FileReader(filename));
+		JSONParser parser = new JSONParser();
+		Object obj = parser.parse(new FileReader(filename));
 
-        JSONObject jsonObject = (JSONObject) obj;
-        JSONArray schemas = (JSONArray) jsonObject.get("schemas");
-        for( int s=0 ; s<schemas.size() ; s++){
-        	JSONObject schema = (JSONObject) schemas.get(s);
-            JSONArray tables = (JSONArray) schema.get("tables");
-            for( int t=0 ; t<tables.size() ; t++){
-            	JSONObject table = (JSONObject) tables.get(t);
-            	DataTreePath dtp = new DataTreePath((String)(table.get("name")), (String)(table.get("description")));
-            	table.put("tablename", dtp.getTableName());
-            	table.put("pathname", dtp.getPathName());
-             }
-        }
-    	FileWriter fw = new FileWriter(filename);
-    	fw.write(jsonObject.toJSONString());
-    	fw.close();
+		JSONObject jsonObject = (JSONObject) obj;
+		JSONArray schemas = (JSONArray) jsonObject.get("schemas");
+		for( int s=0 ; s<schemas.size() ; s++){
+			JSONObject schema = (JSONObject) schemas.get(s);
+			JSONArray tables = (JSONArray) schema.get("tables");
+			for( int t=0 ; t<tables.size() ; t++){
+				JSONObject table = (JSONObject) tables.get(t);
+				DataTreePath dtp = new DataTreePath((String)(schema.get("name")), (String)(table.get("name")),(String)(table.get("description")));
+				table.put("dataTreePath", dtp.getJSONObject());
+			}
+		}
+		FileWriter fw = new FileWriter(filename);
+		fw.write(jsonObject.toJSONString());
+		fw.close();
 
 
 	}
@@ -555,50 +555,64 @@ public class TapNode  extends RootClass {
 	/**
 	 * Builds a JSON file describing the table tableName in a format 
 	 * comprehensible by JQuery datatable widget
-	 * @param tableName  Name of the table
+	 * @param dataTreePath  Data node descriptor
 	 * @throws Exception If something goes wrong
 	 */
-	public void buildJsonTableDescription(String tableName) throws Exception {
-		String tableFileName = RootClass.vizierNameToFileName(tableName);
+	public void buildJsonTableDescription(DataTreePath dataTreePath) throws Exception {
+		String tableFileName = dataTreePath.getEncodedFileName();
 		String productName = this.baseDirectory + tableFileName ;
 		if( new File(productName + ".json").exists()) {
 			return;
 		}
-		logger.debug("JSON file " + tableName + ".json not found: build it");
-		XmlToJson.translateTableMetaData(this.baseDirectory, "tables", tableName, tablesNS);            
+		System.out.println("@@@@@@@ " + dataTreePath);
+		logger.debug("JSON file " + dataTreePath.getTable() + ".json not found: build it");
+		XmlToJson.translateTableMetaData(this.baseDirectory, "tables", dataTreePath, tablesNS);            
 		/*
 		 * If there is no attribute in the JSON table description, the service delivers it likley table by table
 		 */
-		if( !isThereJsonTableDesc(tableName) ) {
+		if( !isThereJsonTableDesc(dataTreePath) ) {
 			logger.debug("No column found in " + tableFileName + ": make a per table query");
 			File fn = new File(productName + ".xml");
-			String noSchemaName = tableName;
-			int pos = noSchemaName.indexOf('.');
-			if( pos > 0 ) {
-				noSchemaName = noSchemaName.substring(pos + 1);
+//			String noSchemaName = dataTreePath.getTableName();
+//			int pos = noSchemaName.indexOf('.');
+//			
+//			if( pos > 0 ) {
+//				noSchemaName = noSchemaName.substring(pos + 1);
+//			}
+			String outputFilename = null;
+			try {
+				outputFilename = this.getServiceReponse("tables/" + dataTreePath.getTable(), tablesNS);
+				if( ! (new File(outputFilename)).renameTo(fn) ) {
+					throw new TapException("Cannot store columns of table  " + dataTreePath +" in file " + outputFilename);
+				}
+				XmlToJson.translateTableMetaData(this.baseDirectory, dataTreePath, tablesNS, "1.0");      
+
+			} catch(FileNotFoundException e){
+				logger.debug("Vosi 1.1");
+				outputFilename = this.getServiceReponse("tables/" + dataTreePath.geTableOrg(), tablesNS);
+				if( ! (new File(outputFilename)).renameTo(fn) ) {
+					throw new TapException("Cannot store columns of table  " + dataTreePath +" in file " + outputFilename);
+				}
+				XmlToJson.translateTableMetaData(this.baseDirectory, dataTreePath, tablesNS, "1.1");      
+
 			}
-			String outputFilename = this.getServiceReponse("tables/" + noSchemaName, tablesNS);
-			//this.getServiceReponse("columns?query=" + noSchemaName, tablesNS);
-			if( ! (new File(outputFilename)).renameTo(fn) ) {
-				throw new TapException("Cannot store columns of table  " + tableName +" in file " + outputFilename);
-			}
-			XmlToJson.translateTableMetaData(this.baseDirectory, tableName, tablesNS);      
-			fn.delete();
-			(new File(this.baseDirectory + tableName  +  ".xsl")).delete();
+			//fn.delete();
+			//(new File(this.baseDirectory + dataTreePath.getEncodedFileName()  +  ".xsl")).delete();
 		}
 
 		setNodekeyInJsonResponse(tableFileName);
+		setDataTreePathInJsonResponse(productName, dataTreePath);
 	}
 	/**
 	 * Return true if the JSON file describing the metadata of the table tableName is not empty of attributes.
 	 * If it is, the table comes likely from Vizier and a special query must be sent to get those column description
-	 * @param tableName
+	 * @param dataTreePath
 	 * @return
 	 * @throws Exception
 	 */
-	private boolean isThereJsonTableDesc(String tableName) throws Exception{
+	private boolean isThereJsonTableDesc(DataTreePath dataTreePath) throws Exception{
 		JSONParser parser = new JSONParser();
-		Object obj = parser.parse(new FileReader(this.baseDirectory + RootClass.vizierNameToFileName(tableName) + ".json"));
+		Object obj = parser.parse(new FileReader(this.baseDirectory + dataTreePath.getEncodedFileName() + ".json"));
 		JSONObject jsonObject = (JSONObject) ((JSONObject) obj).get("attributes");
 
 		return (((JSONArray) jsonObject.get("aaData")).size() > 0)? true: false;
@@ -607,68 +621,56 @@ public class TapNode  extends RootClass {
 	/**
 	 * Builds a JSON file describing the table tableName to setup
 	 * query form
-	 * @param tableName  Name of the table
+	 * @param dataTreePath  Descriptor of the data node
 	 * @throws Exception If something goes wrong
 	 */
 	@SuppressWarnings("unchecked")
-	synchronized public void buildJsonTableAttributes(String tableName) throws Exception {
-		String tableFileName = RootClass.vizierNameToFileName(tableName);
+	synchronized public void buildJsonTableAttributes(DataTreePath dataTreePath) throws Exception {
+
+		String tableFileName = dataTreePath.getEncodedFileName();
 		String productName = this.baseDirectory + tableFileName + "_att";
 		if( new File(productName + ".json").exists()) {
 			return;
 		}
 		logger.debug("JSON file " + tableFileName + ".json not found: build it");
-		XmlToJson.translateTableAttributes(this.baseDirectory, "tables", tableName, tablesNS);		
+		XmlToJson.translateTableAttributes(this.baseDirectory, "tables", dataTreePath, tablesNS);		
 		/*
-		 * If there is no attribute in the JSON table description, the service delivers it likley table by table
+		 * If there is no attribute in the JSON table description, the service delivers likely it  table by table
 		 */
-		if( !isThereJsonTableAtt(tableName) ) {
+		if( !isThereJsonTableAtt(dataTreePath) ) {
 			logger.debug("No column found in " + tableFileName + ": make a per table query");
 			File fn = new File(productName  +  ".xml");
-			String noSchemaName = tableName;
-			int pos = noSchemaName.indexOf('.');
-			if( pos > 0 ) {
-				noSchemaName = noSchemaName.substring(pos + 1);
-			}
 			String outputFilename = null;
 			try {
-				outputFilename = this.getServiceReponse("tables/" + noSchemaName, tablesNS);
+				outputFilename = this.getServiceReponse("tables/" + dataTreePath.getTable(), tablesNS);
 			} catch(FileNotFoundException e){
 				logger.debug("Vosi 1.1");
-				outputFilename = this.getServiceReponse("tables/" + tableName, tablesNS);
+				outputFilename = this.getServiceReponse("tables/" + dataTreePath.geTableOrg(), tablesNS);
 			}
 			if( ! (new File(outputFilename)).renameTo(fn) ) {
 				throw new TapException("Cannot rename " + fn.getAbsolutePath() + " to " + outputFilename );
 			}
-			XmlToJson.translateTableAttributes(this.baseDirectory, tableName, tablesNS);	
-			fn.delete();
-			(new File(productName  +  ".xsl")).delete();
+			XmlToJson.translateTableAttributes(this.baseDirectory, dataTreePath, tablesNS);	
+			//fn.delete();
+			//(new File(productName  +  ".xsl")).delete();
 		}
 		/*
 		 * Insert pathname and tablename in json file
 		 * 
 		 */
-        JSONParser parser = new JSONParser();
-        Object obj = parser.parse(new FileReader(productName + ".json"));
-        JSONObject jsonObject = (JSONObject) obj;
-    	DataTreePath dtp = new DataTreePath((String)(jsonObject.get("table")), "");
-    	jsonObject.put("tablename", dtp.getTableName());
-    	jsonObject.put("pathname", dtp.getPathName());
-    	FileWriter fw = new FileWriter(productName + ".json");
-    	fw.write(jsonObject.toJSONString());
-    	fw.close();
+		setDataTreePathInJsonResponse(productName, dataTreePath);
 	}		
 
 	/**
 	 * Return true if the JSON file describing the table tableName is not empty of attributes.
 	 * If it is, the table comes likely from Vizier and a special query must be sent to get those column description
-	 * @param tableName
+	 * @param dataTreepath descriptor of the data tree path (schema.table)
 	 * @return
 	 * @throws Exception
 	 */
-	private boolean isThereJsonTableAtt(String tableName) throws Exception{
+	private boolean isThereJsonTableAtt(DataTreePath dataTreepath) throws Exception{
 		JSONParser parser = new JSONParser();
-		String vizFilename =  RootClass.vizierNameToFileName(tableName) + "_att.json";
+		String vizFilename =  dataTreepath.getEncodedFileName() + "_att.json";
 		Object obj = parser.parse(new FileReader(this.baseDirectory + vizFilename));
 		JSONObject jsonObject = (JSONObject) obj;
 		return (((JSONArray) jsonObject.get("attributes")).size() > 0)? true: false;

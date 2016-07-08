@@ -23,11 +23,11 @@ jQuery.extend({
 		
 		var aborted = false;
 
-		this.fireAddJobResult = function(treepath, jobid) {
-			Processing.show("Result of job " + treepath + "." + jobid + " added to the cart");
+		this.fireAddJobResult = function(dataTreePath, jobid) {
+			Processing.show("Result of job " + dataTreePath + "." + jobid + " added to the cart");
 			aborted = false;
 			$.each(listeners, function(i){
-				listeners[i].controlAddJobResult(treepath, jobid);
+				listeners[i].controlAddJobResult(dataTreePath, jobid);
 			});
 			this.resetJobControl();
 			Processing.hide();

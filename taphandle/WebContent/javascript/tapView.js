@@ -18,14 +18,12 @@ jQuery.extend({
 		/*
 		 * Fire external events
 		 */
-		this.fireTreeNodeEvent = function(treepath, andsubmit){
-			adqlQueryView.fireSetTreePath(treepath);
+		this.fireTreeNodeEvent = function(dataTreePath, andsubmit){
+			adqlQueryView.fireSetTreePath(dataTreePath);
 			adqlQueryView.fireAddConstraint("tap", "limit", [getQLimit()]);
-			// set to generate errors
-			///adqlQueryView.fireAddConstraint("tap", "limit", ['sfsfsfsdfds']);
-			tapConstraintEditor.fireSetTreepath(treepath);
-			tapPosSelector.fireSetTreepath(treepath);
-			tapColumnSelector.fireSetTreepath(treepath, ((andsubmit)? this.fireSubmitQueryEvent: null));
+			tapConstraintEditor.fireSetTreepath(dataTreePath);
+			tapPosSelector.fireSetTreepath(dataTreePath);
+			tapColumnSelector.fireSetTreepath(dataTreePath, ((andsubmit)? this.fireSubmitQueryEvent: null));
 
 		};
 		this.fireSubmitQueryEvent = function(){
@@ -53,9 +51,9 @@ jQuery.extend({
 			});		
 		};
 
-		this.fireDisplayResult= function(jdataTreePath){
+		this.fireDisplayResult= function(dataTreePath){
 			$.each(listeners, function(i){
-				listeners[i].controlDisplayResult(jdataTreePath);
+				listeners[i].controlDisplayResult(dataTreePath);
 			});
 		};
 		this.fireFilterColumns = function(val) {

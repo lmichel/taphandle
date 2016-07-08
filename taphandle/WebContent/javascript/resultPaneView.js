@@ -184,9 +184,9 @@ jQuery.extend({
 				listeners[i].controlShowMeta();
 			});
 		};
-		this.fireShowMetaNode = function(treepath) {
+		this.fireShowMetaNode = function(dataTreePath) {
 			$.each(listeners, function(i) {
-				listeners[i].controlShowMetaNode(treepath);
+				listeners[i].controlShowMetaNode(dataTreePath);
 			});
 		};
 		this.fireShowSources = function(oid) {
@@ -271,7 +271,9 @@ jQuery.extend({
 
 
 			var title = "Columns of table <i>"
-				+ jsdata.table
+				+ jsdata.dataTreePath.schema
+				+ "."
+				+ jsdata.dataTreePath.table
 				+ "</i> of node <i>"
 				+ jsdata.nodekey 
 				+ "</i>";
@@ -309,14 +311,14 @@ jQuery.extend({
 			Modalinfo.center();
 		};
 
-		this.showTapResult = function(treepath, jid, jsdata, attributeHandlers) {
+		this.showTapResult = function(dataTreePath, jid, jsdata, attributeHandlers) {
 			var table = "<table cellpadding=\"0\" cellspacing=\"0\" border=\"1\"  id=\"datatable\" class=\"display\"></table>";
 			
-			var job = ( !treepath.jobid || treepath.jobid == "")? "": '&gt;'+ treepath.jobid;
+			var job = ( !dataTreePath.jobid || dataTreePath.jobid == "")? "": '&gt;'+ dataTreePath.jobid;
 			
 			$("#resultpane").prepend('<p id="title-table" class="pagetitlepath"></p>');
-			if (treepath.schema != undefined && treepath.table != undefined) {
-				$("#title-table").html('&nbsp;' + treepath.nodekey + '&gt;' + treepath.schema + '&gt;'+ treepath.table + job);
+			if (dataTreePath.schema != undefined && dataTreePath.table != undefined) {
+				$("#title-table").html('&nbsp;' + dataTreePath.nodekey + '&gt;' + dataTreePath.schema + '&gt;'+ dataTreePath.table + job);
 			}
 			
 			$("#resultpane").append(table);

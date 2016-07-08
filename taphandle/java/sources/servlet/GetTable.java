@@ -2,11 +2,13 @@ package servlet;
 
 import java.io.File;
 import java.io.IOException;
+
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import metabase.DataTreePath;
 import metabase.NodeBase;
 import metabase.TapNode;
 import resources.RootClass;
@@ -34,6 +36,7 @@ public class GetTable extends RootServlet implements Servlet {
 
 		String node = this.getParameter(request, "node");
 		String table = this.getParameter(request, "table");
+		String schema = this.getParameter(request, "schema");
 		if( node == null || node.length() ==  0 ) {
 			reportJsonError(request, response, "gettable: no node specified");
 			return;
@@ -42,14 +45,18 @@ public class GetTable extends RootServlet implements Servlet {
 			reportJsonError(request, response, "gettable: no table specified");
 			return;
 		}
+		if( schema == null  ) {
+			schema = "";
+		}
 		try {
 			TapNode tn;
 			if(  (tn = NodeBase.getNode(node)) == null ) {				
 				reportJsonError(request, response, "Node " + node + " does not exist");
 				return;
 			}
-			tn.buildJsonTableDescription(table);
-			dumpJsonFile("/" + RootClass.WEB_NODEBASE_DIR + "/" + node + "/" + RootClass.vizierNameToFileName(table) + ".json", response);
+			DataTreePath dataTreePath = new DataTreePath(schema, table, "");
+			tn.buildJsonTableDescription(dataTreePath);
+			dumpJsonFile("/" + RootClass.WEB_NODEBASE_DIR + "/" + node + "/" + dataTreePath.getEncodedFileName() + ".json", response);
 		} catch (Exception e) {
 			reportJsonError(request, response, e);
 			return;

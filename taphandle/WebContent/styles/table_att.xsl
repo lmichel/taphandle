@@ -27,6 +27,12 @@
 <!-- 		<xsl:sequence select="replace($string, '(\{|\}|\[|\]|\\|&quot;|\\n)', '\\$1')"/> -->	
         <xsl:sequence select="replace($string, '(\\|&quot;|\\n)', '\\$1')"/>	
     </xsl:function>
+    
+	<xsl:function name="json:remove-quotes" as="xs:string">
+		<xsl:param name="string" as="xs:string?"/>
+<!-- 		<xsl:sequence select="replace($string, '(\{|\}|\[|\]|\\|&quot;|\\n)', '\\$1')"/> -->	
+        <xsl:sequence select="replace($string, '&quot;', '')"/>	
+    </xsl:function>
 	
 
 
@@ -36,7 +42,7 @@ but the variable TABLENAME is always given as schema.tableName
 At the ends, we want  name = schema.tableName 
 -->
 <xsl:template match="table | vosi:table">
-<xsl:for-each select=".[name = 'TABLENAME' or ends-with('TABLENAME', name) or ends-with('&quot;TABLENAME&quot;', name)]"><!-- xsl:if test="name = 'TABLENAME' or ends-with('TABLENAME', name) or ends-with('&quot;TABLENAME&quot;', name)" -->
+<xsl:for-each select=".[name = 'TABLENAME' or ends-with(name, 'TABLENAME') or ends-with(name, '&quot;TABLENAME&quot;')]"><!-- xsl:if test="name = 'TABLENAME' or ends-with('TABLENAME', name) or ends-with('&quot;TABLENAME&quot;', name)" -->
 {&quot;nodekey&quot;: &quot;NODEKEY&quot;,
 <!--  &quot;table&quot;: &quot;<xsl:value-of select="name" />&quot;, -->
 &quot;table&quot;: &quot;<xsl:value-of select="json:encode-string(name)"/>&quot;,
@@ -44,9 +50,9 @@ At the ends, we want  name = schema.tableName
 
 <xsl:for-each select="column">
 <xsl:if test="position() > 1">,</xsl:if>
-{&quot;nameattr&quot;: &quot;<xsl:value-of select="json:encode-string(name)"/>&quot;,
- &quot;nameorg&quot;: &quot;<xsl:value-of select="json:encode-string(name)"/>&quot;,
- &quot;unit&quot;: &quot;<xsl:value-of select="json:encode-string(unit)"/>&quot;,
+{&quot;nameattr&quot;: &quot;<xsl:value-of select="json:remove-quotes(name)"/>&quot;,
+ &quot;nameorg&quot;: &quot;<xsl:value-of select="json:remove-quotes(name)"/>&quot;,
+ &quot;unit&quot;: &quot;<xsl:value-of select="json:remove-quotes(unit)"/>&quot;,
  &quot;ucd&quot;: &quot;<xsl:value-of select="ucd" />&quot;,
  &quot;utype&quot;: &quot;<xsl:value-of select="utype" />&quot;,
  &quot;type&quot;: &quot;<xsl:value-of select="dataType" /><xsl:if test="dataType[@arraysize]">(<xsl:value-of select="dataType/@arraysize" />)</xsl:if>&quot;,

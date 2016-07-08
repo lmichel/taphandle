@@ -23,6 +23,8 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
+import metabase.DataTreePath;
+import metabase.TapNode;
 import net.sf.saxon.lib.FeatureKeys;
 
 import org.json.simple.JSONArray;
@@ -152,16 +154,16 @@ public class XmlToJson  extends RootClass {
 	 * @param nsDefinition Name space to use
 	 * @throws Exception If something goes wrong
 	 */
-	public static void translateTableMetaData(String baseDir , String tablesFile, String tableName, NameSpaceDefinition nsDefinition) throws Exception {
-		setVosiNS(baseDir, "table", nsDefinition);
-		String tableFileName = RootClass.vizierNameToFileName(tableName);
-		String filename = baseDir + "table.xsl";
+	public static void translateTableMetaData(String baseDir , String tablesFile, DataTreePath dataTreePath, NameSpaceDefinition nsDefinition) throws Exception {
+		setVosiNS(baseDir, "table1.0", nsDefinition);
+		String tableFileName = dataTreePath.getEncodedFileName();
+		String filename = baseDir + "table1.0.xsl";
 		Scanner s = new Scanner(new File(filename));
-		System.out.println("@@@@@@@@@@@ " + baseDir + tableFileName + ".xsl");
+		System.out.println("@@@@@@@@@@@ " + tableFileName + ".xsl " + dataTreePath);
 		PrintWriter fw = new PrintWriter(new File( baseDir + tableFileName + ".xsl"));
 		while( s.hasNextLine() ) {
 			String b = s.nextLine();
-			String s2  = b.replaceAll("TABLENAME", tableName);
+			String s2  = b.replaceAll("TABLENAME", dataTreePath.getTable());
 			fw.println(s2);
 		}
 		s.close();
@@ -178,7 +180,7 @@ public class XmlToJson  extends RootClass {
 			s = new Scanner(new File(styleName));
 			fw = new PrintWriter(new File( baseDir + tableFileName + ".xsl"));
 			while( s.hasNextLine() ) {
-				String s2 = s.nextLine().replaceAll("TABLENAME", tableName);
+				String s2 = s.nextLine().replaceAll("TABLENAME", dataTreePath.getTable());
 				fw.println(s2);
 			}
 			s.close();
@@ -193,18 +195,19 @@ public class XmlToJson  extends RootClass {
 	 * comprehensible by JQuery datatable widget
 	 * The XML table description is supposed to be in a file names  tableName.xml
 	 * @param baseDir      Working directory
-	 * @param tableName  Name of the table
+	 * @param dataTreePath  Descriptor of tyhe data node
 	 * @param nsDefinition Name space to use
+	 * @param vosiLevel    1.0: format similar to /tables but with just one table, 1.1 see VOSI 1.1
 	 * @throws Exception If something goes wrong
 	 */
-	public static void translateTableMetaData(String baseDir , String tableName, NameSpaceDefinition nsDefinition) throws Exception {
-		setVosiNS(baseDir, "table", nsDefinition);
-		String filename = baseDir + "table.xsl";
-		String tableFileName = RootClass.vizierNameToFileName(tableName);
+	public static void translateTableMetaData(String baseDir , DataTreePath dataTreePath, NameSpaceDefinition nsDefinition, String vosiLevel) throws Exception {
+		setVosiNS(baseDir, "table" + vosiLevel, nsDefinition);
+		String filename = baseDir + "table" + vosiLevel + ".xsl";
+		String tableFileName = dataTreePath.getEncodedFileName();
 		Scanner s = new Scanner(new File(filename));
 		PrintWriter fw = new PrintWriter(new File( baseDir + tableFileName + ".xsl"));
 		while( s.hasNextLine() ) {
-			fw.println(s.nextLine().replaceAll("TABLENAME", tableName));
+			fw.println(s.nextLine().replaceAll("TABLENAME", dataTreePath.getTable()));
 		}
 		s.close();
 		fw.close();
@@ -217,18 +220,18 @@ public class XmlToJson  extends RootClass {
 	 * If the regular styme fails, we try the noschema style of the Astrogrid nodes
 	 * @param baseDir      Working directory
 	 * @param tablesFile  Name of the file containing all table metadata
-	 * @param tableName  Name of the table
+	 * @param dataTreePath  descriptor of the data tree path (schema.table)
 	 * @param nsDefinition Name space to use
 	 * @throws Exception If something goes wrong
 	 */
-	public static void translateTableAttributes(String baseDir, String tablesFile, String tableName, NameSpaceDefinition nsDefinition) throws Exception {
+	public static void translateTableAttributes(String baseDir, String tablesFile, DataTreePath dataTreePath, NameSpaceDefinition nsDefinition) throws Exception {
 		setVosiNS(baseDir, "table_att", nsDefinition);
 		String filename = baseDir + "table_att.xsl";
 		Scanner s = new Scanner(new File(filename));
-		String tableFileName = RootClass.vizierNameToFileName(tableName);
+		String tableFileName = dataTreePath.getEncodedFileName();
 		String tablePrefix =  baseDir + tableFileName + "_att";
 		PrintWriter fw = new PrintWriter(new File( tablePrefix + ".xsl"));
-		String qs = tableName.replaceAll("\"", "");
+		String qs = dataTreePath.getTable();
 		while( s.hasNextLine() ) {
 			String b = s.nextLine();
 			String s2 = b.replaceAll("TABLENAME", qs);
@@ -261,17 +264,17 @@ public class XmlToJson  extends RootClass {
 	 * Builds a JSON file describing the table tableName to setup query form.
 	 * The XML table description is supposed to be in a file names  tableName_att.xml
 	 * @param baseDir      Working directory
-	 * @param tableName  Name of the table
+	 * @param dataTreePath  descriptor of the data tree path (schema.table)
 	 * @param nsDefinition Name space to use
 	 * @throws Exception If something goes wrong
 	 */
-	public static void translateTableAttributes(String baseDir , String tableName, NameSpaceDefinition nsDefinition) throws Exception {
+	public static void translateTableAttributes(String baseDir , DataTreePath dataTreePath, NameSpaceDefinition nsDefinition) throws Exception {
 		setVosiNS(baseDir, "table_att", nsDefinition);
 		String filename = baseDir + "table_att.xsl";
 		Scanner s = new Scanner(new File(filename));
-		String tableFileName = RootClass.vizierNameToFileName(tableName);
+		String tableFileName = dataTreePath.getEncodedFileName();
 		PrintWriter fw = new PrintWriter(new File( baseDir + tableFileName + "_att.xsl"));
-		String qs = tableName.replace("\"", "");
+		String qs = dataTreePath.getTable();
 		while( s.hasNextLine() ) {
 			fw.println(s.nextLine().replaceAll("TABLENAME", qs));
 		}
@@ -443,11 +446,13 @@ public class XmlToJson  extends RootClass {
 				for( JSONObject target:targets) {
 					jsa.add(target);
 				}
-				String file = 	outputDir + File.separator + RootClass.vizierNameToFileName(source_table) + "_joinkeys.json"	;
+				DataTreePath dataTreePath = new DataTreePath(source_table);
+				String file = 	outputDir + File.separator + dataTreePath.getEncodedFileName() + "_joinkeys"	;
 			//	logger.info("Write joinkey file " + file);
-				FileWriter fw = new FileWriter(file);
+				FileWriter fw = new FileWriter(file+ ".json");
 				fw.write(jso.toJSONString());
-				fw.close();				
+				fw.close();	
+				TapNode.setDataTreePathInJsonResponse(file, dataTreePath);
 			}
 			/*
 			 * If an error occurs while StartTable building, we suppose that the VO table contains 

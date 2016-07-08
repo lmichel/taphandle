@@ -11,8 +11,8 @@ jQuery.extend({
 				controlShowMeta: function(){
 					model.processShowMeta();
 				},
-				controlShowMetaNode: function(treepath){
-					model.processShowMetaNode(treepath);
+				controlShowMetaNode: function(dataTreePath){
+					model.processShowMetaNode(dataTreePath);
 				},
 				controlDownloadVOTable: function(){
 					model.downloadVOTable();				

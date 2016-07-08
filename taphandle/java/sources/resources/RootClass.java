@@ -5,6 +5,8 @@ package resources;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -13,7 +15,11 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import metabase.DataTreePath;
+
 import org.apache.log4j.Logger;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 import tapaccess.TapException;
 
@@ -259,27 +265,27 @@ public class RootClass {
 		}		
 	}
 
-	/**
-	 * Convert a Vizier table name to something acceptable for a filename.
-	 * remove surrouding quotes and apply an URL like encoding
-	 * @param vizierName
-	 * @return
-	 * @throws UnsupportedEncodingException 
-	 */
-	public static String vizierNameToFileName(String vizierName) throws UnsupportedEncodingException {
-		return URLEncoder.encode(vizierName.replaceAll("\"",  ""), "UTF-8");
-		//return vizierName.replaceAll("/", "v_v");
-	}
-	/**
-	 * Convert a filename to the Vizier table name it is issued
-	 * @param fileName
-	 * @return
-	 * @throws UnsupportedEncodingException 
-	 */
-	public static String fileNameToVizierName(String fileName) throws UnsupportedEncodingException {
-		return URLDecoder.decode(fileName, "UTF-8");
-		//return fileName.replaceAll("v_v", "/");
-	}
+//	/**
+//	 * Convert a Vizier table name to something acceptable for a filename.
+//	 * remove surrouding quotes and apply an URL like encoding
+//	 * @param vizierName
+//	 * @return
+//	 * @throws UnsupportedEncodingException 
+//	 */
+//	public static String vizierNameToFileName(String vizierName) throws UnsupportedEncodingException {
+//		return URLEncoder.encode(vizierName.replaceAll("\"",  ""), "UTF-8");
+//		//return vizierName.replaceAll("/", "v_v");
+//	}
+//	/**
+//	 * Convert a filename to the Vizier table name it is issued
+//	 * @param fileName
+//	 * @return
+//	 * @throws UnsupportedEncodingException 
+//	 */
+//	public static String fileNameToVizierName(String fileName) throws UnsupportedEncodingException {
+//		return URLDecoder.decode(fileName, "UTF-8");
+//		//return fileName.replaceAll("v_v", "/");
+//	}
 
 	/**
 	 * Quote tableName is required (used for test query)
@@ -312,20 +318,22 @@ public class RootClass {
 	}
 	
 	/**
-	 * Return a string like schema.table avoiding schema to be duplicated
-	 * @param schema
-	 * @param table
-	 * @return
+	 * Insert the datatreepath in the JSON file named productName.json
+	 * @param productName
+	 * @param dataTreePath
+	 * @throws Exception
 	 */
-	public static String getTablePath(String schema, String table){
-		String retour;
-		if( schema.length() == 0 || table.startsWith(schema) || table.startsWith("\"" + schema)) {
-			retour = table;
-		} else  {
-			retour = schema + "." + table;
-		}
-		return retour;
-
+	@SuppressWarnings("unchecked")
+	public	static void setDataTreePathInJsonResponse(String productName, DataTreePath dataTreePath) throws Exception {
+		JSONParser parser = new JSONParser();
+		FileReader fr = new FileReader(productName + ".json");
+		Object obj = parser.parse(fr);
+		JSONObject jsonObject = (JSONObject) obj;
+		jsonObject.put("dataTreePath", dataTreePath.getJSONObject());
+		FileWriter fw = new FileWriter(productName + ".json");
+		fw.write(jsonObject.toJSONString());
+		fw.close();   
+		fr.close();
 	}
 
 }

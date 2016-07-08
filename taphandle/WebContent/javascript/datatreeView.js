@@ -8,7 +8,7 @@ function DataTreeView() {
 	 * Metadata of the data files referenced in the Goodies node
 	 */
 	this.goodies = new Array();
-	this.treePath = null;
+	this.dataTreePath = null;
 	this.capabilities = null;
 	this.info = null;
 }
@@ -138,7 +138,7 @@ DataTreeView.prototype = {
 				if( i > MAX_SCHEMA ) {
 					trunc[trunc.length] = schemaName;
 				} else {
-					console.log("SCEHEA " + i);
+					console.log("SCHEMA" + i);
 
 					if(schemaName.match(/TAP_SCHEMA/i) ) {
 						icon = "images/Redcube2.png";
@@ -188,24 +188,23 @@ DataTreeView.prototype = {
 						}
 						description += "\n Double click or drag and drop to display it"
 
-						//Processing.show("Inserting table " + id_table + " in the TAP nodes");
 						$("div#treedisp").jstree("create_node"
 								, root
 								, false
-								, {"data"  : {"icon": "images/SQLTable2.png", "attr":{"id": id_table, "title": description, "class":"icon-table"}, "title" : table.name},
+								, {"data"  : {"icon": "images/SQLTable2.png",
+									          "attr":{"id": id_table, "title": description, "class":"icon-table"}, 
+									          "title" : table.dataTreePath.table},
 									"state": "closed",
-									"attr" : {"id": id_table}
+									"attr" : {"id": id_table, "dataTreePath": JSON.stringify(table.dataTreePath)}
 								}
 								,false
 								,true);   
-
 						if( (nb_tables++) > MAX_TABLE_PER_SCHEMA ) {
-
-							//trunc[trunc.length] = schema.name;
 							break;
 						}
+
 					}
-					}
+				}
 			}
 			$( "div#treedisp").jstree('close_all', -1);	
 			var msg = "";
@@ -222,16 +221,16 @@ DataTreeView.prototype = {
 			$("div#treedisp").find("li").each(function() {
 				if ($(this).attr("id") != undefined && $(this).find(".metadata").length == 0) {
 					var splited = $(this).attr("id").split(';');
-					if (splited.length >= 3) {
+
+					if( $(this).attr("dataTreePath") != undefined){
+						var dataTreePath = jQuery.parseJSON($(this).attr("dataTreePath"));
 						$(this).find("ins:first").after("<img class='metadata' src='images/metadata.png' title='Show metadata (Does not work with Vizier)'/>");
 						$(this).find("ins:first").next("img").click(function() {
-							var parsedTreePath = splited[2].getTreepath();
-							var treePath = {nodekey: splited[0]
-							, schema: splited[1]
-							, tableorg: splited[2]
-							, table: parsedTreePath.table};
-
-							resultPaneView.fireShowMetaNode(treePath);
+							/*
+							 * Add the node key to the datadataTreePath provided by the server and atached to the node
+							 */
+							dataTreePath.nodekey = splited[0];
+							resultPaneView.fireShowMetaNode(dataTreePath);
 						});
 
 						$(this).find("ins:first").click(function() {
@@ -247,9 +246,9 @@ DataTreeView.prototype = {
 			Processing.hide();
 		},
 
-		fireTreeNodeEvent:function(dataTreePath, andsubmit) {
-			ViewState.fireDoubleClickOK(dataTreePath);
-			tapView.fireTreeNodeEvent(dataTreePath, andsubmit);	
+		fireTreeNodeEvent:function(datadataTreePath, andsubmit) {
+			ViewState.fireDoubleClickOK(datadataTreePath);
+			tapView.fireTreeNodeEvent(datadataTreePath, andsubmit);	
 		},
 		/**
 		 * jsdata: {nodekey: ... , table: ...}
@@ -344,24 +343,24 @@ DataTreeView.prototype = {
 				}
 			});
 		},
-		setTitlePath: function (treepath) {
-			Out.info("title " + treepath);
-			this.treePath = treepath;
+		setTitlePath: function (dataTreePath) {
+			Out.info("title " + dataTreePath);
+			this.dataTreePath = dataTreePath;
 			var tp = $('#titlepath');
 			var span = '<span style="font-style: normal; font-size: x-small ; background-color:';
 			tp.html('');
-			if( treepath) {
-				if ($("#info-"+treepath.nodekey).length == 0) {
-					$("#"+treepath.nodekey).after('<span id="info-'+treepath.nodekey+'"></span>');
+			if( dataTreePath) {
+				if ($("#info-"+dataTreePath.nodekey).length == 0) {
+					$("#"+dataTreePath.nodekey).after('<span id="info-'+dataTreePath.nodekey+'"></span>');
 
-					if (nodeFilterView.getFilter(treepath.nodekey) != null && nodeFilterView.getFilter(treepath.nodekey) != undefined) {
-						$("#info-"+treepath.nodekey).after('<span class="node-filter">'+nodeFilterView.getFilter(treepath.nodekey)+'</span>');
+					if (nodeFilterView.getFilter(dataTreePath.nodekey) != null && nodeFilterView.getFilter(dataTreePath.nodekey) != undefined) {
+						$("#info-"+dataTreePath.nodekey).after('<span class="node-filter">'+nodeFilterView.getFilter(dataTreePath.nodekey)+'</span>');
 					}
 				}
 				else {
-					$("#info-"+treepath.nodekey).html("");
+					$("#info-"+dataTreePath.nodekey).html("");
 				}
-				var span_info = $("#info-"+treepath.nodekey);
+				var span_info = $("#info-"+dataTreePath.nodekey);
 
 				span_info.append(span
 						+ ((this.capabilities.supportSyncQueries== true)?'lightgreen': 'salmon') 
@@ -380,7 +379,7 @@ DataTreeView.prototype = {
 		},
 		showNodeInfos: function () {
 			var report = {"info": this.info, "capabilities": this.capabilities};
-			Modalinfo.infoObject(report, "Node " + this.treePath.nodekey);
+			Modalinfo.infoObject(report, "Node " + this.dataTreePath.nodekey);
 		},
 		getBookmark: function() {
 			var np = window.location.href.split('?')[0].replace(/\/$/, "");

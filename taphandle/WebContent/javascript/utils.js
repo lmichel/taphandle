@@ -2,10 +2,10 @@
  * Various utility routines standing out of any MVC 
  */
 
-function setTitlePath(treepath) {
-	Out.info("title " + treepath);
-	var job = (treepath.jobid == null)? "": '&gt;'+ treepath.jobid;
-	$('#titlepath').html(treepath.nodekey + '&gt;' + treepath.schema + '&gt;'+ treepath.table+ job);
+function setTitlePath(dataTreePath) {
+	Out.info("title " + dataTreePath);
+	var job = (dataTreePath.jobid == null)? "": '&gt;'+ dataTreePath.jobid;
+	$('#titlepath').html(dataTreePath.nodekey + '&gt;' + dataTreePath.schema + '&gt;'+ dataTreePath.table + job);
 }
 
 function getQLimit() {

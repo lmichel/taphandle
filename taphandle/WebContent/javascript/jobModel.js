@@ -44,7 +44,7 @@ jQuery.extend({
 	            "phase": "EXECUTING"
 	        }
 	    },
-	    "treepath": {
+	    "dataTreePath": {
 	        "schema": "CATALOGUE",
 	        "nodekey": "saadatap",
 	        "table": "CatalogueEntry",
@@ -61,7 +61,7 @@ jQuery.extend({
 
 		var jobDescription=null;
 		var sessionId=null;
-		var treePath=null;
+		var dataTreePath=null;
 		var id =null  ;
 		var phase=null;
 		var query =null;
@@ -82,7 +82,7 @@ jQuery.extend({
 		this.setDescription = function(description){
 			jobDescription = description;
 			sessionId = description.session;
-			treePath  = description.treepath;
+			dataTreePath  = description.dataTreePath;
 			if( description.status != undefined && description.status.job != undefined ) {
 				id        = description.status.job.jobId;
 				phase     = description.status.job.phase;
@@ -118,7 +118,7 @@ jQuery.extend({
 		};	
 
 		this.updateStatus = function() {
-			$.getJSON("jobsummary", {jsessionid: sessionID, NODE: treePath.nodekey, JOBID: id}, function(jsondata) {
+			$.getJSON("jobsummary", {jsessionid: sessionID, NODE: dataTreePath.nodekey, JOBID: id}, function(jsondata) {
 				if( Processing.jsonError(jsondata, "Cannot get summary of job " + id) ) {
 					return;
 				}
@@ -133,7 +133,7 @@ jQuery.extend({
 			if( phase == 'COMPLETED' ) {
 				Processing.hide();
 				countDown = 0;
-				ViewState.fireSubmitOK(dataTreeView.treePath);
+				ViewState.fireSubmitOK(dataTreeView.dataTreePath);
 			} else  if( phase == 'EXECUTING' || phase == 'QUEUED' || phase == 'PENDED'){
 				if( countDown > 0 ) {
 					countDown --;
@@ -146,8 +146,7 @@ jQuery.extend({
 			} else  if( phase == 'ERROR'){
 				countDown = 0;
 				Processing.hide();				
-				//Modalinfo.error("\nMESSAGE:\n\n" + jobDescription.status.job.errorSummary.message, treePath.nodekey + ' job ' + treePath.jobid + " failed");
-				Modalinfo.error(jobDescription.status, + 'Job ' + treePath.jobid + " on node " + treePath.nodekey  + " failed");
+				Modalinfo.error(jobDescription.status, + 'Job ' + dataTreePath.jobid + " on node " + dataTreePath.nodekey  + " failed");
 			} else {
 				Processing.hide();
 			}
@@ -171,11 +170,11 @@ jQuery.extend({
 			} else if( action == 'Summary') {	
 				this.showSummary();				
 			} else if( action == 'Display Result') {		
-				ViewState.fireRecallOK(jobDescription.treepath, query);
+				ViewState.fireRecallOK(jobDescription.dataTreePath, query);
 			} else if( action == 'Download Result') {			
 				this.downloadVotable();
 			} else if( action == 'Add to Cart') {			
-				cartView.fireAddJobResult(jobDescription.treepath, id);
+				cartView.fireAddJobResult(jobDescription.dataTreePath, id);
 			} else if( action == 'Send to SAMP') {	
 				this.sampBroadcast();			
 			} else if( action == ' "Add to Goodies' ){
@@ -185,45 +184,43 @@ jQuery.extend({
 		};
 		this.displayResult = function() {
 			Processing.show("Get result of job JOB " + id);			
-			$.getJSON("jobresult" , {jsessionid: sessionId, NODE: treePath.nodekey, JOBID: id, FORMAT: 'json'}, function(jsondata) {
+			$.getJSON("jobresult" , {jsessionid: sessionId, NODE: dataTreePath.nodekey, JOBID: id, FORMAT: 'json'}, function(jsondata) {
 				Processing.hide();
 				if( Processing.jsonError(jsondata, "Cannot get result of job " + id) ) {				
-					ViewState.fireRecallKO(jobDescription.treepath, query);
+					ViewState.fireRecallKO(jobDescription.dataTreePath, query);
 					that.setOnError();
 					return;
 				} else {
 					//ViewState.fireRecallOK(jobDescription.treepath);
-					resultPaneView.showTapResult(treePath, id, jsondata, $('#' + id).data("AttributeHandlers") );
+					resultPaneView.showTapResult(dataTreePath, id, jsondata, $('#' + id).data("AttributeHandlers") );
 				}
 			});					
 		};		
 		this.showSummary = function() {
 			Modalinfo.infoObject(jobDescription);
-
-			//Modalinfo.infoObject(jobDescription.status.job, 'Status of ' + treePath.nodekey + ' job ' + treePath.jobid);
 		};
 
 		this.showQuery = function() {
 			var report  = "";
 			report =query.replace(/\\n/g,'\n            ')+ "\n";
-			Modalinfo.info(report, 'Query of job ' + treePath.nodekey + '.' + treePath.jobid);
+			Modalinfo.info(report, 'Query of job ' + dataTreePath.nodekey + '.' + dataTreePath.jobid);
 		};
 		this.downloadVotable= function() {
-			var url = 'jobresult?NODE=' + treePath.nodekey.trim() + '&JOBID=' + id.trim() + '&jsessionid='+ sessionID;
+			var url = 'jobresult?NODE=' + dataTreePath.nodekey.trim() + '&JOBID=' + id.trim() + '&jsessionid='+ sessionID;
 			PageLocation.changeLocation(url);
 		};
 		this.sampBroadcast= function() {
-			var url =  rootUrl + 'jobresult?NODE=' + treePath.nodekey.trim() + '&JOBID=' + id.trim() + '&jsessionid='+ sessionID;
+			var url =  rootUrl + 'jobresult?NODE=' + dataTreePath.nodekey.trim() + '&JOBID=' + id.trim() + '&jsessionid='+ sessionID;
 			WebSamp_mVc.fireSendVoreport(url, "table.load.votable", url);
 		};
 		this.removeJob= function(){
 			Out.info("remove job " + id);
 			countDown = 0;
 			tapView.fireRemoveJob( id);
-			cartView.fireRemoveJobResult(treePath, id);
+			cartView.fireRemoveJobResult(dataTreePath, id);
 			progressTimer =  false;			
 			$.post("killjob"
-					, {jsessionid: sessionID, NODE: treePath.nodekey, JOBID: id}
+					, {jsessionid: sessionID, NODE: dataTreePath.nodekey, JOBID: id}
 					, function(jsondata, status) {	
 						// Nothing is returned when everything is OK
 						if( jsondata == undefined || jsondata == null ) {

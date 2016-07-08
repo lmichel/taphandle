@@ -20,26 +20,26 @@ public class XmlToJsonTestVosi11 extends RootClass {
 	 * @throws Exception 
 	 */
 	public static void main(String[] args) throws Exception {
-		System.out.println("Processing VIZER");
+//		System.out.println("Processing VIZER");
 		String inputfile = "/tmp/metaviz/viz7.Jv_vA+Av_v552v_vA8v_vtablea1_att.xml";
 		String outputfile =  "/tmp/metaviz/iodb.json";
-		XmlToJson.applyStyle(inputfile
-				, outputfile
-				, "/home/michel/gitRepositories/taphandle/TapHandles/WebContent/styles/New_table_att.xsl");
-		BufferedReader br = new BufferedReader(new FileReader(outputfile));
-		System.out.println("  output: ");
+//		XmlToJson.applyStyle(inputfile
+//				, outputfile
+//				, "/home/michel/gitRepositories/taphandle/TapHandles/WebContent/styles/New_table_att.xsl");
+//		BufferedReader br = new BufferedReader(new FileReader(outputfile));
+//		System.out.println("  output: ");
 		String b;
-		while( (b = br.readLine()) != null ) {
-			System.out.println(b);
-		}
-		br.close();
+//		while( (b = br.readLine()) != null ) {
+//			System.out.println(b);
+//		}
+//		br.close();
 		System.out.println("Processing CADC");
-		inputfile = "/tmp/meta/caom2.Artifact_att.xml";
-		outputfile =  "/tmp/meta/iodb.json";
+		inputfile = "/home/michel/Desktop/cadc/tables.xml";
+		outputfile =  "/home/michel/Desktop/cadc/output.json";
 		XmlToJson.applyStyle(inputfile
 				, outputfile
-				, "/home/michel/gitRepositories/taphandle/TapHandles/WebContent/styles/New_table_att.xsl");
-		br = new BufferedReader(new FileReader(outputfile));
+				, "/home/michel/Desktop/cadc/caom2.Artifact_att.xsl");
+		BufferedReader br = new BufferedReader(new FileReader(outputfile));
 		System.out.println("  output: ");
 		while( (b = br.readLine()) != null ) {
 			System.out.println(b);

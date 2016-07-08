@@ -130,9 +130,9 @@ ValueFormator = function() {
 	};	
 	var addCartControl = function(columnName, tdNode, url, secureMode){
 		if( secureMode ){
-			tdNode.append("<a class='dl_securecart' title='Add to cart' href='#' onclick='cartView.fireRestrictedUrl(\"" + dataTreeView.treePath.nodekey + "\", \"" + url + "\"); return false;'/></a>");
+			tdNode.append("<a class='dl_securecart' title='Add to cart' href='#' onclick='cartView.fireRestrictedUrl(\"" + dataTreeView.dataTreePath.nodekey + "\", \"" + url + "\"); return false;'/></a>");
 		} else {
-			tdNode.append("<a class='dl_cart' title='Add to cart' href='#' onclick='cartView.fireAddUrl(\"" + dataTreeView.treePath.nodekey + "\", \"" + url + "\"); return false;'/></a>");
+			tdNode.append("<a class='dl_cart' title='Add to cart' href='#' onclick='cartView.fireAddUrl(\"" + dataTreeView.dataTreePath.nodekey + "\", \"" + url + "\"); return false;'/></a>");
 		}
 	};	
 	var addSampControl = function(columnName, tdNode, url, sampMType, fileName){

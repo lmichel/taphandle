@@ -1,11 +1,13 @@
 package servlet;
 
 import java.io.IOException;
+
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import metabase.DataTreePath;
 import metabase.NodeBase;
 import metabase.TapNode;
 import resources.RootClass;
@@ -25,13 +27,13 @@ public class GetTableAtt extends RootServlet implements Servlet {
 		printAccess(request, true);
 		response.setContentType("application/json; charset=UTF-8");
 
-		String node = this.getParameter(request, "node");
-		if( node == null ) {
-			node = this.getParameter(request, "nodekey");
-		}
+		String nodeKey = this.getParameter(request, "node");
 		String table = this.getParameter(request, "table");
 		String schema = this.getParameter(request, "schema");
-		if( node == null || node.length() ==  0 ) {
+		if( nodeKey == null ) {
+			nodeKey = this.getParameter(request, "nodekey");
+		}
+		if( nodeKey == null || nodeKey.length() ==  0 ) {
 			reportJsonError(request, response, "gettableatt: no node specified");
 			return;
 		}
@@ -41,19 +43,17 @@ public class GetTableAtt extends RootServlet implements Servlet {
 		}
 		if( schema == null || schema.length() ==  0 ) {
 			schema = "";
-			//reportJsonError(request, response, "gettableatt: no schema specified");
-			//return;
 		}
 		// TAP duplicates the schema name in the table name
 		try {
 			TapNode tn;
-			if(  (tn = NodeBase.getNode(node)) == null ) {				
-				reportJsonError(request, response, "Node " + node + " does not exist");
+			if(  (tn = NodeBase.getNode(nodeKey)) == null ) {				
+				reportJsonError(request, response, "Node " + nodeKey + " does not exist");
 				return;
 			}
-			String tbn = RootClass.getTablePath(schema, table);
-			tn.buildJsonTableAttributes(tbn);
-			dumpJsonFile("/" + RootClass.WEB_NODEBASE_DIR + "/" + node + "/" + RootClass.vizierNameToFileName(tbn) + "_att.json", response);
+			DataTreePath dataTreePath = new DataTreePath(schema, table, "");
+			tn.buildJsonTableAttributes(dataTreePath);
+			dumpJsonFile("/" + RootClass.WEB_NODEBASE_DIR + "/" + nodeKey + "/" + dataTreePath.getEncodedFileName() + "_att.json", response);
 		} catch (Exception e) {
 			reportJsonError(request, response, e);
 			return;

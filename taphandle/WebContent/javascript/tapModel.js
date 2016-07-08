@@ -31,7 +31,7 @@ jQuery.extend({
 
 
 		this.submitQuery = function(){
-			if( dataTreeView.treePath == null) {
+			if( dataTreeView.dataTreePath == null) {
 				Modalinfo.error("No data node selected: cannot process any query\nSelect the data table table you want to query in the 'Tap Nodes' panel\nand ClickClick on it");
 				return;
 			}
@@ -42,8 +42,8 @@ jQuery.extend({
 				, url:"runasyncjob"
 					, dataType: 'json'
 						, data: {jsessionid: sessionID
-							, NODE: dataTreeView.treePath.nodekey
-							, TREEPATH: dataTreeView.treePath.nodekey + ";" + dataTreeView.treePath.schema + ";" + dataTreeView.treePath.table
+							, NODE: dataTreeView.dataTreePath.nodekey
+							, TREEPATH: dataTreeView.dataTreePath.nodekey + ";" + dataTreeView.dataTreePath.schema + ";" + dataTreeView.dataTreePath.table
 							, REQUEST: "doQuery"
 								, LANG: 'ADQL'
 									, FORMAT: 'json'
@@ -64,15 +64,15 @@ jQuery.extend({
 					return;
 				} else {
 					Processing.show("Run job " +  jsondata.status.job.jobId);
-					var jobParam = {"treepath" : jQuery.extend({}, dataTreeView.treePath), "status": jsondata.status, "session": jsondata.session};
-					jobParam.treepath.jobid = jsondata.status.job.jobId;
+					var jobParam = {"dataTreePath" : jQuery.extend({}, dataTreeView.dataTreePath), "status": jsondata.status, "session": jsondata.session};
+					jobParam.dataTreePath.jobid = jsondata.status.job.jobId;
 					
 					jv = new $.JobView();
 					jm = new $.JobModel(jobParam);
 					new $.JobControler(jm, jv);
 					jobs[jsondata.status.job.jobId] = jv;
 					jv.fireInitForm('tapjobs', attributesHandlers);
-					ViewState.fireSubmitted(dataTreeView.treePath,jsondata.status.job.jobId  );
+					ViewState.fireSubmitted(dataTreeView.dataTreePath,jsondata.status.job.jobId  );
 					jv.fireCheckJobCompleted();
 				}
 			}

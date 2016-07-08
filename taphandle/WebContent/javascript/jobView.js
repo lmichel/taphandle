@@ -42,7 +42,7 @@ jQuery.extend({
 	            "phase": "EXECUTING"
 	        }
 	    },
-	    "treepath": {
+	    "dataTreePath": {
 	        "schema": "CATALOGUE",
 	        "nodekey": "saadatap",
 	        "table": "CatalogueEntry",
@@ -116,19 +116,18 @@ jQuery.extend({
 		};
 
 		this.initForm = function(jobDescription, actions, attributesHandlers){
-			Out.info("init job form " + JSON.stringify(jobDescription.treepath) + " "  + jobDescription.session);		
-//			var jtreePath = $.extend({}, treepath);
-//			jtreePath.jobid = id;
-			var nodekey  = jobDescription.treepath.nodekey;
+			Out.info("init job form " + JSON.stringify(jobDescription.dataTreePath) + " "  + jobDescription.session);		
+
+			var nodekey  = jobDescription.dataTreePath.nodekey;
 			var id       = jobDescription.status.job.jobId;
 			var phase    = jobDescription.status.job.phase;
 			$('#' + that.containerID).prepend("<div id=" + id + " style='float: none;'></div>");
 			$('#' + id).data("AttributeHandlers", attributesHandlers);
 			$('#' + id).html('');
-			//	$('#' + id).data('treepath', treepath);
+
 			$('#' + id).append('<span id=' + id + '_id>' + nodekey + '.' 
-					+ jobDescription.treepath.schema + '.' 
-					+ jobDescription.treepath.table + ': job ' + id + '</span>');
+					+ jobDescription.dataTreePath.schema + '.' 
+					+ jobDescription.dataTreePath.table + ': job ' + id + '</span>');
 			$('#' + id).append('&nbsp;<span id=' + id + '_phase class="' + phase.toLowerCase() + '">' + phase + '</span>');
 			$('#' + id).append('<select class="select-job" id=' + id + '_actions style="font-size: small;"></select>');
 			for( var i=0 ; i<actions.length ; i++ ) {
@@ -161,10 +160,6 @@ jQuery.extend({
 			for( var i=0 ; i<actions.length ; i++ ) {
 				actionMenu.append('<option value="' + actions[i] + '">' +  actions[i] + '</option>');
 			}
-//			if( phase == 'ERROR' ) {
-//				Processing.hide();
-//				Modalinfo.info("Job " + treepath.nodekey + ">"  + id + " failed. See the job summary to get more details.");
-//			}
 		};
 		
 		this.setSelected = function(select) {

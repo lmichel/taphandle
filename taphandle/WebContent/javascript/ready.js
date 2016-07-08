@@ -52,6 +52,9 @@ $().ready(function() {
 	whenReady.initQueryForm();
 	whenReady.initSamp();
 	//PageLocation.confirmBeforeUnlaod();
-	
+	$("#toggle-query").trigger( "click" );
+	$("#queryformpane").show();	
+	$("#toggle-query").show();
+
 });
 

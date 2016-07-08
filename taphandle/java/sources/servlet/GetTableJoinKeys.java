@@ -2,11 +2,13 @@ package servlet;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import metabase.DataTreePath;
 import metabase.NodeBase;
 import metabase.TapNode;
 import resources.RootClass;
@@ -24,7 +26,10 @@ public class GetTableJoinKeys extends RootServlet implements Servlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		printAccess(request, true);
 		response.setContentType("application/json; charset=UTF-8");
-
+		String schema = this.getParameter(request, "schema");
+		if( schema == null  ) {
+			schema = "";
+		}
 		String node = this.getParameter(request, "node");
 		if( node == null ){
 			node = this.getParameter(request, "nodekey");
@@ -39,7 +44,7 @@ public class GetTableJoinKeys extends RootServlet implements Servlet {
 			return;
 		}
 		try {
-			dumpJsonFile("/" + RootClass.WEB_NODEBASE_DIR + "/" + node + "/" + RootClass.vizierNameToFileName(table) + "_joinkeys.json", response);
+			dumpJsonFile("/" + RootClass.WEB_NODEBASE_DIR + "/" + node + "/" + (new DataTreePath(schema, table, "")).getEncodedFileName() + "_joinkeys.json", response);
 		} catch (FileNotFoundException e) {
 			return;
 		} catch (Exception e) {

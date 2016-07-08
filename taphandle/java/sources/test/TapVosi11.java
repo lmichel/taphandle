@@ -2,6 +2,7 @@ package test;
 
 import java.io.FileReader;
 
+import metabase.DataTreePath;
 import metabase.TapNode;
 
 import org.json.simple.JSONArray;
@@ -43,7 +44,9 @@ public class TapVosi11  extends RootClass {
 				gen++;
 				if( cpt < 5 || cpt >= 5) {
 					System.out.println("    " + cpt + "/" + gen + " " + t.get("name"));
-					tn.buildJsonTableAttributes((String)t.get("name"));
+					DataTreePath dataTreePath = new DataTreePath(s.get("name").toString(), (String)t.get("name"), "");
+					tn.buildJsonTableAttributes(dataTreePath);
+					tn.buildJsonTableDescription(dataTreePath);
 					System.exit(1);
 				}
 			}

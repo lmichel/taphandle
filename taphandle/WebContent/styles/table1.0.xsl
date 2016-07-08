@@ -18,11 +18,17 @@
         <xsl:sequence select="replace($string, '(\\|&quot;|\\n)', '\\$1')"/>	
 	</xsl:function>
 
+	<xsl:function name="json:remove-quotes" as="xs:string">
+		<xsl:param name="string" as="xs:string?"/>
+<!-- 		<xsl:sequence select="replace($string, '(\{|\}|\[|\]|\\|&quot;|\\n)', '\\$1')"/> -->	
+        <xsl:sequence select="replace($string, '&quot;', '')"/>	
+    </xsl:function>
 
-<xsl:template match="vosi:tableset | tableset">
-<xsl:for-each select="schema/table"><xsl:if  test="name = 'TABLENAME' or ends-with('TABLENAME', name) or ends-with('&quot;TABLENAME&quot;', name)">
+
+<xsl:template match="vosi:tableset | vosi:table |tableset">
+<xsl:for-each select="schema/table"><xsl:if  test="name = 'TABLENAME' or ends-with(name, 'TABLENAME') or ends-with(name , '&quot;TABLENAME&quot;')">
 {&quot;nodekey&quot;: &quot;NODEKEY&quot;,
-&quot;table&quot;: &quot;<xsl:value-of select="name" />&quot;,
+&quot;table&quot;: &quot;<xsl:value-of select="json:remove-quotes(name)" />&quot;,
 &quot;attributes&quot;: 
 {&quot;aoColumns&quot;: [
 {&quot;sTitle&quot;: &quot;nameattr&quot;}

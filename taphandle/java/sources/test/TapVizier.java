@@ -2,6 +2,7 @@ package test;
 
 import java.io.FileReader;
 
+import metabase.DataTreePath;
 import metabase.TapNode;
 
 import org.json.simple.JSONArray;
@@ -18,14 +19,14 @@ import resources.RootClass;
  */
 public class TapVizier  extends RootClass {
 	private static final String baseDir = System.getProperty("java.io.tmpdir") ;
-	private static final String baseUrlN = "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/";
+	private static final String baseUrlN = "http://tapvizier.u-strasbg.fr/beta/TAPVizieR/tap";
 
 	public static void main(String[] args) throws Exception {
 		validWorkingDirectory(baseDir + "/nodebase");
 
 		
 		RegistryMark rm = new RegistryMark("vizier", " ", baseUrlN, "test", false, true);
-		TapNode tn = new TapNode(rm, "/tmp/metaviz");
+		TapNode tn = new TapNode(rm, "/tmp/meta");
 
 		JSONParser parser = new JSONParser();
 		Object obj = parser.parse(new FileReader(tn.getBaseDirectory() + "tables.json"));
@@ -43,7 +44,9 @@ public class TapVizier  extends RootClass {
 				gen++;
 				if( cpt < 5 || cpt >= 5) {
 					System.out.println("    " + cpt + "/" + gen + " " + t.get("name"));
-					tn.buildJsonTableAttributes((String)t.get("name"));
+					DataTreePath dataTreePath = new DataTreePath(s.get("name").toString(), (String)t.get("name"), "");
+					tn.buildJsonTableAttributes(dataTreePath);
+					tn.buildJsonTableDescription(dataTreePath);
 					System.exit(1);
 				}
 			}

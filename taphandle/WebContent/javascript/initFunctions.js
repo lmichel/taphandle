@@ -155,28 +155,25 @@ function initFunctions () {
 			    "drop_finish" : function (data) {
 						var parent = data.r;
 						var id = data.o.attr("id");
-						var streePath = null; ;
-						if( id == null || (streePath = data.o.attr("id").split(';')).length < 3 ) {
-							Modalinfo.info("Meta data only available for tables: ("  +  streePath + ")", 'User Input Error');
-						} else {
-							var parsedTreePath = streePath[2].getTreepath();
-							var treePath = {nodekey: streePath[0]
-							, schema: streePath[1]
-							, tableorg: streePath[2]
-							, table: parsedTreePath.table};
+						var dataTreePath = jQuery.parseJSON(data.o.attr("datadataTreePath"));
 
+						if( id == null || (streePath = data.o.attr("id").split(';')).length < 3 ) {
+							Modalinfo.info("Meta data only available for tables: ("  +  id + ")", 'User Input Error');
+						} else {
+							dataTreePath.nodekey = id.split(";")[0];
+	
 							while(parent.length != 0  ) {
 								if(parent.is('#resultpane') ) {
-									ViewState.fireDoubleClickOK(treePath);
-						            _paq.push(['trackPageView', 'saada TapHandle/dropresult/' + streePath[0]]);
+									ViewState.fireDoubleClickOK(dataTreePath);
+						            _paq.push(['trackPageView', 'saada TapHandle/dropresult/' + dataTreePath.nodekey]);
 									return;
 								/*} else if(parent.attr('id') == "showquerymeta" ) {
 									resultPaneView.fireShowMetaNode(treePath);	
 						            _paq.push(['trackPageView', 'saada TapHandle/dropmeta/' + streePath[0]]);
 								return;*/
 								} else if(  parent.attr('id') == "taptab") {
-									ViewState.fireDragOnQueryForm(treePath);
-						            _paq.push(['trackPageView', 'saada TapHandle/dropquery/' + streePath[0]]);
+									ViewState.fireDragOnQueryForm(dataTreePath);
+						            _paq.push(['trackPageView', 'saada TapHandle/dropquery/' + dataTreePath.nodekey]);
 									return;
 								}
 								parent = parent.parent();
@@ -192,24 +189,30 @@ function initFunctions () {
 		$("a#goodies").attr("class", "help").css("color", "grey");
 		dataTree.bind("dblclick.jstree", function (e, data) {
 			var node = $(e.target).closest("li");
-			var id = node[0].id; //id of the selected node					
-			var treePath = id.split(';');
-			if( treePath.length == 1 ) {
+			var id = node[0].id; //id of the selected node
+			var dataTreePath = jQuery.parseJSON($(node[0]).attr("dataTreePath"));
+
+			var streePath = id.split(';');
+			/*
+			 * Got a dataTreePath: we are on a leaf
+			 */
+			if( dataTreePath != undefined ) {
+				dataTreePath.nodekey = streePath[0];
+				ViewState.fireDoubleClickOK(dataTreePath);
+	            _paq.push(['trackPageView', 'saada TapHandle/2clicks/' + dataTreePath.nodekey]);
+	        /*
+	         * On a root node: open the resource filter tool
+	         */
+			} else if( streePath.length == 1) {
 				var nm = $(e.target).closest("a")[0].id;
 				if( nm != "" ) {
 					nodeFilterView.fireOpenSelectorWindow(nm);
-				}
-			} else if( treePath.length < 3 ) {
-				Modalinfo.info("Query can only be applied on one data category or one data class: ("  +  treePath + ")", 'User Input Error');
+				}	
+			/*
+			 * On schema: do nothing
+			 */
 			} else {
-				var fTreePath = {nodekey: treePath[0], schema: treePath[1], tableorg: treePath[2], table: treePath[2].split('.').pop() };
-				var parsedTreePath = treePath[2].getTreepath();
-				fTreePath = {nodekey: treePath[0]
-				, schema: treePath[1]
-				, tableorg: treePath[2]
-				, table: parsedTreePath.table};
-				ViewState.fireDoubleClickOK(fTreePath);
-	            _paq.push(['trackPageView', 'saada TapHandle/2clicks/' + treePath[0]]);
+				Modalinfo.info("Query can only be applied on one data category or one data class: ("  +  dataTreePath + ")", 'User Input Error');
 			}
 		});
 		rootUrl = "http://" + window.location.hostname +  (location.port?":"+location.port:"") + window.location.pathname;
@@ -221,7 +224,6 @@ function initFunctions () {
 			Processing.show("Connecting " + defaultUrl);
 			dataTreeView.fireNewNodeEvent(unescape(defaultUrl));
             _paq.push(['trackPageView', 'saada TapHandle/paramURL/' + defaultUrl]);
-			//Processing.hide();
 		}
 		Out.setdebugModeFromUrl();
 

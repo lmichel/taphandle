@@ -51,9 +51,9 @@ jQuery.extend({
 			});
 		};
 
-		this.processShowMetaNode= function(treepath){
+		this.processShowMetaNode= function(dataTreePath){
 			Processing.show("Get table description");
-			$.getJSON("gettable", {jsessionid: sessionID, node: treepath.nodekey, schema: treepath.schema, table:treepath.tableorg }, function(data) {
+			$.getJSON("gettable", {jsessionid: sessionID, node: dataTreePath.nodekey, schema: dataTreePath.schema, table:dataTreePath.table }, function(data) {
 				Processing.hide();
 				if( Processing.jsonError(data, "get attribute handlers") ) {
 					return;
