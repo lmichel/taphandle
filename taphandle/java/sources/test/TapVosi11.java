@@ -40,6 +40,8 @@ public class TapVosi11  extends RootClass {
 			int cpt = 0;
 			for( Object ts: tables) {
 				JSONObject t = (JSONObject)ts;
+				String table = t.get("name").toString();
+				if( !table.matches(".*ObsCore")) continue;
 				cpt++;
 				gen++;
 				if( cpt < 5 || cpt >= 5) {

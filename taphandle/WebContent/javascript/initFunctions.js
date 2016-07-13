@@ -198,8 +198,9 @@ function initFunctions () {
 			 */
 			if( dataTreePath != undefined ) {
 				dataTreePath.nodekey = streePath[0];
-				ViewState.fireDoubleClickOK(dataTreePath);
-	            _paq.push(['trackPageView', 'saada TapHandle/2clicks/' + dataTreePath.nodekey]);
+				dtr = new DataTreePath(dataTreePath);
+				ViewState.fireDoubleClickOK(dtr);
+	            _paq.push(['trackPageView', 'saada TapHandle/2clicks/' + dtr.key]);
 	        /*
 	         * On a root node: open the resource filter tool
 	         */

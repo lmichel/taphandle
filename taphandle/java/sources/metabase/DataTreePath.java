@@ -138,11 +138,23 @@ public class DataTreePath {
 	 */
 	public DataTreePath(String schema, String nameOrg, String description) throws Exception{
 		this(nameOrg, description);
+		/*
+		 * Check whether the schema computed by the basic constructor is compliant (same or empty) as this given as parameter
+		 */
 		if( this.schema.length() > 0 && schema.length() > 0 && !this.schema.replaceAll("\"",  "").endsWith(schema.replaceAll("\"", ""))){
 			throw new Exception("The full table name <" + this.tableOrg + "> is inconsistant with the schema name <" + schema + ">");
 		}
+		/*
+		 * Take the given schema name if not empty and if no schema have been taken out from nameOrg
+		 */
 		if( this.schema.length() == 0 && schema.length() > 0 ){
 			this.schema = schema;
+		}
+		/*
+		 * If nameOrg does not contain the schema, addit
+		 */
+		if(  this.schema.length() > 0 & this.getTable().replaceAll("\"",  "").equals(this.tableOrg.replaceAll("\"",  "")) ) {
+			this.tableOrg = this.schema + "." + this.getTable();
 		}
 	}
 

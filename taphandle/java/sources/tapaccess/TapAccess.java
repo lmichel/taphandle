@@ -135,14 +135,12 @@ public class TapAccess  extends RootClass {
 		while ((line = reader.readLine()) != null) {
 			bw.write(line + "\n");
 		}
-		bw.close();
+		bw.close(); 
 		reader.close();
-
 		cookie.storeCookie();	        
 
 		XmlToJson.applyStyle(outputfile, outputfile.replaceAll("xml", "json")
 				, StyleDir + "asyncjob.xsl");
-
 	}
 
 	/**

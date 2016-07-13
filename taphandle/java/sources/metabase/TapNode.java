@@ -645,6 +645,7 @@ public class TapNode  extends RootClass {
 				outputFilename = this.getServiceReponse("tables/" + dataTreePath.getTable(), tablesNS);
 			} catch(FileNotFoundException e){
 				logger.debug("Vosi 1.1");
+				System.out.println(dataTreePath);
 				outputFilename = this.getServiceReponse("tables/" + dataTreePath.geTableOrg(), tablesNS);
 			}
 			if( ! (new File(outputFilename)).renameTo(fn) ) {
