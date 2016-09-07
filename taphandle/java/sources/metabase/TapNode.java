@@ -749,6 +749,7 @@ public class TapNode  extends RootClass {
 				JSONObject t = (JSONObject)ts;
 				String table = (String) t.get("name");
 				String desc = (String) t.get("description");
+				String re = "(?i)(.*" + filter + ".*)";
 				if(takeAnyway ) {
 					continue;
 				} else if( kept >= MAXTABLES ) {
@@ -756,7 +757,10 @@ public class TapNode  extends RootClass {
 					//					truncated = false;
 					//					toRemove.add(t);	
 					//					continue;
-				} else if (!desc.matches("(?i)(.*" + filter + ".*)") && !table.matches("(?i)(.*" + filter + ".*)") ){
+				} else if (!desc.matches(re) 
+						&& !table.matches(re)
+						&& !schema.matches(re)
+						){
 					toRemove.add(t);	
 					continue;
 				} else {
