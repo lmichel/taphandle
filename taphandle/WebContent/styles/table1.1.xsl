@@ -26,7 +26,7 @@
 
 
 <xsl:template match="vosi:table">
-<xsl:if  test="name = 'TABLENAME' or ends-with(name, 'TABLENAME') or ends-with(name , '&quot;TABLENAME&quot;')">
+<xsl:if  test="name = 'TABLENAME' or ends-with(name, '.TABLENAME') or ends-with(name , '&quot;TABLENAME&quot;')">
 {&quot;nodekey&quot;: &quot;NODEKEY&quot;,
 &quot;table&quot;: &quot;<xsl:value-of select="json:remove-quotes(name)" />&quot;,
 &quot;attributes&quot;: 
