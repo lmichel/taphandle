@@ -36,7 +36,6 @@ jQuery.extend({
 				return;
 			}
 			Processing.show("Run job");
-			Out.info(' start ' + $('#saadaworkingContent').css('display'));
 			var limit = getQLimit();
 			$.ajax({type: 'POST'
 				, url:"runasyncjob"
@@ -52,7 +51,6 @@ jQuery.extend({
 											, UPLOAD:tapConstraintEditor.getUploadedFile()
 											, QUERY: adqlQueryView.getQuery() }
 			, beforeSend: function(  jqXHR, settins) {
-				Out.info('before ' + $('#saadaworkingContent').css('display'));
 			}
 			, error: function(  jqXHR,  textStatus,  errorThrown) {
 				Processing.hide();

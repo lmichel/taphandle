@@ -342,7 +342,6 @@ DataTreeView.prototype = {
 			});
 		},
 		setTitlePath: function (dataTreePath) {
-			Out.info("title " + dataTreePath);
 			this.dataTreePath = dataTreePath;
 			var tp = $('#titlepath');
 			var span = '<span style="font-style: normal; font-size: x-small ; background-color:';

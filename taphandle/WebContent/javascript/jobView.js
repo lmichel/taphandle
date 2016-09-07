@@ -152,7 +152,6 @@ jQuery.extend({
 			var id       = jobDescription.status.job.jobId;
 			var phase    = jobDescription.status.job.phase;
 			var status = $('#' + id + '_phase');
-			Out.info("update form for jobh " + id);
 			status.attr("class", phase.toLowerCase());
 			status.text(phase);
 			var actionMenu = $('#' + id + '_actions');

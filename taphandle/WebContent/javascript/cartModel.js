@@ -162,7 +162,6 @@ jQuery.extend({
 			}
 			else {
 				zipJob.kill();
-				Out.info(zipJob.phase);
 				return zipJob.phase;
 			}
 		};
