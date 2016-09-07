@@ -231,7 +231,8 @@ public class XmlToJson  extends RootClass {
 		String tableFileName = dataTreePath.getEncodedFileName();
 		String tablePrefix =  baseDir + tableFileName + "_att";
 		PrintWriter fw = new PrintWriter(new File( tablePrefix + ".xsl"));
-		String qs = dataTreePath.getTable();
+		//Must use the full path because one can have tables with the name but in different schemas
+		String qs = dataTreePath.getSchema() + "." + dataTreePath.getTable();
 		while( s.hasNextLine() ) {
 			String b = s.nextLine();
 			String s2 = b.replaceAll("TABLENAME", qs);
