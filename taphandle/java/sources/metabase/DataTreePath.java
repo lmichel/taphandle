@@ -138,6 +138,8 @@ public class DataTreePath {
 	 */
 	public DataTreePath(String schema, String nameOrg, String description) throws Exception{
 		this(nameOrg, description);
+		System.out.println(schema + " " +  nameOrg + " " + description);
+		System.out.println(this);
 		/*
 		 * Check whether the schema computed by the basic constructor is compliant (same or empty) as this given as parameter
 		 */
@@ -240,7 +242,7 @@ public class DataTreePath {
 	 * @see java.lang.Object#toString()
 	 */
 	public String toString(){
-		return "nameOrg: <" + this.tableOrg + "> dataPath: <" + this.schema + "> tableName: <" + this.table + ">";
+		return "nameOrg: <" + this.tableOrg + "> schema: < " + this.schema + "> dataPath: <" + this.schema + "> tableName: <" + this.table + ">";
 	}
 	/**
 	 * @param args
