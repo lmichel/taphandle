@@ -41,29 +41,46 @@
  * @returns {___anonymous_ValueFormator}
  */
 ValueFormator = function() {
-
+	var raValue = undefined;
+	var decValue = undefined;
+	
+	var reset = function(){
+		raValue = undefined;
+		decValue = undefined;		
+	}
 	/**
 	 * 
 	 */
 	var formatValue = function(columnName, values, tdNode, columnMap) {
 		var value = values[columnName.currentColumn];
-		if( columnName.currentColumn)  {
-			Modalinfo.error("formatValue: Missing column numer in " + JSON.stringify(columnMap));
+		if( columnMap.currentColumn == undefined )  {
+			Modalinfo.error("formatValue: Missing column number in " + JSON.stringify(columnMap));
 			return;
 		}
 		var value = values[columnMap.currentColumn];
+		
+		if ( columnMap.s_ra == columnMap.currentColumn){
+			console.log("RA " + columnMap.currentColumn);
+			raValue = value;
+		}
+		if ( columnMap.s_dec == columnMap.currentColumn){
+			console.log("DEC " + columnMap.currentColumn)
+			decValue = value;
+		}
+
 		/*
-		 * First case te value is an URL
+		 * To be send to the the datalink processor to setup possible cutout services
+		 */
+		var fovObject = {s_ra: (columnMap.s_ra != -1)?  parseFloat(values[columnMap.s_ra]) : 9999 ,
+				        s_dec: (columnMap.s_dec != -1)? parseFloat(values[columnMap.s_dec]): 9999 ,
+						s_fov: (columnMap.s_fov != -1)?parseFloat( values[columnMap.s_fov]): 9999 };
+
+		/*
+		 * First case the value is an URL
 		 */
 		if( value.startsWith("http://") ||  value.startsWith("https://") ) {
 			/*
-			 * To be send to the the datalink processor to setup possible cutout services
-			 */
-			var fovObject = {s_ra: (columnMap.s_ra != -1)?  parseFloat(values[columnMap.s_ra]) : 9999 ,
-					        s_dec: (columnMap.s_dec != -1)? parseFloat(values[columnMap.s_dec]): 9999 ,
-							s_fov: (columnMap.s_fov != -1)?parseFloat( values[columnMap.s_fov]): 9999 };
-			/*
-			 * The mime type is specified: we can take into account the type of response withpout requesting the HTTP header
+			 * The mime type is specified: we can take into account the type of response without requesting the HTTP header
 			 */
 			if( columnMap.access_format != -1 ){
 				var access_format = values[columnMap.access_format];
@@ -92,7 +109,7 @@ ValueFormator = function() {
 			 * Second case: an atomic value;
 			 */
 		} else {
-			formatSimpleValue(columnName, value, tdNode);
+			formatSimpleValue(columnName, value, tdNode, columnMap);
 		}
 	};
 
@@ -103,12 +120,17 @@ ValueFormator = function() {
 	 * Format value: take into account the format of the string representing the value.
 	 * No reference to the context
 	 */
-	var formatSimpleValue = function(columnName, value, tdNode) {
+	var formatSimpleValue = function(columnName, value, tdNode, columnMap) {
+console.log(raValue + " "+ decValue);		
 		/*
 		 * TODO :add SAMP message to Aladin : script.aladin.send
 		 */
 		if( value.match(/^((position)|(region)|(polygon))/i) ) {
 			addSTCRegionControl(tdNode, value);
+		} else if ( raValue != undefined && decValue != undefined && 
+				(columnMap.s_ra == columnMap.currentColumn || columnMap.s_dec == columnMap.currentColumn) ) {
+			var alLink = "<a onclick='ModalAladin.aladinExplorer({ target: &quot;" + raValue + " " + decValue + "&quot;, fov: 0.016, title:&quot;...&quot;}, []);'class='dl_aladin' href='javascript:void(0);' title='Send source coord. to Aladin Lite'></a>";
+			tdNode.html(alLink + " " + (new Number(value)).toPrecision(8));
 		} else if( value.startsWith("Array") ) {
 			tdNode.html("<a title='Data array(click to expand)' class='dl_dataarray' href='#'  onclick='Modalinfo.info(\"" + value + "\", \"Data Array\");'></a>");
 		} else if( decimaleRegexp.test(value)){
@@ -232,6 +254,7 @@ ValueFormator = function() {
 	 * exports
 	 */
 	var pblc = {};
+	pblc.reset = reset;
 	pblc.formatValue = formatValue;
 	return pblc;
 }();
