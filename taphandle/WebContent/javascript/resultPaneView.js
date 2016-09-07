@@ -354,7 +354,7 @@ jQuery.extend({
 						title = "No description available (joined query?)";
 					} else {
 						/*
-						 * Titkle must be filtered to be undestood by the tooltip plugin
+						 * Title must be filtered to be understood by the tooltip plugin
 						 */
 						title = ah.description.replace(/&[a-z]+;/g, '').replace(/[<>]/g, ' ').replace(/"/g, '');
 						+ " - Name: " + ah.nameorg
@@ -375,7 +375,6 @@ jQuery.extend({
 				}
 				aoColumns[i] = {sTitle: '<span title="' + title + '">' + jsdata.aoColumns[i].sTitle + '</span>'};
 			}
-			
 			var options = {
 				"aLengthMenu": [5, 10, 25, 50, 100],
 				"aoColumns" : aoColumns,
@@ -385,6 +384,7 @@ jQuery.extend({
 				"bSort" : false,
 				"bFilter" : true,
 				"fnRowCallback": function( nRow, aData, iDisplayIndex ) {
+					ValueFormator.reset();
 					for( var c=0 ; c<aData.length ; c++ ) {
 						var copiedcolumnMap = jQuery.extend(true, {}, columnMap);
 						var colName = $(this.fnSettings().aoColumns[c].sTitle).text();;
