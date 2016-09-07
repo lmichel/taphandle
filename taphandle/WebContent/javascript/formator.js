@@ -60,11 +60,9 @@ ValueFormator = function() {
 		var value = values[columnMap.currentColumn];
 		
 		if ( columnMap.s_ra == columnMap.currentColumn){
-			console.log("RA " + columnMap.currentColumn);
 			raValue = value;
 		}
 		if ( columnMap.s_dec == columnMap.currentColumn){
-			console.log("DEC " + columnMap.currentColumn)
 			decValue = value;
 		}
 
@@ -121,7 +119,6 @@ ValueFormator = function() {
 	 * No reference to the context
 	 */
 	var formatSimpleValue = function(columnName, value, tdNode, columnMap) {
-console.log(raValue + " "+ decValue);		
 		/*
 		 * TODO :add SAMP message to Aladin : script.aladin.send
 		 */
