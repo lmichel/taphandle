@@ -379,7 +379,7 @@ jQuery.extend({
 				"aLengthMenu": [5, 10, 25, 50, 100],
 				"aoColumns" : aoColumns,
 				"aaData" : jsdata.aaData,
-				"bPaginate" : true,
+				"pagingType" : "simple",
 				"aaSorting" : [],
 				"bSort" : false,
 				"bFilter" : true,
@@ -413,7 +413,7 @@ jQuery.extend({
      	 		  "pos" : "top-right"
      	 		},
      			{ "name": "information",
-     	 	      "pos" : "bottom-right"
+     	 	      "pos" : "top-center"
      	 	 	}
      	 	];
 			
