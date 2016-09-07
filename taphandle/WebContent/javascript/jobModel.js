@@ -68,7 +68,7 @@ jQuery.extend({
 		var countDown = 10;
 		var progressTimer = null;
 		var actions  = new Array();
-		actions['COMPLETED'] = ["Actions", "Show Query", "Display Result", "Download Result", "Add to Cart", "Send to SAMP", /*"Add to Goodies",*/ "Summary"];
+		actions['COMPLETED'] = ["Actions", "Show Query", "Display Result", "Download Result", "Display Result in Aladin", "Add to Cart", "Send to SAMP", /*"Add to Goodies",*/ "Summary"];
 		actions['PENDING']   = ["Actions", "Show Query", "Run",  "Summary"];
 		actions['EXECUTING'] = ["Actions", "Show Query", "Summary"];
 		actions['QUEUED']    = ["Actions", "Show Query", "Summary"];
@@ -173,6 +173,12 @@ jQuery.extend({
 				ViewState.fireRecallOK(jobDescription.dataTreePath, query);
 			} else if( action == 'Download Result') {			
 				this.downloadVotable();
+			} else if( action == 'Display Result in Aladin') {		
+				var url = rootUrl + '/jobresult?NODE=' + dataTreePath.nodekey.trim() + '&JOBID=' + id.trim() + '&jsessionid='+ sessionID;
+				ModalAladin.aladinExplorer({swarm: url
+					                      , title: dataTreePath.nodekey.trim() + ' '+ dataTreePath.schema + '.' 
+					                        + dataTreePath.table  + " Job " + id.trim()}
+										, []);		
 			} else if( action == 'Add to Cart') {			
 				cartView.fireAddJobResult(jobDescription.dataTreePath, id);
 			} else if( action == 'Send to SAMP') {	
