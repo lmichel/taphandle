@@ -138,8 +138,6 @@ DataTreeView.prototype = {
 				if( i > MAX_SCHEMA ) {
 					trunc[trunc.length] = schemaName;
 				} else {
-					console.log("SCHEMA" + i);
-
 					if(schemaName.match(/TAP_SCHEMA/i) ) {
 						icon = "images/Redcube2.png";
 						description = "Schema containing the description of the published tables";
