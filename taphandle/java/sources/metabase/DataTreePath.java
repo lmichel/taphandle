@@ -13,7 +13,6 @@ import java.util.regex.Pattern;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 /**
  * Class transforming a data path like ele1.ele2....eleN.table in 2 components:
@@ -138,13 +137,19 @@ public class DataTreePath {
 	 */
 	public DataTreePath(String schema, String nameOrg, String description) throws Exception{
 		this(nameOrg, description);
-		System.out.println(schema + " " +  nameOrg + " " + description);
-		System.out.println(this);
 		/*
 		 * Check whether the schema computed by the basic constructor is compliant (same or empty) as this given as parameter
 		 */
-		if( this.schema.length() > 0 && schema.length() > 0 && !this.schema.replaceAll("\"",  "").endsWith(schema.replaceAll("\"", ""))){
-			throw new Exception("The full table name <" + this.tableOrg + "> is inconsistant with the schema name <" + schema + ">");
+		if( this.schema.length() > 0 && schema.length() > 0 
+				&& !this.schema.replaceAll("\"",  "").endsWith(schema.replaceAll("\"", ""))
+				/*
+				 * In some cases (HEASARCH) we can have schemaName=SCHEMA with tablename=schema.table.
+				 * In this case, we keep the table name fields 
+				 */
+				&& !this.schema.toLowerCase().replaceAll("\"",  "").endsWith(schema.replaceAll("\"", ""))
+				&& !this.schema.replaceAll("\"",  "").endsWith(schema.toLowerCase().replaceAll("\"", ""))	
+				){
+				throw new Exception("The full table name <" + this.tableOrg + "> is inconsistant with the schema name <" + schema + ">");
 		}
 		/*
 		 * Take the given schema name if not empty and if no schema have been taken out from nameOrg
