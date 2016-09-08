@@ -247,6 +247,7 @@ public class XmlToJson  extends RootClass {
 		 */
 		if( !out.exists() || out.length() == 0 ){
 			logger.info("Translate table att with a noschema style (astrogrid)");
+			qs = dataTreePath.getTable();
 			setVosiNS(baseDir, "table_att_noschema", nsDefinition);
 			String styleName = baseDir + "table_att_noschema.xsl";
 			s = new Scanner(new File(styleName));
