@@ -10,8 +10,8 @@
 	<xsl:output method="text" media-type="text/html" encoding="UTF-8" version="4.0" />
 	<xsl:strip-space elements="name" />
 	
-	<xsl:template match="/">
-		<xsl:apply-templates select="tab:tables | tables" />
+	<xsl:template match="vosi:tableset/schema | tableset/schema">
+				<xsl:apply-templates select="table | vosi:table" />
 	</xsl:template>
 	
 	<xsl:function name="json:encode-string" as="xs:string">
@@ -20,13 +20,18 @@
         <xsl:sequence select="replace($string, '(\\|&quot;|\\n)', '\\$1')"/>	
     </xsl:function>
 	
-<xsl:template match="tab:tables | tables">
+<xsl:template match="table | vosi:table">
+
 <!-- 
 Table name can be either tableName or schema.tableName 
 but the variable TABLENAME is always given as schema.tableName 
 At the ends, we want  name = schema.tableName 
 -->
-<xsl:for-each select="table"><xsl:if test="name = 'TABLENAME' or ends-with('TABLENAME', name)">
+<!--  xsl:for-each select="table"><xsl:value-of select="json:encode-string(name)"/ -->
+<xsl:for-each select=".[name = 'TABLENAME' or ends-with(name, '.TABLENAME') or ends-with(name, '&quot;TABLENAME&quot;') or ends-with('&quot;TABLENAME&quot;', name)]">
+<!-- xsl:if test="name = 'TABLENAME' or ends-with('TABLENAME', name) or ends-with('&quot;TABLENAME&quot;', name)" -->
+
+<!--  xsl:if test="name = 'TABLENAME' or ends-with('TABLENAME', name) or ends-with(name, 'TABLENAME')" -->
 
 {&quot;nodekey&quot;: &quot;NODEKEY&quot;,
 <!--  &quot;table&quot;: &quot;<xsl:value-of select="name" />&quot;, -->
@@ -44,6 +49,8 @@ At the ends, we want  name = schema.tableName
  &quot;dataType&quot;: &quot;<xsl:value-of select="dataType" /><xsl:if test="dataType[@arraysize]">(<xsl:value-of select="dataType/@arraysize" />)</xsl:if>&quot;,
  &quot;description&quot;: &quot;<xsl:value-of select="json:encode-string(description)"/>&quot;}
 </xsl:for-each>]
-}</xsl:if></xsl:for-each>
+}
+<!-- /xsl:if -->
+</xsl:for-each>
 </xsl:template>
 </xsl:stylesheet>
