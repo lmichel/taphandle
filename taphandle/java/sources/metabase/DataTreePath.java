@@ -141,13 +141,13 @@ public class DataTreePath {
 		 * Check whether the schema computed by the basic constructor is compliant (same or empty) as this given as parameter
 		 */
 		if( this.schema.length() > 0 && schema.length() > 0 
-				&& !this.schema.replaceAll("\"",  "").endsWith(schema.replaceAll("\"", ""))
+				&& !(this.schema.replaceAll("\"",  "").endsWith(schema.replaceAll("\"", ""))
 				/*
 				 * In some cases (HEASARCH) we can have schemaName=SCHEMA with tablename=schema.table.
 				 * In this case, we keep the table name fields 
 				 */
-				&& !this.schema.toLowerCase().replaceAll("\"",  "").endsWith(schema.replaceAll("\"", ""))
-				&& !this.schema.replaceAll("\"",  "").endsWith(schema.toLowerCase().replaceAll("\"", ""))	
+				|| this.schema.toLowerCase().replaceAll("\"",  "").endsWith(schema.replaceAll("\"", ""))
+				|| this.schema.replaceAll("\"",  "").endsWith(schema.toLowerCase().replaceAll("\"", "")))	
 				){
 				throw new Exception("The full table name <" + this.tableOrg + "> is inconsistant with the schema name <" + schema + ">");
 		}
