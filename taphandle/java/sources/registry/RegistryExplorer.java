@@ -35,8 +35,8 @@ public class RegistryExplorer extends RootClass {
 	 */
 	static {
 		try {
-			offRegistryMarks.put("xcatdb"       , new RegistryMark("xcatdb", ""
-					, "http://xcatdb.u-strasbg.fr/3xmmdr5/tap"
+			offRegistryMarks.put("xcatdb 3XMMMdr6", new RegistryMark("xcatdb 3XMMMdr6", ""
+					, "http://xcatdb.unistra.fr/3xmmdr6/tap"
 					, "SSC interface of the 3XMM-Newton catalogue DR5", true, true));
 			offRegistryMarks.put("vizier"       , new RegistryMark("vizier", ""
 					, "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/"
