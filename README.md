@@ -1,5 +1,5 @@
-# tap-handles
+# TAPHandle
 
-* What is TAPHandle
+* What is it
 
 * How does it work
