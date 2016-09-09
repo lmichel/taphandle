@@ -87,10 +87,12 @@ ValueFormator = function() {
 					addInfoControl(columnName, tdNode, value);
 					addDatalinkControl(value,  tdNode, fovObject);
 				} else if( access_format.startsWith("image/") || access_format.startsWith("text/") ){
-					tDdNode.html("");
-					addInfoControl(columnName, tdNode, value);
-					addPreviewControl(columnName, tdNode, value, fileName);	
-					addCartControl(columnName, tdNode, value, secureMode);
+//					tdNode.html("");
+//					addInfoControl(columnName, tdNode, value);
+//					addPreviewControl(columnName, tdNode, value);	
+//					addCartControl(columnName, tdNode, value, secureMode);
+					processURLInfo( columnName, value, tdNode, fovObject);
+
 				} else  {
 					/*
 					 * In case of a simple download we he to request the HTTP header anyway to get extra information (zipper, encrypted..)
@@ -159,7 +161,7 @@ ValueFormator = function() {
 				+ url + "\",\"" + sampMType + "\", " + fileName + "); return false;'/></a>");
 	};	
 	var addPreviewControl = function(columnName, tdNode, url, fileName){
-		var title = fileName + " preview";
+		var title = ((fileName != undefined)?fileName: "") + " preview";
 		var x = "<a class='dl_download' title='Data preview' href='javascript:void(0);' onclick='Modalinfo.openIframePanel(\"" + url + "\", \"" + title + "\");'></a>";
 		tdNode.append(x);
 		
@@ -172,11 +174,13 @@ ValueFormator = function() {
 	};
 	var addSTCRegionControl = function(tdNode, stcRegion) {
 		var region = new STCRegion(stcRegion);
-		tdNode.html("<a title='STC Region (click to expand)' class='dl_stc' href='#'></a>");
-		tdNode.first("a").click(function() {
-			Modalinfo.showSTCRegion(region);
+		tdNode.html("");
+		tdNode.append("<a title='" + stcRegion + " (click to plot)' class='dl_stc' href='#'></a>");
+		tdNode.append("<a class='dl_samp' title='Broadcast to SAMP'   href='#' onclick='WebSamp_mVc.fireSendAladinScript(&quot;" + region.getAladinScript() + "&quot;); return false;'/></a>");
+		tdNode.first().click(function() {
+			ModalAladin.aladinExplorer({ region: region, fov: 0.016, title:"STC Region"}, []);
+			return false;
 		})
-		tdNode.append("<a class='dl_samp' title='Broadcast to SAMP'   href='#' onclick='WebSamp_mVc.fireSendAladinScript(\"" + region.getAladinScript() + "\"); return false;'/></a>");				
 	}
 	/**
 	 * Get the URL infos asynchronously: formating must be achieved inside the callback
