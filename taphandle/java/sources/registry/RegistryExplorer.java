@@ -19,7 +19,7 @@ import translator.XmlToJson;
 
 public class RegistryExplorer extends RootClass {
 	public static final String[] registryServers = {
-		"http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap/"
+		"http://reg.g-vo.org/tap/"
 	};
 	public static final String query = "SELECT ivoid, access_url, res_title\n"
 		+ "FROM rr.capability \n"
@@ -35,24 +35,24 @@ public class RegistryExplorer extends RootClass {
 	 */
 	static {
 		try {
-			offRegistryMarks.put("xcatdb 3XMMMdr6", new RegistryMark("xcatdb 3XMMMdr6", ""
-					, "http://xcatdb.unistra.fr/3xmmdr6/tap"
-					, "SSC interface of the 3XMM-Newton catalogue DR5", true, true));
+//			offRegistryMarks.put("xcatdb 3XMMMdr6", new RegistryMark("xcatdb 3XMMMdr6", ""
+//					, "http://xcatdb.unistra.fr/3xmmdr6/tap"
+//					, "SSC interface of the 3XMM-Newton catalogue DR5", true, true));
 			offRegistryMarks.put("vizier"       , new RegistryMark("vizier", ""
 					, "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/"
 					, "CDS Vizier TAP query engine", true, true));
 			offRegistryMarks.put("simbad"       , new RegistryMark("simbad", "ivo://cds.simbad/tap"
 					, "http://simbad.u-strasbg.fr/simbad/sim-tap"
 					, "CDS Simbad TAP query engine", true, true));
-			offRegistryMarks.put("cadc"         , new RegistryMark("cadc"  , "ivo://cadc.nrc.ca/tap"
-					, "http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap"
-					, "CADC Table Query (TAP) Service", true, true));
-			offRegistryMarks.put("gavo"         , new RegistryMark("gavo"  , "ivo://org.gavo.dc/__system__/tap/run"
-					, "http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap"
-					, "GAVO data center TAP service", true, true));
-			offRegistryMarks.put("heasarc-xamin", new RegistryMark("heasarc-xamin", ""
-					, "http://heasarc.gsfc.nasa.gov/xamin/vo/tap"
-					, "HEASARCH Table Query (TAP) Service", true, true));
+//			offRegistryMarks.put("cadc"         , new RegistryMark("cadc"  , "ivo://cadc.nrc.ca/tap"
+//					, "http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap"
+//					, "CADC Table Query (TAP) Service", true, true));
+//			offRegistryMarks.put("gavo"         , new RegistryMark("gavo"  , "ivo://org.gavo.dc/__system__/tap/run"
+//					, "http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap"
+//					, "GAVO data center TAP service", true, true));
+//			offRegistryMarks.put("heasarc-xamin", new RegistryMark("heasarc-xamin", ""
+//					, "http://heasarc.gsfc.nasa.gov/xamin/vo/tap"
+//					, "HEASARCH Table Query (TAP) Service", true, true));
 			/*
 			 * For te datalink demo
 			 */
@@ -93,6 +93,7 @@ public class RegistryExplorer extends RootClass {
 	 */
 	public static void readRegistries() throws Exception {
 		for( String r: registryServers) {
+			logger.info("Reading TAP registry: " + r);
 			readRegistry(r);
 		}
 		/*
@@ -100,7 +101,7 @@ public class RegistryExplorer extends RootClass {
 		 */
 		for( Entry<String,RegistryMark>  k: offRegistryMarks.entrySet()) {
 			if( registryMarks.get(k.getKey()) == null ){
-				logger.info("add entry " + k.getKey() + " to the registry entry set (hardcoded)");
+				logger.info("add static entry " + k.getKey() + " to the registry entry set (hardcoded)");
 				registryMarks.put(k.getKey(), k.getValue());
 			}
 		}
