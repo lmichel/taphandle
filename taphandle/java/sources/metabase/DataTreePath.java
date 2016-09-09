@@ -138,31 +138,43 @@ public class DataTreePath {
 	public DataTreePath(String schema, String nameOrg, String description) throws Exception{
 		this(nameOrg, description);
 		/*
-		 * Check whether the schema computed by the basic constructor is compliant (same or empty) as this given as parameter
+		 * If nameOrg does not start with schema, we can consider that nameorg is a table name
 		 */
-		if( this.schema.length() > 0 && schema.length() > 0 
-				&& !(this.schema.replaceAll("\"",  "").endsWith(schema.replaceAll("\"", ""))
-				/*
-				 * In some cases (HEASARCH) we can have schemaName=SCHEMA with tablename=schema.table.
-				 * In this case, we keep the table name fields 
-				 */
-				|| this.schema.toLowerCase().replaceAll("\"",  "").endsWith(schema.replaceAll("\"", ""))
-				|| this.schema.replaceAll("\"",  "").endsWith(schema.toLowerCase().replaceAll("\"", "")))	
-				){
-				throw new Exception("The full table name <" + this.tableOrg + "> is inconsistant with the schema name <" + schema + ">");
-		}
-		/*
-		 * Take the given schema name if not empty and if no schema have been taken out from nameOrg
-		 */
-		if( this.schema.length() == 0 && schema.length() > 0 ){
-			this.schema = schema;
-		}
-		/*
-		 * If nameOrg does not contain the schema, addit
-		 */
-		if(  this.schema.length() > 0 & this.getTable().replaceAll("\"",  "").equals(this.tableOrg.replaceAll("\"",  "")) ) {
+		String sqnameOrg = nameOrg.replaceAll("\"",  "").toUpperCase();
+		String sqschema = schema.replaceAll("\"",  "").toUpperCase();
+		if( !sqnameOrg.startsWith(sqschema) ) {
+			this.schema = schema.replaceAll("\"",  "");
+			this.table = new DataTreePathElement(nameOrg);
 			this.tableOrg = this.schema + "." + this.getTable();
 		}
+//		/*
+//		 * Check whether the schema computed by the basic constructor is compliant (same or empty) as this given as parameter
+//		 */
+//		if( this.schema.length() > 0 && schema.length() > 0 
+//				&& !(this.schema.replaceAll("\"",  "").endsWith(schema.replaceAll("\"", ""))
+//				/*
+//				 * In some cases (HEASARCH) we can have schemaName=SCHEMA with tablename=schema.table.
+//				 * In this case, we keep the table name fields 
+//				 */
+//				|| this.schema.toLowerCase().replaceAll("\"",  "").endsWith(schema.replaceAll("\"", ""))
+//				|| this.schema.replaceAll("\"",  "").endsWith(schema.toLowerCase().replaceAll("\"", "")))	
+//				){
+//			System.out.println(this);
+//			System.out.println(schema + " " +nameOrg + " " + description);
+//				throw new Exception("The full table name <" + this.tableOrg + "> is inconsistant with the schema name <" + schema + ">");
+//		}
+//		/*
+//		 * Take the given schema name if not empty and if no schema have been taken out from nameOrg
+//		 */
+//		if( this.schema.length() == 0 && schema.length() > 0 ){
+//			this.schema = schema;
+//		}
+//		/*
+//		 * If nameOrg does not contain the schema, addit
+//		 */
+//		if(  this.schema.length() > 0 & this.getTable().replaceAll("\"",  "").equals(this.tableOrg.replaceAll("\"",  "")) ) {
+//			this.tableOrg = this.schema + "." + this.getTable();
+//		}
 	}
 
 	private static String quoteName(String element){
@@ -267,6 +279,7 @@ public class DataTreePath {
 		System.out.println(new DataTreePath("\"zerr././.\".AAAA.\"BBBB\".\"CC\\C\"", ""));
 		System.out.println(new DataTreePath("\"AAAA\".\"BBBB\".\"CCCC\"", ""));
 		System.out.println(new DataTreePath("AAAA.\"BBBB\".\"CCCC\"", ""));
+		System.out.println(new DataTreePath("viz7" ,"J/other/NewA/35.48/table2", ""));
 		String fn = "/tmp/meta/tables.json";
         JSONParser parser = new JSONParser();
         Object obj = parser.parse(new FileReader(fn));
