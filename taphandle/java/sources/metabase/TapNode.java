@@ -694,10 +694,12 @@ public class TapNode  extends RootClass {
 			boolean takeAnyway = false;
 			ArrayList<JSONObject> toRemove = new ArrayList<JSONObject>();
 			JSONObject s = (JSONObject)sn;
-			if( ((String)s.get("name")).equalsIgnoreCase("tap_schema") ) {
+			String schemaName = (String)s.get("name");
+			if( schemaName.equalsIgnoreCase("tap_schema") ||schemaName.equalsIgnoreCase("ivoa") ) {
 				takeAnyway = true;
 			}
 			JSONArray tables = (JSONArray) s.get("tables");
+
 			int cpt = 0;
 			for( Object ts: tables) {
 				JSONObject t = (JSONObject)ts;

@@ -135,7 +135,7 @@ DataTreeView.prototype = {
 				var description = jsdata.schemas[i].description;
 
 				var schemaName = jsdata.schemas[i].name;		
-				if( i > MAX_SCHEMA ) {
+				if( i > MAX_SCHEMA && jsdata.schemas[i].name != "ivoa"   && jsdata.schemas[i].name != "tap_schema") {
 					trunc[trunc.length] = schemaName;
 				} else {
 					if(schemaName.match(/TAP_SCHEMA/i) ) {
@@ -171,7 +171,7 @@ DataTreeView.prototype = {
 
 				var schema = jsdata.schemas[i];
 				var id_schema = jsdata.nodekey + "X" + schema.name;
-				if( i > MAX_SCHEMA ) {
+				if( i > MAX_SCHEMA && schema.name != "ivoa"   && schema.name != "tap_schema") {
 					//trunc[trunc.length] = schema.name;
 				} else {
 					var root = $("#" + id_schema);
