@@ -44,6 +44,7 @@ js_array_org=("basics.js"
            "ConstList_v.js"
            "FieldList_v.js"
 		   "Sorter_v.js"
+		   "HipsExplorer_v.js"
            "DataLink"  
            "ConstQEditor" 
            "QueryTextEditor" 
@@ -188,7 +189,7 @@ minifySet "$workspaceDir/jsresources/WebContent/saadajsbasics/jsimports"       \
     "jquery.prints.js"\
 	"jquery.tooltip.js"\
 	"jquery.form.js"\
-	"aladin.min.js"
+	"aladin.js"
 	
 
 minifySet "../WebContent/jsimport"   \
