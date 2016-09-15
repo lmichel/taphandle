@@ -236,8 +236,14 @@ public class TapAccess  extends RootClass {
 	 */
 	public static String runSyncJob(String endpoint, String query, String outputfile, NodeCookie cookie, String remoteAddress) throws Exception {
 		String runId = (remoteAddress == null )? RUNID: "TapHandle-" + remoteAddress;
+		/*
+		 * Services based on DACHs 	are forced to return VOTable with data in a table (not BINARY)
+		 * In order to be consumable by Aladin Lite
+		 */
+		String format = (endpoint.indexOf("__system__") > 0 || endpoint.indexOf("heidelberg") > 0 )
+				? "&FORMAT=" + URLEncoder.encode("application/x-votable+xml;serialization=tabledata" , "ISO-8859-1"): "";
 		sendPostRequest(endpoint + "sync"
-				, "RUNID=" + runId + "&REQUEST=doQuery&LANG=ADQL&QUERY=" + URLEncoder.encode(query, "ISO-8859-1")
+				, "RUNID=" + runId + "&REQUEST=doQuery" + format + "&LANG=ADQL&QUERY=" + URLEncoder.encode(query, "ISO-8859-1")
 				, outputfile
 				, cookie
 				, false);
@@ -257,8 +263,14 @@ public class TapAccess  extends RootClass {
 	 */
 	public static String createAsyncJob(String endpoint, String query, String outputfile, NodeCookie cookie, String remoteAddress) throws Exception {
 		String runId = (remoteAddress == null )? RUNID: "TapHandle-" + remoteAddress;
+		/*
+		 * Services based on DACHs 	are forced to return VOTable with data in a table (not BINARY)
+		 * In order to be consumable by Aladin Lite
+		 */
+		String format = (endpoint.indexOf("__system__") > 0 || endpoint.indexOf("heidelberg") > 0 )
+				? "&FORMAT=" + URLEncoder.encode("application/x-votable+xml;serialization=tabledata" , "ISO-8859-1"): "";
 		sendPostRequest(endpoint + "async"
-				, "RUNID=" + runId + "&REQUEST=doQuery&LANG=ADQL&QUERY=" + URLEncoder.encode(query, "ISO-8859-1")
+				, "RUNID=" + runId + format + "&REQUEST=doQuery&LANG=ADQL&QUERY=" + URLEncoder.encode(query, "ISO-8859-1")
 				, outputfile
 				, cookie
 				, true);
