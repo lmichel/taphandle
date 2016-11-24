@@ -1,39 +1,3 @@
-/*
- * Some utilities moved to basic.js
- */
-//if(!String.prototype.startsWith){
-//	String.prototype.startsWith = function (str) {
-//		return !this.indexOf(str);
-//	};
-//};
-//if(!String.prototype.endsWith){
-//	String.prototype.endsWith = function(suffix) {
-//		return this.indexOf(suffix, this.length - suffix.length) !== -1;
-//	};
-//};
-//
-//if(!String.prototype.hashCode){
-//	String.prototype.hashCode = function(){
-//		var hash = 0;
-//		if (this.length == 0) return code;
-//		for (var i = 0; i < this.length; i++) {
-//			var char = this.charCodeAt(i);
-//			hash = 31*hash+char;
-//			hash = hash & hash; 
-//		}
-//		return hash;
-//	};
-//};
-//if(!String.prototype.trim){
-//	String.prototype.trim = function(chaine){
-//		return chaine.replace(/^\s+|\s+$/g,"");
-//	} ;
-//};
-//
-//function trim(chaine) {
-//	return chaine.replace(/^\s+|\s+$/g,"");
-//}
-//
 
 /**
  * Singleton encapsulating the formating function 
@@ -130,8 +94,13 @@ ValueFormator = function() {
 				(columnMap.s_ra == columnMap.currentColumn || columnMap.s_dec == columnMap.currentColumn) ) {
 			var alLink = "<a onclick='ModalAladin.aladinExplorer({ target: &quot;" + raValue + " " + decValue + "&quot;, fov: 0.016, title:&quot;...&quot;}, []);'class='dl_aladin' href='javascript:void(0);' title='Send source coord. to Aladin Lite'></a>";
 			tdNode.html(alLink + " " + (new Number(value)).toPrecision(8));
-		} else if( value.startsWith("Array") ) {
-			tdNode.html("<a title='Data array(click to expand)' class='dl_dataarray' href='#'  onclick='Modalinfo.info(\"" + value + "\", \"Data Array\");'></a>");
+			/*
+			 * Array annotation removed from server because of CSIRO for which all data are typed as arra
+			 */
+		} else if(/* value.startsWith("Array")*/ value.length > 24 ) {
+			//console.log(value);
+			//tdNode.html("<a title='Data array(click to expand)' class='dl_dataarray' href='#'  onclick='Modalinfo.info(\"" + value + "\", \"Data Array\");'></a>");
+			tdNode.html("<span title='" + value + "' style='cursor: pointer;' onclick='Modalinfo.info(\"" + value + "\", \"Full Value\");'>" + value.substring(0, 23) + " ... </span>");
 		} else if( decimaleRegexp.test(value)){
 			tdNode.html((new Number(value)).toPrecision(8));
 		} else if( bibcodeRegexp.test(value)){

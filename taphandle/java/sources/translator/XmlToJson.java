@@ -296,7 +296,7 @@ public class XmlToJson  extends RootClass {
 	public static void translateResultTable(String inputFile, String outputFile  ) throws Exception {
 		StarTableFactory stf = new StarTableFactory();
 		logger.info("Translate " +inputFile);
-		
+
 		try {
 			StarTable table = stf.makeStarTable(inputFile); 
 			JSONObject retour = new JSONObject();
@@ -318,43 +318,56 @@ public class XmlToJson  extends RootClass {
 					logger.warn("JSON result truncated to " +  MAX_ROWS);
 					break;
 				}
-//				if( (r%100) == 0 ) {
-//					long mb = 1024*1024;
-//			        Runtime runtime = Runtime.getRuntime();
-//					long max = runtime.maxMemory()/mb;
-//					long tot = runtime.totalMemory()/mb;
-//					long free = runtime.freeMemory()/mb;
-//					System.out.println( "      -- " + max  + " " +  tot  + " " +  free);
-//					if( max == tot ) {
-//						double rt = (double)free/(double)max;
-//						System.out.println("RT " + rt);
-//						if( rt < 0.5 ) {
-//							logger.warn("Result truncated to " + r + " rows to avoid memory overflow");
-//							throw new TapException("No enough memory space to parse " + inputFile);
-//						}
-//					}		
-//				}
+				//				if( (r%100) == 0 ) {
+				//					long mb = 1024*1024;
+				//			        Runtime runtime = Runtime.getRuntime();
+				//					long max = runtime.maxMemory()/mb;
+				//					long tot = runtime.totalMemory()/mb;
+				//					long free = runtime.freeMemory()/mb;
+				//					System.out.println( "      -- " + max  + " " +  tot  + " " +  free);
+				//					if( max == tot ) {
+				//						double rt = (double)free/(double)max;
+				//						System.out.println("RT " + rt);
+				//						if( rt < 0.5 ) {
+				//							logger.warn("Result truncated to " + r + " rows to avoid memory overflow");
+				//							throw new TapException("No enough memory space to parse " + inputFile);
+				//						}
+				//					}		
+				//				}
 				Object[] o = table.getRow(r);
 				JSONArray rowData = new JSONArray();
 				for (int i = 0; i < nCol; i++) {
 					Object obj = o[i];
 					if(obj == null ) {
 						rowData.add("null");
+						/*
+						 * Array annotation removed from server because of CSIRO for which all data are typed as array
+						 */
 					} else 	if(obj.getClass().isArray()) {
-						String v = "";
-						for( int p=0 ; p<Array.getLength(obj) ; p++ ){
-							Object cell = Array.get(obj, p);
-							if( cell.getClass().isArray()) {
-								v += "[";
-								for( int q=0 ; q<Array.getLength(cell) ; q++ ){
-									v += Array.get(cell, i) + " ";
+						int arraylLength = Array.getLength(obj);
+						if( arraylLength > 1 ) {
+							System.out.println("1 " + obj.getClass() + " "+ Array.getLength(obj));
+							String v = "";
+							for( int p=0 ; p<arraylLength ; p++ ){
+								Object cell = Array.get(obj, p);
+								if( cell.getClass().isArray()) {
+									v += "[";
+									for( int q=0 ; q<Array.getLength(cell) ; q++ ){
+										v += Array.get(cell, i) + " ";
+									}
+									v += "] "; 
+								} else {
+									v += cell + " ";
 								}
-								v += "] "; 
-							} else {
-								v += cell + " ";
 							}
+							//rowData.add("Array[" + v + "]");	
+							rowData.add(v);	
+						} else if( arraylLength == 1 ){
+							Object cell = Array.get(obj, 0);
+							rowData.add( cell.toString() ) ;
+						} else {
+							rowData.add("");				
 						}
-						rowData.add("Array[" + v + "]");				
 					} else {
 						rowData.add(obj.toString());				
 					}
@@ -372,7 +385,7 @@ public class XmlToJson  extends RootClass {
 			 */
 		} catch (OutOfMemoryError m) {	
 			throw new TapException("No enough memory space to parse " + inputFile);
-			
+
 		} catch (Exception e) {
 			logger.error("Can't translate result file " + inputFile);
 			SavotPullParser  sp = new SavotPullParser(inputFile, SavotPullEngine.FULL);
@@ -418,19 +431,19 @@ public class XmlToJson  extends RootClass {
 			 */
 			for( int r=0 ; r<nSrc ; r++ ) {
 				map.addJoin(table.getRow(r));
-//				Object[] o =table.getRow(r);
-//				String source_table = o[0].toString();
-//
-//				JSONObject jso = new JSONObject();
-//				jso.put("target_table", o[1].toString());
-//				jso.put("source_column", o[2].toString());
-//				jso.put("target_column", o[3].toString());
-//				Collection<JSONObject> set;
-//				if( (set = map.get(source_table)) == null) {
-//					set =  new ArrayList<JSONObject>();
-//					map.put(source_table,set);
-//				}
-//				set.add(jso);
+				//				Object[] o =table.getRow(r);
+				//				String source_table = o[0].toString();
+				//
+				//				JSONObject jso = new JSONObject();
+				//				jso.put("target_table", o[1].toString());
+				//				jso.put("source_column", o[2].toString());
+				//				jso.put("target_column", o[3].toString());
+				//				Collection<JSONObject> set;
+				//				if( (set = map.get(source_table)) == null) {
+				//					set =  new ArrayList<JSONObject>();
+				//					map.put(source_table,set);
+				//				}
+				//				set.add(jso);
 			}
 			map.buildReverseJoins();
 			/*
@@ -450,7 +463,7 @@ public class XmlToJson  extends RootClass {
 				}
 				DataTreePath dataTreePath = new DataTreePath(source_table);
 				String file = 	outputDir + File.separator + dataTreePath.getEncodedFileName() + "_joinkeys"	;
-			//	logger.info("Write joinkey file " + file);
+				//	logger.info("Write joinkey file " + file);
 				FileWriter fw = new FileWriter(file+ ".json");
 				fw.write(jso.toJSONString());
 				fw.close();	
