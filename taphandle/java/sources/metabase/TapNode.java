@@ -258,35 +258,6 @@ public class TapNode  extends RootClass {
 		}
 
 	}
-	/**
-	 * Check the service availability. This method is invoked each time the node is acceded.
-	 * The avoid useless network accesses, the  service is actually invoked every 
-	 * AVAILABILITY_CHECK_FREQUENCY ms. Otherwise the method returns the availability read in the file
-	 * returned by the service
-	 * @throws Exception
-	 */
-	private void checkAvailability() throws Exception {
-		logger.debug("check availability");
-		long t = new Date().getTime();
-		if( (t - this.last_availability_check) > AVAILABILITY_CHECK_FREQUENCY) {
-			this.getServiceReponse("availability", availabilityNS);
-			this.translateServiceReponse("availability", availabilityNS);
-			this.last_availability_check = t;
-		} else {
-			logger.debug("availability already checked");
-			if( availabilityNS.getNsDeclaration() == null )
-				this.getNamspaceDefinition("capabilities", capabilityNS);
-			return;
-		}
-
-		String av = JsonUtils.getValue (this.baseDirectory + "availability.json", "available");
-		if( "1".equals(av) || "true".equalsIgnoreCase(av)) {
-			logger.debug("Service " + this.regMark + " is available");
-		}
-		else {
-			logger.debug("Service " + this.regMark + " is unavailable");
-		}
-	}
 
 	/**
 	 * Check the capability of the service
@@ -372,6 +343,10 @@ public class TapNode  extends RootClass {
 		QueryModeChecker qmc = new QueryModeChecker(this.regMark.getFullUrl(), query, uploadQuery, this.baseDirectory);
 		this.supportSyncMode = qmc.supportSyncMode();
 		this.supportAsyncMode = qmc.supportAsyncMode();
+		if( this.regMark.getUrl().contains("cadc") ) {
+			logger.info("Force CADC to work in sync mode to avoid https issues");
+			this.supportAsyncMode = false;
+		}
 
 		if( CHECKUPLOAD ) {
 			this.supportUpload = qmc.supportUpload();
@@ -564,7 +539,6 @@ public class TapNode  extends RootClass {
 		if( new File(productName + ".json").exists()) {
 			return;
 		}
-		System.out.println("@@@@@@@ " + dataTreePath);
 		logger.debug("JSON file " + dataTreePath.getTable() + ".json not found: build it");
 		XmlToJson.translateTableMetaData(this.baseDirectory, "tables", dataTreePath, tablesNS);            
 		/*
@@ -645,7 +619,6 @@ public class TapNode  extends RootClass {
 				outputFilename = this.getServiceReponse("tables/" + dataTreePath.getTable(), tablesNS);
 			} catch(FileNotFoundException e){
 				logger.debug("Vosi 1.1");
-				System.out.println(dataTreePath);
 				outputFilename = this.getServiceReponse("tables/" + dataTreePath.geTableOrg(), tablesNS);
 			}
 			if( ! (new File(outputFilename)).renameTo(fn) ) {

@@ -31,7 +31,6 @@ public class CartDecoder extends RootClass {
 	 * @param args
 	 */
 	public  void decode(String jsonString) {
-		System.out.println(jsonString);
 		JSONObject obj=(JSONObject) JSONValue.parse(jsonString);
 		Set<String> ks = obj.keySet();
 		for( String folder: ks) {
