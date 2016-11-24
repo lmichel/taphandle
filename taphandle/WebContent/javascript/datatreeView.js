@@ -4,6 +4,7 @@ function DataTreeView() {
 	 * The nodes given here must be initialized in Nodebase.java
 	 */
 	this.nodeList = new Array();
+	this.reports = {};
 	/**
 	 * Metadata of the data files referenced in the Goodies node
 	 */
@@ -93,10 +94,12 @@ DataTreeView.prototype = {
 
 			Processing.show("Waiting for the constrution of the tree");
 			this.capabilities = {supportSyncQueries: true
-					, supportAsyncQueries: (jsdata.asyncsupport == "true")?true: false
+					        , supportAsyncQueries: (jsdata.asyncsupport == "true")?true: false
 							, supportJoin: true
 							, supportUpload:(jsdata.uploadsupport == "true")?true: false};
 			this.info = {url: jsdata.nodeurl , ivoid: null, description: "Not available"};
+			this.reports[jsdata.nodekey] = {"info": this.info, "capabilities": this.capabilities};
+
 			$("div#treedisp").jstree("remove","#" + jsdata.nodekey);
 			/*
 			 * Create the root of the subtree of this node
@@ -225,7 +228,7 @@ DataTreeView.prototype = {
 						$(this).find("ins:first").after("<img class='metadata' src='images/metadata.png' title='Show metadata (Does not work with Vizier)'/>");
 						$(this).find("ins:first").next("img").click(function() {
 							/*
-							 * Add the node key to the datadataTreePath provided by the server and atached to the node
+							 * Add the node key to the datadataTreePath provided by the server and attached to the node
 							 */
 							dataTreePath.nodekey = splited[0];
 							resultPaneView.fireShowMetaNode(dataTreePath);
@@ -239,7 +242,7 @@ DataTreeView.prototype = {
 			});
 			$("div#treedisp").jstree("open_node", $('li.jstree-closed').first() );
 
-			$("#"+jsdata.nodekey).before("<img class='metadata' src='images/metadata.png' title='Click to get more info' onclick='dataTreeView.showNodeInfos();'/>");
+			$("#"+jsdata.nodekey).before("<img class='metadata' src='images/metadata.png' title='Click to get more info' onclick='dataTreeView.showNodeInfos(&quot;" + jsdata.nodekey + "&quot;);'/>");
 			this.setTitlePath({nodekey: jsdata.nodekey});
 			Processing.hide();
 		},
@@ -374,13 +377,22 @@ DataTreeView.prototype = {
 
 			}
 		},
-		showNodeInfos: function () {
-			var report = {"info": this.info, "capabilities": this.capabilities};
-			Modalinfo.infoObject(report, "Node " + this.dataTreePath.nodekey);
+		showNodeInfos: function (nodekey) {
+//			var report = {"info": this.info, "capabilities": this.capabilities};
+//			Modalinfo.infoObject(report, "Node " + this.dataTreePath.nodekey);
+//			
+			Modalinfo.infoObject(this.reports[nodekey], "Node " + nodekey);
 		},
 		getBookmark: function() {
-			var np = window.location.href.split('?')[0].replace(/\/$/, "");
-			return (this.info != null)?np + "?url=" + escape(this.info.url): np;
+			var info = this.reports[this.dataTreePath.nodekey].info;
+			if( info != undefined ){
+				var np = window.location.href.split('?')[0].replace(/\/$/, "");
+				return (info != null)?np + "?url=" + escape(info.url): np;
+			} else {
+				"No active data node"
+			}
+//			var np = window.location.href.split('?')[0].replace(/\/$/, "");
+//			return (this.info != null)?np + "?url=" + escape(this.info.url): np;
 		}
 };
 
