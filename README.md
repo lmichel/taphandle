@@ -21,3 +21,6 @@ The main cache functionnalities are:
   * User data storage
   * XML => JSON conversion. The TAP protocol is bases on XML message whereas the communication between the browser and the porxy server are mostly based on JSON messages.
 
+2. **Connect TapHandle**
+
+[http://saada.unistra.fr/taphandle]
