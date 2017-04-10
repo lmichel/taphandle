@@ -39,7 +39,7 @@ function initFunctions () {
 		$(".vizier-link").attr("href", np+"?url=http%3A//tapvizier.u-strasbg.fr/TAPVizieR/tap/")
 		$(".simbad-link").attr("href", np+"?url=http%3A//simbad.u-strasbg.fr/simbad/sim-tap/")
 		$(".planet-link").attr("href", np+"?url=http%3A//voparis-tap.obspm.fr/__system__/tap/run/tap/")
-		$(".heasarch-link").attr("href", np+"?url=http%3A//heasarc.gsfc.nasa.gov/xamin/vo/tap/")
+		$(".heasarch-link").attr("href", np+"?url=https%3A//heasarc.gsfc.nasa.gov/xamin/vo/tap/")
 		$(".chandra-link").attr("href", np+"?url=http%3A//cda.harvard.edu/cxctap/")
 		$(".sdss-link").attr("href", np+"?url=http://wfaudata.roe.ac.uk/sdssdr9-dsa/TAP/")
 		
