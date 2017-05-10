@@ -51,7 +51,7 @@ public class TapAccess  extends RootClass {
 	 * @param translate: Apply the asyncjob style sheet if needed
 	 * @throws Exception
 	 */
-	public static void sendPostRequest(String endpoint, String data, String outputfile, NodeCookie cookie, boolean translate) throws Exception {
+	public static void sendPostRequest(String endpoint, String data, String statusFileName, NodeCookie cookie, boolean translate) throws Exception {
 
 		logger.debug("send POST request " + endpoint + "(" + data + ") " + cookie);
 		// Send the request
@@ -70,7 +70,7 @@ public class TapAccess  extends RootClass {
 
 		// Get the response
 		BufferedWriter bw ;
-		bw = new BufferedWriter(new FileWriter(outputfile));
+		bw = new BufferedWriter(new FileWriter(statusFileName));
 		InputStream is = null;
 		try {
 			is = conn.getInputStream();
@@ -83,7 +83,7 @@ public class TapAccess  extends RootClass {
 			reader.close();
 			cookie.storeCookie();	   
 			if( translate){
-				XmlToJson.applyStyle(outputfile, outputfile.replaceAll("xml", "json")
+				XmlToJson.applyStyle(statusFileName, statusFileName.replaceAll("xml", "json")
 						, StyleDir + "asyncjob.xsl");
 			}
 
@@ -137,7 +137,12 @@ public class TapAccess  extends RootClass {
 		}
 		bw.close(); 
 		reader.close();
-		cookie.storeCookie();	        
+		cookie.storeCookie();	 
+		// TODO: removing these debug messages make applyStyle failing on an unexistant file on Saada
+		// as if  bw was not flushed !!!
+logger.info("@@@ " + outputfile );
+File f = new File(outputfile);
+logger.info("@@@ " + f.exists() + " " + f.length() );
 
 		XmlToJson.applyStyle(outputfile, outputfile.replaceAll("xml", "json")
 				, StyleDir + "asyncjob.xsl");
@@ -255,13 +260,13 @@ public class TapAccess  extends RootClass {
 	/**
 	 * @param endpoint
 	 * @param query
-	 * @param outputfile
+	 * @param statusFileName
 	 * @param cookie
 	 * @param remoteAddress
 	 * @return
 	 * @throws Exception
 	 */
-	public static String createAsyncJob(String endpoint, String query, String outputfile, NodeCookie cookie, String remoteAddress) throws Exception {
+	public static String createAsyncJob(String endpoint, String query, String statusFileName, NodeCookie cookie, String remoteAddress) throws Exception {
 		String runId = (remoteAddress == null )? RUNID: "TapHandle-" + remoteAddress;
 		/*
 		 * Services based on DACHs 	are forced to return VOTable with data in a table (not BINARY)
@@ -271,10 +276,10 @@ public class TapAccess  extends RootClass {
 				? "&FORMAT=" + URLEncoder.encode("application/x-votable+xml;serialization=tabledata" , "ISO-8859-1"): "";
 		sendPostRequest(endpoint + "async"
 				, "RUNID=" + runId + format + "&REQUEST=doQuery&LANG=ADQL&QUERY=" + URLEncoder.encode(query, "ISO-8859-1")
-				, outputfile
+				, statusFileName
 				, cookie
 				, true);
-		return  JsonUtils.getValue (outputfile.replaceAll("xml", "json"), "job.jobId");
+		return  JsonUtils.getValue (statusFileName.replaceAll("xml", "json"), "job.jobId");
 	}
 
 	/**
@@ -328,16 +333,16 @@ public class TapAccess  extends RootClass {
 	/**
 	 * @param endpoint
 	 * @param jobId
-	 * @param outputfile
+	 * @param statusFilename
 	 * @param cookie
 	 * @return
 	 * @throws Exception
 	 */
-	public static String getAsyncJobPhase(String endpoint, String jobId, String outputfile, NodeCookie cookie) throws Exception {
+	public static String getAsyncJobPhase(String endpoint, String jobId, String statusFilename, NodeCookie cookie) throws Exception {
 		sendGetRequest(endpoint + "async/" + jobId
-				, outputfile
+				, statusFilename
 				, cookie);
-		return  JsonUtils.getValue (outputfile.replaceAll("xml", "json"), "job.phase");
+		return  JsonUtils.getValue (statusFilename.replaceAll("xml", "json"), "job.phase");
 	}
 
 	/**
