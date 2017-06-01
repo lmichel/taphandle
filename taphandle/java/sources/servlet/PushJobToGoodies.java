@@ -12,6 +12,7 @@ import org.json.simple.JSONObject;
 import session.UserSession;
 import session.UserTrap;
 import translator.JsonUtils;
+import static java.nio.file.StandardCopyOption.*;
 
 /**
  * Servlet implementation class PushJobToGoodies
@@ -49,9 +50,13 @@ public class PushJobToGoodies extends RootServlet {
 			retour.put("table", goodiesName);
 			JsonUtils.teePrint(response, retour.toJSONString());
 			
-/*			UserSession session = UserTrap.getUserAccount(request);
+			UserSession session = UserTrap.getUserAccount(request);
+			logger.debug("#### " + jobId);
 			session.pushJobInGoodies(nodeKey, jobId, goodiesName);
-			JsonUtils.teePrint(response, session.goodies.getJsonContent().toJSONString());
+			logger.debug("#### " + jobId);
+			
+/*
+ * 			JsonUtils.teePrint(response, session.goodies.getJsonContent().toJSONString());
 */		} catch (Exception e) {
 			this.reportJsonError(request, response, e);
 		}
