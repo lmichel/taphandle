@@ -1,8 +1,11 @@
 package session;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 
 import org.apache.commons.fileupload.FileItem;
@@ -21,6 +24,8 @@ import translator.GoodiesIngestor;
  */
 public  class Goodies extends RootClass{
 	private final String baseDirectory;
+	//TODO find a way to import radius
+	private int radius = 3;
 
 	/**
 	 * @param baseDirectory
@@ -42,10 +47,22 @@ public  class Goodies extends RootClass{
 	 * @throws Exception
 	 */
 	protected void pushJobResultInGoodies(String nodeKey, String jobPath, String goodiesName) throws Exception{
-		String dirName =  this.baseDirectory + WEB_USER_GOODIES_LIST +File.separator + nodeKey;
+		String dirName =  this.baseDirectory + WEB_USER_GOODIES_JOB;
 		validWorkingDirectory(dirName );
+		dirName += File.separator + nodeKey;
+		validWorkingDirectory(dirName );
+		String[] splitBaseDir = this.baseDirectory.split("/"); 
+		String basedir ="";
+		int i=0;
+		while(i < splitBaseDir.length -3){
+			basedir += splitBaseDir[i];
+			basedir += "/";
+			i++;
+		}
+			
+		logger.debug("@@@@ "+ basedir + jobPath);
 		FileUtils.copyFile(
-				new File(jobPath +File.separator  + VOTABLE_JOB_RESULT)
+				new File(basedir + jobPath +File.separator  + VOTABLE_JOB_RESULT)
 				, new File(dirName +File.separator  + ((goodiesName.endsWith(".xml"))? goodiesName: goodiesName + ".xml") )
 		);
 	}
@@ -53,19 +70,20 @@ public  class Goodies extends RootClass{
 	/**
 	 * Returns the full pathname of to file goodiesName stored into the goodies position list.
 	 * The returned path must match a non existing file. If the file already exists, it is appended
-	 * with a number in ()
+	 * with a number at the end
 	 * @param goodiesName
 	 * @return
 	 * @throws Exception
 	 */
 	public String getNewUserListPath(String goodiesName) throws Exception{
 		int cpt = 0;
+		logger.debug("get " + goodiesName);
 		String gn = goodiesName;
 		String fileName  =  this.baseDirectory + WEB_USER_GOODIES_LIST+File.separator + goodiesName;
 		File f = new File(fileName);
 		while( f.exists() ) {
 			cpt++;
-			gn = goodiesName + "(" + cpt + ")";
+			gn = goodiesName + "_" + cpt;
 			fileName =  this.baseDirectory + WEB_USER_GOODIES_LIST+File.separator + gn;
 			f = new File(fileName);
 		} 
@@ -78,9 +96,10 @@ public  class Goodies extends RootClass{
 	 */
 	public String ingestUserList(FileItem item) throws Exception{
 		File f = new File(this.getNewUserListPath(item.getName()));
-		item.write(f);	
-		return processUserList( item.getName());
+		item.write(f);
+		return processUserList( f.getName());
 	}
+
 
 	/**
 	 * Public for debug purpose can be run without reference to FileItem
@@ -88,10 +107,19 @@ public  class Goodies extends RootClass{
 	 * @return
 	 * @throws Exception
 	 */
-	public String processUserList(String listName)  throws Exception{
-		GoodiesIngestor gi = new GoodiesIngestor(this.baseDirectory + WEB_USER_GOODIES_LIST, listName);
-		gi.ingestUserList();
-		return gi.getReport();		
+	public String processUserList(String listName)  throws Exception{ 
+		GoodiesIngestor gi = new GoodiesIngestor(this.baseDirectory + WEB_USER_GOODIES_LIST, listName, radius);
+		String[] fSplitName = listName.replaceAll("[\\.\\(\\)]", "_").split("_");		
+		String ext = "xml";
+	
+		if(fSplitName[fSplitName.length -1].equalsIgnoreCase(ext)){
+			logger.debug("Upload is already a VOTable");
+			gi.ingestUserList(listName,listName.replaceAll("_xml", ".json").replaceAll(".xml", ".json"));
+			return gi.getReport();
+		}else{
+			gi.ingestUserList();
+			return gi.getReport();	
+		}
 	}
 	
 	public void dropUserList(String name) throws Exception{
@@ -106,12 +134,35 @@ public  class Goodies extends RootClass{
 			logger.info("Remove file " + f.getAbsolutePath());
 			f.delete();
 		}
+		String namePos = report.get("nameReport").toString().substring(0,report.get("nameReport").toString().length()-4);
+		String[] namesplit = namePos.split("_");
+		namePos = namesplit[0];
+		for(int i =1; i< namesplit.length-1; i++){
+			namePos += "_" + namesplit[i];
+		}
+		namePos += "." + namesplit[namesplit.length-1];
+		
+		f = new File(this.baseDirectory + WEB_USER_GOODIES_LIST + File.separator + namePos);
+		if( f.exists() ) {
+			logger.info("Remove file " + f.getAbsolutePath());
+			f.delete();
+		}
 		f = new File(this.baseDirectory + WEB_USER_GOODIES_LIST + File.separator + report.get("nameReport")) ;
 		if( f.exists() ) {
 			logger.info("Remove file " + f.getAbsolutePath());
 			f.delete();
 		}
 	}
+	
+	
+	public void dropUserJob(String node, String jobname) throws Exception{
+		File f = new File(this.baseDirectory + WEB_USER_GOODIES_JOB + File.separator + node +  File.separator + jobname);
+		if( f.exists() ) {
+			logger.info("Remove file " + f.getAbsolutePath());
+			f.delete();
+		}
+	}
+	
 	/**
 	 * Return a JSON description of the Goodies content
 	 * Retuned JSON is [{nodekey:"..", posLists: [{"positions", "date", "nameOrg", "nameVot", "nameReport}, ....] 
@@ -156,6 +207,59 @@ public  class Goodies extends RootClass{
 	 */
 	public JSONObject getUserListReport(String table) throws Exception {
 		return getJsonContent(WEB_USER_GOODIES_LIST, table);
+	}
+	
+	public JSONObject getAllUserList() throws Exception{
+		JSONObject retour  = new JSONObject();
+		
+		//Add all list upload
+		JSONArray tab = new JSONArray();
+		String [] listefichiers; 
+		File repertoire = new File(this.baseDirectory + WEB_USER_GOODIES_LIST);
+		logger.debug("folder : " + repertoire.getAbsolutePath());
+		int i; 
+		listefichiers = repertoire.list();
+		if(listefichiers != null){
+			for(i=0;i<listefichiers.length;i++){ 
+				if(listefichiers[i].endsWith("xml")==true){
+					JSONObject list = new JSONObject();
+					list.put("filename", listefichiers[i].toString() );
+					list.put("decription", "No description available");
+					tab.add(list);
+				}
+			}
+		}
+		retour.put(WEB_USER_GOODIES_LIST, tab);
+		
+		JSONObject jobs = new JSONObject();
+		File repertoireJobs = new File(this.baseDirectory + WEB_USER_GOODIES_JOB);
+		listefichiers = repertoireJobs.list();
+		String [] joblist;
+		if(listefichiers != null){
+			for(i=0;i<listefichiers.length;i++){ 
+				JSONArray job = new JSONArray();
+				File repertoireJob = new File(this.baseDirectory + WEB_USER_GOODIES_JOB + "/"+ listefichiers[i]);
+				logger.debug("folder : " + repertoireJob.getAbsolutePath());
+				joblist = repertoireJob.list();
+				for(int j=0;j<joblist.length;j++){
+					String s = joblist[j].toString();
+					
+					System.out.println(s);
+					JSONObject a = new JSONObject();
+					a.put("jobnumber", joblist[j]);
+					a.put("filename", "result.xml");
+					a.put("description", "No description available");
+					job.add(a);
+				
+			}
+			if(!job.isEmpty()){
+				jobs.put(listefichiers[i],job);
+			}
+		}
+		}		
+		
+		retour.put("myJobs", jobs);
+		return retour;
 	}
 
 	/**
