@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" id="WebApp_ID" version="2.5">
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  xmlns:web="http://java.sun.com/xml/ns/javaee" xmlns="http://java.sun.com/xml/ns/javaee" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" id="WebApp_ID" version="2.5">
   <display-name>TapHandles V1.5</display-name>
   <welcome-file-list>
     <welcome-file>index.html</welcome-file>
@@ -219,6 +219,26 @@
     <servlet-name>UploadUserPosList</servlet-name>
     <url-pattern>/uploaduserposlist</url-pattern>
   </servlet-mapping>
+    <servlet>
+    <description></description>
+    <display-name>GetGoodiesList</display-name>
+    <servlet-name>GetGoodiesList</servlet-name>
+    <servlet-class>servlet.GetGoodiesList</servlet-class>
+  </servlet>
+    <servlet-mapping>
+    <servlet-name>GetGoodiesList</servlet-name>
+    <url-pattern>/GetGoodiesList</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>DeleteGoodies</display-name>
+    <servlet-name>DeleteGoodies</servlet-name>
+    <servlet-class>servlet.DeleteGoodies</servlet-class>
+  </servlet>
+    <servlet-mapping>
+    <servlet-name>DeleteGoodies</servlet-name>
+    <url-pattern>/deletegoodies</url-pattern>
+  </servlet-mapping>
   <servlet>
     <description></description>
     <display-name>ManageUserPosList</display-name>
@@ -228,5 +248,15 @@
   <servlet-mapping>
     <servlet-name>ManageUserPosList</servlet-name>
     <url-pattern>/ManageUserPosList</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>GetUploadedFile</display-name>
+    <servlet-name>GetUploadedFile</servlet-name>
+    <servlet-class>servlet.GetUploadedFile</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>GetUploadedFile</servlet-name>
+    <url-pattern>/getuploadedfile/*</url-pattern>
   </servlet-mapping>
 </web-app>
