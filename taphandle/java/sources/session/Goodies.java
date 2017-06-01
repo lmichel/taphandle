@@ -134,19 +134,7 @@ public  class Goodies extends RootClass{
 			logger.info("Remove file " + f.getAbsolutePath());
 			f.delete();
 		}
-		String namePos = report.get("nameReport").toString().substring(0,report.get("nameReport").toString().length()-4);
-		String[] namesplit = namePos.split("_");
-		namePos = namesplit[0];
-		for(int i =1; i< namesplit.length-1; i++){
-			namePos += "_" + namesplit[i];
-		}
-		namePos += "." + namesplit[namesplit.length-1];
-		
-		f = new File(this.baseDirectory + WEB_USER_GOODIES_LIST + File.separator + namePos);
-		if( f.exists() ) {
-			logger.info("Remove file " + f.getAbsolutePath());
-			f.delete();
-		}
+
 		f = new File(this.baseDirectory + WEB_USER_GOODIES_LIST + File.separator + report.get("nameReport")) ;
 		if( f.exists() ) {
 			logger.info("Remove file " + f.getAbsolutePath());
