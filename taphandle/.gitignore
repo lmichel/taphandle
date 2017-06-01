@@ -1,3 +1,4 @@
 **/goodies/**/*
 *.class
 packed*
+.classpath
