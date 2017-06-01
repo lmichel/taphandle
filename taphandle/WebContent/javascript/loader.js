@@ -72,7 +72,7 @@ resourceLoader = function() {
 		/*
 		 * Check if saadajsbasics resources are installed locally
 		 */
-		baseUrl = "http://localhost:8888/jsresources/";
+		baseUrl = "http://obs-stage-c11:8888/jsresources/";
 		$.ajax({
 			url: baseUrl + 'saadajsbasics/loader.js',
 			async: false, 
