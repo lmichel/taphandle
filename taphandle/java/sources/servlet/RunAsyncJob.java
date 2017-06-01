@@ -26,10 +26,11 @@ public class RunAsyncJob extends RootServlet implements Servlet {
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		printAccess(request, true);
+		
 		try {
 			UserSession session = UserTrap.getUserAccount(request);
 			String node = this.getParameter(request, "NODE");
-			String nodeKey=null;;
+			String nodeKey=null;
 			response.setContentType("application/json; charset=UTF-8");
 			if( node == null || node.length() ==  0 ) {
 				reportJsonError(request, response, "runasyncjob: no node specified");
@@ -48,7 +49,7 @@ public class RunAsyncJob extends RootServlet implements Servlet {
 			} else {
 				nodeKey = node;
 			}
-
+			
 			String query = this.getParameter(request, "QUERY");
 			if( query == null || query.length() ==  0 ) {
 				reportJsonError(request, response, "runasyncjob: no query specified");
@@ -63,7 +64,9 @@ public class RunAsyncJob extends RootServlet implements Servlet {
 
 			String upload = this.getParameter(request, "UPLOAD");	
 			if( upload != null && upload.length() >  0 ) {
-				String uploadParam = upload + "," + request.getRequestURL().toString() + "/getUploadedFile?session=" + request.getSession().getId() + "&file=" + upload;
+				String url = request.getRequestURL().toString();
+				String uploadParam = upload + "," + url.replace("runasyncjob", "getuploadedfile") + "/" + session.sessionID + "/" + upload + "?jsessionid=" + session.sessionID;
+				logger.debug("Call " + uploadParam);
 				session.connectNode(nodeKey);
 				String jobId = session.startJob(nodeKey, query, uploadParam, treenode);
 				response.getWriter().print(session.getJobSummary(nodeKey, jobId));
