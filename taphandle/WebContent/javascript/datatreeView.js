@@ -252,16 +252,18 @@ DataTreeView.prototype = {
 			tapView.fireTreeNodeEvent(datadataTreePath, andsubmit);	
 		},
 		/**
-		 * jsdata: {nodekey: ... , table: ...}
+		 * jsdata: {nodekey: ... , table: ..., date : ..., posNb: ... }
 		 */
 		addGoodies: function(jsdata){
 			var id_schema = "GoodiesX" + jsdata.nodekey;
-
+			
+			var desc ="Creation : " + jsdata.date + "\nPositions: " + jsdata.posNb;
+			
 			if( $("#" + id_schema).length == 0 ){
 				$("div#treedisp").jstree("create"
 						, $("#goodies")
 						, false
-						, {"data" : {"attr":{"id": id_schema, "title": "description"}, "title" : jsdata.nodekey},
+						, {"data" : {"attr":{"id": id_schema, "title": desc}, "title" : jsdata.nodekey},
 							"state": "closed",
 							"attr" :{"id": id_schema},
 
@@ -276,7 +278,7 @@ DataTreeView.prototype = {
 				$("div#treedisp").jstree("create"
 						, $("#" + id_schema)
 						, false // position
-						, {"data"  : {"icon": "images/SQLTable2.png", "attr":{"id": jsdata.table, "title": "description"}, "title" : jsdata.table},
+						, {"data"  : {"icon": "images/SQLTable2.png", "attr":{"id": jsdata.table, "title": desc}, "title" : jsdata.table},
 							"state": "closed"
 						}
 						,false// callback
@@ -299,11 +301,11 @@ DataTreeView.prototype = {
 			}
 			return;
 		},
-		pushJobToGoodies: function(jid){
+		pushJobToGoodies: function(jid, node, gn){
 			var that = this;
 			Processing.show("Pushing job to goodies");
 			$.getJSON("pushjobtogoodies"
-					, {jsessionid: sessionID, node: "table", jobid:"jobid" , goodiesname: "goodiesname" }, function(jsondata) {
+					, {jsessionid: sessionID, node: node, jobid: jid , goodiesname: gn }, function(jsondata) {
 						Processing.hide();
 						if( Processing.jsonError(jsondata, "Cannot get meta data") ) {
 							return;
