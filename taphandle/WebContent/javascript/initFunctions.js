@@ -116,13 +116,13 @@ function initFunctions () {
 		tapConstraintEditor = QueryConstraintEditor.tapConstraintEditor({parentDivId: 'tapwhere'
 			, formName: 'tapFormName'
 			, sesameUrl:"sesame"
-			, upload: {url: "uploadposlist", postHandler: function(retour){alert("postHandler " + retour);}}
+			, upload: {url: "uploaduserposlist", postHandler: UploadManager.postHandler}
 			, queryView: adqlQueryView});
 		
 		tapPosSelector = QueryConstraintEditor.tapPosSelector({ parentDivId: 'tapwhereposition'
 			, formName:'tapPosName'
 			, sesameUrl:"sesame"
-			, upload: {url: "uploadposlist", postHandler: function(retour){alert("postHandler " + retour);}}
+			, upload: {url: "uploaduserposlist", postHandler: UploadManager.postHandler}
 			, queryView: adqlQueryView});
 
 		var ins = $("input#node_selector");
