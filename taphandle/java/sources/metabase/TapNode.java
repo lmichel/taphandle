@@ -343,10 +343,6 @@ public class TapNode  extends RootClass {
 		QueryModeChecker qmc = new QueryModeChecker(this.regMark.getFullUrl(), query, uploadQuery, this.baseDirectory);
 		this.supportSyncMode = qmc.supportSyncMode();
 		this.supportAsyncMode = qmc.supportAsyncMode();
-		/** @@@@@@@@@ to remove
-		 *
-		 */
-		//this.supportAsyncMode = false;
 		if( this.regMark.getUrl().contains("cadc") ) {
 			logger.info("Force CADC to work in sync mode to avoid https issues");
 			this.supportAsyncMode = false;
