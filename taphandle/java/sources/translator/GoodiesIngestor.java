@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 
+import org.apache.commons.fileupload.FileItem;
 import org.json.simple.JSONObject;
 
 import resources.PositionParser;
@@ -25,6 +26,7 @@ public class GoodiesIngestor extends RootClass {
 	private final String filePrefix;
 	private final String fileName;
 	private final String jsonName;
+	private final String userFileName;
 	private final double defaultRadius;
 	private int nbPositions = 0;
 	private int nbLines = 0;
@@ -39,9 +41,11 @@ public class GoodiesIngestor extends RootClass {
 	public GoodiesIngestor(String workingDir, String filePrefix, String fileName, double defaultRadius) {
 		this.workingDir = workingDir;
 		this.filePrefix = filePrefix;
-		this.fileName = fileName.replaceAll("[\\.\\(\\)]", "_");;
-		this.jsonName = filePrefix + ".json";
+		String index = indexGen();
+		this.fileName = fileName.replaceAll("[\\.\\(\\)]", "_")+index ;
+		this.jsonName = filePrefix.replaceAll("[\\.\\(\\)]", "_")+index  + ".json";
 		this.defaultRadius = defaultRadius/60.;
+		this.userFileName = this.fileName+ ".org";
 	}
 
 	/**
@@ -53,9 +57,11 @@ public class GoodiesIngestor extends RootClass {
 	public GoodiesIngestor(String workingDir, String filePrefix, double defaultRadius) {
 		this.workingDir = workingDir;
 		this.filePrefix = filePrefix;
-		this.fileName = (filePrefix + ".xml").replaceAll("[\\.\\(\\)]", "_");
-		this.jsonName = filePrefix + ".json";
+		String index = indexGen();	
+		this.fileName = (filePrefix +index + ".xml").replaceAll("[\\.\\(\\)]", "_");
+		this.jsonName = filePrefix.replaceAll("[\\.\\(\\)]", "_")+index + ".json";
 		this.defaultRadius = defaultRadius/60.;
+		this.userFileName = this.fileName   +".org";
 	}
 
 	/**
@@ -66,15 +72,69 @@ public class GoodiesIngestor extends RootClass {
 	public GoodiesIngestor(String workingDir, String filePrefix) {
 		this.workingDir = workingDir;
 		this.filePrefix = filePrefix;
-		this.fileName = (filePrefix + ".xml").replaceAll("[\\.\\(\\)]", "_");
-		this.jsonName = filePrefix + ".json";
+		String index = indexGen();
+		this.fileName = (filePrefix +index  + ".xml").replaceAll("[\\.\\(\\)]", "_");
+		this.jsonName = filePrefix.replaceAll("[\\.\\(\\)]", "_")+index + ".json";
+		this.userFileName = this.fileName + ".org";
 		this.defaultRadius = Double.NaN;
 	}
 
+	
+	public String indexGen(){
+		int indexFile = 1;
+		File f;
+		try {
+			f = new File(this.workingDir + File.separator + this.filePrefix + "_1");
+
+			if(f.exists()){
+				while(f.exists()){
+					f = new File(this.workingDir + File.separator + this.filePrefix + "_" + indexFile);
+					logger.debug(this.workingDir + File.separator + this.filePrefix + "_" + indexFile + " Already exists");
+					indexFile ++;
+				}
+				return "_" + (indexFile-2);
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return "";
+	}
+	
+	
 	public void ingestUserList() throws IOException {
 		try {
 			convertUserList();
 			writeJsonReport();
+			logger.info("File " + this.filePrefix + " ingested as  " + this.fileName + " with " + this.nbPositions + " valid  positions" );
+
+		} catch (Exception e) {
+			logger.error("File " + this.filePrefix + " error" + e.getMessage() );
+			FileWriter fw = new FileWriter(this.workingDir + File.separator + this.jsonName);
+			fw.write(JsonUtils.getErrorMsg("Position List convertion failure\n" +e.getMessage()));
+			fw.close();
+		}
+	}
+	
+	public void ingestUserList(String nameVot, String reportName) throws IOException {
+		try {
+			//convertUserList();
+			int pos = 0;
+			try{
+				File inpf = new File(this.workingDir + File.separator  + nameVot);
+				BufferedReader br = new BufferedReader(new FileReader(inpf)) ;
+				String boeuf;
+				while( (boeuf = br.readLine()) != null ) {
+					boeuf = boeuf.trim();
+					if(boeuf.contains("<TR>")){
+						pos ++;
+					}
+				}
+			}
+			catch(Exception e){
+				logger.error("@@ File " + nameVot + " error" + e.getMessage() );
+			}
+			writeJsonReport(nameVot, pos, reportName);
 			logger.info("File " + this.filePrefix + " ingested as  " + this.fileName + " with " + this.nbPositions + " valid  positions" );
 
 		} catch (Exception e) {
@@ -91,6 +151,8 @@ public class GoodiesIngestor extends RootClass {
 		if( !inpf.exists() ){
 			throw new IOException("File " + inpf.getAbsolutePath() + " does not exist");
 		}
+		
+		
 		BufferedReader br = new BufferedReader(new FileReader(inpf)) ;
 		String boeuf;
 		ArrayList<Double> ra = new ArrayList<Double>();
@@ -145,14 +207,34 @@ public class GoodiesIngestor extends RootClass {
 		bw.write("      </TABLE>\n");
 		bw.write("  </RESOURCE>\n");
 		bw.write("</VOTABLE>\n");
-		bw.close();		
+		bw.close();
+		
+		copyToOrg(inpf);
+	}
+	
+	public void copyToOrg(File inpf){
+		try{
+			File outf = new File(this.workingDir + File.separator + this.userFileName);
+			BufferedReader br = new BufferedReader(new FileReader(inpf)) ;
+			BufferedWriter bw = new BufferedWriter(new FileWriter(outf));
+			String boeuf;
+			while( (boeuf = br.readLine()) != null ) {
+				boeuf = boeuf.trim();
+				bw.write(boeuf + "\n");
+				nbLines++;
+			}
+			bw.close();
+		}
+		catch(Exception e){
+			logger.error("File " + this.filePrefix + " error" + e.getMessage() );
+		}
 	}
 
 	@SuppressWarnings("unchecked")
 	private void writeJsonReport() throws IOException {
 		this.report = new JSONObject();
 		report.put("nameReport", this.jsonName);
-		report.put("nameOrg", this.filePrefix);
+		report.put("nameOrg", this.userFileName);
 		report.put("nameVot", this.fileName);
 		report.put("positions", this.nbPositions);
 		report.put("lines", this.nbLines);
@@ -163,6 +245,19 @@ public class GoodiesIngestor extends RootClass {
 		fw.close();
 	}
 	
+	private void writeJsonReport(String nameVot, int pos, String reportName) throws IOException {
+		this.report = new JSONObject();
+		report.put("nameReport", this.jsonName);
+		report.put("nameOrg", this.userFileName);
+		report.put("nameVot", nameVot);
+		report.put("positions", pos);
+		report.put("lines", this.nbLines);
+		report.put("radius", this.defaultRadius);
+		report.put("date", (new Date()).toString());
+		FileWriter fw = new FileWriter(this.workingDir + File.separator + reportName);
+		fw.write(report.toJSONString());
+		fw.close();
+	}
 	/**
 	 * 
 	 */
