@@ -338,6 +338,7 @@ public class XmlToJson  extends RootClass {
 				JSONArray rowData = new JSONArray();
 				for (int i = 0; i < nCol; i++) {
 					Object obj = o[i];
+
 					if(obj == null ) {
 						rowData.add("null");
 						/*
@@ -346,7 +347,6 @@ public class XmlToJson  extends RootClass {
 					} else 	if(obj.getClass().isArray()) {
 						int arraylLength = Array.getLength(obj);
 						if( arraylLength > 1 ) {
-							System.out.println("1 " + obj.getClass() + " "+ Array.getLength(obj));
 							String v = "";
 							for( int p=0 ; p<arraylLength ; p++ ){
 								Object cell = Array.get(obj, p);
