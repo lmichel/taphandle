@@ -18,7 +18,7 @@ import resources.RootClass;
  *
  */
 public class TapGAVO  extends RootClass {
-	private static final String baseDir = System.getProperty("java.io.tmpdir") ;
+	private static final String baseDir = "/home/stagiaire/test/tapGAVO/" ;
 	private static final String baseUrlN = "http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap/";
 
 	public static void main(String[] args) throws Exception {
@@ -26,13 +26,17 @@ public class TapGAVO  extends RootClass {
 
 		
 		RegistryMark rm = new RegistryMark("GAVO", " ", baseUrlN, "test", false, true);
-		TapNode tn = new TapNode(rm, "/tmp/meta");
-
+		TapNode tn = new TapNode(rm, "/home/stagiaire/test/tapGAVO/");
+		
+		
+		
+		
 		JSONParser parser = new JSONParser();
 		Object obj = parser.parse(new FileReader(tn.getBaseDirectory() + "tables.json"));
 		JSONObject jsonObject = (JSONObject) obj;
 		JSONArray schemas = (JSONArray) jsonObject.get("schemas");
-		int gen = 0;
+		System.out.println((JSONArray) jsonObject.get("schemas"));
+		//int gen = 0;
 		for(Object sn: schemas) {
 			JSONObject s = (JSONObject)sn;
 
@@ -47,23 +51,24 @@ public class TapGAVO  extends RootClass {
 					}
 				}
 			}
-//			JSONObject s = (JSONObject)sn;
-//			System.out.println("*********** " + s.get("name"));
-//			JSONArray tables = (JSONArray) s.get("tables");
-//			int cpt = 0;
-//			for( Object ts: tables) {
-//				JSONObject t = (JSONObject)ts;
-//				cpt++;
-//				gen++;
-//				if( cpt < 5 || cpt >= 5) {
-//					System.out.println("    " + cpt + "/" + gen + " " + t.get("name"));
-//					DataTreePath dataTreePath = new DataTreePath(s.get("name").toString(), (String)t.get("name"), "");
-//					tn.buildJsonTableAttributes(dataTreePath);
-//					tn.buildJsonTableDescription(dataTreePath);
-//					System.exit(1);
-//				}
-//			}
-		}	
-		System.out.println(tn.filterTableList(2).toJSONString());
+		}
+/*			System.out.println("*********** " + s.get("name"));
+			JSONArray tables = (JSONArray) s.get("tables");
+			int cpt = 0;
+			for( Object ts: tables) {
+				JSONObject t = (JSONObject)ts;
+				cpt++;
+				gen++;
+				if( cpt < 5 || cpt >= 5) {
+					System.out.println("    " + cpt + "/" + gen + " " + t.get("name"));
+					DataTreePath dataTreePath = new DataTreePath(s.get("name").toString(), (String)t.get("name"), "");
+					tn.buildJsonTableAttributes(dataTreePath);
+					tn.buildJsonTableDescription(dataTreePath);
+					System.exit(1);
+				}
+			}
+		}
+*/		System.out.println(tn.filterTableList(2).toJSONString());
+		System.exit(1);
 	}
 }
