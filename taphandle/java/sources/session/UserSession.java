@@ -131,23 +131,29 @@ public class UserSession  extends RootClass {
 			 * synchronous job
 			 */
 		} else {
+			
 			String jobID = "";
+			
 			do {
 				jobID = Integer.toString((int)(Math.random() *1000));
 			} while( jobStack.getJobCookie(nodeKey, jobID) != null ) ;
+			
 			String statusFileName = this.baseDirectory + nodeKey + File.separator + "status.xml";
 			String outputDir = JobUtils.setupJobDir(nodeKey, this.getJobDir(nodeKey, jobID), statusFileName, treepath);
 			NodeCookie nodeCookie = new NodeCookie();
 			nodeCookie.saveCookie(outputDir);
 			jobStack.pushJob(nodeKey, jobID, new JobTreePath(treepath), nodeCookie);
 			Date startTime = new Date();
+			
 			try {
 				TapAccess.runSyncJob(node.getUrl(), query, outputDir + VOTABLE_JOB_RESULT, nodeCookie, treepath);
 				JobUtils.writeSyncJobStatus(nodeKey, outputDir, jobID, startTime, query);
 			} catch(Exception e){
 				JobUtils.writeSyncJobError(nodeKey, outputDir, jobID, startTime, query, e.getMessage());
 			}
+			
 			return jobID;
+			
 		}
 	}
 	
@@ -164,7 +170,30 @@ public class UserSession  extends RootClass {
 				 * synchronous job
 				 */
 			} else {
-				throw new Exception("File upload not supported in synchronous mode");
+				
+				String jobID = "";
+				do {
+					jobID = Integer.toString((int)(Math.random() *1000));
+				} while( jobStack.getJobCookie(nodeKey, jobID) != null ) ;
+				
+				String statusFileName = this.baseDirectory + nodeKey + File.separator + "status.xml";
+				String outputDir = JobUtils.setupJobDir(nodeKey, this.getJobDir(nodeKey, jobID), statusFileName, treepath);
+				NodeCookie nodeCookie = new NodeCookie();
+				nodeCookie.saveCookie(outputDir);
+				jobStack.pushJob(nodeKey, jobID, new JobTreePath(treepath), nodeCookie);
+				Date startTime = new Date();
+				
+				try {
+					TapAccess.runSyncJob(node.getUrl(), query, uploadParam, outputDir + VOTABLE_JOB_RESULT, nodeCookie, treepath);
+					JobUtils.writeSyncJobStatus(nodeKey, outputDir, jobID, startTime, query);
+				} catch(Exception e){
+					JobUtils.writeSyncJobError(nodeKey, outputDir, jobID, startTime, query, e.getMessage());
+				}
+				
+				return jobID;
+				
+				
+				//throw new Exception("File upload not supported in synchronous mode");
 			}
 		}
 
@@ -489,3 +518,4 @@ public class UserSession  extends RootClass {
 		//		System.out.println(us.getJobList());
 	}
 }
+
