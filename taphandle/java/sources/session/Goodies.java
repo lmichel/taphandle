@@ -134,7 +134,6 @@ public  class Goodies extends RootClass{
 			logger.info("Remove file " + f.getAbsolutePath());
 			f.delete();
 		}
-
 		f = new File(this.baseDirectory + WEB_USER_GOODIES_LIST + File.separator + report.get("nameReport")) ;
 		if( f.exists() ) {
 			logger.info("Remove file " + f.getAbsolutePath());
