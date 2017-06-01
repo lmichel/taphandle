@@ -27,31 +27,17 @@ public class UserTrap extends RootClass {
 	private static final Map<String, HttpSession> sessions = new LinkedHashMap<String, HttpSession>();
 	private static final Pattern restSession = Pattern.compile(".*\\/jid([0-9A-Z]*$)");
 
-	public static UserSession getUserAccount(HttpServletRequest request) throws Exception {
+	public static UserSession getUserAccount(HttpServletRequest request, String paramSessionId) throws Exception {
 		HttpSession session = null;
-		/*
-		 * Try first to get the session from the HTTP parameter
-		 */
-//		String jsessionid = request.getParameter("jsessionid");
-//		if( jsessionid != null && (session = sessions.get(jsessionid)) != null ) {
-//			logger.info("session " + jsessionid + " already stored in session map");
-//			return  (UserSession) session.getAttribute("account");
-//		} else {
-//			Matcher m = restSession.matcher(request.getRequestURI());
-//			if (m.matches() && (session = sessions.get(m.group(1))) != null ) {
-//				logger.info("session " + jsessionid + " already stored in session map (rest mode)");
-//				return  (UserSession) session.getAttribute("account");			
-//			}
-//		}
 		session = request.getSession();  
 		session.setMaxInactiveInterval(-1);
 		String session_id = session.getId();
+		logger.debug("Get session id :" + session_id + " paramSessionId:" + paramSessionId);
 		if (session.isNew()) {
 			HttpSession localSession = null;
 			/*
 			 * Try first to get the session from the HTTP parameter
 			 */
-			String paramSessionId = request.getParameter("jsessionid");
 			if( paramSessionId != null && (localSession = sessions.get(paramSessionId)) != null ) {
 				logger.debug("session " + paramSessionId + " retreived in session map");
 				return  (UserSession) localSession.getAttribute("account");
@@ -64,6 +50,7 @@ public class UserTrap extends RootClass {
 			}			
 			UserSession account = new UserSession(session_id, request.getRemoteAddr());
 			session.setAttribute("account", account);
+			logger.debug("Save session id : " + session_id  + " : " + session);
 			sessions.put(session_id, session);
 			return account;
 		} else {
@@ -79,6 +66,11 @@ public class UserTrap extends RootClass {
 			return account;	    			
 		}
 	}
+	
+	public static UserSession getUserAccount(HttpServletRequest request) throws Exception {
+			return getUserAccount(request, request.getParameter("jsessionid"));
+	}
+	
 	
 	public static void destroySession(HttpServletRequest request) throws IOException {
 		HttpSession session = request.getSession(true);  
