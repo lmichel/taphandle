@@ -107,7 +107,7 @@ public class RootClass {
 	public static final String WEB_USERBASE_DIR =  "userbase"; // session data repository
 	public static final String WEB_USER_GOODIES_DIR =  "goodies"; // Directory where user can upload data files
 	public static final String WEB_USER_GOODIES_LIST =  "myLists"; // Directory where user can upload data files
-	public static final String WEB_USER_GOODIES_JOB = "myJobs";// Directory where user can upload jobs result
+	public static final String WEB_USER_GOODIES_JOB = "myJobs";// Directory where user can upload jobs result 
 	public final static String RUNID = "TapHandle-Proxy";
 	/*
 	 * some standard file names
