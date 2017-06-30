@@ -79,7 +79,7 @@ ViewState = function() {
 		 * Connect the interface to the selected node
 		 */
 		setPath(dataTreePath);			
-		tapView.fireTreeNodeEvent(dataTreePath, true);	
+		tapView.fireTreeNodeEvent(dataTreePath, true, dataTreeView.reports[dataTreePath.nodekey].capabilities.supportUpload);	
 	};
 	/**
 	 * A double click on a node has generated an error

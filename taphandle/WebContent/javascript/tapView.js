@@ -18,11 +18,12 @@ jQuery.extend({
 		/*
 		 * Fire external events
 		 */
-		this.fireTreeNodeEvent = function(dataTreePath, andsubmit){
+		this.fireTreeNodeEvent = function(dataTreePath, andsubmit, supportUpload){
 			adqlQueryView.fireSetTreePath(dataTreePath);
 			adqlQueryView.fireAddConstraint("tap", "limit", [getQLimit()]);
 			tapConstraintEditor.fireSetTreepath(dataTreePath);
 			tapPosSelector.fireSetTreepath(dataTreePath);
+			tapPosSelector.fireSupportUpload(supportUpload);
 			tapColumnSelector.fireSetTreepath(dataTreePath, ((andsubmit)? this.fireSubmitQueryEvent: null));
 
 		};
