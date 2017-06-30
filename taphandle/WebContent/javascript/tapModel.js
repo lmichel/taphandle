@@ -48,7 +48,7 @@ jQuery.extend({
 									, FORMAT: 'json'
 										, PHASE: 'RUN'
 											, MAXREC: limit
-											, UPLOAD:tapConstraintEditor.getUploadedFile()
+											, UPLOAD:tapPosSelector.getUploadedFile()
 											, QUERY: adqlQueryView.getQuery() }
 			, beforeSend: function(  jqXHR, settins) {
 			}
