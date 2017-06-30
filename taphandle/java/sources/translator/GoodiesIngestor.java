@@ -3,6 +3,7 @@ package translator;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -32,21 +33,6 @@ public class GoodiesIngestor extends RootClass {
 	private int nbLines = 0;
 	private JSONObject report;
 
-	/**
-	 * @param workingDir 
-	 * @param filePrefix: name of the uploaded file (before conversion in VOtable)
-	 * @param fileName: Name of the final votable
-	 * @param defaultRadius: Default radius in arcmin: used for positions without radius in user list
-	 */
-	public GoodiesIngestor(String workingDir, String filePrefix, String fileName, double defaultRadius) {
-		this.workingDir = workingDir;
-		this.filePrefix = filePrefix;
-		String index = indexGen();
-		this.fileName = fileName.replaceAll("[\\.\\(\\)]", "_")+index ;
-		this.jsonName = filePrefix.replaceAll("[\\.\\(\\)]", "_")+index  + ".json";
-		this.defaultRadius = defaultRadius/60.;
-		this.userFileName = this.fileName+ ".org";
-	}
 
 	/**
 	 * Constructor used for user lists. The name of the finbal votable is derived from the name of the uploaded file.
@@ -57,26 +43,11 @@ public class GoodiesIngestor extends RootClass {
 	public GoodiesIngestor(String workingDir, String filePrefix, double defaultRadius) {
 		this.workingDir = workingDir;
 		this.filePrefix = filePrefix;
-		String index = indexGen();	
-		this.fileName = (filePrefix +index + ".xml").replaceAll("[\\.\\(\\)]", "_");
-		this.jsonName = filePrefix.replaceAll("[\\.\\(\\)]", "_")+index + ".json";
+		String index       = indexGen();	
+		this.fileName      = (filePrefix +index + ".xml").replaceAll("[\\.\\(\\)]", "_");
+		this.userFileName  = filePrefix.replaceAll("[\\.\\(\\)]", "_")+index;
+		this.jsonName      = this.userFileName + ".json";
 		this.defaultRadius = defaultRadius/60.;
-		this.userFileName = this.fileName   +".org";
-	}
-
-	/**
-	 * Constructor used for user lists. The name of the final votable is derived from the name of the uploaded file.
-	 * @param workingDir 
-	 * @param filePrefix: name of the uploaded file (before conversion in VOtable)
-	 */
-	public GoodiesIngestor(String workingDir, String filePrefix) {
-		this.workingDir = workingDir;
-		this.filePrefix = filePrefix;
-		String index = indexGen();
-		this.fileName = (filePrefix +index  + ".xml").replaceAll("[\\.\\(\\)]", "_");
-		this.jsonName = filePrefix.replaceAll("[\\.\\(\\)]", "_")+index + ".json";
-		this.userFileName = this.fileName + ".org";
-		this.defaultRadius = Double.NaN;
 	}
 
 	
@@ -245,6 +216,7 @@ public class GoodiesIngestor extends RootClass {
 		fw.close();
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void writeJsonReport(String nameVot, int pos, String reportName) throws IOException {
 		this.report = new JSONObject();
 		report.put("nameReport", this.jsonName);
@@ -263,5 +235,19 @@ public class GoodiesIngestor extends RootClass {
 	 */
 	public String getReport() {
 		return ((report != null)? report.toJSONString(): "NULL");
+	}
+	
+	/**
+	 * Returns the JSON description as it is stored on disk
+	 * @throws FileNotFoundException 
+	 */
+	public String getReportFromDisk() throws Exception {
+		BufferedReader br = new BufferedReader(new FileReader(this.workingDir + File.separator + this.jsonName));
+		String boeuf, retour = "";
+		while( (boeuf = br.readLine()) != null){
+			retour += boeuf;
+		}
+		br.close();
+		return retour;
 	}
 }

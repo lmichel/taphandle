@@ -100,6 +100,16 @@ public  class Goodies extends RootClass{
 		return processUserList( f.getName());
 	}
 
+	/**
+	 * Returns the JSON description of the list listName as it is stored on disk
+	 * @param listName
+	 * @return
+	 * @throws Exception
+	 */
+	public String getListReportFromDisk(String listName) throws Exception{
+		GoodiesIngestor gi = new GoodiesIngestor(this.baseDirectory + WEB_USER_GOODIES_LIST, listName, radius);
+		return gi.getReportFromDisk();	
+	}
 
 	/**
 	 * Public for debug purpose can be run without reference to FileItem
@@ -122,6 +132,11 @@ public  class Goodies extends RootClass{
 		}
 	}
 	
+	/**
+	 * Remove the user's list named name
+	 * @param name
+	 * @throws Exception
+	 */
 	public void dropUserList(String name) throws Exception{
 		JSONObject report = this.getJsonContent(WEB_USER_GOODIES_LIST, name + ".json");
 		File f = new File(this.baseDirectory + WEB_USER_GOODIES_LIST + File.separator + report.get("nameOrg")) ;
