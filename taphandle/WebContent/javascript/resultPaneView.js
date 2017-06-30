@@ -312,7 +312,7 @@ jQuery.extend({
 		};
 
 		this.showTapResult = function(dataTreePath, jid, jsdata, attributeHandlers) {
-			var table = "<table cellpadding=\"0\" cellspacing=\"0\" border=\"1\"  id=\"datatable\" class=\"display\"></table>";
+			var table = "<table cellpadding=\"0\" cellspacing=\"0\" border=\"1\" width= 100% id=\"datatable\" class=\"display\"></table>";
 			
 			var job = ( !dataTreePath.jobid || dataTreePath.jobid == "")? "": '&gt;'+ dataTreePath.jobid;
 			
@@ -489,7 +489,7 @@ jQuery.extend({
 				/*
 				 * Build empty table
 				 */
-				table += "</tr>"
+				table += "</tr >"
 					+ "</thead>"
 					+ "<tbody>"
 					+ "<tr><td colspan="
