@@ -122,7 +122,7 @@ function initFunctions () {
 		tapPosSelector = QueryConstraintEditor.tapPosSelector({ parentDivId: 'tapwhereposition'
 			, formName:'tapPosName'
 			, sesameUrl:"sesame"
-			, upload: {url: "uploaduserposlist", postHandler: UploadManager.postHandler}
+			, upload: {url: "uploaduserposlist", postHandler: UploadManager.postHandler, preloadedGetter: UploadManager.preloadedGetter}
 			, queryView: adqlQueryView});
 
 		var ins = $("input#node_selector");
