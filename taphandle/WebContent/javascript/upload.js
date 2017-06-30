@@ -11,5 +11,9 @@ var UploadManager = {
 	postHandler: function (retour){
 		//console.log("@@@@ postHandler : ");
 		UploadManager.dataTreeUpdate(retour);
+	},
+	
+	preloadedGetter: function (){
+		return [];
 	}
 };

@@ -62,7 +62,8 @@ public class UploadUserPosList extends RootServlet {
 				 */
 				double radius = Double.NaN;
 				FileItem fileItem = null;;
-				String sessionID = "";
+				String sessionID = null;
+				String fileName = null;
 				while (iter.hasNext()) {
 					FileItem item = (FileItem) iter.next();
 					if (item.isFormField() ) {
@@ -71,6 +72,9 @@ public class UploadUserPosList extends RootServlet {
 						}
 						if(item.getFieldName().equalsIgnoreCase("jsessionid")){
 							sessionID = item.getString();
+						}
+						if(item.getFieldName().equalsIgnoreCase("fileName")){
+							fileName = item.getString();
 						}
 						
 					} else {
@@ -82,12 +86,18 @@ public class UploadUserPosList extends RootServlet {
 				/*
 				 * Checks that all data have been received
 				 */
-				if( fileItem == null){
-					reportJsonError(request, response, "No file received");	
-					return;
-				} else if( Double.isNaN(radius)) {
+				if( Double.isNaN(radius)) {
 					reportJsonError(request, response, "No valid radius received");		
 					return;
+				} else if( fileItem == null){
+					if( fileName != null ){
+						Goodies goodies = session.goodies;
+						JsonUtils.teePrint(response, goodies.getListReportFromDisk(fileName));
+						return;
+					} else {
+						reportJsonError(request, response, "No file received");	
+						return;
+					}
 				} else {
 					/*
 					 * Store the file and convert it into a VOTable
@@ -96,6 +106,7 @@ public class UploadUserPosList extends RootServlet {
 					JsonUtils.teePrint(response, goodies.ingestUserList(fileItem));
 				}
 			} catch (Exception e) {
+				e.printStackTrace();
 				reportJsonError(request, response, e);
 			}
 		} else {
