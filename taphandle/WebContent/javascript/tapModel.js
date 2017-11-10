@@ -37,19 +37,23 @@ jQuery.extend({
 			}
 			Processing.show("Run job");
 			var limit = getQLimit();
+			var upload = tapPosSelector.getUploadedFile();
+			var post_data = {jsessionid: sessionID
+					, NODE: dataTreeView.dataTreePath.nodekey
+					, TREEPATH: dataTreeView.dataTreePath.nodekey + ";" + dataTreeView.dataTreePath.schema + ";" + dataTreeView.dataTreePath.table
+					, REQUEST: "doQuery"
+					, LANG: 'ADQL'
+					, FORMAT: 'json'
+					, PHASE: 'RUN'
+					, MAXREC: limit
+					, QUERY: adqlQueryView.getQuery() };
+			if( upload ){
+				 post_data.UPLOAD = upload;
+			} 
 			$.ajax({type: 'POST'
 				, url:"runasyncjob"
-					, dataType: 'json'
-						, data: {jsessionid: sessionID
-							, NODE: dataTreeView.dataTreePath.nodekey
-							, TREEPATH: dataTreeView.dataTreePath.nodekey + ";" + dataTreeView.dataTreePath.schema + ";" + dataTreeView.dataTreePath.table
-							, REQUEST: "doQuery"
-								, LANG: 'ADQL'
-									, FORMAT: 'json'
-										, PHASE: 'RUN'
-											, MAXREC: limit
-											, UPLOAD:tapPosSelector.getUploadedFile()
-											, QUERY: adqlQueryView.getQuery() }
+				, dataType: 'json'
+				, data: post_data
 			, beforeSend: function(  jqXHR, settins) {
 			}
 			, error: function(  jqXHR,  textStatus,  errorThrown) {
