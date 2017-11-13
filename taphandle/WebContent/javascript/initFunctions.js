@@ -203,10 +203,13 @@ function initFunctions () {
 	        /*
 	         * On a root node: open the resource filter tool
 	         */
-			} else if( streePath.length == 1) {
-				var nm = $(e.target).closest("a")[0].id;
-				if( nm != "" ) {
-					nodeFilterView.fireOpenSelectorWindow(nm);
+			} else if( streePath.length == 1 ) {
+				var target = $(e.target);
+				if( target.attr("id") != "GoodiesXmyList") {
+					var nm = target.closest("a")[0].id;
+					if( nm != "" ) {
+						nodeFilterView.fireOpenSelectorWindow(nm);
+					}
 				}	
 			/*
 			 * On schema: do nothing
