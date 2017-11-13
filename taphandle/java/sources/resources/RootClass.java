@@ -34,7 +34,7 @@ import tapaccess.TapException;
  *
  */
 public class RootClass {
-	public static final String VERSION = "2.1.1";
+	public static final String VERSION = "2.2";
 	/**
 	 * Logger used everywhere in the project
 	 */
