@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 
-import org.apache.commons.fileupload.FileItem;
 import org.json.simple.JSONObject;
 
 import resources.PositionParser;
@@ -42,10 +41,18 @@ public class GoodiesIngestor extends RootClass {
 	 */
 	public GoodiesIngestor(String workingDir, String filePrefix, double defaultRadius) {
 		this.workingDir = workingDir;
-		this.filePrefix = filePrefix;
-		String index       = indexGen();	
-		this.fileName      = (filePrefix +index + ".xml").replaceAll("[\\.\\(\\)]", "_");
-		this.userFileName  = filePrefix.replaceAll("[\\.\\(\\)]", "_")+index;
+		String index = "";
+		/*
+		 * Source lists already uploaded and reused are prefixed with _Goodies_
+		 */
+		if( filePrefix.startsWith("_Goodies_")) {
+			this.filePrefix = filePrefix.replaceFirst("^_Goodies_", "");
+		} else {
+			this.filePrefix = filePrefix;
+			index       = indexGen();	
+		}
+		this.fileName      = (this.filePrefix +index + ".xml").replaceAll("[\\.\\(\\)]", "_");
+		this.userFileName  = this.filePrefix.replaceAll("[\\.\\(\\)]", "_")+index;
 		this.jsonName      = this.userFileName + ".json";
 		this.defaultRadius = defaultRadius/60.;
 	}

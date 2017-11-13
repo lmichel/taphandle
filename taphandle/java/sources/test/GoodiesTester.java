@@ -20,11 +20,7 @@ import translator.GoodiesIngestor;
 
 public class GoodiesTester extends RootClass {
 
-	/**
-	 * @param args
-	 * @throws IOException 
-	 */
-	public static void main(String[] args) throws Exception {
+	public static void testVizier() throws Exception {
 		String base = "WebContent/" + WEB_USER_GOODIES_DIR + "/";
 		
 		Goodies g = new Goodies(base);
@@ -32,19 +28,50 @@ public class GoodiesTester extends RootClass {
 		JSONArray jso;
 		jso = g.getJsonContent();
 		System.out.println(jso.toJSONString());
-		/*
+		
 		String baseUrlN = "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/";
-		String urlList = "http://obs-stage-c11:8888/taphandle/goodies/myLists/";
+		String urlList = "http://saada.unistra.fr/taphandle/sample/";
 		RegistryMark rm = new RegistryMark("vizier", " ", baseUrlN, "test", false, true);
 		String urlServ = rm.getFullUrl();
-		String inpFileName = "list_vizier_pos_xml";
+		String inpFileName = "uploadsample.xml";
 		String tableName= "\"J/AJ/144/129/refs\"";//"vcds1.\"B/cfht/obscore\"";
 		String query = "SELECT TOP 1 * FROM " + tableName + " NATURAL JOIN TAP_UPLOAD.taphandlesample";
 		String nodeKey = "testAsync/";		
-		String localdir = "/home/stagiaire/test/";		
+		String localdir = "/home/michel/Desktop/";		
 		//upload(urlServ, inpFileName, urlList, tableName, query);
-		//uploadAsync(urlServ, nodeKey, query, urlList + inpFileName, localdir, tableName);
-		*/
+		uploadAsync(urlServ, nodeKey, query, urlList + inpFileName, localdir, tableName);
+	}
+	
+	public static void testSimbad() throws Exception {
+		String base = "WebContent/" + WEB_USER_GOODIES_DIR + "/";
+		
+		Goodies g = new Goodies(base);
+		g.processUserList("list_vizier.pos");		
+		JSONArray jso;
+		jso = g.getJsonContent();
+		System.out.println(jso.toJSONString());
+		
+		String baseUrlN = "http://simbad.u-strasbg.fr/simbad/sim-tap/";
+		String urlList = "http://saada.unistra.fr/taphandle/sample/";
+		RegistryMark rm = new RegistryMark("vizier", " ", baseUrlN, "test", false, true);
+		String urlServ = rm.getFullUrl();
+		String inpFileName = "uploadsample.xml";
+		String tableName= "\"J/AJ/144/129/refs\"";//"vcds1.\"B/cfht/obscore\"";
+		String query = "SELECT  TOP 100  * FROM public.basic, TAP_UPLOAD.taphandlesample " 
+				+ " WHERE      CONTAINS(POINT('ICRS', ra, dec), CIRCLE('ICRS', TAP_UPLOAD.taphandlesample.s_ra, TAP_UPLOAD.taphandlesample.s_dec, 0.016666666666666666)) = 1 ";
+		String nodeKey = "testAsync/";		
+		String localdir = "/home/michel/Desktop/";		
+		//upload(urlServ, inpFileName, urlList, tableName, query);
+		uploadAsync(urlServ, nodeKey, query, urlList + inpFileName, localdir, tableName);
+	}
+	/**
+	 * @param args
+	 * @throws IOException 
+	 */
+	public static void main(String[] args) throws Exception {
+		testSimbad();
+		//testVizier();
+		
 		System.exit(0);
 	}
 	

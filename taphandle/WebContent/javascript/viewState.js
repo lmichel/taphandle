@@ -106,6 +106,13 @@ ViewState = function() {
 
 	};
 	/**
+	 * Goodies are removed from the datatree must be 
+	 * removed from the current query form as well
+	 */
+	var fireGoodyRemoved = function(goodyName) {
+		tapView.fireGoodyRemoved(goodyName);
+	}
+	/**
 	 * A new jobs has ben submitted
 	 */
 	var fireSubmit = function(dataTreePath) {
@@ -175,6 +182,7 @@ ViewState = function() {
 	pblc.fireDoubleClickKO   = fireDoubleClickKO;
 	pblc.fireDragOnQueryForm = fireDragOnQueryForm;
 	pblc.fireSubmit          = fireSubmit;
+	pblc.fireGoodyRemoved    = fireGoodyRemoved;
 	pblc.fireSubmitted       = fireSubmitted;
 	pblc.fireSubmitOK        = fireSubmitOK;
 	pblc.fireSubmitDelayed   = fireSubmitDelayed;

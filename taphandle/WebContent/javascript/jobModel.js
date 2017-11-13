@@ -68,7 +68,7 @@ jQuery.extend({
 		var countDown = 10;
 		var progressTimer = null;
 		var actions  = new Array();
-		actions['COMPLETED'] = ["Actions", "Show Query", "Display Result", "Download Result", "Display Result in Aladin", "Add to Cart", "Send to SAMP", "Add to Goodies", "Summary"];
+		actions['COMPLETED'] = ["Actions", "Show Query", "Display Result", "Download Result", "Display Result in Aladin", "Add to Cart", "Send to SAMP", /*"Add to Goodies",*/ "Summary"];
 		actions['PENDING']   = ["Actions", "Show Query", "Run",  "Summary"];
 		actions['EXECUTING'] = ["Actions", "Show Query", "Summary"];
 		actions['QUEUED']    = ["Actions", "Show Query", "Summary"];
@@ -174,17 +174,17 @@ jQuery.extend({
 			} else if( action == 'Download Result') {			
 				this.downloadVotable();
 			} else if( action == 'Display Result in Aladin') {		
-				var url = rootUrl + '/jobresult?NODE=' + dataTreePath.nodekey.trim() + '&JOBID=' + id.trim() + '&jsessionid='+ sessionID;
+				var url = rootUrl + '/jobresult?NODE=' + dataTreePath.nodekey.trim() + '&JOBID=' + id.toString().trim() + '&jsessionid='+ sessionID;
 				ModalAladin.aladinExplorer({swarm: url
 					                      , title: dataTreePath.nodekey.trim() + ' '+ dataTreePath.schema + '.' 
-					                        + dataTreePath.table  + " Job " + id.trim()}
+					                        + dataTreePath.table  + " Job " + id.toString().trim()}
 										, []);		
 			} else if( action == 'Add to Cart') {			
 				cartView.fireAddJobResult(jobDescription.dataTreePath, id);
 			} else if( action == 'Send to SAMP') {	
 				this.sampBroadcast();			
 			} else if( action == 'Add to Goodies' ){
-				dataTreeView.pushJobToGoodies(id.trim(), jobDescription.dataTreePath.nodekey, id.trim());
+				dataTreeView.pushJobToGoodies(id.toString().trim(), jobDescription.dataTreePath.nodekey, id.toString().trim());
 			} else {
 				this.displayResult();
 			}
@@ -213,11 +213,11 @@ jQuery.extend({
 			Modalinfo.info(report, 'Query of job ' + dataTreePath.nodekey + '.' + dataTreePath.jobid);
 		};
 		this.downloadVotable= function() {
-			var url = 'jobresult?NODE=' + dataTreePath.nodekey.trim() + '&JOBID=' + id.trim() + '&jsessionid='+ sessionID;
+			var url = 'jobresult?NODE=' + dataTreePath.nodekey.trim() + '&JOBID=' + id.toString().trim() + '&jsessionid='+ sessionID;
 			PageLocation.changeLocation(url);
 		};
 		this.sampBroadcast= function() {
-			var url =  rootUrl + 'jobresult?NODE=' + dataTreePath.nodekey.trim() + '&JOBID=' + id.trim() + '&jsessionid='+ sessionID;
+			var url =  rootUrl + 'jobresult?NODE=' + dataTreePath.nodekey.trim() + '&JOBID=' + id.toString().trim() + '&jsessionid='+ sessionID;
 			WebSamp_mVc.fireSendVoreport(url, "table.load.votable", url);
 		};
 		this.removeJob= function(){

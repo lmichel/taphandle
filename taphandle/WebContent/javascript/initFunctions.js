@@ -185,7 +185,7 @@ function initFunctions () {
 				}
 		}); // end of jstree
 
-		$("a#goodies").attr("class", "help").css("color", "grey");
+		//$("a#goodies").attr("class", "help").css("color", "grey");
 		dataTree.bind("dblclick.jstree", function (e, data) {
 			var node = $(e.target).closest("li");
 			var id = node[0].id; //id of the selected node

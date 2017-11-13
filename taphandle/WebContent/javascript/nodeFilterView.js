@@ -50,6 +50,7 @@ jQuery.extend({
 					}
 					goodies += '"' + span + '"';
 					dataTreeView.delGoodies({"nodekey" : "myList", "table" : span});
+					ViewState.fireGoodyRemoved(span);
 				}
 			}
 			goodies += "]";
@@ -112,7 +113,7 @@ jQuery.extend({
 //					+ "        <input id=nodeFilter type=texte width=24 class='form-control input-sm'>"
 					+ "    </div>"
 */					+ "    <div id=nodeFilterList class='detaildata' style='border: 1px black solid; background-color: whitesmoke; width: 100%; height: 380px; overflow: auto; position:relative'></div>"
-					+ "    <p class=help>Unselect the tables you not want to access"
+					+ "    <p class=help>Unselect the tables you not want to remove"
 					+ "    (<a href='#' onclick=\"$('#nodeFilterList input').attr('checked', 'true');$('#nodeFilterList li').attr('class', 'tableSelected');\">select</a> /"
 					+ "     <a href='#' onclick=\"$('#nodeFilterList input').removeAttr('checked');$('#nodeFilterList li').attr('class', 'tableNotSelected');\">unselect</a> all)<br>"
 					+ "    Caution: You cannot refine your selection once it is accepted (Version 1.1)<p><hr>"

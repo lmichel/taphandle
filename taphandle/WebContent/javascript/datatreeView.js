@@ -263,7 +263,7 @@ DataTreeView.prototype = {
 				$("div#treedisp").jstree("create"
 						, $("#goodies")
 						, false
-						, {"data" : {"attr":{"id": id_schema, "title": desc}, "title" : jsdata.nodekey},
+						, {"data" : {"attr":{"id": id_schema, "title": "Uploaded source lists"}, "title" : jsdata.nodekey},
 							"state": "closed",
 							"attr" :{"id": id_schema},
 
@@ -275,17 +275,28 @@ DataTreeView.prototype = {
 				return;
 			}
 			if( $("#" + id_schema + " #" + jsdata.table).length == 0 ){
+				var noneName = jsdata.table.replace(new RegExp('_xml$'), '');
 				$("div#treedisp").jstree("create"
 						, $("#" + id_schema)
 						, false // position
-						, {"data"  : {"icon": "images/SQLTable2.png", "attr":{"id": jsdata.table, "title": desc}, "title" : jsdata.table},
+						, {"data"  : {"icon": "images/SQLTable2.png", "attr":{"id": noneName, "title": desc}, "title" : noneName},
 							"state": "closed"
 						}
 						,false// callback
 						,true //skip rename
 				);   
 			}
+			dataTreeView.getLists();
 			return;
+		},
+		
+		/**
+		 *  return the list of uploaded source lists. Data are taken out from the tree, not from the server
+		 */
+		getLists: function() {
+			var retour = [];
+			$("li#GoodiesXmyList").find('li').find('a').each(function(){retour.push($(this).attr('id'));});
+			return retour;
 		},
 		/**
 		 * jsdata: {nodekey: ... , table: ...}
@@ -294,7 +305,7 @@ DataTreeView.prototype = {
 			var id_schema = "GoodiesX" + jsdata.nodekey;
 
 			if( $("#" + id_schema).length != 0 ){
-				$("div#treedisp").jstree("remove", $("#" + id_schema + " #" + jsdata.table));
+				$("div#treedisp").jstree("remove", $("#" + id_schema + " #" + jsdata.table.replace("_xml", "")));
 				if($("#" + id_schema).find("> ul > li:eq(0)").length == 0) {
 					$("div#treedisp").jstree("remove", $("#" + id_schema));
 				}

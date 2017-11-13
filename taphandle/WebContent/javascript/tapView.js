@@ -32,6 +32,10 @@ jQuery.extend({
 				listeners[i].controlSubmitQueryEvent();
 			});
 		};
+		this.fireGoodyRemoved = function(goodyName){
+			tapPosSelector.fireGoodyRemoved(goodyName);
+		};
+
 		/**
 		 * Just called at init time to display the job still stored in the session (not implemented yet)
 		 */
