@@ -179,8 +179,10 @@ DataTreeView.prototype = {
 				} else {
 					var root = $("#" + id_schema);
 					nb_tables = 0;
-
-					for( var j=0 ; j<schema.tables.length ; j++ ) {
+					/*
+					 * We scan from the end to preserve the natural ordering because JSTREE stacks new nodes
+					 */
+					for( var j=(schema.tables.length-1) ; j>=0 ; j-- ) {
 						var table = schema.tables[j];
 						var id_table = jsdata.nodekey + ";" + schema.name + ";" + table.name;
 						var description = table.description;
@@ -218,7 +220,9 @@ DataTreeView.prototype = {
 			if( msg != "" ) {
 				Modalinfo.info(msg + "\n\nDouble click on the '" + jsdata.nodekey + "' node to make you own selection");
 			}
-
+			/*
+			 * Activate leaves
+			 */
 			$("div#treedisp").find("li").each(function() {
 				if ($(this).attr("id") != undefined && $(this).find(".metadata").length == 0) {
 					var splited = $(this).attr("id").split(';');
