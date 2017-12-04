@@ -342,6 +342,7 @@ logger.info("@@@ " + f.exists() + " " + f.length() );
 		sendGetRequest(endpoint + "async/" + jobId
 				, statusFilename
 				, cookie);
+		System.out.println(statusFilename.replaceAll("xml", "json") + " " + JsonUtils.getValue (statusFilename.replaceAll("xml", "json"), "job.phase"));
 		return  JsonUtils.getValue (statusFilename.replaceAll("xml", "json"), "job.phase");
 	}
 

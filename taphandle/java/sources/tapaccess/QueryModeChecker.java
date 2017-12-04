@@ -82,15 +82,15 @@ public class QueryModeChecker extends RootClass {
 			try {
 				this.jobID = TapAccess.createAsyncJob(this.endpoint, this.query, this.workingDirectory + this.resultFile, this.cookie, null);
 				TapAccess.runAsyncJob(this.endpoint, this.jobID,  this.statusFile, this.cookie);
-				int cpt=0;
+				int cpt=1;
 				do {
-					phase = TapAccess.getAsyncJobPhase(this.endpoint, this.jobID,  this.workingDirectory + "asyncmodetest_phase.xml", this.cookie);
-					Thread.sleep(2000);
-					if( (cpt++) > 4 ) {
-						logger.warn("No result after 10\": async mode considered as not working");
+					if( (cpt++) > ASYNC_CHECK_ATTEMPTS ) {
+						logger.warn("No result after " + (ASYNC_CHECK_POLLPERIOD*ASYNC_CHECK_ATTEMPTS) +"\": async mode considered as not working");
 						TapAccess.deleteAsyncJob(this.endpoint, this.jobID, this.cookie);
 						return false;
 					}			
+					phase = TapAccess.getAsyncJobPhase(this.endpoint, this.jobID,  this.workingDirectory + "asyncmodetest_phase.xml", this.cookie);
+					Thread.sleep((ASYNC_CHECK_POLLPERIOD*1000));
 				} while( phase.equals("EXECUTING") || phase.equals("PENDING")|| phase.equals("QUEUED"));
 				String[] resultURLs = TapAccess.getAsyncJobResults(this.endpoint
 						, this.jobID

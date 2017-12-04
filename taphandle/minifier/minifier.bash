@@ -48,6 +48,7 @@ js_array_org=("basics.js"
            "DataLink"  
            "ConstQEditor" 
            "QueryTextEditor" 
+           "AstroCoo.js"
            "Segment.js"
            "RegionEditor"
            "domain.js"
@@ -207,9 +208,9 @@ minifySet "../WebContent/javascript"   \
 				"nodeFilterModel.js"\
 				"nodeFilterView.js"\
 				"nodeFilterControler.js"\
-                                 "tapModel.js"  \
-                                "tapView.js"  \
-                                "tapControler.js"  \
+                "tapModel.js"  \
+                "tapView.js"  \
+                "tapControler.js"  \
                                 "jobModel.js"  \
                                 "jobView.js"  \
                                 "jobControler.js"  \
@@ -220,10 +221,12 @@ minifySet "../WebContent/javascript"   \
                                 "zipjobModel.js"  \
                                 "datatreeView.js"  \
                                 "initFunctions.js"  \
-                                "utils.js"  \
-                                "ready.js"  \
+                                "utils.js" \
                                 "viewState.js"\
-                                "resize.js"
+                                "upload.js"\
+                                "resize.js" \
+                                "ready.js"  
+
 
 echo "=========== Pack JS files"
 pack 

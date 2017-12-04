@@ -140,7 +140,8 @@ public class RootClass {
 	public static final int  SOCKET_READ_TIMEOUT   = 60000;					
 	public static int JOINKEY_PERIOD = 5*60*1000;
 	public static int JOINKEY_MAX_ATTEMPTS = 1;
-
+	public static int ASYNC_CHECK_POLLPERIOD=2;
+	public static int ASYNC_CHECK_ATTEMPTS=6;
 	/**
 	 * Read the file taphandle.porpoerties to set up the init mode
 	 */
@@ -149,6 +150,8 @@ public class RootClass {
 		boolean noinit = true;
 		boolean checkupload = false;
 		boolean includejoin = true;
+		
+		int ascpollperiod=ASYNC_CHECK_POLLPERIOD, ascattemps=ASYNC_CHECK_ATTEMPTS; 
 		try {
 			Properties prop = new Properties(); 
 			prop.load(RootClass.class.getClassLoader().getResourceAsStream("taphandle.properties"));
@@ -170,6 +173,14 @@ public class RootClass {
 			} else if( "false".equals(p) ) {
 				includejoin = false;
 			}
+			p = prop.getProperty("async.check.pollperiod");
+			if( p!= null && p.matches("\\d+") ) {
+				ascpollperiod = Integer.parseInt(p);
+			} 
+			p = prop.getProperty("async.check.attemps");
+			if( p!= null && p.matches("\\d+") ) {
+				ascattemps = Integer.parseInt(p);
+			} 
 		} 
 		catch (IOException ex) {
 			ex.printStackTrace();
@@ -177,7 +188,8 @@ public class RootClass {
 			NOINIT = noinit;
 			INCLUDE_JOIN = includejoin;
 			CHECKUPLOAD = checkupload;
-			//System.out.println("NOINIT:" + noinit + " INCLUDE_JOIN :"  + includejoin +  " CHECKUPLOAD:" + checkupload);
+			ASYNC_CHECK_ATTEMPTS = ascattemps;
+			ASYNC_CHECK_POLLPERIOD = ascpollperiod;
 		}
 	}
 	/**

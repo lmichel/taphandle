@@ -410,6 +410,10 @@ public class TapNode  extends RootClass {
 					found = true;
 				}
 			}
+			/*
+			 * Some sites (STCSI) set VOSITables as default namespace, this make style sheets ignoring anything but <tableset>
+			 */
+			inputLine = inputLine.replace("xmlns=\"http://www.ivoa.net/xml/VOSITables/v1.0\"", "xmlns:vosi=\"http://www.ivoa.net/xml/VOSITables/v1.0\"");
 			bfw.write(inputLine + "\n"/*.replaceAll("<\\/.*\\>", ">\n")*/);
 		}
 		in.close();

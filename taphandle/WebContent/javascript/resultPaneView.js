@@ -375,6 +375,7 @@ jQuery.extend({
 				}
 				aoColumns[i] = {sTitle: '<span title="' + title + '">' + jsdata.aoColumns[i].sTitle + '</span>'};
 			}
+			var schema = dataTreePath.schema;
 			var options = {
 				"aLengthMenu": [5, 10, 25, 50, 100],
 				"aoColumns" : aoColumns,
@@ -396,7 +397,11 @@ jQuery.extend({
 						}
 						copiedcolumnMap.currentColumn = c;
 						//formatValue(this.fnSettings().aoColumns[c].sTitle, aData[c], $('td:eq(' + c + ')', nRow));
-						ValueFormator.formatValue(colName, aData, $('td:eq(' + c + ')', nRow), copiedcolumnMap);
+						/*
+						 * Not formatting for the relational registry
+						 */
+						if( schema != "rr")
+							ValueFormator.formatValue(colName, aData, $('td:eq(' + c + ')', nRow), copiedcolumnMap);
 					}
 					return nRow;
 				}
