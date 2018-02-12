@@ -370,6 +370,8 @@ jQuery.extend({
 							columnMap.s_dec = i;
 						} else if( ah.nameorg == "s_fov" || ah.nameorg.match(/.*instr\.fov/) ) {
 							columnMap.s_fov = i;
+						} else if( ah.nameorg == "target_name"  ) {
+							columnMap.target_name = i;
 						}
 					}
 				}
@@ -396,7 +398,6 @@ jQuery.extend({
 							copiedcolumnMap.access_format = -1;
 						}
 						copiedcolumnMap.currentColumn = c;
-						//formatValue(this.fnSettings().aoColumns[c].sTitle, aData[c], $('td:eq(' + c + ')', nRow));
 						/*
 						 * Not formatting for the relational registry
 						 */

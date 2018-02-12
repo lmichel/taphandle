@@ -29,7 +29,6 @@ resourceLoader = function() {
 	                , "QueryTextEditor"
 	                , "AstroCoo.js"
 	                , "RegionEditor"
-	                , "upload.js"
 	                , "domain.js"];
 	var local_min_js = ["basics.js"
 	                    , "WebSamp"

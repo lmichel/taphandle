@@ -7,7 +7,7 @@
 ValueFormator = function() {
 	var raValue = undefined;
 	var decValue = undefined;
-	
+	var targetName = undefined;
 	var reset = function(){
 		raValue = undefined;
 		decValue = undefined;		
@@ -25,11 +25,11 @@ ValueFormator = function() {
 		
 		if ( columnMap.s_ra == columnMap.currentColumn){
 			raValue = value;
-		}
-		if ( columnMap.s_dec == columnMap.currentColumn){
+		} else	if ( columnMap.s_dec == columnMap.currentColumn){
 			decValue = value;
+		} else	if ( columnMap.target_name== columnMap.currentColumn){
+			targetName = value;
 		}
-
 		/*
 		 * To be send to the the datalink processor to setup possible cutout services
 		 */
@@ -50,10 +50,6 @@ ValueFormator = function() {
 					addInfoControl(columnName, tdNode, value);
 					addDatalinkControl(value,  tdNode, fovObject);
 				} else if( access_format.startsWith("image/") || access_format.startsWith("text/") ){
-//					tdNode.html("");
-//					addInfoControl(columnName, tdNode, value);
-//					addPreviewControl(columnName, tdNode, value);	
-//					addCartControl(columnName, tdNode, value, secureMode);
 					processURLInfo( columnName, value, tdNode, fovObject);
 
 				} else  {
@@ -146,7 +142,7 @@ ValueFormator = function() {
 		tdNode.append("<a title='" + stcRegion + " (click to plot)' class='dl_stc' href='#'></a>");
 		tdNode.append("<a class='dl_samp' title='Broadcast to SAMP'   href='#' onclick='WebSamp_mVc.fireSendAladinScript(&quot;" + region.getAladinScript() + "&quot;); return false;'/></a>");
 		tdNode.first().click(function() {
-			ModalAladin.aladinExplorer({ region: region, fov: 0.016, title:"STC Region"}, []);
+			ModalAladin.aladinExplorer({ region: region, fov: 0.016, title:"STC Region", surveyKeyword: targetName}, []);
 			return false;
 		})
 	}
