@@ -1,5 +1,6 @@
 package servlet;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
@@ -44,7 +45,17 @@ public class GetTableJoinKeys extends RootServlet implements Servlet {
 			return;
 		}
 		try {
-			dumpJsonFile("/" + RootClass.WEB_NODEBASE_DIR + "/" + node + "/" + (new DataTreePath(schema, table, "")).getEncodedFileName() + "_joinkeys.json", response);
+			/*
+			 * join key files are not prefixed with the schema (see XmlToJson.translateJoinKeysTable)
+			 * Meanwhile this is fixed, we try both filename versions
+			 */
+			String filename = "/" + RootClass.WEB_NODEBASE_DIR + "/" + node + "/" + (new DataTreePath(schema, table, "")).getEncodedFileName() + "_joinkeys.json";
+			if( (new File(filename)).exists() == false ) {
+				filename = "/" + RootClass.WEB_NODEBASE_DIR + "/" + node + "/" + (new DataTreePath(table, "")).getEncodedFileName() + "_joinkeys.json";
+
+			}
+			dumpJsonFile(filename, response);
+
 		} catch (FileNotFoundException e) {
 			return;
 		} catch (Exception e) {
