@@ -33,15 +33,17 @@ function initFunctions () {
 	this.initLayout = function() {
 		Out.info("Activate popular sites access");
 		var np = window.location.href.split('?')[0].replace(/\/#?$/, "");
-		$(".3xmm-link").attr("href", np+"?url=http%3A//xcatdb.unistra.fr/3xmmdr7/tap/")
-		$(".cadc-link").attr("href", np+"?url=http%3A//www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap/")
-		$(".gavo-link").attr("href", np+"?url=http%3A//dc.zah.uni-heidelberg.de/__system__/tap/run/tap/")
-		$(".vizier-link").attr("href", np+"?url=http%3A//tapvizier.u-strasbg.fr/TAPVizieR/tap/")
-		$(".simbad-link").attr("href", np+"?url=http%3A//simbad.u-strasbg.fr/simbad/sim-tap/")
-		$(".planet-link").attr("href", np+"?url=http%3A//voparis-tap.obspm.fr/__system__/tap/run/tap/")
+		$(".3xmm-link").attr("href", np+"?url=http%3A//xcatdb.unistra.fr/3xmmdr7/tap/");
+		$(".cadc-link").attr("href", np+"?url=http%3A//www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap/");
+		$(".gavo-link").attr("href", np+"?url=http%3A//dc.zah.uni-heidelberg.de/__system__/tap/run/tap/");
+		$(".vizier-link").attr("href", np+"?url=http%3A//tapvizier.u-strasbg.fr/TAPVizieR/tap/");
+		$(".simbad-link").attr("href", np+"?url=http%3A//simbad.u-strasbg.fr/simbad/sim-tap/");
+		$(".planet-link").attr("href", np+"?url=http%3A//voparis-tap.obspm.fr/__system__/tap/run/tap/");
 		$(".heasarch-link").attr("href", np+"?url=https%3A//heasarc.gsfc.nasa.gov/xamin/vo/tap/")
-		$(".chandra-link").attr("href", np+"?url=http%3A//cda.harvard.edu/cxctap/")
-		$(".sdss-link").attr("href", np+"?url=http://wfaudata.roe.ac.uk/sdssdr9-dsa/TAP/")
+		$(".chandra-link").attr("href", np+"?url=http%3A//cda.harvard.edu/cxctap/");
+		$(".sdss-link").attr("href", np+"?url=http://wfaudata.roe.ac.uk/sdssdr9-dsa/TAP/");
+		$(".ned-link").attr("href", np+"?url=https%3A//ned.ipac.caltech.edu/tap/");
+		$(".stsci-link").attr("href", np+"?url=http%3A//vao.stsci.edu/CAOMTAP/TapService.aspx/");
 		
 
 		// Define the height of the div knowing the banner take 70px and the query editor 330px

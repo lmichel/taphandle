@@ -347,6 +347,10 @@ public class TapNode  extends RootClass {
 			logger.info("Force CADC to work in sync mode to avoid https issues");
 			this.supportAsyncMode = false;
 		}
+		if( this.regMark.getUrl().contains("vao.stsci.edu/CAOMTAP") ) {
+			logger.info("Force STSCI to work in sync mode to avoid https issues");
+			this.supportAsyncMode = false;
+		}
 
 		if( CHECKUPLOAD ) {
 			this.supportUpload = qmc.supportUpload();

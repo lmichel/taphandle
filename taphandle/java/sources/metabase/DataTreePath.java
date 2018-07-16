@@ -1,18 +1,12 @@
 package metabase;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 
 /**
  * Class transforming a data path like ele1.ele2....eleN.table in 2 components:
@@ -87,9 +81,9 @@ public class DataTreePath {
 				}
 			}
 		/*
-		 * Each element are quoted
+		 * Each element is quoted
 		 */
-		} else if( nameOrg.matches("\".*\"")){
+		} else if( nameOrg.matches("(\".+\")(\\.(\".+\"))*")){
 			String[] pe = this.tableOrg.split("\"\\.\"");
 			this.table = new DataTreePathElement(pe[pe.length -1]);
 			this.schema = "";
@@ -101,6 +95,8 @@ public class DataTreePath {
 					this.schema += pe[i];
 				}
 			}
+			this.schema += "\"";;
+
 		/*
 		 * Element are either quoted or not
 		 */
@@ -118,8 +114,13 @@ public class DataTreePath {
 				if( this.schema.length() > 0 ){
 					this.schema += ".";
 				}
-				this.schema += quoteName(pele.get(i));
+				this.schema += unQuoteName(pele.get(i));
 			}
+			this.schema = "\"" + this.schema + "\"";
+		}
+
+		if( this.schema.equals("public")){
+			this.schema = "\"" + this.schema + "\"";
 		}
 	}	
 	
@@ -144,37 +145,17 @@ public class DataTreePath {
 		String sqschema = schema.replaceAll("\"",  "").toUpperCase();
 		if( !sqnameOrg.startsWith(sqschema) ) {
 			this.schema = schema.replaceAll("\"",  "");
+			/*
+			 * Quoted schemas are not supported by XSL sheet
+			 * This case must be processed in JS
+			 *
+			if( this.schema.equals("public")){
+				this.schema = "\"" + this.schema + "\"";
+			}
+            */
 			this.table = new DataTreePathElement(nameOrg);
 			this.tableOrg = this.schema + "." + this.getTable();
 		}
-//		/*
-//		 * Check whether the schema computed by the basic constructor is compliant (same or empty) as this given as parameter
-//		 */
-//		if( this.schema.length() > 0 && schema.length() > 0 
-//				&& !(this.schema.replaceAll("\"",  "").endsWith(schema.replaceAll("\"", ""))
-//				/*
-//				 * In some cases (HEASARCH) we can have schemaName=SCHEMA with tablename=schema.table.
-//				 * In this case, we keep the table name fields 
-//				 */
-//				|| this.schema.toLowerCase().replaceAll("\"",  "").endsWith(schema.replaceAll("\"", ""))
-//				|| this.schema.replaceAll("\"",  "").endsWith(schema.toLowerCase().replaceAll("\"", "")))	
-//				){
-//			System.out.println(this);
-//			System.out.println(schema + " " +nameOrg + " " + description);
-//				throw new Exception("The full table name <" + this.tableOrg + "> is inconsistant with the schema name <" + schema + ">");
-//		}
-//		/*
-//		 * Take the given schema name if not empty and if no schema have been taken out from nameOrg
-//		 */
-//		if( this.schema.length() == 0 && schema.length() > 0 ){
-//			this.schema = schema;
-//		}
-//		/*
-//		 * If nameOrg does not contain the schema, addit
-//		 */
-//		if(  this.schema.length() > 0 & this.getTable().replaceAll("\"",  "").equals(this.tableOrg.replaceAll("\"",  "")) ) {
-//			this.tableOrg = this.schema + "." + this.getTable();
-//		}
 	}
 
 	private static String quoteName(String element){
@@ -183,6 +164,9 @@ public class DataTreePath {
 		} else {
 			return "\"" + element + "\"";
 		}
+	}
+	private static String unQuoteName(String element){
+		return element.replaceAll("^\"|\"$", "");
 	}
 	/**
 	 * @return
@@ -200,7 +184,7 @@ public class DataTreePath {
 	/**
 	 * @return
 	 */
-	public boolean mudtBeQuoted() {
+	public boolean mustBeQuoted() {
 		return this.table.mustBeQuoted();
 	}
 
@@ -250,7 +234,7 @@ public class DataTreePath {
 		retour.put("tableorg", this.tableOrg);
 		retour.put("table", this.getTable());
 		retour.put("schema", this.schema);
-		retour.put("quoted", this.mudtBeQuoted());
+		retour.put("quoted", this.mustBeQuoted());
 		
 		return retour;
 	}
@@ -259,52 +243,7 @@ public class DataTreePath {
 	 * @see java.lang.Object#toString()
 	 */
 	public String toString(){
-		return "nameOrg: <" + this.tableOrg + "> schema: < " + this.schema + "> dataPath: <" + this.schema + "> tableName: <" + this.table + ">";
-	}
-	/**
-	 * @param args
-	 * @throws Exception 
-	 * @throws IOException 
-	 * @throws FileNotFoundException 
-	 */
-	public static void main(String[] args) throws Exception {		
-		System.out.println(new DataTreePath("table", ""));
-		System.out.println(new DataTreePath(".table", ""));
-		System.out.println(new DataTreePath("schema.table", ""));
-		System.out.println(new DataTreePath(".schema.table", ""));
-		System.out.println(new DataTreePath("base.schema.table", ""));
-		System.out.println(new DataTreePath("\"base.schema.table\"", ""));
-		System.out.println(new DataTreePath("\"base\".\"schema\".\"table\"", ""));
-		System.out.println(new DataTreePath("base.\"schema\".\"table\"", ""));
-		System.out.println(new DataTreePath("\"zerr././.\".AAAA.\"BBBB\".\"CC\\C\"", ""));
-		System.out.println(new DataTreePath("\"AAAA\".\"BBBB\".\"CCCC\"", ""));
-		System.out.println(new DataTreePath("AAAA.\"BBBB\".\"CCCC\"", ""));
-		System.out.println(new DataTreePath("viz7" ,"J/other/NewA/35.48/table2", ""));
-		String fn = "/tmp/meta/tables.json";
-        JSONParser parser = new JSONParser();
-        Object obj = parser.parse(new FileReader(fn));
-
-        JSONObject jsonObject = (JSONObject) obj;
-        JSONArray schemas = (JSONArray) jsonObject.get("schemas");
-        for( int s=0 ; s<schemas.size() ; s++){
-        	JSONObject schema = (JSONObject) schemas.get(s);
-            JSONArray tables = (JSONArray) schema.get("tables");
-        	System.out.println(schema.get("name"));
-
-            for( int t=0 ; t<tables.size() ; t++){
-            	JSONObject table = (JSONObject) tables.get(t);
-            	DataTreePath dtp = new DataTreePath(schema.get("name").toString(), (String)(table.get("name")), (String)(table.get("description")));
-            	System.out.println(dtp);
-            	table.put("tablename", dtp.getTable());
-            	table.put("pathname", dtp.getSchema());
-        		System.out.println((new DataTreePath((String)(table.get("pathname")) + "." + (String)(table.get("name")), (String)(table.get("description")))));
-
-            }
-        }
-    	FileWriter fw = new FileWriter("/tmp/meta/tables.quoted.json");
-    	fw.write(jsonObject.toJSONString());
-    	fw.close();
-
+		return "nameOrg: <" + this.tableOrg + "> schema: <" + this.schema + "> dataPath: <" + this.schema + "> tableName: <" + this.table + ">";
 	}
 
 }

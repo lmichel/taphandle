@@ -163,7 +163,7 @@ if (!String.prototype.quotedTableName) {
 				tbl.push(results[1]);				
 			}
 			/*
-			 * In this case, we have to know if the first element is a schema or the first part of a table name
+			 * In this case, we have to know whether the first element is a schema or the first part of a table name
 			 * We suppose that schemas have regular names 
 			 */
 		} else if (results.length > 2 ) {
@@ -192,7 +192,7 @@ if (!String.prototype.quotedTableName) {
 			}
 		}  
 		for (var j = 0; j < tbl.length; j++) {
-			if (!tbl[j].match(/^[a-zA-Z0-9][a-zA-Z0-9_]*$/)) {
+			if (tbl[j] == "public" || !tbl[j].match(/^[a-zA-Z0-9][a-zA-Z0-9_]*$/)) {
 				tbl[j] = '"' + tbl[j] + '"';
 			}
 		}		
@@ -422,7 +422,7 @@ Modalinfo =
 			s += '<FUNCTION>';
 			break;
 		default:
-			s += x;
+			s += x.replace(/</g, "&lt;").replace(/>/g, "&gt;");
 		break;
 		}
 //		s = s.replace(/{/g,'');
@@ -485,7 +485,7 @@ Modalinfo =
 			break;
 		default:
 			s += x;
-		break;
+		break;		exit;
 		}
 //		s = s.replace(/{/g,'');
 //		s = s.replace(/}/g,'');
@@ -552,9 +552,9 @@ Modalinfo =
 			}
 		}
 	};
-
 	// Return the id of the last modal in the page
 	var findLastModal = function(){
+		
 		var id_last_modal = -1;
 		$("div[id^='modal-']").each(function() {
 			var tmp = $(this).attr('id').substring(6);
@@ -596,7 +596,8 @@ Modalinfo =
 			removeModal(id);
 			removeBtn(id);
 		} else {
-			Modalinfo.close(Modalinfo.findLastModal());
+			// Provoque un stack overflow
+			//Modalinfo.close(Modalinfo.findLastModal());
 		}
 
 	};
@@ -763,7 +764,7 @@ Modalinfo =
 		var id_modal = nextId();
 		Out.infoTrace(content);
 		if( jQuery.isPlainObject({}) ) {
-			setModal(id_modal, false, getTitle("Error", title), dump(content, '&nbsp;&nbsp;').replace(/\n[\n\s]*/g, "<br />"));
+			setModal(id_modal, false, getTitle("Error", title), dump(content, '&nbsp;&nbsp;').replace(/\n[\n\s]*/g, "<br />"));//.replace(/</g, "&lt;").replace(/>/g, "&gt;"));
 		} else {
 			setModal(id_modal, false, getTitle("Error", title), formatMessage(content));
 		}
@@ -781,8 +782,9 @@ Modalinfo =
 	 * @handler: action to do if file upload success
 	 * @beforehandler: action to do before submit the form
 	 * @extraParamers: table, hidden input to add to the form
+	 * @preloadedFiles: list of preloaded files which can be reused: to be display as a popup
 	 */
-	var uploadForm = function (title, url, description, handler, beforeHandler, extraParamers) {
+	var uploadForm = function (title, url, description, handler, beforeHandler, extraParamers, preloadedFiles) {
 		var id_modal = nextId();
 		var htmlForm = '<form id="upload-form" class="form-horizontal" target="_sblank" action="' + url + '" method="post"'
 		+  'enctype="multipart/form-data">';
@@ -790,6 +792,10 @@ Modalinfo =
 			for( var i=0 ; i<extraParamers.length ; i++ ) 
 				htmlForm += "<input type='hidden'  name='" + extraParamers[i].name + "'  value='" + extraParamers[i].value + "'>";
 		}
+		/*
+		 * Set with the filename to upload, allows to keep trace Goodie files which content is not uploaded
+		 */
+		htmlForm += "<input type='hidden'  name='fileName'  value=''>";
 		htmlForm += '<div class="align-center">'
 			+'<input class="stdinput custom-file" id="uploadPanel_filename" type="file" name="file"/>'
 			+ '<p class="overflow info-upload"></p>'
@@ -814,19 +820,46 @@ Modalinfo =
 			.closest("form");
 			$("input").prop('disabled', false);
 		});
-
+		/*
+		 * Write out description + goodies
+		 */
+		var fullDesc = (description != null)? description: "";
+		if( preloadedFiles != null && preloadedFiles.length > 0) {
+			fullDesc += "<br>Preloaded files: <select id=preloadedFiles ><option/>";
+			for( var i=0 ; i<preloadedFiles.length ; i++){
+				fullDesc += "<option>_Goodies_" + preloadedFiles[i];
+			}
+			fullDesc += "</select>";
+		}
+		$("#"+id_modal).find(".form-description").html(fullDesc);
+		/*
+		 * File upload handler: For security reasons, the visible path is c:/fakepath/filename pas de panique
+		 */
 		$("#"+id_modal).find(".custom-file").change(function() {            
 			$("#"+id_modal).find(".custom-file").fadeTo('slow', 0.3, function(){}).delay(800).fadeTo('slow', 1);
-			$("input").prop('disabled', false);
+			$("input[value=Upload]").prop('disabled', false);
 			var filename = this.value.xtractFilename().filename;
 			$("#"+id_modal).find(".info-upload").text(filename);     
+			$("input[name=fileName]").val(filename);     
+			$("#preloadedFiles").prop('disabled', true);
 		});
-
-
-		if( description != null ) {
-			$("#"+id_modal).find(".form-description").html(description);
-			//$('#upload-form .form-description').html(description);
-		}
+		/*
+		 * Goodies selection handler
+		 */
+		$("#preloadedFiles").change(function() {
+			var si = $( this ).val();
+			if( si.length > 0 ){
+				$("input[value=Upload]").prop('disabled', false);
+				$("#uploadPanel_filename").prop('disabled', true);
+			} else {
+				$("input[value=Upload]").prop('disabled', true);
+				$("#uploadPanel_filename").prop('disabled', false);
+			}
+			$("input[name=fileName]").val(si);     
+		});
+		/*
+		 * Upload button handler: priority to the goodies
+		 */
 		$("#"+id_modal).find('#upload-form').ajaxForm({
 			beforeSubmit: function() {
 				if(beforeHandler != null ) {
@@ -838,19 +871,35 @@ Modalinfo =
 					close(id_modal);
 					return;
 				} else {
+					
 					$("#upload_status").html("Uploaded");
 					$("#upload_status").css("color","green");
-					var retour = {retour: e, path : $("#"+id_modal).find('#uploadPanel_filename').val().xtractFilename()};
+					/*
+					 * Take the goodies if there are
+					 */
+					var retour = $( "#preloadedFiles option:selected" ).val();
+					/*
+					 * Take the file upload otherwise
+					 */
+					if( retour == null || retour.length == 0 ) {
+						retour = $("#"+id_modal).find('#uploadPanel_filename').val();
+					}
+					/*
+					 * @TODO xtractFilename does not return a correct path.
+					 */
+					obj_retour = {retour: e, path : retour.xtractFilename()};
+
 
 					if( handler != null) {
-						handler(retour);
+						handler(obj_retour);
 					}
 					// If no handler, displays infos in the dialog
 					else {
-						var display_retour = dump(retour).replace(/\n/g, "<br />");
+						var display_retour = dump(obj_retour).replace(/\n/g, "<br />");
 						display_retour = display_retour.replace(/^<br\s*\/?>|<br\s*\/?>$/g,'');
 						$("#infos").html(display_retour);	
 					}
+					Modalinfo.close(id_modal);
 				}
 			}
 		});
@@ -1567,7 +1616,6 @@ ModalAladin = function(){
 		buildAladinDialog(data.label);
 		showInfo();
 		hideSidePanel();
-		console.log(aladin.view.imageSurvey);
 		if( aladin.view.imageSurvey == null ||  aladin.view.imageSurvey.id == null ) {
 			aladin.setImageSurvey('P/XMM/PN/color');
 			aladin.gotoObject(data.target);
@@ -1654,8 +1702,14 @@ ModalAladin = function(){
 		aladin.gotoObject(initialTarget);
 	}
 	/**
-	 * position { target: '13:05:44.90+17:53:28.9', fov: 0.016, title:'3XMM J130544.8+175328'} or
-	 *          { swarm: 'http:/something....',title:'3XMM J130544.8+175328'}
+	 * position { surveyKeyword: surveyKeyword,
+	 *          { target: '13:05:44.90+17:53:28.9', fov: 0.016, title:'3XMM J130544.8+175328', surveyKeyword: surveyKeyword} or
+	 *          { swarm: 'http:/something....',title:'3XMM J130544.8+175328', surveyKeyword: surveyKeyword} or
+	 *          { region: stcregion title:'3XMM J130544.8+175328', surveyKeyword: surveyKeyword}
+	 * stcregion: {"stcString":"Polygon ICRS UNKNOWNREFPOS SPHERICAL2 48.08864682613741 -43.34294001968425 48.04499151548045 -45.25890768286587 50.76739411109153 -45.25886082596674 50.72361221832557 -43.34289619542031"
+	 *            ,"size":2.7224025956110793
+	 *            ,"raCenter":49.40619281328598,"decCenter":-44.30090193914309
+	 *            ,"points":[[48.08864682613741,-43.34294001968425],[48.04499151548045,-45.25890768286587],[50.76739411109153,-45.25886082596674],[50.72361221832557,-43.34289619542031],[48.08864682613741,-43.34294001968425]]}
 	 * services : [{type: 'json', name: 'ACDS', url: 'http://xcatdb.unistra.fr/3xmmdr5//getarchesdetail/acdslinks?oid=581249378845461815&mode=aladinlite'}, {type: 'json', name: 'Photometric points', url: 'http://xcatdb.unistra.fr/3xmmdr5/getarchesxmatchpoints?oid=581249378845461815'}, {type: 'votable', name: 'Cluster components', url: 'http://xcatdb.unistra.fr/3xmmdr5/download?oid=294989349005558113'}]
 	 * 
 	 */
@@ -1690,7 +1744,6 @@ ModalAladin = function(){
 				}
 		});
 		var RaDec ;
-		aladin.setImageSurvey('http://alasky.u-strasbg.fr/2MASS/J');
 		/*
 		 * Insert target anchor
 		 */
@@ -1705,14 +1758,30 @@ ModalAladin = function(){
 			initialTarget = position.target;
 			initialFov = position.fov;
 			RaDec = aladin.getRaDec();
+			addServices(position, services, theS, RaDec);
+		} else if( position.region != undefined ) {
+			if( position.region.points.length > 6) {
+				aladin.gotoObject(position.region.raCenter + ' ' + position.region.decCenter);
+				aladin.setZoom((position.region.size == 0)? 0.016: 2*position.region.size);
+				var overlay = A.graphicOverlay({color: 'red', lineWidth: 2});
+				aladin.addOverlay(overlay);
+				overlay.addFootprints(A.polygon(position.region.points));  
+			} else {
+				position.target = position.region.raCenter + ' ' + position.region.decCenter;
+				aladin.gotoObject(position.target);
+				aladin.setZoom(position.fov);
+				initialTarget = position.target;
+				initialFov = position.fov;
+				position.fov = (position.region.size == 0)? 0.016: 2*position.region.size;
+			}
+			RaDec = aladin.getRaDec();
 			addServices(position, services, theS, RaDec);		
 		} else if( position.swarm != undefined ) {
-			console.log(position.swarm);
 			Processing.showWithTO("Fetching Data", 5000);
 			var cat = A.catalogFromURL(position.swarm, {name: 'Swarm', sourceSize:8, shape: 'plus', color: 'red', onClick:"showTable", }
 			, function(sources) {
 				/*
-				 * Defines the field enclising the data selection
+				 * Defines the field enclosing the data selection
 				 * which is supposed to be smaller that 180deg along RA
 				 */
 				var raMin = 1000 ; raMax = -1;
@@ -1726,6 +1795,7 @@ ModalAladin = function(){
 				}
 				var decFov = decMax - decMin
 				var decCenter = (decMax + decMin)/2;
+				
 				/*
 				 * Takes the smallest fov along of RA
 				 */
@@ -1735,6 +1805,7 @@ ModalAladin = function(){
 				if( Math.abs(raMax - raCenter) > 90 ) raCenter += 180;
 				if( raCenter > 360 ) raCenter -= 360;
 				var fov = (decFov > raFov)? decFov: raFov;
+							
 				aladin.gotoRaDec(raCenter , decCenter);
 				aladin.setZoom(fov);
 				RaDec = aladin.getRaDec();
@@ -1944,11 +2015,27 @@ ModalAladin = function(){
 		/*
 		 * Display DSS color by default
 		 */
-		displaySelectedHips("DSS2 optical HEALPix survey, color (R=red[~0.6um]/G=average/B=blue[~0.4um])"
-				, "http://alasky.u-strasbg.fr/DSS/DSSColor"
-				, "equatorial"
-				, 9
-				, "jpeg");
+		var survey = {desc: "DSS2 optical HEALPix survey, color (R=red[~0.6um]/G=average/B=blue[~0.4um])"
+			, url:"http://alasky.u-strasbg.fr/DSS/DSSColor", sys: 'equatorial', order: 9 , format:"jpeg"};
+		var surveykw;
+		
+		if( (surveykw = position.surveyKeyword) ) {
+			surveykw = surveykw.toLowerCase();
+			if( surveykw == 'mars' ) {
+				survey = {desc: "Mars MOLA Shaded Relief / Colorised Elevation"
+					, url:"http://alasky.u-strasbg.fr/Planets/Mars_MOLA/", sys: 'mars', order: 5 , format:"jpeg"};
+			} else if( surveykw == 'moon' ) {
+				survey = {desc: "Moon Kaguya-Evening-V04-474m"
+					, url:"http://alasky.u-strasbg.fr/Planets/CDS_P_Moon_Kaguya-Evening-V04-474m", sys: 'moon', order: 3 , format:"png"};
+			} else if( surveykw == 'venus' ) {
+				survey = {desc: "Venus Magellan C3-MDIR-ClrTopo-6600m-color"
+					, url:"http://alasky.u-strasbg.fr/Planets/CDS_P_Venus_Magellan_C3-MDIR-ClrTopo-6600m-color", sys: 'venus', order: 5 , format:"jpeg"};
+			} else if( surveykw == 'mercury' ) {
+				survey = {desc: "Mercury MESSENGER-MDIS-LOI-166m"
+					, url:"http://alasky.u-strasbg.fr/Planets/CDS_P_Mercury_MESSENGER-MDIS-LOI-166m", sys: 'mercury', order: 5 , format:"jpeg"};
+			}
+		}
+		displaySelectedHips(survey.desc, survey.url, survey.sys, survey.order, survey.format);
 	}
 	/**
 	 * 
@@ -1958,13 +2045,11 @@ ModalAladin = function(){
 		$("#itemList").css("display", "none");
 		cmdNode.html(obs_title);
 		var fmt = "";
-		console.log(hips_tile_format);
 		if(hips_tile_format.indexOf("png") >=0  ){
 			fmt = "png";
 		} else {
 			fmt = "jpg";
 		}
-		console.log(fmt);
 		if( fmt != "")
 			aladin.setImageSurvey(aladin.createImageSurvey(obs_title, obs_title, hips_service_url, hips_frame, moc_order, {imgFormat: fmt})  );
 		else 
@@ -2056,7 +2141,6 @@ ModalAladin = function(){
 			cmdNode.css("background-color", "white");
 			cmdNode.attr("class", "datahelp");
 			for( var c=0 ; c<aladin.view.catalogs.length ; c++) {
-				console.log(aladin.view.catalogs[c].name);
 				if( aladin.view.catalogs[c].name.startsWith("NED"))  {
 					aladin.view.catalogs.splice(c, 1);
 					aladin.view.mustClearCatalog = true;
@@ -2612,6 +2696,14 @@ Modalcommand = function() {
 			$(this).parent().find("div").first().toggle(handler);		  
 		});
 	};
+	/**
+	 * Collapse or expand all top div in fieldsets
+	 */
+	var collapseDiv= function(handler) {
+		$(divSelect + " fieldset legend").each(function() {
+			$(this).parent().find("div").first().toggle(handler);		  
+		});
+	};
 	/*
 	 * exports
 	 */
@@ -2619,6 +2711,7 @@ Modalcommand = function() {
 	pblc.commandPanel = commandPanel;
 	pblc.commandPanelAsync = commandPanelAsync;
 	pblc.setDivToggling = setDivToggling;
+	pblc.collapseDiv = collapseDiv;
 	return pblc;
 }();
 
@@ -2637,7 +2730,7 @@ Processing  = function() {
 		}
 		else if( jsondata.errormsg != null) {
 			if (custom_msg == undefined) {
-				Modalinfo.error("JSON ERROR: " + msg + ": "  + jsondata.errormsg);
+				Modalinfo.error(jsondata.errormsg, msg );
 			}
 			else {
 				Modalinfo.error(custom_msg);
@@ -4373,6 +4466,12 @@ console.log('=============== >  WebSamp_m.js ');
 
 
 WebSamp_mVc = function() {
+	/*
+	 * debug on
+	 */
+	
+	Out.debugModeOn();
+	
 	var that = this;
 	/**
 	 * who is listening to us?
@@ -4397,7 +4496,7 @@ WebSamp_mVc = function() {
 	var hubs = new Array();
 	hubs["topcat"] = {
 			webStartUrl : "http://www.star.bris.ac.uk/~mbt/topcat/topcat-full.jnlp",
-			iconUrl : "http://www.star.bris.ac.uk/~mbt/topcat/tc3.gif",
+			iconUrl : "http://www.star.bris.ac.uk/~mbt/topcat/images/tc_sok.png",
 			webUrl : "http://www.star.bris.ac.uk/~mbt/topcat/",
 			description : "Tool for Operations on Catalogues And Tables"
 	};
@@ -4407,6 +4506,19 @@ WebSamp_mVc = function() {
 			webUrl : "http://aladin.u-strasbg.fr/",
 			description : "The Aladin sky atlas and VO Portal"
 	};
+	hubs["cassis"] = {
+			webStartUrl : "http://cassis.irap.omp.eu/online/cassis.jnlp",
+			iconUrl : "http://saada.unistra.fr/taphandle/images/cassis.png",
+			webUrl : "http://cassis.irap.omp.eu/",
+			description : "CASSIS is able to retrieve some useful informations for the modeling or identification from databases"
+	};
+	/*
+	hubs["splat"] = {
+			webStartUrl : "http://soft.g-vo.org/splat-beta/splatvo/splat.jnlp",
+			iconUrl : "http://soft.g-vo.org/splat-beta/splat.png",
+			webUrl : "http://www.g-vo.org/pmwiki/About/SPLAT",
+			description : ""			
+	};*/
 	/*
 	 * Internal flags
 	 */
@@ -4505,7 +4617,7 @@ WebSamp_mVc = function() {
 		var callback = (requete.type == "oid" )     ? "WebSamp_mVc.fireSendFileToClient"
 				      :(requete.type == "voreport") ? "WebSamp_mVc.fireSendUrlToClient"
 					  :(requete.type == "skyat")    ? "WebSamp_mVc.fireSendSkyatToClient"
-					  :(requete.type == "script")   ? "fireSendAladinScript"
+					  :(requete.type == "script")   ? "WebSamp_mVc.fireSendAladinScript"
 					  : "";
 		var found = false;
 		for (ident in sampClients) {
@@ -4515,6 +4627,16 @@ WebSamp_mVc = function() {
 
 				var onclick = (callback == "")? "Modalinfo.info(&quot;No message to send&quot;);"
 						: callback + "(\"" +  ident + "\");";
+				// the icon send by the hub doens't works so we upload our icon
+				if(meta["samp.name"] == "Cassis"){
+					meta["samp.icon.url"] = "http://saada.unistra.fr/taphandle/images/cassis.png";
+					meta["home.page"] = "http://cassis.irap.omp.eu/";
+				}
+				else if(meta["samp.name"] == "splat"){
+					meta["home.page"] = "http://star-www.dur.ac.uk/~pdraper/splat/index.html";
+				}
+				
+				
 				addItem("<img class=clickableicon align=bottom style='height: 32px; border: 0px;' src='"
 						+ meta["samp.icon.url"]
 						+ "' onclick='" + onclick + "'>"
@@ -4578,6 +4700,7 @@ WebSamp_mVc = function() {
 
 				var onclick = (callback == "")? "Modalinfo.info(&quot;No message to send&quot;);"
 						: callback + "(\"" +  ident + "\");";
+
 				addItem("<img class=clickableicon align=bottom style='height: 32px; border: 0px;' src='"
 						+ meta["samp.icon.url"]
 						+ "' onclick='" + onclick + "'>"
@@ -4721,7 +4844,7 @@ WebSamp_mVc = function() {
 			fireRegisterToHub();
 		} else {
 			var cpt=0;
-			/*
+			/*Out.debug(
 			 * If more than one client: propose a choice window
 			 */
 			for (ident in sampClients) {
@@ -4838,7 +4961,9 @@ WebSamp_mVc = function() {
 		listener.controlIsHubRunning();
 	};
 	var showTrackerReply = function(id, action, data) {
+		Out.debugModeOn();
 		Out.debug("showTrackerReply " + id + " " +action);
+		Out.debug("data : " + JSON.stringify(data));
 		waitForHub = false;
 		showConnectionOn();
 		var removed = "";
@@ -4854,6 +4979,7 @@ WebSamp_mVc = function() {
 			}
 		} else {
 			if (!sampClients[id]) {
+				Out.debug("new client, id : " + id);
 				sampClients[id] = new Object();
 			}
 			if (action == "meta") {
@@ -4861,10 +4987,13 @@ WebSamp_mVc = function() {
 			} 
 			// Only accept to deal with clients accepting VOtable or FITS
 			else if (action == "subs") {
-				if (data["table.load.fits"] && data["table.load.votable"] &&  data["coord.pointAt.sky"] ) {
+				Out.debug("try to sub client " + data["samp.name"]);
+				if (data["table.load.fits"] && data["table.load.votable"] ){  //&&  data["coord.pointAt.sky"] ) for casssis 
 					sampClients[id].subs = data;
+					Out.debug("sub successful");
 				} else {
 					delete sampClients[id];
+					Out.debug("sub fail");
 				}
 			}
 			if (sampClients[id] && sampClients[id].meta && sampClients[id].subs)
@@ -5228,7 +5357,7 @@ KWConstraint_Mvc.prototype  = Object.create(KWSimpleConstraint_Mvc.prototype, {
 				var area = null;
 				if( this.attributeHandler.nameattr.startsWith('POSLIST:')) {
 					area = opd.split(',');
-					var n = this.attributeHandler.nameattr.replace("POSLIST:", "upload.");
+					var n = this.attributeHandler.nameattr.replace("POSLIST:", "TAP_UPLOAD.");
 					area = [n + ".pos_ra_csa", n + ".pos_dec_csa", area[area.length-1]];
 
 				} else {
@@ -5653,10 +5782,10 @@ KWSimpleConstraint_mVc.prototype = {
 				that.fireRemoveFirstAndOr(this.rootId);
 				that.fireEnterEvent();
 			});
-			//this.fireEnterEvent(null, null, null);
+			this.fireEnterEvent(null, null, null);
 		},
 		fireGetADQL : function(attQuoted){
-			return this.defValue;
+			return this.listener.controlGetADQL(attQuoted);
 		},	
 		fireEnterEvent : function(andor, operator, operand, unit){
 			var valInput   = $('#' + this.constListId + ' input[id="' + this.rootId + '_val"]');
@@ -5794,9 +5923,14 @@ KWConstraint_mVc.prototype = Object.create(KWSimpleConstraint_mVc.prototype, {
 			var closeInput = $('#' + this.constListId    + ' a[id="' + this.rootId + '_close"]');
 			closeInput.click(function() {
 				rootDiv.remove();
+				if($("#" + this.id)){}
 				that.fireRemoveFirstAndOr(this.rootId);
 				if( ah.nameattr.startsWith('Qualifier ') ||  ah.nameorg.startsWith('Qualifier ') || ah.nameattr.startsWith('Cardinality')) {
 					that.fireRemoveConstRef(ah.nameattr); 
+				}
+				if( ah.nameattr.startsWith('POSLIST:') ){
+					$("#" + $("#" + "tapwhereposition_constposcont input:text")[0].id).val("");
+					$("span#uploadresult").text("");
 				}
 				that.fireEnterEvent();
 				that.fireTypoMsg(false, '');
@@ -6786,6 +6920,15 @@ OrderBy_mVc = function(parentDivId, formName, constContainerId, orderByHandler){
 	this.isDesc = function() {
 		return ($('#' + orderByDesId).attr("checked"))?true: false;
 	};
+	this.setDesc = function() {
+		$('#' + orderByDesId).attr("checked", "true");
+	};
+	this.setAsc = function() {
+		$('#' + orderByAscId).attr("checked", "true");
+	};
+	this.isAsc = function() {
+		return ($('#' + orderByAscId).attr("checked"))?true: false;
+	};
 	this.fireClearAllConst= function (){
 		$('.orderby').val('');
 		$('#' + orderByDesId).attr("checked", "true");
@@ -6812,6 +6955,7 @@ function ConeSearch_mVc(params) {
 	this.formName = params.formName;
 	this.frames = params.frames, this.sesameURL = params.urls.sesameURL;
 	this.uploadURL = params.urls.uploadURL;
+	this.preloadedGetter = params.preloadedGetter; //function returning a list of position files already uploaded
 	this.cooFieldId = this.formName + "_CScoofield";
 	this.radiusFieldId = this.formName + "_CSradiusfield";
 	this.frameSelectId = this.formName + "_CSframeselect";
@@ -6819,6 +6963,7 @@ function ConeSearch_mVc(params) {
 	this.sesameId = this.formName + "_CSsesame";
 	this.stackId = this.formName + "_CSstack";
 	this.regionId = this.formName + "_CSregion";
+	parentId = this.parentDivId;
 };
 /**
  * Methods prototypes
@@ -6845,7 +6990,11 @@ ConeSearch_mVc.prototype = {
 				+ '           <a href="javascript:void(0);" id="'
 				+ this.sesameId
 				+ '" title="Invoke the CDS name resolver" class="sesame-small"></a>'
-				+ '       </div></div>'
+				+ '       </div>'
+				+ '		  <div class="form-group" style="margin-bottom: 0px;">'
+				+ '         <label class="col-sm-12 control-label" style="padding-top: 0px;"><span class="help">12.5 +45.8 - 14:03:01.01+54:23:41.6 - M33 </span></label>'
+				+ '       </div>'
+				+ '    </div>'
 				+ '		  <div class="form-group">'
 				+ '         <label class="col-sm-4 control-label">Radius(arcmin)</label>'
 				+ '         <div class="col-sm-8">'
@@ -6900,7 +7049,7 @@ ConeSearch_mVc.prototype = {
 			var that = this;
 			var handler = (this.uploadURL != null) ? function() {
 				Modalinfo.uploadForm("Upload a list of position", that.uploadURL,
-						"Upload a CSV position list<br>Error are in arcmin",
+						"Upload a CSV position list<br>Search radius (optional) are in arcmin",
 						function(returnedPath) {
 					var msg;
 					if (returnedPath.retour.name != undefined
@@ -7023,7 +7172,7 @@ SimplePos_mVc.prototype = Object
 						+ '" class="inputvalue form-control input-sm"/>'
 						+ '       	<a href="javascript:void(0);" id="'
 						+ this.sesameId
-						+ '" title="Invoke the CDS name resolver" class="sesame-small"></a>'
+						+ '" title="Invoke the CDS name resolver" class="sesame-small"></a><br><span class="help">12.5 +45.8 - 14:03:01.01+54:23:41.6 - M33 </span>'
 						+ '       </div>'
 						+ '		  <div class="form-group">'
 						+ '         <label style="margin-right: 7px;">Radius(arcmin)</label>'
@@ -7107,6 +7256,13 @@ SimplePos_mVc.prototype = Object
 					$('#' + this.cooFieldId).click(function(event) {
 						that.readAndUpdate();
 					});
+					/*
+					 * Invoked when  value is pasted with the mouse
+					 */
+					$('#' + this.cooFieldId).bind('input propertychange', function (e) {
+						that.readAndUpdate();
+					});
+					
 					$('#' + this.radiusFieldId).keyup(function(event) {
 						if (event.which == 13) {
 							event.preventDefault();
@@ -7117,6 +7273,13 @@ SimplePos_mVc.prototype = Object
 					$('#' + this.radiusFieldId).click(function(event) {
 						that.readAndUpdate();
 					});
+					/*
+					 * Invoked when  value is pasted with the mouse
+					 */
+					$('#' + this.radiusFieldId).bind('input propertychange', function (e) {
+						that.readAndUpdate();
+					});
+
 					$('#' + this.frameSelectId).change(function(event) {
 						that.readAndUpdate();
 					});
@@ -7140,7 +7303,7 @@ SimplePos_mVc.prototype = Object
 						.uploadForm(
 								"Upload a list of position",
 								that.uploadURL,
-								"Upload a CSV position list<br>Error are in arcmin",
+								"Upload a CSV position list<br>Search radius (optional) are in arcmin",
 								function(returnedPath) {
 									var msg;
 									if (returnedPath.retour.name != undefined
@@ -7162,13 +7325,18 @@ SimplePos_mVc.prototype = Object
 									.val(
 											"poslist:"
 											+ returnedPath.retour.name);
-									$('#' + that.radiusFieldId)
-									.val("0");
+									/*
+									 * This value is taken by default, must not be set to null
+									 */
+//									$('#' + that.radiusFieldId)
+//									.val("0");
 									that.readAndUpdate();
-								}, function() {
+								}, 
+								function() {
 									$('span#uploadresult')
 									.text('');
-								});
+								}
+								);
 					}
 					: function() {
 						Modalinfo
@@ -7261,6 +7429,7 @@ SimplePos_mVc.prototype = Object
 			},
 			fireClearAllConst : {
 				value : function() {
+
 					var that = this;
 					$('#' + this.cooFieldId).val('');
 					that.readAndUpdate();
@@ -7286,8 +7455,7 @@ function TapSimplePos_mVc(params) {
 /**
  * Method overloading
  */
-TapSimplePos_mVc.prototype = Object
-.create(
+TapSimplePos_mVc.prototype = Object.create(
 		SimplePos_mVc.prototype,
 		{
 			/**
@@ -7307,7 +7475,7 @@ TapSimplePos_mVc.prototype = Object
 						+ '" class=inputvalue  size=18 />'
 						+ '       <a href="javascript:void(0);" id="'
 						+ this.sesameId
-						+ '" title="Invoke the CDS name resolver" class="sesame-small"></a>'
+						+ '" title="Invoke the CDS name resolver" class="sesame-small"></a><br><span class="help">12.5 +45.8 - 14:03:01.01+54:23:41.6 - M33 </span>'
 						+ '       <span class=help >System</span>'
 						+ ((this.frames != null) ? '      <select id="'
 								+ this.frameSelectId + '" >'
@@ -7324,7 +7492,7 @@ TapSimplePos_mVc.prototype = Object
 								+ '" type="button"/>'
 								+ '       <input type=button id="'
 								+ this.uploadId
-								+ '" value="Upload Position List" disabled title="Not implemented yet (wait for next release)"/>'
+								+ '" value="Upload Position List" title="Active for services supporting uploads" disabled=true />'
 								+ '</div>'
 								+ '       <div>'
 								+ '            <span class=help id="uploadresult"></span>'
@@ -7382,7 +7550,7 @@ TapSimplePos_mVc.prototype = Object
 						"input error");
 					} else {
 						var rd = coo.split(/\s+/);
-						if (coo.startsWith('poslist:')) {
+						if (coo.startsWith('poslist:') ) {
 							this.uploadedFile = coo.replace('poslist:',
 							'');
 							this.editor.fireInputCoordEvent(coo, null,
@@ -7402,6 +7570,18 @@ TapSimplePos_mVc.prototype = Object
 					}
 				}
 			},
+			supportUpload: {
+				value : function(supportUpload) {
+					var inp = $('#' + this.uploadId);
+		
+					inp.prop('disabled', !supportUpload);
+					if( supportUpload ){
+						inp.prop('title', 'Upload supported by the current node');
+					} else  {
+						inp.prop('title', 'Upload not supported by the current node');
+					}
+				}
+			},
 			setUploadForm : {
 				value : function() {
 					var that = this;
@@ -7410,51 +7590,44 @@ TapSimplePos_mVc.prototype = Object
 						if (radius == "") {
 							Modalinfo.error("Radius must be set");
 						} else if (that.editor.isReadyToUpload()) {
-							Modalinfo
-							.uploadForm(
+							var preloadedFiles = ( that.preloadedGetter != null )? that.preloadedGetter():[];
+							Modalinfo.uploadForm(
 									"Upload a list of position",
 									that.uploadURL,
 									"Upload a CSV position list (ra dec or object name)",
 									function(returnedPath) {
 										var msg;
-										if (returnedPath.retour.name != undefined
+										if (returnedPath.retour.nameVot != undefined
 												&& returnedPath.retour.positions != undefined) {
-											msg = returnedPath.retour.name
+											$('#' + parentId.split("_")[0] +'_delconstlist').click();
+											msg = returnedPath.retour.nameVot
 											+ ' uploaded, '
 											+ returnedPath.retour.positions
 											+ ' positions';
-											$(
-													'#'
-													+ that.cooFieldId)
-													.val(
+											$('#' + that.cooFieldId).val(
 															"poslist:"
-															+ returnedPath.retour.name);
-											$(
-													'#'
-													+ that.parentDivId
-													+ ' span#uploadresult')
-													.html(msg);
-											that
-											.readAndUpdate();
+															+ returnedPath.retour.nameVot);
+											$('#' + that.parentDivId + ' span#uploadresult').html(msg);
+											that.readAndUpdate();
 											if (that.postUploadHandler != null) {
-												that
-												.postUploadHandler(returnedPath.retour);
+												that.postUploadHandler(returnedPath.retour);
 											}
 											Modalinfo.close();
 										} else {
-											Modalinfo
-											.error(
-													JSON
-													.stringify(returnedPath),
+											Modalinfo.error(
+													returnedPath,
 													"Upload Failure");
 										}
 									}, function() {
-										$('span#uploadresult')
-										.text('');
+										$('span#uploadresult').text('');
 									}, [ {
 										name : 'radius',
-										value : radius
-									} ]);
+										value : radius,
+										},{
+										name : 'jsessionid',
+										value : sessionID
+									} ]
+									,preloadedFiles);
 						}
 					}
 					: function() {
@@ -7523,7 +7696,7 @@ TapSimplePos_mVc.prototype = Object
 			fireClearAllConst : {
 				value : function() {
 					$('#' + this.cooFieldId).val('');
-					that.readAndUpdate();
+					this.readAndUpdate();
 				}
 			}
 		});
@@ -7609,6 +7782,10 @@ ConstList_mVc = function(parentDivId, formName, constContainerId, removeAllHandl
 		return ( $("#"+ typoMsgId).first().attr('class') ==  'typomsg_ok');					
 	};
 	this.fireClearAllConst= function() {
+		if($("#" + parentDivId + "_constposcont input:text").length != 0){
+		$("#" + $("#" + parentDivId + "_constposcont input:text")[0].id).val("");
+		}
+		$("span#uploadresult").text("");
 		$("#" + constListId + " div.kwConstraint").each(function() {
 			$(this).remove();
 		});
@@ -7665,8 +7842,8 @@ BasicFieldList_mVc.prototype = {
 			this.attributesHandlers = new Array();
 			this.parentDiv.html('<div class=fielddiv><div class="fieldlist" id="' + this.fieldListId
 					+  '"></div>'
-				//	+ ' <div class="form-group" style="width:347px; margin-bottom:8px; margin-top:8px;"></div>'
-					);
+					//	+ ' <div class="form-group" style="width:347px; margin-bottom:8px; margin-top:8px;"></div>'
+			);
 
 			$("#"+this.fieldListId).closest(".fielddiv").css("padding","3px");
 
@@ -7682,11 +7859,11 @@ BasicFieldList_mVc.prototype = {
 		getAttributeTitle : function(ah) {
 			return ah.nameorg 
 			+ " - database name; " +  ah.nameattr
-			+ " - description: " +  ah.comment
-			+ " - UCD: " +  ah.ucd
-			+ " - Unit: " +  ah.unit
-			+ " - Type: " +  ah.type
-			+ " - Range: " +  ((ah.range == null || ah.range.values == null)? 'Not Set':JSON.stringify( ah.range.values).replace(/'/g,"&#39;"))
+			+ " - description: " +  ah.description
+			+ ((ah.ucd)?(" - UCD: " +  ah.ucd): "")
+			+ ((ah.unit)?(" - Unit: " +  ah.unit): "")
+			+ ((ah.type)?(" - Type: " +  ah.type): "")
+			+ ((ah.range)?(" - Range: " +  JSON.stringify( ah.range.values).replace(/'/g,"&#39;")): "")
 			;
 		},
 		/**
@@ -7781,7 +7958,7 @@ BasicFieldList_mVc.prototype = {
 				this.addPresetValues(ah);
 				this.displayField(ah);
 			}
-			
+
 		},
 		addPresetValues : function(attributeHandler){
 			if( attributeHandler.nameattr == 'dataproduct_type' ) {
@@ -7797,7 +7974,6 @@ BasicFieldList_mVc.prototype = {
 			}
 		},
 		getAttributeHandler: function(ahname){
-			Out.infoTrace(ahname + " "  + this.attributesHandlers[ahname]);
 			return this.attributesHandlers[ahname];
 		}
 }
@@ -8155,7 +8331,6 @@ TapColList_mVc.prototype = Object.create(FieldList_mVc.prototype, {
 	},
 	setDataTreePath: {
 		value: function(dataTreePath){
-			Out.infoTrace("================= setDataTreePath " + JSON.stringify(dataTreePath) );
 			this.dataTreePath = dataTreePath;
 			$('#' +  this.fieldListId ).html('');
 			$('#' +  this.tableselectid ).html('');
@@ -8166,14 +8341,12 @@ TapColList_mVc.prototype = Object.create(FieldList_mVc.prototype, {
 	},
 	addTableOption: {
 		value: function(treePath){
-			Out.infoTrace("addTableOption " + JSON.stringify(treePath));
 			$('#' + this.tableselectid).append('<option>' + treePath.schema + '.' + treePath.table + '</option>');
 			//$('#' + this.tableselectid).append('<option>' + treePath.tableorg + '</option>');
 		}
 	},
 	changeTable : {
 		value: function(dataTreePath) {	
-			Out.infoTrace("================= changeTable " + JSON.stringify(dataTreePath) );
 			this.dataTreePath = dataTreePath;
 			this.displayFields();
 		}
@@ -8184,11 +8357,11 @@ TapColList_mVc.prototype = Object.create(FieldList_mVc.prototype, {
 			+ " - node; " +  this.dataTreePath.nodekey
 			+ " - schema; " +  this.dataTreePath.schema
 			+ " - table; " +  this.dataTreePath.table
-			+ " - description: " +  ah.comment
-			+ " - UCD: " +  ah.ucd
-			+ " - Unit: " +  ah.unit
-			+ " - Type: " +  ah.type
-			+ " - Range: " +  ((ah.range == null || ah.range.values == null)? 'Not Set':JSON.stringify( ah.range.values).replace(/'/g,"&#39;"))
+			+ " - description: " +  ah.description
+			+ ((ah.ucd)?(" - UCD: " +  ah.ucd): "")
+			+ ((ah.unit)?(" - Unit: " +  ah.unit): "")
+			+ ((ah.type)?(" - Type: " +  ah.type): "")
+			+ ((ah.range)?(" - Range: " +  JSON.stringify( ah.range.values).replace(/'/g,"&#39;")): "")
 			;
 		}
 	},
@@ -8196,11 +8369,10 @@ TapColList_mVc.prototype = Object.create(FieldList_mVc.prototype, {
 		value : function(){
 			var that = this;
 			this.attributesHandlers =new Array();
-			Out.infoTrace("============ displayFields " + JSON.stringify(this.dataTreePath));
 			MetadataSource.getTableAtt(
 					this.dataTreePath
 					, function(cache) {
-						Out.infoTrace("HANDLER " + JSON.stringify(that.dataTreePath));
+						that.resetPosKeywords();
 						var ahm = cache.hamap;
 						var table  = "<table id=" + that.fieldTableId + " style='width: 100%; border-spacing: 0px; border-collapse:collapse' class='table'></table>";
 						$('#' + that.fieldListId).html(table);
@@ -8212,9 +8384,7 @@ TapColList_mVc.prototype = Object.create(FieldList_mVc.prototype, {
 						}
 						if( !that.joinedTableLoaded ) {
 							var jt = cache.targets;
-							console.log(JSON.stringify(cache.targets));
-						for( var k=0 ; k<jt.length ; k++) {
-								console.log(JSON.stringify(jt[k].target_datatreepath));
+							for( var k=0 ; k<jt.length ; k++) {
 								that.addTableOption(jt[k].target_datatreepath);
 							}
 							/*
@@ -8235,7 +8405,9 @@ TapColList_mVc.prototype = Object.create(FieldList_mVc.prototype, {
 	lookForDeltaKeyword: {
 		value: function(ah) {}
 	},
-
+	resetPosKeywords: {
+		value: function(ah) {}
+	},
 
 });
 
@@ -8338,6 +8510,15 @@ TapFieldList_mVc.prototype = Object.create(TapColList_mVc.prototype, {
 			 */
 		}
 	},
+	resetPosKeywords: {
+		value: function(ah) {
+			$('#' + this.raFieldId).html('');
+			this.alphakw = null;
+			$('#' + this.decFieldId).html('');
+			this.deltakw = null;
+		}
+	},
+
 	lookForAlphaKeyword: {
 		value: function(ah) {
 			for( var ahn in this.attributesHandlers ) {
@@ -8452,15 +8633,18 @@ console.log('=============== >  FieldList_v.js ');
 /**
  * class prototype
  */
-function Sorter_mVc(container, parentContainer, fieldAh, handler){
+function Sorter_mVc(container, parentContainer, fieldAh, handler, scrollHandler){
 
 	/*
 	 * Some reference and IDs on useful  DOM elements
 	 */
 	this.container = container;
+	this.scrollPaneSelector = null;
+	this.scrollLeft = 0;
 	this.parentContainer = parentContainer;
 	this.fieldAh = fieldAh;
 	this.handler = (handler == null)? function(fieldName, sortCommand){alert("Sort command: " + fieldName + " " +  sortCommand);}: handler;
+	this.scrollHandler = scrollHandler;
 }
 /**
  * Methods prototypes
@@ -8479,6 +8663,7 @@ Sorter_mVc.prototype = {
 				var clickedAnchor = $(this);
 				that.enableDisable(clickedAnchor);
 				var nodeClass = clickedAnchor.attr("class");
+
 				if( nodeClass == "sort_asc" ) {
 					that.handler(that.fieldAh.nameattr, "asc");
 				} else if( nodeClass == "sort_desc" ) {
@@ -8486,7 +8671,20 @@ Sorter_mVc.prototype = {
 				} else {
 					that.handler(that.fieldAh.nameattr, null);
 				}
+				/*
+				 * Send the scroll position to the caller 
+				 */
+				if( that.scrollPaneSelector != null && that.scrollHandler != null ) {
+					var x = $(that.scrollPaneSelector).scrollLeft();
+					that.scrollHandler(x);
+				}
 			});
+		},
+		/**
+		 * Set a jquery selector pointing on the scrollable data panel
+		 */
+		setScrollPaneSelector: function(scrollPaneSelector) {
+			this.scrollPaneSelector = scrollPaneSelector;
 		},
 		enableDisable: function(clickedAnchor) {
 			var initClass =  clickedAnchor.attr("class");
@@ -8505,7 +8703,6 @@ Sorter_mVc.prototype = {
 							:(initClass == "sort_asc")? "sort_asc_disabled"
 									: (initClass == "sort_desc_disabled")? "sort_desc"
 											: "sort_desc_disabled");
-					
 		},
 		activeArrow: function(asc) {
 			this.container.find("a").each(function() {
@@ -8525,6 +8722,101 @@ Sorter_mVc.prototype = {
 
 
 console.log('=============== >  Sorter_v.js ');
+
+function HipsExplorer_mVc(params){
+	this.aladinInstance = params.aladinInstance;
+	this.parentDivId = params.parentDivId;
+	this.title       = params.title;
+	this.formName    = params.formName;
+	this.handler     = params.handler;
+	this.maskId      = this.formName + "_mask";
+	this.productType = params.productType;
+	this.target      = params.target
+	this.baseUrl ="http://alasky.unistra.fr/MocServer/query?RA=" 
+		+ this.target.ra + "&DEC=" + this.target.dec + "&SR=" + this.target.fov + "&fmt=json&get=record&logic=or";
+	this.imageIdPattern = new RegExp(/.*\/C\/.*/);
+	this.imageTilePattern = new RegExp(/.*((jpeg)|(png)).*/);
+
+};
+
+
+/**
+ * Methods prototypes
+ */
+HipsExplorer_mVc.prototype = {
+		/**
+		 * Draw the field container
+		 */
+		draw : function() {
+			var that = this;
+			var html = '<input type="text" id="' + this.maskId + '" size=10>\n';
+			$('#' + this.parentDivId).html(html);
+
+			$('#' + this.maskId).keyup(function(e) {
+				if( $(this).val().length >= 2 || e.which == 13) {
+					that.searchHisp($(this).val());
+				}
+			});
+
+		},
+
+		searchHisp: function(mask){
+			var that = this;
+			if( this.aladinInstance != undefined ) {
+				var radec = this.aladinInstance.getRaDec();
+				this.baseUrl ="http://alasky.unistra.fr/MocServer/query?RA=" 
+					+ radec[0] + "&DEC=" + radec[1] + "&SR=" + this.aladinInstance.getFov()[0] + "&fmt=json&get=record&casesensitive=false";
+			}
+			var url = this.baseUrl;
+
+			if( mask != "" ){
+				url += "&publisher_id,publisher_did,obs_id,obs_title,obs_regime=*"  + mask + "*";
+			}
+			$.getJSON(url, function(jsondata) {
+				Processing.hide();
+				if( Processing.jsonError(jsondata,url) ) {
+					return;
+				} else {
+					if( that.productType != undefined ){
+						for(var i = jsondata.length - 1; i >= 0; i--) {
+							if(jsondata[i].dataproduct_type != that.productType ) {
+								jsondata.splice(i, 1);
+							}
+						}
+						/*
+						 * Only keep survey supported buy AladinLite
+						 */
+						if( that.productType == "image" ){
+							for(var i = jsondata.length - 1; i >= 0; i--) {
+								var keepIt = 0;
+								//if( that.imageIdPattern.test(jsondata[i]) ) {
+									if(  $.isArray(jsondata[i].hips_tile_format)) {
+										for( var j=0 ; j<jsondata[i].hips_tile_format.length ; j++){
+											if( that.imageTilePattern.test(jsondata[i].hips_tile_format[j]) ){
+												keepIt = 1;
+												break;
+											}
+										}
+									} else if(  that.imageTilePattern.test(jsondata[i].hips_tile_format) ){
+										keepIt = 1;
+									}
+								//}
+								if( keepIt == 0 ){
+									jsondata.splice(i, 1);
+								}
+							}
+						}
+					}
+					that.handler(jsondata);
+				}
+			});
+		},
+		setMaskValue: function(string){
+			$('#' + this.maskId).val(string);
+		}
+
+}
+console.log('=============== >  HipsExplorer_v.js ');
 
 /**
  * @returns {QueryTextEditor_Mvc}
@@ -8641,7 +8933,7 @@ DataLink_mVc.prototype = {
 					i++;
 				});
 				html += "<fieldset>";
-				html += "  <legend><span>Link <i>" + productType + "</i> <span></legend>";
+				html += "  <legend style='border-bottom: 0px; border-top: 1px solid #e5e5e5;'><span style='fontweight: bold;'>Link <i>" + productType + "</i> <span></legend>";
 				html += "    <a class='dlinfo' title='Get info about' href='#' onclick='LinkProcessor.fireGetProductInfo(\"" + this.linkInstance.access_url + "\"); return false;'></a>"
 				html += "    <a class=dldownload href='#' onclick='PageLocation.changeLocation(&quot;" + url + "&quot);' title='Download link target'></a>";
 				html += "    <span class=help>" +  semantic + "</span><br>";
@@ -8891,17 +9183,24 @@ CompliantDataLink_mVc.prototype = Object.create(DataLink_mVc.prototype, {
 					that.linkMap.push(new Link_mVc(obj, xml, index));
 				});
 			});
-			var html = "";
+			var html = "<span class='help'> (click on titles to expand links)</span><br>";
 			for( var i=0 ; i<this.linkMap.length ; i++ ){
-				html += this.linkMap[i].getHtml();
+				console.log(this.linkMap[i].async)
+				if( ! this.linkMap[i].async){
+					html += this.linkMap[i].getHtml();
+				}
 			}
 			Modalcommand.commandPanel("Link Browser", html);
-			//$("div.datalinkform").toggle();
 			Modalcommand.setDivToggling();
+			Modalcommand.collapseDiv();
+
+
 
 			for( var link in this.linkMap) {
-				this.linkMap[link].buildSliders();
-				this.linkMap[link].buildRegionEditors(this.dataObject);
+				if( ! this.linkMap[link].async){
+					this.linkMap[link].buildSliders();
+					this.linkMap[link].buildRegionEditors(this.dataObject);
+				}
 			}
 		}
 	},
@@ -8932,6 +9231,7 @@ function Link_mVc(instance, xml, index) {
 	this.sliders = new Array();
 	this.aladins = new Array();
 	this.xml = xml;
+	this.async = false;
 	this.setParams();
 
 }
@@ -8945,12 +9245,17 @@ Link_mVc.prototype = {
 					$(this).find('PARAM[name="accessURL"]').each(function() {
 						that.linkInstance.access_url =  $(this).attr("value");
 					});
+					$(this).find('PARAM[name="standardID"]').each(function() {
+						if( $(this).attr("value").match(/.*async.*/ )){
+							that.async = true;
+						}
+					});
 					$(this).find('GROUP[name="inputParams"]').each(function() {
 
 						$(this).find('PARAM').each(function() {
 							var param = {xml: $(this), value : ""};
 							var fieldPointer = $(this);
-							var x = $(this).find('VALUES');
+							var values = fieldPointer.find('VALUES');
 							/*
 							 * IF a field is referenced, its value is taken for the parameter value
 							 */
@@ -8958,11 +9263,14 @@ Link_mVc.prototype = {
 								var ref = fieldPointer.attr("ref");
 								param.value = that.getFieldValueByRef(ref);
 							}
+							else if( fieldPointer.attr("value") != null ){
+								param.value = fieldPointer.attr("value");
+							}
 							/*
 							 * If there is no value element attached to the PARAM, will look
 							 * if there is a field having the same name as the parameter
 							 */
-							else if( $(this).find('VALUES').length == 0 ){
+							else if( values.length == 0 ){
 								var name = fieldPointer.attr("name");
 								param.value = that.getFieldValueByName(name);
 							}
@@ -9041,18 +9349,18 @@ Link_mVc.prototype = {
 			if( this.params.length == 0 ){
 				var html = "";
 				html += "<fieldset>";
-				html += "  <legend><span title='Click on the link name to toggle'>Link <i>"  + this.linkInstance.semantics + "</i></legend><div class=datalinkform>";
-				html += this.getSimpleLinkAction();
+				html += "  <legend style='margin-bottom: 5px;border-top: 1px solid #e5e5e5;'><span style='font-weight: bold;'>Link <i style='font-weight: normal;'>"  + this.linkInstance.semantics + "</i> <span></legend><div class=datalinkform>";
+
+				//html += "  <legend><span title='Click on the link name to toggle'>Link <i>"  + this.linkInstance.semantics + "</i></legend><div class=datalinkform>";
 				html += this.getDescriptionSpan();
+				html += this.getSimpleLinkAction();
 				html += "</div></fieldset>";
 				return html;
 			} else {
 				var html = "";
 				html += "<fieldset name='" + this.linkInstance.semantics + "'>";
 				var that = this;
-				html += "  <legend><span title='Click on the link name to toggle'>Link <i>"  + this.linkInstance.semantics + "</i></legend><div class=datalinkform>";
-				html += "    <a class=dldownload    href='#' onclick='LinkProcessor.processWithParams(\"" + this.linkInstance.access_url + "\", \"" + this.linkInstance.semantics + "\");' title='Download link target'></a>";
-				html += "    <a class='dlivoalogo'  href='#' onclick='LinkProcessor.processToSampWithParams(\"" + this.linkInstance.access_url + "\", \"" + this.linkInstance.semantics + "\");' title='broadcast to SAMP'></a><BR\>";
+				html += "  <legend style='margin-bottom: 5px;border-top: 1px solid #e5e5e5;'><span style='font-weight: bold;' title='Click on the link name to toggle'>Link <i style='font-weight: normal;'>"  + this.linkInstance.semantics + "</i></legend><div class=datalinkform>";
 				html += this.getDescriptionSpan();
 				for( var i=0 ; i<this.params.length ; i++) {
 					var param = this.params[i];
@@ -9061,7 +9369,7 @@ Link_mVc.prototype = {
 					var paramId = paramName + "_" + this.index; // used to buid unique div IDs
 					var divId = paramId + "_input";
 					var sliderId = paramId + "_input_slider";
-
+					var withAladin = false;
 					var values;
 					var description, de;
 					if ( (de = $(param.xml).find('DESCRIPTION')).length != 0 ){
@@ -9074,18 +9382,24 @@ Link_mVc.prototype = {
 					 * Constant value
 					 */
 					if( param.value != null && param.value != ""){
-						html += "    <span><b>" + paramName + "</b></span> <span class=help>" + description + "</span><br>"
+						html += "<div id='param_" +  paramName + "'>   <span><b>" + paramName + "</b></span>&nbsp;<span class=help>" + description + "</span><br>"
 						+ "<input id='" + divId + "' readonly style='width: 100%;' type='text' value='" 
-						+ param.value + "' name='" + param.xml.attr("name") + "'><br>";
-						/*
-						 * Cutout: open Aladin Lite
-						 */
-					} else if ("stc:AstroCoordArea" == param.xml.attr("xtype")){
+						+ param.value + "' name='" + param.xml.attr("name") + "'></div>";
+					/*
+					 * Cutout: make a reference on a future AL
+					 * Only polygons are supported  
+					 */
+					} else if( ("stc:AstroCoordArea" == param.xml.attr("xtype") && "circle" != param.xml.attr("xtype")) || "polygon" == param.xml.attr("xtype")){
 						var divAladin = paramId + "_aladin";
-						html += "    <span id='cutoutParam'><b>" + paramName + "</b></span><span class=help> " 
+						html += "<div id='param_" +  paramName + "'><input type='checkbox' name='takeit' value='takeit' title='uncheck to ignore the parameter' checked><span id='cutoutParam'>&nbsp;<b>" + paramName + "</b></span>&nbsp;<span class=help> " 
 						+ description + "</b></span><br><textarea id='" + divId + "' style='width:100%;' rows='3' name='" 
-						+ paramName +"'>POLYGON ICRS</textarea><br><div id='" + divAladin + "' style='width: 400px; height: 400px'></div>";
-						this.aladins.push(divAladin);
+						+ paramName +"'></textarea><br><div id='" + divAladin + "' style='width: 400px; height: 470px'></div></div>";
+						var maxField, envelope = '';
+						if ( (values = $(param.xml).find('VALUES')).length != 0  && (maxField = $(values).find("MAX")) ){
+							envelope = $(maxField).attr("value");
+						}
+						this.aladins.push({div: divAladin, envelope:envelope} );
+						withAladin = true;
 						/*
 						 * Parmas with a defined value range: use either a slider or a choice menu
 						 */	
@@ -9103,15 +9417,15 @@ Link_mVc.prototype = {
 							var def =  (paramName.endsWith("MIN"))? min: (paramName.endsWith("MAX"))?max: (min + max)/2;
 							def = (paramType == "int")? Math.round(def) :def ;
 							var scaleMention = (scaleMin.factor != 1)? (" (* " + (1/scaleMin.factor) +")"): "" ;
-							html += "    <input type='checkbox' name='" + paramName + "' value='takeit' title='uncheck to ignore the parameter' checked><span><b>" + paramName + "</b></span><span class=help>" + description + scaleMention + "</span><br>";
+							html += "<div id='param_" +  paramName + "'> <input type='checkbox' name='" + paramName + "' value='takeit' title='uncheck to ignore the parameter' checked>&nbsp;<span><b>" + paramName + "</b></span>&nbsp;<span class=help>" + description + scaleMention + "</span><br>";
 							html += '&nbsp;&nbsp;<label for="amount">Value</label>'
 								+ ' <input type="text" name="' + paramName + '" id="' + divId + '" size=10 style="border: 0;font-weight: bold;" value="' + (Math.round(def*1000)/1000) + '"/>'
-								+ ' <intput type=hidden value="' + scaleMin.factor + '" id="' + paramId + '_input_factor">'
-								+ '<div style="display: inline-block;width: 300px" id="' + sliderId + '"></div><br>'    ;
+								+ ' <input  type="hidden" value="' + scaleMin.factor + '" id="' + paramName + '_input_factor"/>'
+								+ '<div style="display: inline-block;width: 300px" id="' + sliderId + '"></div></div>'    ;
 							this.sliders[sliderId] = {id: divId, type: paramType, min: min, max: max, def: def, scaleFactor: scaleMin.factor};
 
 						} else if( (option = $(values).find("OPTION")).length != 0) {
-							html += "    <input type='checkbox' name='" + paramName + "' value='takeit' title='uncheck to ignore the parameter' checked><span><b>" + paramName + "</b></span> <span class=help>" + description + "</span><br>";
+							html += "<div id='param_" +  paramName + "'> <input type='checkbox' name='" + paramName + "' value='takeit' title='uncheck to ignore the parameter' checked>&nbsp;<span><b>" + paramName + "</b></span>&nbsp;<span class=help>" + description + "</span><br>";
 							html += ' <select type="text" name="' + paramName + '" id="' + divId + '">';
 							option.each(function() {
 								var name = $(this).attr("name");
@@ -9121,13 +9435,21 @@ Link_mVc.prototype = {
 								}
 								html += "  <option value='" + value + "'>" + value + " " + name + ")</option>";
 							});					
-							html += ' </select>';
-
-
+							html += ' </select></div>';
+						} else if( (maxField = $(values).find("MAX")).length != 0 ) {
+							html += "<div id='param_" +  paramName + "'> <input type='checkbox' name='" + paramName + "' value='takeit' title='uncheck to ignore the parameter' >&nbsp;<span class=help>" 
+								+ "<b>" + paramName + "</b>&nbsp; " + description +"</span><br>"
+								+ '<input type="text" name="' + paramName + '" id="' + divId + '" style="width: 100%;" value="' + maxField.attr("value") + '"/></div>';
 						} else {
-							html += "    <input type='checkbox' name='takeit' value='takeit' title='uncheck to ignore the parameter' checked><span class=help>" + paramName + " " + description +"</span><br>FREE<br>";
+							html += " <div id='param_" +  paramName + "'> <input type='checkbox' name='takeit' value='takeit' title='uncheck to ignore the parameter' checked>&nbsp;<span class=help>" + paramName + "&nbsp;" + description +"</span><br>FREE</div>";
 						}
 					} 
+				}
+				html += "    <a class='dlinfo' title='Get info about' href='#' onclick='LinkProcessor.infoWithParams(\"" + this.linkInstance.access_url + "\", \"" + this.linkInstance.semantics + "\"); return false;'></a>";
+				html += "    <a class=dldownload    href='#' onclick='LinkProcessor.processWithParams(\"" + this.linkInstance.access_url + "\", \"" + this.linkInstance.semantics + "\");' title='Download link target'></a>";
+				html += "    <a class='dlivoalogo'  href='#' onclick='LinkProcessor.processToSampWithParams(\"" + this.linkInstance.access_url + "\", \"" + this.linkInstance.semantics + "\");' title='broadcast to SAMP'></a><BR\>";
+				if( withAladin ){
+					html += "    <span class='help'>Draw counter-clockwise please</span>\n"
 				}
 				html += "</div></fieldset>";
 				return html;
@@ -9166,84 +9488,41 @@ Link_mVc.prototype = {
 			}
 		},
 		/*
-		 * Active widget must be built after the link HTML has beeb attached to the DOM
+		 * Active widget must be built after the link HTML has been attached to the DOM
 		 */
 		buildRegionEditors : function(fovObject){
 			for( var i=0 ; i<this.aladins.length ; i++ ) {
-				var div = this.aladins[i];
+				var div = this.aladins[i].div;
+				var envelope = this.aladins[i].envelope;
 				var message = "";
 				if( div.length != 0){
-					var points = [];
-					if( !('s_ra' in fovObject) || !('s_dec' in fovObject) ) {
-						message = "CUTOUT Link: Cannot access object position: set it by hand";
-					} else {
-						var ra = fovObject.s_ra;
-						var dec = fovObject.s_dec;
-						if( ra < 0 || ra > 360 || dec <-90 || dec >90 ) {
-							message = "CUTOUT Link: No valid position for this object: set it by hand";
-						} else {
-							var fov;
-							/*
-							 * Take 1' as FoV by default
-							 */
-							if ( !(('s_fov' in fovObject) && (fov = fovObject.s_fov) > 0 && fov < 180 )){
-								fov = 1/60;
-							}
-
-							size = fov/2;
-							var ra_min = ((ra - size) < 0)  ? (360 + (ra - size)): ((ra - size) > 360)? (360 - (ra - size)): (ra - size);
-							var dec_min = ((dec - size) < -90)? (-180 - (dec - size)):  ((dec - size) >  90)? ( 180 - (dec - size)):   (dec - size);
-							var ra_max = ((ra + size) < 0)  ? (360 + (ra + size)): ((ra + size) > 360)? (360 - (ra + size)): (ra + size);
-							var dec_max = ((dec + size) < -90)? (-180 - (dec + size)): ((dec + size) >  90)? ( 180 - (dec + size)):   (dec + size);
-
-							points = [
-							          ra_min, dec_min,
-							          ra_min, dec_max,
-							          ra_max, dec_max,
-							          ra_max, dec_min,
-							          ];								
-						}
-					}
+					
 					var regionEditor = new RegionEditor_mVc  (div
 							, function(params){			
-						str = "polygon ICRS ";
-						var pts = params.region.points
-						for( var i=0 ; i<pts.length ; i++) {
-							str += parseFloat(pts[i][0]).toFixed(6) + " " +parseFloat(pts[i][1]).toFixed(6) + " "; 
-						}
-						$("#" + div.replace("aladin", "input")).text(str);
-					}
-					, [fovObject.s_ra ,fovObject.s_dec ] 
-					); 		
+								str = "";
+								var pts = params.region.points
+								/*
+								 * CADC fails when last point == first point
+								 */
+								for( var i=0 ; i<(pts.length -1) ; i++) {
+									str += parseFloat(pts[i][0]).toFixed(6) + " " +parseFloat(pts[i][1]).toFixed(6) + " "; 
+								}
+								$("#" + div.replace("aladin", "input")).text(str);
+							}
+							, [fovObject.s_ra ,fovObject.s_dec ] 
+						); 		
 					regionEditor.init();	
-					$(".aladin-box").css("z-index", (9999));
-					if( message != ""){
-						Modalinfo.info(message);								
-					}
-
-					if( points.length > 0 ) {
-						var initRegion = {type: "array", value: points};
-						Processing.show("init Aladin");
-						setTimeout(function() {
-							regionEditor.setInitialValue( initRegion );
-							Processing.hide();
+					if( envelope ) {
+						var s = envelope.split(/\\s+/);
+						var l = s.length -1;
+						if( s[0] == s[l-1] && s[1] == s[l]){
+							s.pop()
+							s.pop();
 						}
-						, 1000);
-						/*
-						 * We need to draw a polygon in any case; otherwise AL loops for even in the view.redraw function 
-						 * from the second time the modal is open
-						 */
-					} else {
-						var initRegion = {type: "array", value: [1,2,1.1, 2, 1.1, 2.1]};
-						Processing.show("init Aladin");
-						setTimeout(function() {
-							regionEditor.setInitialValue( initRegion );
-							regionEditor.clean();						
-							$("#" + div.replace("aladin", "input")).text("POLYGON ICRS");
-
-							Processing.hide();
-						}
-						, 1000);
+						regionEditor.setEditionFrame({
+							type : "soda",
+							value : "POLYGON " + s.join(" ")});
+						$("#" + div.replace("aladin", "input")).text(s.join(" "));
 
 					}
 				}
@@ -9291,32 +9570,41 @@ Link_mVc.prototype = {
  * Singleton class providing the fonction processing the link accesses 
  */
 LinkProcessor = function() {
-	var processWithParams = function(access_url, semantic) {
+	var builURL = function(access_url, semantic) {
 		var fieldset = $("fieldset[name='" + semantic + "']");
 		var params = new Array();
-		fieldset.find("input[type='text'], textarea").each(function(){
-			var name = $(this).attr("name");
-			var check =  $(this).parent().children('input[type=checkbox][name=' + name + ']');
+		//fieldset.find("input[type='text'], textarea").each(function(){
+		fieldset.find("div[id^=param_]").each(function(){
+			var check =  $(this).children('input[type=checkbox]');
+			var name = $(this).attr("id").replace("param_", "");
+
 			if( (name != undefined && name != null  && name != "" )  &&  (check.length == 0 ||  check.prop('checked')) ) {
 				var id = $(this).attr("id");
-				var factorEle = $("#" + id + "_factor");
-				var value;
-				if( factorEle.length == 0 ){
-					value =  $(this).val();
-				} else {
-					value =  $(this).val()/ factorEle.attr("value");
+				var factorEle = $(this).find("#" + name + "_input_factor").first();
+				var value =  $(this).children('input[type="text"], textarea').val();	
+				if( value ) {
+					if( factorEle.length != 0 ){
+						value =  value / factorEle.attr("value");
+					}
+					params.push((name + "=" + encodeURIComponent(value)));
 				}
-
-				params.push(name + "=" + encodeURIComponent(value) );
+				else {
+					$(this).find("select").each(function(){
+						var value =  $(this).val();
+						params.push(name + "=" + encodeURIComponent(value) );
+					});
+				}
 			}
 		})
-		fieldset.find("select").each(function(){
-			var id = $(this).attr("id");
-			var value =  $(this).val();
-			params.push($(this).attr("name") + "=" + encodeURIComponent(value) );
-		})
-		var retour = access_url + "?" + params.join("&");
-		PageLocation.download(retour);
+		console.log(params)
+		console.log(params.join("&"))
+		return access_url + "?" + params.join("&");
+	}; 
+	var processWithParams = function(access_url, semantic) {
+		PageLocation.download(builURL(access_url, semantic));
+	};
+	var infoWithParams = function(access_url, semantic) {
+		Modalinfo.info(builURL(access_url, semantic), "Service Info");
 	}; 
 	var processToSampWithParams = function(access_url, semantic) {
 		var fieldset = $("fieldset[name=" + semantic + "]");
@@ -9368,6 +9656,7 @@ LinkProcessor = function() {
 	 */
 	var pblc = {};
 	pblc.processWithParams = processWithParams;
+	pblc.infoWithParams = infoWithParams;
 	pblc.processToSampWithParams = processToSampWithParams;
 	pblc.fileDownload = fileDownload;
 	pblc.fireGetProductInfo = fireGetProductInfo;
@@ -9453,7 +9742,7 @@ ConstQEditor_Mvc.prototype = {
 		},
 		clearConst : function(filter){
 			this.notifyTypoMsg(false, '');
-			for(  var e in this.editors) {
+			for(var e in this.editors) {
 				if( e.match(filter) ) {
 					delete this.editors[e];
 					this.const_key --;
@@ -10132,7 +10421,7 @@ tapQEditor_Mvc.prototype = Object.create(tapColSelector_Mvc.prototype, {
 						}
 						// if the targetted table is an uploaded file: crosmatch 	
 					} else if( ed.fieldName.startsWith("POSLIST") ) {
-						joins[tt] = {target_table: "upload." + ed.fieldName.replace('POSLIST:',''), target_column: "", source_column: ""};
+						joins[tt] = {target_table: "TAP_UPLOAD." + ed.fieldName.replace('POSLIST:',''), target_column: "", source_column: ""};
 					}
 				}
 			}
@@ -10251,7 +10540,7 @@ tapPosQEditor_Mvc.prototype = Object.create(tapColSelector_Mvc.prototype, {
 						}
 						// if the targetted table is an uploaded file: crosmatch 	
 					} else if( ed.fieldName.startsWith("POSLIST") ) {
-						joins[tt] = {target_table: "upload." + ed.fieldName.replace('POSLIST:',''), target_column: "", source_column: ""};
+						joins[tt] = {target_table: "TAP_UPLOAD." + ed.fieldName.replace('POSLIST:',''), target_column: "", source_column: ""};
 					}
 				}
 			}
@@ -10503,7 +10792,6 @@ function PosQEditor_mVc(params /*{parentDivId, formName, queryView, frames, urls
 	ConstQEditor_mVc.call(this, params);
 	params.editor = this;
 	this.fieldListView = new ConeSearch_mVc(params);
-	console.log("1");
 };
 /**
  * Method overloading
@@ -10600,7 +10888,6 @@ PosQEditor_mVc.prototype = Object.create(ConstQEditor_mVc.prototype, {
 				 * In region mode: only one constraint
 				 */
 				this.fireClearAllConst();
-				console.log(rq);
 				if( rq != '' ) {
 					this.listener.controlAttributeEvent({type: "region", frame: "ICRS", position: rq, radius: 0}, that.constListId);
 					$("#" + this.constListId + " span.help").attr("style","display:none;");
@@ -10714,6 +11001,7 @@ function tapColSelector_mVc(params){
 	var that = this;
 	this.help = params.help;
 	this.constPosContainer   = params.parentDivId + "_constposcont";
+	
 	this.fieldListView = new TapColList_mVc(params.parentDivId
 			, this.formName
 			, {stackHandler: function(ahName){ that.fireAttributeEvent(ahName);}
@@ -10836,7 +11124,7 @@ function tapQEditor_mVc(params /*parentDivId, formName, sesameUrl, upload { url,
 		, formName: this.formName
 		, frames: null
 		, urls: {sesameURL: params.sesameUrl, uploadURL:params.upload.url}
-	, postUploadHandler: params.upload.postHandler
+	    , postUploadHandler: params.upload.postHandler
 	});
 };
 /**
@@ -10868,6 +11156,11 @@ tapQEditor_mVc.prototype = Object.create(tapColSelector_mVc.prototype, {
 			this.fieldListView.lookForAlphaKeyword();
 			this.fieldListView.lookForDeltaKeyword();
 			return;
+		}
+	},
+	fireGoodyremoved :  { 
+		value: function(goodyName){
+			this.posEditor.fireClearAllConst();
 		}
 	},
 	fireAttributeEvent :  { 
@@ -10931,7 +11224,7 @@ tapQEditor_mVc.prototype = Object.create(tapColSelector_mVc.prototype, {
  * @param help
  * @returns {tapPosQEditor_mVc}
  */
-function tapPosQEditor_mVc(params /*parentDivId, formName, sesameUrl, upload { url, postHandler}, queryView, currentNode }*/){
+function tapPosQEditor_mVc(params /*parentDivId, formName, sesameUrl, upload { url, postHandler, preloadedGetter}, queryView, currentNode }*/){
 	tapColSelector_mVc.call(this, params);
 	var that = this;
 	this.fieldListView = new TapFieldList_mVc(params.parentDivId
@@ -10949,7 +11242,9 @@ function tapPosQEditor_mVc(params /*parentDivId, formName, sesameUrl, upload { u
 		, formName: this.formName
 		, frames: null
 		, urls: {sesameURL: params.sesameUrl, uploadURL:params.upload.url}
-	, postUploadHandler: params.upload.postHandler
+	    , postUploadHandler: params.upload.postHandler
+	    , preloadedGetter: params.upload.preloadedGetter
+
 	});
 };
 /**
@@ -10977,6 +11272,26 @@ tapPosQEditor_mVc.prototype = Object.create(tapColSelector_mVc.prototype, {
 			//this.orderByView.draw();
 		}
 	},
+	// handler is called after the form is uptdated: query submission e.g.
+	fireSetTreepath : { 
+		value: function(treePath, handler){
+			var that = this;
+			if( this.dataTreePath != null ){
+				this.fireClearAllConst();
+				this.queryView.fireDelConstraint(this.formName, "orderby");
+			}
+
+			this.dataTreePath = treePath;	
+			// table name can include the schema
+			//this.dataTreePath.table = this.dataTreePath.table.split('.').pop();
+			this.queryView.fireSetTreePath(this.dataTreePath);
+			this.queryView.fireAddConstraint(this.formName, "select", ["*"]);
+			this.orderByView.fireClearAllConst();
+			this.listener.controlLoadFields(that.dataTreePath, handler);
+			this.fieldListView.setDataTreePath(this.dataTreePath);
+			this.posEditor.uploadedFile = '';
+		}
+	},
 	displayFields: { 
 		value: function(attributesHandlers){
 			this.fieldListView.displayFields(attributesHandlers);
@@ -10992,6 +11307,11 @@ tapPosQEditor_mVc.prototype = Object.create(tapColSelector_mVc.prototype, {
 			$("#" + this.constListId + " span.help").attr("style","display:none;");
 		}
 	},		
+	fireGoodyRemoved  :  { 
+		value: function(goodyName){
+			this.fireClearAllConst();
+		}
+	},
 	fireInputCoordEvent :  { 
 		value : function(ra, dec, radius, frame){
 			var that = this;
@@ -11032,7 +11352,77 @@ tapPosQEditor_mVc.prototype = Object.create(tapColSelector_mVc.prototype, {
 		value: function(){
 			return this.posEditor.uploadedFile;
 		}
+	},
+	fireSupportUpload: {
+		value: function(supportUpload){
+			this.posEditor.supportUpload(supportUpload);
+		}
 	}
+});
+
+
+
+
+
+
+
+function tapCrossMatchQEditor_mVc(params /*parentDivId, formName, sesameUrl, upload { url, postHandler}, queryView, currentNode }*/){
+	tapPosQEditor_mVc.call(this, params);
+	this.xParentDivId = "X" + this.parentDiv.attr('id');
+	this.xfieldListView ;
+	this.sessionId = params.sessionID;
+};
+
+/**
+ * Method overloading
+ */
+tapCrossMatchQEditor_mVc.prototype = Object.create(tapPosQEditor_mVc.prototype, {	
+	draw : { 
+		value: function() {
+			
+			//first fieldlist
+			this.fieldListView.draw();
+			this.parentDiv.css("width", "");
+			this.parentDiv.wrap("<div id='tapCrossMatchParent'></div>");
+			//display row
+			$("#tapCrossMatchParent").css("display","flex");
+			
+			//second fieldlist div
+			$("#tapCrossMatchParent").append("<div  style='width: 100px;'></div>" +
+											"<div style='width: 100%;' id='" + this.xParentDivId + "'></div>");
+			
+			
+			//debug
+			$("#tapCrossMatchParent").css("border","1px solid red");
+			$("#" + this.xParentDivId).css("border","1px solid green");
+			
+			//setup 2nd fieldlist
+			this.xfieldListView = new TapFieldList_mVc(this.xParentDivId
+					, this.formName
+					, {stackHandler: null
+			, orderByHandler: null
+			, raHandler: null
+			, decHandler: null
+			, radec: true}	        
+			, this.sessionID
+			);
+			this.xfieldListView.draw();
+			this.xfieldListView.setStackTooltip("Click to constrain this field");
+			
+			// remove join table input
+			$("#XtapCrossMatchSelector_tableSelect").parent().parent().remove();
+			$("#tapCrossMatchSelector_tableSelect").parent().parent().remove();
+			
+			//fill 2nd fieldlist
+			this.xfieldListView.setDataTreePath(new DataTreePath({nodekey:'node', schema: 'schema', table: 'table', tableorg: 'schema.table'}));
+			
+			//add constraint view (empty)
+			$("#" + this.xParentDivId).append('<div><div id=' + this.constContainerId + '></div></div>');
+			$("#" + this.constContainerId).css({"height" : "100px", "margin-top" : "270px", "border" : "1px solid pink"});
+
+		}
+	},
+
 });
 
 
@@ -11420,7 +11810,6 @@ JoinKeyMap.prototype = {
 			if( jk == null ){
 				this.keyMap[key] = {joinKey: joinKey, origins: [origin]};
 			} else {
-				console.log(this.keyMap[key]);
 				var ors = jk.origins;
 				var index = ors.indexOf(origin);
 				if (index == -1) {
@@ -11552,6 +11941,184 @@ QueryTextEditor_mvC = function(view, model){
 
 console.log('=============== >  QueryTextEditor_c.js ');
 
+/**
+ * @preserve LICENSE
+ * 
+ * Copyright (c) 2017 Laurent Michel
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
+ * IN THE SOFTWARE. 
+**/
+
+/**
+ * A few geometric functions necessary to deal with the poles and the shtitling. 
+ * These functions make use of the Coo class defined with the AladinLite core 
+ * (http://aladin.u-strasbg.fr/AladinLite/)
+ * 
+ * Author:  laurent.michel@astro.unistra.fr
+ */
+BasicGeometry = function () {
+    /**
+     * Nodes are 2 arrays with 2 elements
+     * Returns a distance ranging from 0 to 180deg
+     */
+    function distanceBetweenNodes(node1, node2){
+    	var coo1 = new Coo(node1[0], node1[1]);
+    	var coo2 = new Coo(node2[0], node2[1]);
+    	return coo1.distance(coo2)
+    }
+    /**
+     * Return the geometric definition of the view enclosing the skyPositions polygon
+     * skyPositions: Array of points: [[ra,dec], ...]
+     * return : {center: {ra: .., dec: ..}, size: ..} size is in deg
+     */
+    function getEnclosingView(skyPositions) {
+		maxSize=0;
+		var coo = new Coo();
+		var raMin=360;
+		var raMax=0;
+		var decMin=+90
+		var decMax=-90;
+		/*
+		 * Take the the biggest distance between 2 vertices as polygon size
+		 * 
+		 */
+		for( var node1=0 ; node1<skyPositions.length ; node1++) {
+			posNode1 = skyPositions[node1];
+			ra1 = posNode1[0];
+			dec1 = posNode1[1];
+			if( ra1 > raMax) raMax = ra1;
+			if( ra1 < raMin) raMin = ra1;
+			if( dec1 > decMax) decMax = dec1;
+			if( dec1 < decMin) decMin = dec1;
+
+			for( var node2=skyPositions.length/2 ; node2<skyPositions.length ; node2++) {
+				posNode2 = skyPositions[Math.floor(node2)];
+				ra2 = posNode2[0];
+				dec2 = posNode2[1];
+				if( maxSize < (d = BasicGeometry.distanceBetweenNodes(posNode1, posNode2))){
+					maxSize = d;
+				}
+			}
+		}
+		/*
+		 * Transform the polygon a an array of Coo instance
+		 * This will made the further computation easier
+		 */
+		var vertices = [];
+		for( var node1=0 ; node1<(skyPositions.length - 1) ; node1++) {
+			posNode1 = skyPositions[node1];
+			vertices.push(new Coo(posNode1[0], posNode1[1]));
+		}
+		/*
+		 * Compute the average position as rough view center 
+		 */
+		var sumX=0 , sumY=0, sumZ=0;
+		/*
+		 * Compute first the average of the Euclidian coordinates
+		 */
+		for( var node1=0 ; node1<vertices.length  ; node1++) {
+			var vertex = vertices[node1];
+			sumX += vertex.x;
+			sumY += vertex.y;
+			sumZ += vertex.z;
+		}
+		sumX = sumX/vertices.length;
+		sumY = sumY/vertices.length;
+		sumZ = sumZ/vertices.length;
+		/*
+		 * The normalize to R=1 
+		 */
+		var ratio = 1/Math.sqrt(sumX*sumX + sumY*sumY +sumZ*sumZ);
+		sumX *= ratio;
+		sumY *= ratio;
+		sumZ *= ratio;
+		/*
+		 * Convert Euclidian to sky coords 
+		 */
+		var coo = new Coo();
+		coo.x = sumX;
+		coo.y = sumY;
+		coo.z = sumZ;
+		coo.computeLonLat();
+		/*
+		 * Adjust the view to make sure that all vertices are visible 
+		 */
+		var deltaRA = 0;
+		var deltaDEC = 0;
+		for( var node1=0 ; node1<vertices.length  ; node1++) {
+			var vertex = vertices[node1];
+
+			var left = [coo.lon  - maxSize/2, vertex.lat];
+			if( left[0] < 0 ) left[0]  = 360 + left[0];
+			if( left[0] > 360) left[0] = left[0] -360;
+			
+			var right = [coo.lon  + maxSize/2, vertex.lat]
+			if( right[0] < 0 ) right[0]  = 360 + right[0];
+			if( right[0] > 360) right[0] = right[0] -360;
+			
+			var rightDistance = BasicGeometry.distanceBetweenNodes(right, [vertex.lon, vertex.lat])
+			if( maxSize  < rightDistance) {
+				deltaRA =rightDistance - maxSize;
+			}
+			var leftDistance = BasicGeometry.distanceBetweenNodes(left, [vertex.lon, vertex.lat])
+			if( maxSize  < leftDistance) {
+				deltaRA =leftDistance - maxSize;
+			}
+
+			
+			var top = [vertex.lon, coo.lat  + maxSize/2];
+			if( top[1] > 90 ) top[1]  = 180  - top[1];
+			
+			var bottom = [vertex.lon, coo.lat  - maxSize/2];
+			if( bottom[1] < -90 ) bottom[1]  = -180 + bottom[1];
+			
+			if( vertex.lat < bottom[1] ){
+				deltaDEC = bottom[1] -  vertex.lat;
+			} else if( vertex.lat > top[1] ){
+				deltaDEC = vertex.lat - top[1];
+			}			
+		}
+    	return {center: {ra: (coo.lon - deltaRA), dec: (coo.lat - deltaDEC)}, size: maxSize};
+    }
+    
+	var pblc = {};
+	pblc.distanceBetweenNodes = distanceBetweenNodes;
+	pblc.getEnclosingView = getEnclosingView;
+	return pblc;
+}();
+
+console.log('=============== >  AstroCoo.js ');
+
+/*****************************
+ * LICENSE
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
+ * IN THE SOFTWARE.
+ * 
+ * Laurent Michel, Gerardo Irvin Campos yah  - Strasbourg Observatory - 2015
+ * laurent.michel@astro.unistra.fr
+ */
 function Segment(polygoneNodes /*canvas*/)
 {
 	var alfa;
@@ -12074,9 +12641,34 @@ function Segment(polygoneNodes /*canvas*/)
 console.log('=============== >  Segment.js ');
 
 /**
+ * @preserve LICENSE
+ * 
+ * Copyright (c) 2017 Laurent Michel
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
+ * IN THE SOFTWARE. 
+**/
+
+/**
  * Model processing the draw canvas
  * 
  * Author Gerardo Irvin Campos yah
+ * Contact laurent.michel@astro.unistra.fr
  */
 function RegionEditor_Mvc(canvas, canvaso, aladin){
 
@@ -12093,7 +12685,8 @@ function RegionEditor_Mvc(canvas, canvaso, aladin){
 }
 
 RegionEditor_Mvc.prototype = {
-
+      
+	      
 		DrawNode: function (data){
 			for(var i in data)
 			{
@@ -12123,7 +12716,6 @@ RegionEditor_Mvc.prototype = {
 
 				this.context.closePath(); 
 				this.context.strokeStyle = 'lime';
-				// this.context.lineWidth = 3;
 				this.context.stroke();	
 			}
 			else
@@ -12135,7 +12727,6 @@ RegionEditor_Mvc.prototype = {
 				this.context.lineTo(x,y);
 				this.context.closePath(); 
 				this.context.strokeStyle = 'lime';
-				//this.context.lineWidth = 3;
 				this.context.stroke();
 			}
 		},
@@ -12258,8 +12849,6 @@ RegionEditor_Mvc.prototype = {
 				A: (this.node.length  - 1),
 				B: 0
 			});
-
-			//console.log('total: ' + total.length);
 			return total;
 		},
 
@@ -12298,7 +12887,6 @@ RegionEditor_Mvc.prototype = {
 			if(width > 180)
 			{
 				width = 360 - width;
-				//console.log('width 360');
 			}
 
 			return { decmax: Decmax, decmin: Decmin , width: width  };
@@ -12314,10 +12902,6 @@ RegionEditor_Mvc.prototype = {
 			var contextGrafic = canvasgraf.getContext('2d');
 			var contador = 20;
 			var contador2 = 20;
-
-			//console.log("ancho: " + ancho);
-			//console.log("alto: " + alto);
-
 			for(var i =0; i < alto ; i++)
 			{
 
@@ -12342,7 +12926,6 @@ RegionEditor_Mvc.prototype = {
 
 				this.contextGrafic.closePath(); 
 				this.contextGrafic.strokeStyle = 'yellow';
-				//this.context.lineWidth = 3;
 				this.contextGrafic.stroke();	
 
 				contador = parseInt( contador + 20);
@@ -12371,7 +12954,6 @@ RegionEditor_Mvc.prototype = {
 
 				this.contextGrafic.closePath(); 
 				this.contextGrafic.strokeStyle = 'brown';
-				//this.context.lineWidth = 3;
 				this.contextGrafic.stroke();	
 				contador2 = parseInt( contador2 + 20);	    	       
 			}  
@@ -12470,8 +13052,6 @@ RegionEditor_Mvc.prototype = {
 					}
 				}			          		         
 			}
-
-			//console.log('this.node add: ' + this.node.length);        
 		},
 
 		//function que permet obtener le numero de this.node
@@ -12489,7 +13069,6 @@ RegionEditor_Mvc.prototype = {
 
 				if(result <= 25)
 				{	    
-					//console.log('i: ' + i);
 					return i;	
 				}
 			}
@@ -12610,12 +13189,8 @@ RegionEditor_Mvc.prototype = {
 		//function pour garder les valeur de alafin lite et les convertir en valeurs de this.canvas("pixel")
 		almacenar: function()
 		{			
-			//console.log('mesage this.almacenar');
-			//console.log('this.skyPositions: ' + this.skyPositions);
 			if(this.skyPositions != null)
 			{
-				//console.log('this.skyPositions' + this.skyPositions);
-				//console.log('this.node' + this.node);					
 				this.node = [];
 				this.skyPositions.pop();
 
@@ -12630,14 +13205,6 @@ RegionEditor_Mvc.prototype = {
 
 				this.ArrayToObject(this.node);
 
-				//console.log('this.node: ' + typeof(this.node));
-				/*for(i in this.node)
-				{	
-					console.log('i : ' + i);
-					console.log('this.node x: ' + this.node[i].cx);
-					console.log('this.node y: ' + this.node[i].cy);				
-				}*/
-
 				this.Redrawn(this.node);	
 			}
 
@@ -12648,12 +13215,9 @@ RegionEditor_Mvc.prototype = {
 		{
 			if (this.overlay != null) 
 			{			 	      
-				//console.log('this.skyPositions: ' + this.skyPositions);
-				//console.log('A: ' + typeof(A));
 				this.overlay.addFootprints(A.polygon(this.skyPositions));
 				this.overlay.removeAll();
 				this.overlay.overlays = [];
-				//console.log('this.overlay' + this.overlay);			           
 			}	        	 
 		},
 
@@ -12667,12 +13231,9 @@ RegionEditor_Mvc.prototype = {
 			if( this.node && this.node.length == 0 && this.skyPositions && this.skyPositions.length > 0 ) {
 				return ;
 			}
-			//console.log('this.node1: ' + this.node.length);
 
-			//console.log('this.node.length: ' + this.node.length);
 			this.skyPositions = [];		 
 			for (var k=0; k<this.node.length; k++) {
-				//this.skyPositions.push(this.aladin.pix2world(this.node[k][0], this.node[k][1]));
 				this.skyPositions.push(this.aladin.pix2world(this.node[k].cx, this.node[k].cy));
 			};
 			//finalthis.node
@@ -12713,22 +13274,14 @@ RegionEditor_Mvc.prototype = {
 			this.CanvasUpdate();
 			this.node = [];
 			this.skyPositions= [];
-			//console.log('this.node delete: ' + this.node.length);		
 		},
 
 		//trouver le polygon en adalin lite si on se trouve en otre part du universe
 		PolygonCenter: function()
 		{		
-			var Height = this.GetHeight(this.skyPositions);		
-			var width = this.GetWidth(this.skyPositions);
-			if( Height.largeur == 0 || width.largeur == 0 ) {
-				return;
-			}
-			var center = {};
-			center.ra = ((Height.ramax +  Height.ramin)/2);
-			center.dec =  ((width.decmax + width.decmin)/2);
-			this.aladin.gotoPosition(center.ra, center.dec);
-			this.aladin.setZoom( (width.width + Height.largeur) );
+			var view = BasicGeometry.getEnclosingView(this.skyPositions);
+			this.aladin.gotoPosition(view.center.ra, view.center.dec);
+			this.aladin.setZoom( 1.2*view.size );
 		},
 
 		//effacer un this.node de le polygone si se trouve sûr autre this.node
@@ -12757,12 +13310,8 @@ RegionEditor_Mvc.prototype = {
 
 			for(var i in this.node)
 			{	         
-				//console.log('this.nodenum:  ' + i);
-				//console.log('cx: ' + this.node[i].cx);
-				//console.log('cy: ' + this.node[i].cy);
 				dx = x - this.node[i].cx;
 				dy = y - this.node[i].cy;  
-				//var result =Math.sqrt(dx * dx + dy * dy);
 				var result = dx * dx + dy * dy;
 
 				if(result <= 25)
@@ -12826,35 +13375,61 @@ RegionEditor_Mvc.prototype = {
 console.log('=============== >  RegionEditor_m.js ');
 
 /**
+ * @preserve LICENSE
+ * 
+ * Copyright (c) 2017 Laurent Michel
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
+ * IN THE SOFTWARE. 
+**/
+
+/**
  * Manager of the view of the region editor
  * 
+ * parentDivId: if of the host DIV
+ * Handler: called when the contour is accepted
+ * editionFrame{center {ra, dec} size} : Fied of viw where the user is supposed to draw
  * Author Gerardo Irvin Campos yah
+ * Contact laurent.michel@astro.unistra.fr
  */ 
-function RegionEditor_mVc(parentDivId, handler, points){
+function RegionEditor_mVc(parentDivId, handler, editionFrame){
 	this.parentDivId = parentDivId;
 	this.drawCanvas = null; // canvas where the polygon is drawn
 	this.drawContext = null;
 	this.lineCanvas = null; // canvas where the moving lines are drawn
 	this.lineContext = null;
 	this.controller = null;
-	this.points = points; // Initial values
-	this.clientHandler = (handler == null) ? function(){Modalinfo.info("No client handler registered");}: handler;
+	this.editationFrame = editionFrame;
+	this.editationFrameOverlay = null;
+	this.clientHandler = handler; // can be null
 } 
 
 RegionEditor_mVc.prototype = {
 		init: function (data){
 			// création instance d'Aladin lite
-			$('#' + this.parentDivId).append('<div id="' + this.parentDivId + '_aladin" style="width: 390px; height: 320px;"></div><div id="' + this.parentDivId + '_button"></div>');
+			$('#' + this.parentDivId).append('<div id="' + this.parentDivId + '_aladin" style="width: 390px; height: 390px;"></div><div id="' + this.parentDivId + '_button"></div>');
 				this.aladin = $.aladin('#' + this.parentDivId + '_aladin'
 					, {showControl: true, 
-				      //fov: 0.55, 
-				     // target: "orion", 
 				      cooFrame: "ICRS", 
 				      survey: "P/DSS2/color", 
 				      showFullscreenControl: false, 
 				      showFrame: false, 
 				      showGotoControl: false});
-			//this.aladin.setImageSurvey("P/XMM/PN/color");
 			this.aladin.setImageSurvey("P/DSS2/color");
 			
 			this.parentDiv = this.aladin.getParentDiv();
@@ -12871,7 +13446,6 @@ RegionEditor_mVc.prototype = {
 			this.lineCanvas.css('z-index', '100');
 			this.lineCanvas.css('position', 'absolute');
 			this.lineCanvas.hide(); 
-
 			/*
 			 * Canvas pour les traces temporaires
 			 */
@@ -12883,9 +13457,10 @@ RegionEditor_mVc.prototype = {
 			this.drawCanvas.css('z-index', '100');
 			this.drawCanvas.css('position', 'absolute');
 			this.drawCanvas.hide(); 
-
-
-			this.controller = new RegionEditor_mvC({ "points": this.points, "handler": this.clientHandler, "canvas": this.drawCanvas, "canvaso": this.lineCanvas, "aladin": this.aladin});
+			/*
+			 * Controler setup
+			 */
+			this.controller = new RegionEditor_mvC({"handler": this.clientHandler, "canvas": this.drawCanvas, "canvaso": this.lineCanvas, "aladin": this.aladin});
 			/*
 			 * The controller function is wrapped in a function in order to make it working in the context of the controller object
 			 * and not of he HTML widget
@@ -12922,14 +13497,21 @@ RegionEditor_mVc.prototype = {
 				that.drawContext.clearRect(0, 0, that.drawCanvas[0].width, that.drawCanvas[0].height);
 				that.controller.almacenar();	       
 			});
+			
+			
+			var btnVal = (this.editionFrame )? "Ed. Frame": "center";
+			var btnTitle = (this.editionFrame )? "Center the view on the editable frame": "Center on the current drawing";
 
-
-			this.centerBtn = $("<input type='button' id='edit' value='Center' />");
+			this.centerBtn = $("<input type='button' id='center' value='" + btnVal + "' title='" + btnTitle + "'/>");
 			divButtons.append(this.centerBtn);
 			this.centerBtn.css('margin-top','10px');
 			this.centerBtn.css('margin-left','5px');
-			this.centerBtn.click(function() {        	 
-				that.controller.PolygonCenter();
+			this.centerBtn.click(function() {     
+				if( that.editionFrame ){
+					that.setEditionFrame();
+				} else {
+					that.controller.PolygonCenter();
+				}
 			});
 
 			this.effacerBtn = $("<input type='button' id='edit' value='clear' />");
@@ -12951,7 +13533,9 @@ RegionEditor_mVc.prototype = {
 				that.setBrowseMode();
 				that.controller.invokeHandler(true);
 			});
-			this.posField = $("<br><input type='text' id='position' size=24 />");
+			
+			divButtons.append("<br><span style='font-size: small;'>&nbsp;Go To: </span>");
+			this.posField = $("<input type='text' id='position' size=24 />");
 			divButtons.append(this.posField);
 			this.posField.css('margin-top','10px');
 			this.posField.css('margin-left','5px');
@@ -12964,7 +13548,10 @@ RegionEditor_mVc.prototype = {
 					that.aladin.gotoObject(pos);
 				}
 			});
-
+			if( this.editionFrame ){
+				this.setEditionFrame(this.editionFrame);
+				this.setEditMode();
+			}
 		},
 		/**
 		 * Operate the drawing removal from outside 
@@ -12978,6 +13565,51 @@ RegionEditor_mVc.prototype = {
 			this.controller.almacenar();	       
 			this.controller.recuperar();   
 			this.setBrowseMode();
+		},
+		/**
+		 * Draws the editable frame in blue and center the view on it 
+		 */
+		setEditionFrame: function(points){
+			if( points){
+				this.editionFrame = points;
+			}
+			var x = null;
+			if( this.editionFrame ){
+				var pts = [];
+				/*
+				 * Extract region or position from SaadaQL statement
+				 */
+				if (this.editionFrame.type == "array") {
+					x = this.parseArrayPolygon(this.editionFrame.value);
+				} else if (this.editionFrame.type == "soda") {
+					x = this.parseSodaPolygon(this.editionFrame.value);
+				} else {
+					alert("Polygone format " + points.type + " not understood");
+				}
+				if( x ){
+					var view = BasicGeometry.getEnclosingView(x);
+					this.aladin.gotoPosition(view.center.ra, view.center.dec);
+					this.aladin.setZoom( 1.2*view.size );
+					if( this.editionFrameOverlay == null ) {
+						this.editionFrameOverlay = A.graphicOverlay({color: 'blue', name: "Editable Frame"});
+						this.aladin.addOverlay(this.editionFrameOverlay);
+					}
+					this.editionFrameOverlay.removeAll();	  
+					this.editionFrameOverlay.addFootprints(A.polygon(x));
+					$("#center").val("Ed. Frame").attr("title", "Center the view on the editable frame");
+				} else {
+					this.editionFrame = null;
+					$("#center").val("Center").attr("title", "Center on the current drawing");
+				}
+			}
+			/*
+			 * Fix for the errors when we open a new region editor
+			 */
+			var that = this;
+	           setTimeout(function() {
+                   that.aladin.increaseZoom();
+                   that.aladin.decreaseZoom();
+                   }, 500);
 
 		},
 		/**
@@ -13000,7 +13632,7 @@ RegionEditor_mVc.prototype = {
 				if( this.points.type == "saadaql") {
 					var s = /"(.*)"/.exec(this.points.value);
 					if( s.length != 2 ) {
-						Modalinfo.error(this.points.value + " does not look like a SaadaQL statment");
+						alert(this.points.value + " does not look like a SaadaQL statment");
 						return;
 					} else {
 						if( this.points.value.startsWith("isInRegion")) {
@@ -13018,7 +13650,7 @@ RegionEditor_mVc.prototype = {
 				} else if (this.points.type == "array") {
 					pts = this.points.value;
 				} else {
-					Modalinfo.error("Polygone format " + points.type + " not understood");
+					alert("Polygone format " + points.type + " not understood");
 					return;
 				}
 
@@ -13050,6 +13682,38 @@ RegionEditor_mVc.prototype = {
 			this.lineCanvas.show();
 			this.drawCanvas.show();
 		},
+		parseSodaPolygon: function (value){
+		    var s = value.split(/\s+/);
+			var x = null;
+		    if( s[0].toUpperCase() != "POLYGON"){
+				alert("Only SODA POLYGON are supported");
+		    } else {
+		    	s.shift();
+				if( !s || (s.length%2) != 0 || s.length < 6 ) {
+					alert("Even number of coordinates required (" + s.length + " values read)");
+				} else {
+					x = [];
+					for(var i=0 ; i<(s.length/2) ; i++){
+						x[x.length] = [parseFloat(s[2*i]), parseFloat(s[(2*i)+1])];
+					}
+					x.push(x[0]);
+				}
+		    }
+		    return x;
+		},
+		parseArrayPolygon: function (value){
+			var x = null;
+			if( !value || (value.length%2) != 0 || value.length < 6 ) {
+				alert("Even number of coordinates required");
+			} else {
+				x = [];
+				for(var i=0 ; i<(value.length/2) ; i++){
+					x[x.length] = [value[2*i], value[(2*i)+1]];
+				}
+				x.push(x[0]);
+			}
+		    return x;
+		}
 
 }
 
@@ -13057,19 +13721,39 @@ RegionEditor_mVc.prototype = {
 console.log('=============== >  RegionEditor_v.js ');
 
 /**
+ * @preserve LICENSE
+ * 
+ * Copyright (c) 2017 Laurent Michel
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
+ * IN THE SOFTWARE. 
+**/
+
+/**
  * Controller handling the user actions in connection with the model 
  * 
  *  params = {canvas,canvaso, aladin}
  * 
  * Author Gerardo Irvin Campos yah
+ * Contact laurent.michel@astro.unistra.fr
  */
-function /**
- * @author michel
- *
- */
-RegionEditor_mvC(params){
-	//this.poligone =  new poligoneCreate(params.canvas, params.canvaso, params.aladin);
-	this.poligone =  new RegionEditor_Mvc(params.canvas, params.canvaso, params.aladin);
+function  RegionEditor_mvC(params){
+	this.polygonModel =  new RegionEditor_Mvc(params.canvas, params.canvaso, params.aladin);
 
 	this.canvas = params.canvas; 	
 	this.clientHandler = params.handler;
@@ -13113,29 +13797,29 @@ RegionEditor_mvC.prototype = {
 			var y = parseInt(event.pageY) - parseInt( this.canvas.offset().top).toFixed(1);
 					
 			//pregunta si el pologono esta vacio
-			if( this.poligone.isEmpty()) 
+			if( this.polygonModel.isEmpty()) 
 			{
-				this.poligone.addNode(x,y);			 
+				this.polygonModel.addNode(x,y);			 
 			}
 			//obtener segmento
 			
 			//comenzar el this.drag del nodo		
-			else if(this.closed == true && (clickedNode = this.poligone.getNode(x,y)) != -1)
+			else if(this.closed == true && (clickedNode = this.polygonModel.getNode(x,y)) != -1)
 			{
 				//console.log('start this.drag');
 				//console.log('clickedNode: ' + clickedNode);
-				this.result = this.poligone.getSegment(clickedNode);
-				this.stokeNode = this.poligone.stokeNode(clickedNode);
+				this.result = this.polygonModel.getSegment(clickedNode);
+				this.stokeNode = this.polygonModel.stokeNode(clickedNode);
 				this.startdrag = true;		
 				this.drag = clickedNode;
 				this.startingNode = clickedNode;		
 				this.canvas.css('cursor','move');
 			}
 			//pregunta si el espacio presionado es un nodo 
-			else if((clickedNode = this.poligone.getNode(x,y)) != -1 )
+			else if((clickedNode = this.polygonModel.getNode(x,y)) != -1 )
 			{
 				//pregunta si es una extremidad
-				if(this.poligone.isExtremity(clickedNode) /*poligono abierto*/) 
+				if(this.polygonModel.isExtremity(clickedNode) /*poligono abierto*/) 
 				{			
 					//pregunta estas abierto
 					if(this.closed == true)
@@ -13155,7 +13839,7 @@ RegionEditor_mvC.prototype = {
 			//saber si estoy sobre un segmento
 			if(this.closed && clickedNode == -1)
 			{						
-				var node = this.poligone.GetNodelength();	
+				var node = this.polygonModel.GetNodelength();	
 						
 				var Segmentos = new Segment(node);	
 				var option = Segmentos.IsCursorOn(x,y);
@@ -13165,17 +13849,17 @@ RegionEditor_mvC.prototype = {
 					if(option.flag == "vertical")
 					{
 						//console.log("option: " + option.flag);
-						this.poligone.addNode(x, y, option);
+						this.polygonModel.addNode(x, y, option);
 					}
 					else if(option.flag == "horizontal")
 					{
 						//console.log("option: " + option.flag);
-						this.poligone.addNode(x, y, option);
+						this.polygonModel.addNode(x, y, option);
 					}
 					else if(option.flag == "distancia")
 					{
 						//console.log("option: " + option.flag);
-						this.poligone.addNode(x, y, option);
+						this.polygonModel.addNode(x, y, option);
 					}
 				}						
 			
@@ -13195,11 +13879,11 @@ RegionEditor_mvC.prototype = {
 				//console.log ('this.drag');
 				//console.log ('this.startingNode' + this.startingNode);
 				this.movestart = true;
-				this.poligone.drawHashline(this.startingNode,x,y,this.result);		
+				this.polygonModel.drawHashline(this.startingNode,x,y,this.result);		
 			}		
 			else if(this.startdrag)
 			{
-				this.poligone.Drag(this.drag, x, y , this.result);
+				this.polygonModel.Drag(this.drag, x, y , this.result);
 				
 				//console.log('this.startdrag move');		
 			}
@@ -13213,19 +13897,20 @@ RegionEditor_mvC.prototype = {
 			var x = parseInt(event.pageX) - parseInt( this.canvas.offset().left).toFixed(1);
 			var y = parseInt(event.pageY) - parseInt( this.canvas.offset().top).toFixed(1);		
 		//pregunta nodo es presionado y es si es un nodo
-			if(this.buttondown == true && (clickedNode = this.poligone.getNode(x,y)) != -1 )
+			if(this.buttondown == true && (clickedNode = this.polygonModel.getNode(x,y)) != -1 )
 			{		
 				//pregunta si es un extremo
-				if( this.poligone.isExtremity(clickedNode) == false) 
+				if( this.polygonModel.isExtremity(clickedNode) == false) 
 				{				
-					this.poligone.CleanLine();				
+					this.polygonModel.CleanLine();				
 					this.buttondown = false;
 				}	
 				
 				//console.log('clickedNode: ' + clickedNode + ' this.startingNode: ' +  this.startingNode);
-				if(this.poligone.closePolygone(clickedNode , this.startingNode) == true)
+				if(this.polygonModel.closePolygone(clickedNode , this.startingNode) == true)
 				{
-					//console.log('this.closed polygon');					
+					//console.log('this.closed polygon');
+					this.recuperar();
 					this.buttondown = false;	
 					this.closed = true;
 					this.invokeHandler(false);
@@ -13234,35 +13919,35 @@ RegionEditor_mvC.prototype = {
 				}
 			} 
 			
-			if(this.closed == true && (finalnode = this.poligone.GetXYNode(x, y) ) != null)			
+			if(this.closed == true && (finalnode = this.polygonModel.GetXYNode(x, y) ) != null)			
 			{
 				if(finalnode.a != undefined && finalnode.b != undefined)
 				{
 					//console.log('finalnode a: ' + finalnode.a + ' finalnode b: ' + finalnode.b);
 					
 					if(this.startingNode ==  finalnode.a)
-						this.poligone.RemoveNode(finalnode.a,false);
+						this.polygonModel.RemoveNode(finalnode.a,false);
 					else if(this.startingNode ==  finalnode.b)
-						this.poligone.RemoveNode(finalnode.b,false);
+						this.polygonModel.RemoveNode(finalnode.b,false);
 				}			
 			}
 					
 			if(this.buttondown == true && this.movestart == true)
 			{		
-				if( clickedNode == this.startingNode && (clickedNode = this.poligone.getNode(x,y) != -1) )
-				//if((clickedNode = this.poligone.getNode(x,y)) != -1)
+				if( clickedNode == this.startingNode && (clickedNode = this.polygonModel.getNode(x,y) != -1) )
+				//if((clickedNode = this.polygonModel.getNode(x,y)) != -1)
 				{											
 					this.buttondown = false;		
 					this.movestart = false;	
-					this.poligone.CleanLine();							
+					this.polygonModel.CleanLine();							
 				}				
 				else
 				{						
-						this.poligone.addNode(x,y,this.startingNode);
+						this.polygonModel.addNode(x,y,this.startingNode);
 						this.buttondown = false;		
 						this.movestart = false;	
 						
-						var nodos = this.poligone.GetNodelength();					
+						var nodos = this.polygonModel.GetNodelength();					
 						var Segmentos = new Segment(nodos);	
 						var temp;
 						
@@ -13272,11 +13957,11 @@ RegionEditor_mvC.prototype = {
 						{			
 							//poligono abierto = true
 							if(this.startingNode != 0)
-								this.poligone.RemoveNode(inter.nB,true);
+								this.polygonModel.RemoveNode(inter.nB,true);
 							else
-								this.poligone.RemoveNode(inter.nA,true);
+								this.polygonModel.RemoveNode(inter.nA,true);
 							
-							this.poligone.CleanLine();
+							this.polygonModel.CleanLine();
 						}												
 				}			
 				
@@ -13296,49 +13981,48 @@ RegionEditor_mvC.prototype = {
 				//stoke le numero de noeud appuyer
 				//this.startingNode;			
 				
-				var nodos = this.poligone.GetNodelength();					
+				var nodos = this.polygonModel.GetNodelength();					
 				var Segmentos = new Segment(nodos);	
 				var inter = Segmentos.Itersection(this.startingNode,true);			
 				if(inter != -1 && inter != undefined)
 				{						
-					this.poligone.RemoveNode(this.startingNode, false);
-					this.poligone.addNode(x, y, this.stokeNode,true);
+					this.polygonModel.RemoveNode(this.startingNode, false);
+					this.polygonModel.addNode(x, y, this.stokeNode,true);
 					//console.log(inter.length);
 				}
 			}
-			this.poligone.canvasUpdate();
+			this.polygonModel.canvasUpdate();
 		},
 		
 		almacenar : function()
 		{
-			this.poligone.almacenar();
+			this.polygonModel.almacenar();
 		},
 		
 		recuperar : function()
 		{
-			this.poligone.recuperar();
+			this.polygonModel.recuperar();
 		},
 		
 		DeleteOverlay : function() {
-			this.poligone.DeleteOverlay();
+			this.polygonModel.DeleteOverlay();
 		},
 		
 		CleanPoligon : function(){
-			this.poligone.CleanPoligon();
+			this.polygonModel.CleanPoligon();
 			this.closed = false;
 		},
 		
 		PolygonCenter : function(){
-			this.poligone.PolygonCenter();
+			this.polygonModel.PolygonCenter();
 		},
 	
 		CreateGrafic : function(canvas){
-			this.poligone.createGrafic(this.canvas);
+			this.polygonModel.createGrafic(this.canvas);
 		},
 		
 		show : function() {
-			console.log(this.poligone.getSkyPositions());
-			alert(this.poligone.getSkyPositions());
+			alert(this.polygonModel.getSkyPositions());
 		},
 		/**
 		 * Set the polygone with points. Points is a simple array. It must have at 
@@ -13354,7 +14038,7 @@ RegionEditor_mvC.prototype = {
 				for(var i=0 ; i<(points.length/2) ; i++){
 					x[x.length] = [points[2*i], points[(2*i)+1]];
 				}
-				this.poligone.setPolygon(x);
+				this.polygonModel.setPolygon(x);
 				this.closed = true;
 				this.invokeHandler(false);
 				return true;
@@ -13367,30 +14051,23 @@ RegionEditor_mvC.prototype = {
 		    userAction: userAction,     // handler called after the user have clicked on Accept
 		    region : {
 		        format: "array2dim",    // The only one suported yet [[x, y]....]
-		        points: this.poligone.skyPositions  // array with structire matching the format
+		        points: this.polygonModel.skyPositions  // array with structire matching the format
 		        size: {x: , y:} // regiosn size in deg
 		        }
 		 */
 		invokeHandler : function(userAction){
-			if( this.closed || ( this.poligone.node == undefined || this.poligone.node.length == 0) ){
+			if( this.clientHandler && (this.closed || ( this.polygonModel.node == undefined || this.polygonModel.node.length == 0)) ){
 				/*
 				 * Compute the region size in degrees
 				 */
-				for( var p=0 ; p<this.poligone.skyPositions.length ; p++ ) {
-					for( var q=(p+1) ; q<this.poligone.skyPositions.length ; q++ ) {
-						var x = Math.abs(this.poligone.skyPositions[p][0] - this.poligone.skyPositions[q][0]);
-						if( x > 180 )x = 360 - x; 
-						var y = Math.abs(this.poligone.skyPositions[p][1] - this.poligone.skyPositions[q][1]);
-						if( y > 180 )y = 360 - y; 
-					}
-				}
+				var view = BasicGeometry.getEnclosingView(this.polygonModel.skyPositions);
 				this.clientHandler({isReady: true
 					, userAction: userAction
 					, region : {format: "array2dim"
-						       , points: this.poligone.skyPositions
-							   , size: {x: x, y: y}}});
+						       , points: this.polygonModel.skyPositions
+							   , size: {x: view.size, y: view.size}}});
 			} else {
-				Modalinfo.error("Polygon not closed");
+				alert("Polygon not closed");
 			}
 		}
 }
@@ -13681,7 +14358,6 @@ MetadataSource = function() {
 		 */
 		//key = JSON.stringify(dataTreePath) ;
 		key = dataTreePath.key;
-		Out.infoTrace("look for key " + key);
 		if(  cache[key] == undefined ) {
 			var buffer = {};
 			buffer.dataTreePath = dataTreePath;		
@@ -13716,7 +14392,6 @@ MetadataSource = function() {
 							}
 							isAjaxing = false;
 							cache[key] = buffer;
-							console.log("getMetaTableUrl ");
 						}
 					}
 				});
@@ -13792,7 +14467,6 @@ MetadataSource = function() {
 			buffer.targets      = new Array();
 			if( getMetaTableUrl != null ) {
 				isAjaxing = true;
-				Out.infoTrace("Connect new node  " + dataTreePath.nodekey);
 
 				var params = {jsessionid: this.sessionID, nodekey: buffer.dataTreePath.nodekey, schema:buffer.dataTreePath.schema, table:buffer.dataTreePath.tableorg};
 				//console.log("Looking for " + JSON.stringify(dataTreePath) + " " + isAjaxing);
@@ -13879,9 +14553,9 @@ MetadataSource = function() {
 	 * exports
 	 */
 	var pblc = {};
-	pblc.ahMap        = function(dataTreePath){return(!cache)?null: cache[dataTreePath.nodekey].hamap;};
-	pblc.relations        = function(dataTreePath){return(!cache)?null: cache[dataTreePath.nodekey].relation;};
-	pblc.joinedTables = function(dataTreePath){return(!cache)?null: cache[dataTreePath.nodekey].targets;};
+	pblc.ahMap        = function(dataTreePath){return(!cache)?null: cache[dataTreePath.key].hamap;};
+	pblc.relations        = function(dataTreePath){return(!cache)?null: cache[dataTreePath.key].relation;};
+	pblc.joinedTables = function(dataTreePath){return(!cache)?null: cache[dataTreePath.key].targets;};
 	pblc.init = init;
 	pblc.getTableAtt = getTableAtt;
 	pblc.getRelations = getRelations;
@@ -14187,25 +14861,38 @@ QueryConstraintEditor = function() {
 		return view;
 	};
 
-	var tapConstraintEditor = function (params /*parentDivId, formName, sesameUrl, upload { url, postHandler}, queryView, currentNode }*/) {
+	var tapConstraintEditor = function (params /*parentDivId, formName, sesameUrl*/) {
 		var parentdiv = $('#' + params.parentDivId);
 		if( !parentdiv.length) {
 			Modalinfo.error("Div #" + params.parentDivId + " not found");
 			return ;
 		}
-		var view  = new tapQEditor_mVc(params /*parentDivId, formName, sesameUrl, upload { url, postHandler}, queryView, currentNode }*/);
+		var view  = new tapQEditor_mVc(params /*parentDivId, formName, sesameUrl*/);
 		new ConstQEditor_mvC(view, new tapQEditor_Mvc());
 		view.draw();
 		return view;
 	};
 
-	var tapPosSelector = function (params) {
+	var tapPosSelector = function (params /*parentDivId, formName, sesameUrl, upload { url, postHandler, preloadedGetter}, queryView, currentNode }*/) {
 		var parentdiv = $('#' + params.parentDivId);
 		if( !parentdiv.length) {
 			Modalinfo.error("Div #" + params.parentDivId + " not found");
 			return ;
 		}
-		var view  = new tapPosQEditor_mVc(params /*parentDivId, formName, sesameUrl, upload { url, postHandler}, queryView, currentNode }*/);
+		var view  = new tapPosQEditor_mVc(params /*parentDivId, formName, sesameUrl, upload { url, postHandler, preloadedGetter}, queryView, currentNode }*/);
+		new ConstQEditor_mvC(view, new tapPosQEditor_Mvc());
+		view.draw();
+		return view;
+	}
+	
+	
+	var tapCrossMatchSelector = function (params) {
+		var parentdiv = $('#' + params.parentDivId);
+		if( !parentdiv.length) {
+			Modalinfo.error("Div #" + params.parentDivId + " not found");
+			return ;
+		}
+		var view  = new tapCrossMatchQEditor_mVc(params /*parentDivId, formName, sesameUrl, upload { url, postHandler}, queryView, currentNode }*/);
 		new ConstQEditor_mvC(view, new tapPosQEditor_Mvc());
 		view.draw();
 		return view;
@@ -14262,6 +14949,7 @@ QueryConstraintEditor = function() {
 	pblc.tapConstraintEditor = tapConstraintEditor;
 	pblc.tapColumnSelector = tapColumnSelector;
 	pblc.tapPosSelector = tapPosSelector;
+	pblc.tapCrossMatchSelector = tapCrossMatchSelector;
 	pblc.queryTextEditor = queryTextEditor;
 	pblc.adqlTextEditor = adqlTextEditor;
 	return pblc;
@@ -44115,12 +44803,11118 @@ function log() {
 
 console.log('=============== >  jquery.form.js ');
 
-function AstroMath(){}function Projection(t,e){this.PROJECTION=Projection.PROJ_TAN,this.ROT=this.tr_oR(t,e)}function Coo(t,e,i){this.lon=t,this.lat=e,this.prec=i,this.frame=null,this.computeDirCos()}function Tokenizer(t,e){this.string=Strings.trim(t,e),this.sep=e,this.pos=0}function Strings(){}function Numbers(){}function relMouseCoords(t){if(t.offsetX)return{x:t.offsetX,y:t.offsetY};if(!Utils.cssScale){var e=window.getComputedStyle(document.body,null),i=e.getPropertyValue("-webkit-transform")||e.getPropertyValue("-moz-transform")||e.getPropertyValue("-ms-transform")||e.getPropertyValue("-o-transform")||e.getPropertyValue("transform"),r=/matrix\((-?\d*\.?\d+),\s*0,\s*0,\s*(-?\d*\.?\d+),\s*0,\s*0\)/,o=i.match(r);Utils.cssScale=o?parseFloat(o[1]):1}var s=t;s.target;var a=s.target||s.srcElement,n=a.currentStyle||window.getComputedStyle(a,null),h=parseInt(n.borderLeftWidth,10),l=parseInt(n.borderTopWidth,10),c=a.getBoundingClientRect(),u=s.clientX-h-c.left,d=s.clientY-l-c.top;return{x:parseInt(u/Utils.cssScale),y:parseInt(d/Utils.cssScale)}}var cds=cds||{},A=A||{};"object"!=typeof JSON&&(JSON={}),function(){"use strict";function f(t){return 10>t?"0"+t:t}function quote(t){return escapable.lastIndex=0,escapable.test(t)?'"'+t.replace(escapable,function(t){var e=meta[t];return"string"==typeof e?e:"\\u"+("0000"+t.charCodeAt(0).toString(16)).slice(-4)})+'"':'"'+t+'"'}function str(t,e){var i,r,o,s,a,n=gap,h=e[t];switch(h&&"object"==typeof h&&"function"==typeof h.toJSON&&(h=h.toJSON(t)),"function"==typeof rep&&(h=rep.call(e,t,h)),typeof h){case"string":return quote(h);case"number":return isFinite(h)?h+"":"null";case"boolean":case"null":return h+"";case"object":if(!h)return"null";if(gap+=indent,a=[],"[object Array]"===Object.prototype.toString.apply(h)){for(s=h.length,i=0;s>i;i+=1)a[i]=str(i,h)||"null";return o=0===a.length?"[]":gap?"[\n"+gap+a.join(",\n"+gap)+"\n"+n+"]":"["+a.join(",")+"]",gap=n,o}if(rep&&"object"==typeof rep)for(s=rep.length,i=0;s>i;i+=1)"string"==typeof rep[i]&&(r=rep[i],o=str(r,h),o&&a.push(quote(r)+(gap?": ":":")+o));else for(r in h)Object.prototype.hasOwnProperty.call(h,r)&&(o=str(r,h),o&&a.push(quote(r)+(gap?": ":":")+o));return o=0===a.length?"{}":gap?"{\n"+gap+a.join(",\n"+gap)+"\n"+n+"}":"{"+a.join(",")+"}",gap=n,o}}"function"!=typeof Date.prototype.toJSON&&(Date.prototype.toJSON=function(){return isFinite(this.valueOf())?this.getUTCFullYear()+"-"+f(this.getUTCMonth()+1)+"-"+f(this.getUTCDate())+"T"+f(this.getUTCHours())+":"+f(this.getUTCMinutes())+":"+f(this.getUTCSeconds())+"Z":null},String.prototype.toJSON=Number.prototype.toJSON=Boolean.prototype.toJSON=function(){return this.valueOf()});var cx=/[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,escapable=/[\\\"\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,gap,indent,meta={"\b":"\\b","	":"\\t","\n":"\\n","\f":"\\f","\r":"\\r",'"':'\\"',"\\":"\\\\"},rep;"function"!=typeof JSON.stringify&&(JSON.stringify=function(t,e,i){var r;if(gap="",indent="","number"==typeof i)for(r=0;i>r;r+=1)indent+=" ";else"string"==typeof i&&(indent=i);if(rep=e,e&&"function"!=typeof e&&("object"!=typeof e||"number"!=typeof e.length))throw Error("JSON.stringify");return str("",{"":t})}),"function"!=typeof JSON.parse&&(JSON.parse=function(text,reviver){function walk(t,e){var i,r,o=t[e];if(o&&"object"==typeof o)for(i in o)Object.prototype.hasOwnProperty.call(o,i)&&(r=walk(o,i),void 0!==r?o[i]=r:delete o[i]);return reviver.call(t,e,o)}var j;if(text+="",cx.lastIndex=0,cx.test(text)&&(text=text.replace(cx,function(t){return"\\u"+("0000"+t.charCodeAt(0).toString(16)).slice(-4)})),/^[\],:{}\s]*$/.test(text.replace(/\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g,"@").replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g,"]").replace(/(?:^|:|,)(?:\s*\[)+/g,"")))return j=eval("("+text+")"),"function"==typeof reviver?walk({"":j},""):j;throw new SyntaxError("JSON.parse")})}(),Logger={},Logger.log=function(t,e){try{var i="http://alasky.u-strasbg.fr/cgi/AladinLiteLogger/log.py",r="";e&&(r=JSON.stringify(e)),$.ajax({url:i,data:{action:t,params:r,pageUrl:window.location.href,referer:document.referrer?document.referrer:""},method:"GET",dataType:"json"})}catch(o){window.console&&console.log("Exception: "+o)}},function(t){"function"==typeof define&&define.amd?define(["jquery"],t):"object"==typeof exports?module.exports=t:t(jQuery)}(function(t){function e(e){var a=e||window.event,n=h.call(arguments,1),l=0,u=0,d=0,p=0,f=0,g=0;if(e=t.event.fix(a),e.type="mousewheel","detail"in a&&(d=-1*a.detail),"wheelDelta"in a&&(d=a.wheelDelta),"wheelDeltaY"in a&&(d=a.wheelDeltaY),"wheelDeltaX"in a&&(u=-1*a.wheelDeltaX),"axis"in a&&a.axis===a.HORIZONTAL_AXIS&&(u=-1*d,d=0),l=0===d?u:d,"deltaY"in a&&(d=-1*a.deltaY,l=d),"deltaX"in a&&(u=a.deltaX,0===d&&(l=-1*u)),0!==d||0!==u){if(1===a.deltaMode){var v=t.data(this,"mousewheel-line-height");l*=v,d*=v,u*=v}else if(2===a.deltaMode){var m=t.data(this,"mousewheel-page-height");l*=m,d*=m,u*=m}if(p=Math.max(Math.abs(d),Math.abs(u)),(!s||s>p)&&(s=p,r(a,p)&&(s/=40)),r(a,p)&&(l/=40,u/=40,d/=40),l=Math[l>=1?"floor":"ceil"](l/s),u=Math[u>=1?"floor":"ceil"](u/s),d=Math[d>=1?"floor":"ceil"](d/s),c.settings.normalizeOffset&&this.getBoundingClientRect){var y=this.getBoundingClientRect();f=e.clientX-y.left,g=e.clientY-y.top}return e.deltaX=u,e.deltaY=d,e.deltaFactor=s,e.offsetX=f,e.offsetY=g,e.deltaMode=0,n.unshift(e,l,u,d),o&&clearTimeout(o),o=setTimeout(i,200),(t.event.dispatch||t.event.handle).apply(this,n)}}function i(){s=null}function r(t,e){return c.settings.adjustOldDeltas&&"mousewheel"===t.type&&0===e%120}var o,s,a=["wheel","mousewheel","DOMMouseScroll","MozMousePixelScroll"],n="onwheel"in document||document.documentMode>=9?["wheel"]:["mousewheel","DomMouseScroll","MozMousePixelScroll"],h=Array.prototype.slice;if(t.event.fixHooks)for(var l=a.length;l;)t.event.fixHooks[a[--l]]=t.event.mouseHooks;var c=t.event.special.mousewheel={version:"3.1.12",setup:function(){if(this.addEventListener)for(var i=n.length;i;)this.addEventListener(n[--i],e,!1);else this.onmousewheel=e;t.data(this,"mousewheel-line-height",c.getLineHeight(this)),t.data(this,"mousewheel-page-height",c.getPageHeight(this))},teardown:function(){if(this.removeEventListener)for(var i=n.length;i;)this.removeEventListener(n[--i],e,!1);else this.onmousewheel=null;t.removeData(this,"mousewheel-line-height"),t.removeData(this,"mousewheel-page-height")},getLineHeight:function(e){var i=t(e),r=i["offsetParent"in t.fn?"offsetParent":"parent"]();return r.length||(r=t("body")),parseInt(r.css("fontSize"),10)||parseInt(i.css("fontSize"),10)||16},getPageHeight:function(e){return t(e).height()},settings:{adjustOldDeltas:!0,normalizeOffset:!0}};t.fn.extend({mousewheel:function(t){return t?this.bind("mousewheel",t):this.trigger("mousewheel")},unmousewheel:function(t){return this.unbind("mousewheel",t)}})}),window.requestAnimFrame=function(){return window.requestAnimationFrame||window.webkitRequestAnimationFrame||window.mozRequestAnimationFrame||window.oRequestAnimationFrame||window.msRequestAnimationFrame||function(t){window.setTimeout(t,1e3/60)}}();var Stats=function(){function t(t,e,i){var r,o,s;for(o=0;30>o;o++)for(r=0;73>r;r++)s=4*(r+74*o),t[s]=t[s+4],t[s+1]=t[s+5],t[s+2]=t[s+6];for(o=0;30>o;o++)s=4*(73+74*o),e>o?(t[s]=P[i].bg.r,t[s+1]=P[i].bg.g,t[s+2]=P[i].bg.b):(t[s]=P[i].fg.r,t[s+1]=P[i].fg.g,t[s+2]=P[i].fg.b)}var e,i,r,o,s,a,n,h,l,c,u,d,p,f,g=0,v=2,m=0,y=(new Date).getTime(),w=y,C=y,S=0,x=1e3,M=0,b=0,T=1e3,I=0,A=0,R=1e3,O=0,P={fps:{bg:{r:16,g:16,b:48},fg:{r:0,g:255,b:255}},ms:{bg:{r:16,g:48,b:16},fg:{r:0,g:255,b:0}},mb:{bg:{r:48,g:16,b:26},fg:{r:255,g:0,b:128}}};e=document.createElement("div"),e.style.cursor="pointer",e.style.width="80px",e.style.opacity="0.9",e.style.zIndex="10001",e.addEventListener("click",function(){switch(g++,g==v&&(g=0),i.style.display="none",n.style.display="none",u.style.display="none",g){case 0:i.style.display="block";break;case 1:n.style.display="block";break;case 2:u.style.display="block"}},!1),i=document.createElement("div"),i.style.backgroundColor="rgb("+Math.floor(P.fps.bg.r/2)+","+Math.floor(P.fps.bg.g/2)+","+Math.floor(P.fps.bg.b/2)+")",i.style.padding="2px 0px 3px 0px",e.appendChild(i),r=document.createElement("div"),r.style.fontFamily="Helvetica, Arial, sans-serif",r.style.textAlign="left",r.style.fontSize="9px",r.style.color="rgb("+P.fps.fg.r+","+P.fps.fg.g+","+P.fps.fg.b+")",r.style.margin="0px 0px 1px 3px",r.innerHTML='<span style="font-weight:bold">FPS</span>',i.appendChild(r),o=document.createElement("canvas"),o.width=74,o.height=30,o.style.display="block",o.style.marginLeft="3px",i.appendChild(o),s=o.getContext("2d"),s.fillStyle="rgb("+P.fps.bg.r+","+P.fps.bg.g+","+P.fps.bg.b+")",s.fillRect(0,0,o.width,o.height),a=s.getImageData(0,0,o.width,o.height),n=document.createElement("div"),n.style.backgroundColor="rgb("+Math.floor(P.ms.bg.r/2)+","+Math.floor(P.ms.bg.g/2)+","+Math.floor(P.ms.bg.b/2)+")",n.style.padding="2px 0px 3px 0px",n.style.display="none",e.appendChild(n),h=document.createElement("div"),h.style.fontFamily="Helvetica, Arial, sans-serif",h.style.textAlign="left",h.style.fontSize="9px",h.style.color="rgb("+P.ms.fg.r+","+P.ms.fg.g+","+P.ms.fg.b+")",h.style.margin="0px 0px 1px 3px",h.innerHTML='<span style="font-weight:bold">MS</span>',n.appendChild(h),o=document.createElement("canvas"),o.width=74,o.height=30,o.style.display="block",o.style.marginLeft="3px",n.appendChild(o),l=o.getContext("2d"),l.fillStyle="rgb("+P.ms.bg.r+","+P.ms.bg.g+","+P.ms.bg.b+")",l.fillRect(0,0,o.width,o.height),c=l.getImageData(0,0,o.width,o.height);try{performance&&performance.memory&&performance.memory.totalJSHeapSize&&(v=3)}catch(E){}return u=document.createElement("div"),u.style.backgroundColor="rgb("+Math.floor(P.mb.bg.r/2)+","+Math.floor(P.mb.bg.g/2)+","+Math.floor(P.mb.bg.b/2)+")",u.style.padding="2px 0px 3px 0px",u.style.display="none",e.appendChild(u),d=document.createElement("div"),d.style.fontFamily="Helvetica, Arial, sans-serif",d.style.textAlign="left",d.style.fontSize="9px",d.style.color="rgb("+P.mb.fg.r+","+P.mb.fg.g+","+P.mb.fg.b+")",d.style.margin="0px 0px 1px 3px",d.innerHTML='<span style="font-weight:bold">MB</span>',u.appendChild(d),o=document.createElement("canvas"),o.width=74,o.height=30,o.style.display="block",o.style.marginLeft="3px",u.appendChild(o),p=o.getContext("2d"),p.fillStyle="#301010",p.fillRect(0,0,o.width,o.height),f=p.getImageData(0,0,o.width,o.height),{domElement:e,update:function(){m++,y=(new Date).getTime(),b=y-w,T=Math.min(T,b),I=Math.max(I,b),t(c.data,Math.min(30,30-30*(b/200)),"ms"),h.innerHTML='<span style="font-weight:bold">'+b+" MS</span> ("+T+"-"+I+")",l.putImageData(c,0,0),w=y,y>C+1e3&&(S=Math.round(1e3*m/(y-C)),x=Math.min(x,S),M=Math.max(M,S),t(a.data,Math.min(30,30-30*(S/100)),"fps"),r.innerHTML='<span style="font-weight:bold">'+S+" FPS</span> ("+x+"-"+M+")",s.putImageData(a,0,0),3==v&&(A=9.54e-7*performance.memory.usedJSHeapSize,R=Math.min(R,A),O=Math.max(O,A),t(f.data,Math.min(30,30-A/2),"mb"),d.innerHTML='<span style="font-weight:bold">'+Math.round(A)+" MB</span> ("+Math.round(R)+"-"+Math.round(O)+")",p.putImageData(f,0,0)),C=y,m=0)}}};Constants={},Constants.PI=Math.PI,Constants.C_PR=Math.PI/180,Constants.VLEV=2,Constants.EPS=1e-7,Constants.c=.105,Constants.LN10=Math.log(10),Constants.PIOVER2=Math.PI/2,Constants.TWOPI=2*Math.PI,Constants.TWOTHIRD=2/3,Constants.ARCSECOND_RADIAN=484813681109536e-20,SpatialVector=function(){function t(t,e,i){"use strict";this.x=t,this.y=e,this.z=i,this.ra_=0,this.dec_=0,this.okRaDec_=!1}return t.prototype.setXYZ=function(t,e,i){this.x=t,this.y=e,this.z=i,this.okRaDec_=!1},t.prototype.length=function(){"use strict";return Math.sqrt(this.lengthSquared())},t.prototype.lengthSquared=function(){"use strict";return this.x*this.x+this.y*this.y+this.z*this.z},t.prototype.normalized=function(){"use strict";var t=this.length();this.x/=t,this.y/=t,this.z/=t},t.prototype.set=function(t,e){"use strict";this.ra_=t,this.dec_=e,this.okRaDec_=!0,this.updateXYZ()},t.prototype.angle=function(t){"use strict";var e=this.y*t.z-this.z*t.y,i=this.z*t.x-this.x*t.z,r=this.x*t.y-this.y*t.x,o=Math.sqrt(e*e+i*i+r*r);return Math.abs(Math.atan2(o,dot(t)))},t.prototype.get=function(){"use strict";return[x,y,z]},t.prototype.toString=function(){"use strict";return"SpatialVector["+this.x+", "+this.y+", "+this.z+"]"},t.prototype.cross=function(e){"use strict";return new t(this.y*e.z-e.y*this.z,this.z*e.x-e.z*this.x,this.x*e.y-e.x()*this.y)},t.prototype.equal=function(t){"use strict";return this.x==t.x&&this.y==t.y&&this.z==t.z()?!0:!1},t.prototype.mult=function(e){"use strict";return new t(e*this.x,e*this.y,e*this.z)},t.prototype.dot=function(t){"use strict";return this.x*t.x+this.y*t.y+this.z*t.z},t.prototype.add=function(e){"use strict";return new t(this.x+e.x,this.y+e.y,this.z+e.z)},t.prototype.sub=function(e){"use strict";return new t(this.x-e.x,this.y-e.y,this.z-e.z)},t.prototype.dec=function(){"use strict";return this.okRaDec_||(this.normalized(),this.updateRaDec()),this.dec_},t.prototype.ra=function(){"use strict";return this.okRaDec_||(this.normalized(),this.updateRaDec()),this.ra_},t.prototype.updateXYZ=function(){"use strict";var t=Math.cos(this.dec_*Constants.C_PR);this.x=Math.cos(this.ra_*Constants.C_PR)*t,this.y=Math.sin(this.ra_*Constants.C_PR)*t,this.z=Math.sin(this.dec_*Constants.C_PR)},t.prototype.updateRaDec=function(){"use strict";this.dec_=Math.asin(this.z)/Constants.C_PR;var t=Math.cos(this.dec_*Constants.C_PR);this.ra_=t>Constants.EPS||-Constants.EPS>t?this.y>Constants.EPS||this.y<-Constants.EPS?0>this.y?360-Math.acos(this.x/t)/Constants.C_PR:Math.acos(this.x/t)/Constants.C_PR:0>this.x?180:0:0,this.okRaDec_=!0},t.prototype.toRaRadians=function(){"use strict";var t=0;return(0!=this.x||0!=this.y)&&(t=Math.atan2(this.y,this.x)),0>t&&(t+=2*Math.PI),t},t.prototype.toDeRadians=function(){var t=z/this.length(),e=Math.acos(t);return Math.PI/2-e},t}(),AngularPosition=function(){return AngularPosition=function(t,e){"use strict";this.theta=t,this.phi=e},AngularPosition.prototype.toString=function(){"use strict";return"theta: "+this.theta+", phi: "+this.phi},AngularPosition}(),LongRangeSetBuilder=function(){function t(){this.items=[]}return t.prototype.appendRange=function(t,e){for(var i=t;e>=i;i++)i in this.items||this.items.push(i)},t}(),HealpixIndex=function(){function t(t){"use strict";this.nside=t}return t.NS_MAX=8192,t.ORDER_MAX=13,t.NSIDELIST=[1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192],t.JRLL=[2,2,2,2,3,3,3,3,4,4,4,4],t.JPLL=[1,3,5,7,0,2,4,6,1,3,5,7],t.XOFFSET=[-1,-1,0,1,1,1,0,-1],t.YOFFSET=[0,1,1,1,0,-1,-1,-1],t.FACEARRAY=[[8,9,10,11,-1,-1,-1,-1,10,11,8,9],[5,6,7,4,8,9,10,11,9,10,11,8],[-1,-1,-1,-1,5,6,7,4,-1,-1,-1,-1],[4,5,6,7,11,8,9,10,11,8,9,10],[0,1,2,3,4,5,6,7,8,9,10,11],[1,2,3,0,0,1,2,3,5,6,7,4],[-1,-1,-1,-1,7,4,5,6,-1,-1,-1,-1],[3,0,1,2,3,0,1,2,4,5,6,7],[2,3,0,1,-1,-1,-1,-1,0,1,2,3]],t.SWAPARRAY=[[0,0,0,0,0,0,0,0,3,3,3,3],[0,0,0,0,0,0,0,0,6,6,6,6],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,5,5,5,5],[0,0,0,0,0,0,0,0,0,0,0,0],[5,5,5,5,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[6,6,6,6,0,0,0,0,0,0,0,0],[3,3,3,3,0,0,0,0,0,0,0,0]],t.Z0=Constants.TWOTHIRD,t.prototype.init=function(){"use strict";var e=256;this.ctab=Array(e),this.utab=Array(e);for(var i=0;256>i;++i)this.ctab[i]=1&i|(2&i)<<7|(4&i)>>1|(8&i)<<6|(16&i)>>2|(32&i)<<5|(64&i)>>3|(128&i)<<4,this.utab[i]=1&i|(2&i)<<1|(4&i)<<2|(8&i)<<3|(16&i)<<4|(32&i)<<5|(64&i)<<6|(128&i)<<7;this.nl2=2*this.nside,this.nl3=3*this.nside,this.nl4=4*this.nside,this.npface=this.nside*this.nside,this.ncap=2*this.nside*(this.nside-1),this.npix=12*this.npface,this.fact2=4/this.npix,this.fact1=(this.nside<<1)*this.fact2,this.order=t.nside2order(this.nside)},t.calculateNSide=function(e){for(var i=0,r=e*e,o=180/Constants.PI,s=5184e4*Constants.PI*o*o,a=Utils.castToInt(s/r),n=a/12,h=Math.sqrt(n),l=t.NS_MAX,c=0,u=0;t.NSIDELIST.length>u;u++)if(l>=Math.abs(h-t.NSIDELIST[u])&&(l=Math.abs(h-t.NSIDELIST[u]),i=t.NSIDELIST[u],c=u),h>i&&t.NS_MAX>h&&(i=t.NSIDELIST[c+1]),h>t.NS_MAX)return console.log("nside cannot be bigger than "+t.NS_MAX),t.NS_MAX;return i},t.nside2order=function(e){"use strict";return(e&e-1)>0?-1:Utils.castToInt(t.log2(e))},t.log2=function(t){"use strict";return Math.log(t)/Math.log(2)},t.prototype.ang2pix_nest=function(e,i){"use strict";var r,o,s,a,n,h,l,c,u,d,p,f,g;if(i>=Constants.TWOPI&&(i-=Constants.TWOPI),0>i&&(i+=Constants.TWOPI),e>Constants.PI||0>e)throw{name:"Illegal argument",message:"theta must be between 0 and "+Constants.PI};if(i>Constants.TWOPI||0>i)throw{name:"Illegal argument",message:"phi must be between 0 and "+Constants.TWOPI};if(o=Math.cos(e),s=Math.abs(o),a=i/Constants.PIOVER2,t.Z0>=s){var v=this.nside*(.5+a),m=.75*this.nside*o,c=v-m,u=v+m;h=c>>this.order,l=u>>this.order,p=h==l?4==h?4:h+4:l>h?h:l+8,f=Utils.castToInt(u&this.nside-1),g=Utils.castToInt(this.nside-(c&this.nside-1)-1)}else{d=Utils.castToInt(a),d>=4&&(d=3),n=a-d;var y=this.nside*Math.sqrt(3*(1-s));c=Utils.castToInt(n*y),u=Utils.castToInt((1-n)*y),c=Math.min(t.NS_MAX-1,c),u=Math.min(t.NS_MAX-1,u),o>=0?(p=d,f=Utils.castToInt(this.nside-u-1),g=Utils.castToInt(this.nside-c-1)):(p=d+8,f=c,g=u)}return r=this.xyf2nest(f,g,p)},t.prototype.xyf2nest=function(t,e,i){"use strict";return(i<<2*this.order)+(this.utab[255&t]|this.utab[255&t>>8]<<16|this.utab[255&t>>16]<<32|this.utab[255&t>>24]<<48|this.utab[255&e]<<1|this.utab[255&e>>8]<<17|this.utab[255&e>>16]<<33|this.utab[255&e>>24]<<49)},t.prototype.nest2xyf=function(t){"use strict";var e={};e.face_num=t>>2*this.order;var i=t&this.npface-1,r=(93823560581120&i)>>16|(614882086624428e4&i)>>31|21845&i|(1431633920&i)>>15;return e.ix=this.ctab[255&r]|this.ctab[255&r>>8]<<4|this.ctab[255&r>>16]<<16|this.ctab[255&r>>24]<<20,i>>=1,r=(93823560581120&i)>>16|(614882086624428e4&i)>>31|21845&i|(1431633920&i)>>15,e.iy=this.ctab[255&r]|this.ctab[255&r>>8]<<4|this.ctab[255&r>>16]<<16|this.ctab[255&r>>24]<<20,e},t.prototype.pix2ang_nest=function(e){"use strict";if(0>e||e>this.npix-1)throw{name:"Illegal argument",message:"ipix out of range"};var i,r,o,s=this.nest2xyf(e),a=s.ix,n=s.iy,h=s.face_num,l=(t.JRLL[h]<<this.order)-a-n-1;this.nside>l?(i=l,r=1-i*i*this.fact2,o=0):l>this.nl3?(i=this.nl4-l,r=i*i*this.fact2-1,o=0):(i=this.nside,r=(this.nl2-l)*this.fact1,o=1&l-this.nside);var c=Math.acos(r),u=(t.JPLL[h]*i+a-n+1+o)/2;u>this.nl4&&(u-=this.nl4),1>u&&(u+=this.nl4);var d=(u-.5*(o+1))*(Constants.PIOVER2/i);return{theta:c,phi:d}},t.nside2Npix=function(e){"use strict";if(0>e||(e&-e)!=e||e>t.NS_MAX)throw{name:"Illegal argument",message:"nside should be >0, power of 2, <"+t.NS_MAX};var i=12*e*e;return i},t.prototype.xyf2ring=function(e,i,r){"use strict";var o,s,a,n=t.JRLL[r]*this.nside-e-i-1;this.nside>n?(o=n,a=2*o*(o-1),s=0):n>3*this.nside?(o=this.nl4-n,a=this.npix-2*(o+1)*o,s=0):(o=this.nside,a=this.ncap+(n-this.nside)*this.nl4,s=1&n-this.nside);var h=(t.JPLL[r]*o+e-i+1+s)/2;return h>this.nl4?h-=this.nl4:1>h&&(h+=this.nl4),a+h-1},t.prototype.nest2ring=function(t){"use strict";var e=this.nest2xyf(t),i=this.xyf2ring(e.ix,e.iy,e.face_num);return i},t.prototype.corners_nest=function(t,e){"use strict";var i=this.nest2ring(t);return this.corners_ring(i,e)},t.prototype.pix2ang_ring=function(t){"use strict";var e,i,r,o,s,a,n,h,l;if(0>t||t>this.npix-1)throw{name:"Illegal argument",message:"ipix out of range"};return a=t+1,this.ncap>=a?(h=a/2,l=Utils.castToInt(h),r=Utils.castToInt(Math.sqrt(h-Math.sqrt(l)))+1,o=a-2*r*(r-1),e=Math.acos(1-r*r*this.fact2),i=(o-.5)*Constants.PI/(2*r)):this.npix-this.ncap>t?(s=t-this.ncap,r=s/this.nl4+this.nside,o=s%this.nl4+1,n=(1&r+this.nside)>0?1:.5,e=Math.acos((this.nl2-r)*this.fact1),i=(o-n)*Constants.PI/this.nl2):(s=this.npix-t,r=Utils.castToInt(.5*(1+Math.sqrt(2*s-1))),o=4*r+1-(s-2*r*(r-1)),e=Math.acos(-1+Math.pow(r,2)*this.fact2),i=(o-.5)*Constants.PI/(2*r)),[e,i]},t.prototype.ring=function(t){"use strict";var e,i,r=0,o=t+1,s=0;return this.ncap>=o?(i=o/2,s=Utils.castToInt(i),r=Utils.castToInt(Math.sqrt(i-Math.sqrt(s)))+1):this.nl2*(5*this.nside+1)>=o?(e=Utils.castToInt(o-this.ncap-1),r=Utils.castToInt(e/this.nl4+this.nside)):(e=this.npix-o+1,i=e/2,s=Utils.castToInt(i),r=Utils.castToInt(Math.sqrt(i-Math.sqrt(s)))+1,r=this.nl4-r),r},t.prototype.integration_limits_in_costh=function(t){"use strict";var e,i,r,o;return o=1*this.nside,this.nside>=t?(i=1-Math.pow(t,2)/3/this.npface,r=1-Math.pow(t-1,2)/3/this.npface,e=t==this.nside?2*(this.nside-1)/3/o:1-Math.pow(t+1,2)/3/this.npface):this.nl3>t?(i=2*(2*this.nside-t)/3/o,r=2*(2*this.nside-t+1)/3/o,e=2*(2*this.nside-t-1)/3/o):(r=t==this.nl3?2*(-this.nside+1)/3/o:-1+Math.pow(4*this.nside-t+1,2)/3/this.npface,e=-1+Math.pow(this.nl4-t-1,2)/3/this.npface,i=-1+Math.pow(this.nl4-t,2)/3/this.npface),[r,i,e]},t.prototype.pixel_boundaries=function(t,e,i,r){var o,s,a,n,h,l,c,u,d=1*this.nside;if(Math.abs(r)>=1-1/3/this.npface)return c=i*Constants.PIOVER2,u=(i+1)*Constants.PIOVER2,[c,u];if(1.5*r>=1)o=Math.sqrt(3*(1-r)),s=1/d/o,a=e,n=a-1,h=t-e,l=h+1,c=Constants.PIOVER2*(Math.max(n*s,1-l*s)+i),u=Constants.PIOVER2*(Math.min(1-h*s,a*s)+i);else if(1.5*r>-1){var p=.5*(1-1.5*r),f=p+1,g=this.nside+t%2;a=e-(g-t)/2,n=a-1,h=(g+t)/2-e,l=h+1,c=Constants.PIOVER2*(Math.max(f-l/d,-p+n/d)+i),u=Constants.PIOVER2*(Math.min(f-h/d,-p+a/d)+i)}else{o=Math.sqrt(3*(1+r)),s=1/d/o;var v=2*this.nside;a=t-v+e,n=a-1,h=v-e,l=h+1,c=Constants.PIOVER2*(Math.max(1-(v-n)*s,(v-l)*s)+i),u=Constants.PIOVER2*(Math.min(1-(v-a)*s,(v-h)*s)+i)}return[c,u]},t.vector=function(t,e){"use strict";var i=1*Math.sin(t)*Math.cos(e),r=1*Math.sin(t)*Math.sin(e),o=1*Math.cos(t);return new SpatialVector(i,r,o)},t.prototype.corners_ring=function(e,i){"use strict";var r=2*i+2,o=Array(r),s=this.pix2ang_ring(e),a=Math.cos(s[0]),n=s[0],h=s[1],l=Utils.castToInt(h/Constants.PIOVER2),c=this.ring(e),u=Math.min(c,Math.min(this.nside,this.nl4-c)),d=0,p=Constants.PIOVER2/u;d=c>=this.nside&&this.nl3>=c?Utils.castToInt(h/p+c%2/2)+1:Utils.castToInt(h/p)+1,d-=l*u;var f=r/2,g=this.integration_limits_in_costh(c),v=Math.acos(g[0]),m=Math.acos(g[2]),y=this.pixel_boundaries(c,d,l,g[0]);if(o[0]=d>u/2?t.vector(v,y[1]):t.vector(v,y[0]),y=this.pixel_boundaries(c,d,l,g[2]),o[f]=d>u/2?t.vector(m,y[1]):t.vector(m,y[0]),1==i){var w=Math.acos(g[1]);y=this.pixel_boundaries(c,d,l,g[1]),o[1]=t.vector(w,y[0]),o[3]=t.vector(w,y[1])}else for(var C=g[2]-g[0],S=C/(i+1),x=1;i>=x;x++)a=g[0]+S*x,n=Math.acos(a),y=this.pixel_boundaries(c,d,l,a),o[x]=t.vector(n,y[0]),o[r-x]=t.vector(n,y[1]);return o},t.vec2Ang=function(t){"use strict";var e=t.z/t.length(),i=Math.acos(e),r=0;return(0!=t.x||0!=t.y)&&(r=Math.atan2(t.y,t.x)),0>r&&(r+=2*Math.PI),[i,r]},t.prototype.queryDisc=function(e,i,r,o){"use strict";if(0>i||i>Constants.PI)throw{name:"Illegal argument",message:"angular radius is in RADIAN and should be in [0,pi]"};var s,a,n,h,l,c,u,d,p,f,g,v,m,y,w,C,S,x,M,b=new LongRangeSetBuilder,T=null,l=i;if(o&&(l+=Constants.PI/this.nl4),T=t.vec2Ang(e),c=T[0],u=T[1],g=this.fact2,v=this.fact1,h=Math.cos(c),M=1/Math.sqrt((1-h)*(1+h)),y=c-l,w=c+l,d=Math.cos(l),S=Math.cos(y),s=this.ringAbove(S)+1,C=Math.cos(w),a=this.ringAbove(C),s>a&&0==a&&(a=s),0>=y)for(var I=1;s>I;++I)this.inRing(I,0,Math.PI,b);for(n=s;a>=n;++n)x=this.nside>n?1-n*n*g:this.nl3>=n?(this.nl2-n)*v:-1+(this.nl4-n)*(this.nl4-n)*g,p=(d-x*h)*M,f=1-x*x-p*p,m=Math.atan2(Math.sqrt(f),p),isNaN(m)&&(m=l),this.inRing(n,u,m,b);if(w>=Math.PI)for(var I=a+1;this.nl4>I;++I)this.inRing(I,0,Math.PI,b,!1);var A;if(r){for(var R=b.items,O=[],P=0;R.length>P;P++){var E=this.ring2nest(R[P]);O.indexOf(E)>=0||O.push(E)}A=O}else A=b.items;return A},t.prototype.inRing=function(t,e,i,r,o){"use strict";var s,a,n,h,l=!1,c=!1,u=1e-12,d=0,p=0,f=0,g=0,v=(e-i)%Constants.TWOPI-u,m=e+i+u,y=(e+i)%Constants.TWOPI+u;if(u>Math.abs(i-Constants.PI)&&(l=!0),t>=this.nside&&this.nl3>=t?(p=t-this.nside+1,n=this.ncap+this.nl4*(p-1),h=n+this.nl4-1,s=p%2,a=this.nl4):(this.nside>t?(p=t,n=2*p*(p-1),h=n+4*p-1):(p=4*this.nside-t,n=this.npix-2*p*(p+1),h=n+4*p-1),a=4*p,s=1),l)return r.appendRange(n,h),void 0;if(d=s/2,o)f=Math.round(a*v/Constants.TWOPI-d),g=Math.round(a*m/Constants.TWOPI-d),f%=a,g>a&&(g%=a);else{if(f=Math.ceil(a*v/Constants.TWOPI-d),g=Utils.castToInt(a*y/Constants.TWOPI-d),f>g&&1==t&&(g=Utils.castToInt(a*m/Constants.TWOPI-d)),f==g+1&&(f=g),1==f-g&&Constants.PI>i*a)return console.log("the interval is too small and avay from center"),void 0;f=Math.min(f,a-1),g=Math.max(g,0)}if(f>g&&(c=!0),c)f+=n,g+=n,r.appendRange(n,g),r.appendRange(f,h);else{if(0>f)return f=Math.abs(f),r.appendRange(n,n+g),r.appendRange(h-f+1,h),void 0;f+=n,g+=n,r.appendRange(f,g)}},t.prototype.ringAbove=function(t){"use strict";var e=Math.abs(t);if(e>Constants.TWOTHIRD){var i=Utils.castToInt(this.nside*Math.sqrt(3*(1-e)));return t>0?i:4*this.nside-i-1}return Utils.castToInt(this.nside*(2-1.5*t))},t.prototype.ring2nest=function(t){"use strict";var e=this.ring2xyf(t);return this.xyf2nest(e.ix,e.iy,e.face_num)},t.prototype.ring2xyf=function(e){"use strict";var i,r,o,s,a={};if(this.ncap>e){i=Utils.castToInt(.5*(1+Math.sqrt(1+2*e))),r=e+1-2*i*(i-1),o=0,s=i,a.face_num=0;var n=r-1;n>=2*i&&(a.face_num=2,n-=2*i),n>=i&&++a.face_num}else if(this.npix-this.ncap>e){var h=e-this.ncap;this.order>=0?(i=(h>>this.order+2)+this.nside,r=(h&this.nl4-1)+1):(i=h/this.nl4+this.nside,r=h%this.nl4+1),o=1&i+this.nside,s=this.nside;var l,c,u=i-this.nside+1,d=this.nl2+2-u;this.order>=0?(l=r-Utils.castToInt(u/2)+this.nside-1>>this.order,c=r-Utils.castToInt(d/2)+this.nside-1>>this.order):(l=(r-Utils.castToInt(u/2)+this.nside-1)/this.nside,c=(r-Utils.castToInt(d/2)+this.nside-1)/this.nside),a.face_num=c==l?4==c?4:Utils.castToInt(c)+4:l>c?Utils.castToInt(c):Utils.castToInt(l)+8}else{var h=this.npix-e;i=Utils.castToInt(.5*(1+Math.sqrt(2*h-1))),r=4*i+1-(h-2*i*(i-1)),o=0,s=i,i=2*this.nl2-i,a.face_num=8;var n=r-1;n>=2*s&&(a.face_num=10,n-=2*s),n>=s&&++a.face_num}var p=i-t.JRLL[a.face_num]*this.nside+1,f=2*r-t.JPLL[a.face_num]*s-o-1;return f>=this.nl2&&(f-=8*this.nside),a.ix=f-p>>1,a.iy=-(f+p)>>1,a},t}(),Utils=function(){},Utils.radecToPolar=function(t,e){return{theta:Math.PI/2-e/180*Math.PI,phi:t/180*Math.PI}},Utils.polarToRadec=function(t,e){return{ra:180*e/Math.PI,dec:180*(Math.PI/2-t)/Math.PI}},Utils.castToInt=function(t){return t>0?Math.floor(t):Math.ceil(t)},AstroMath.D2R=Math.PI/180,AstroMath.R2D=180/Math.PI,AstroMath.sign=function(t){return t>0?1:0>t?-1:0},AstroMath.cosd=function(t){if(0==t%90){var e=Math.abs(Math.floor(t/90+.5))%4;switch(e){case 0:return 1;case 1:return 0;case 2:return-1;case 3:return 0}}return Math.cos(t*AstroMath.D2R)},AstroMath.sind=function(t){if(0===t%90){var e=Math.abs(Math.floor(t/90-.5))%4;switch(e){case 0:return 1;case 1:return 0;case 2:return-1;case 3:return 0}}return Math.sin(t*AstroMath.D2R)},AstroMath.tand=function(t){var e;return e=t%360,0==e||180==Math.abs(e)?0:45==e||225==e?1:-135==e||-315==e?-1:Math.tan(t*AstroMath.D2R)},AstroMath.asind=function(t){return Math.asin(t)*AstroMath.R2D},AstroMath.acosd=function(t){return Math.acos(t)*AstroMath.R2D},AstroMath.atand=function(t){return Math.atan(t)*AstroMath.R2D},AstroMath.atan2=function(t,e){if(0==t)return e>0?0:0>e?Math.PI:0/0;var i=AstroMath.sign(t);if(0==e)return Math.PI/2*i;var r=Math.atan(Math.abs(t/e));return e>0?r*i:0>e?(Math.PI-r)*i:void 0},AstroMath.atan2d=function(t,e){return AstroMath.atan2(t,e)*AstroMath.R2D},AstroMath.cosh=function(t){return(Math.exp(t)+Math.exp(-t))/2},AstroMath.sinh=function(t){return(Math.exp(t)-Math.exp(-t))/2},AstroMath.tanh=function(t){return(Math.exp(t)-Math.exp(-t))/(Math.exp(t)+Math.exp(-t))},AstroMath.acosh=function(t){return Math.log(t+Math.sqrt(t*t-1))},AstroMath.asinh=function(t){return Math.log(t+Math.sqrt(t*t+1))},AstroMath.atanh=function(t){return.5*Math.log((1+t)/(1-t))},AstroMath.sinc=function(t){var e,i=Math.abs(t);return.001>=i?(i*=i,e=1-i*(1-i/20)/6):e=Math.sin(i)/i,e},AstroMath.asinc=function(t){var e,i=Math.abs(t);return.001>=i?(i*=i,e=1+i*(6+.45*i)/6):e=Math.asin(i)/i,e},AstroMath.hypot=function(t,e){return Math.sqrt(t*t+e*e)},AstroMath.eulerMatrix=function(t,e,i){var r=Array(3);r[0]=Array(3),r[1]=Array(3),r[2]=Array(3);var o=AstroMath.cosd(t),s=AstroMath.sind(t),a=AstroMath.cosd(e),n=AstroMath.sind(e),h=AstroMath.cosd(i),l=AstroMath.sind(i);return r[0][0]=h*a*o-l*s,r[0][1]=-l*a*o-h*s,r[0][2]=-n*o,r[1][0]=h*a*s+l*o,r[1][1]=-l*a*s+h*o,r[1][2]=-n*s,r[2][0]=-n*h,r[2][1]=-n*o,r[2][2]=a,r},AstroMath.displayMatrix=function(t){for(var e=t.length,i=0,r=0;e>r;r++)t[r].length>i&&(i=t[r].length);for(var o="<table>\n",r=0;e>r;r++){o+="<tr>";for(var s=0;e>s;s++)o+="<td>",t[r].length>r&&(o+=""+t[r][s]),o+="</td>";o+="</td>\n"}return o+="</table>\n"},Projection.PROJ_TAN=1,Projection.PROJ_TAN2=2,Projection.PROJ_STG=2,Projection.PROJ_SIN=3,Projection.PROJ_SIN2=4,Projection.PROJ_ZEA=4,Projection.PROJ_ARC=5,Projection.PROJ_SCHMIDT=5,Projection.PROJ_AITOFF=6,Projection.PROJ_AIT=6,Projection.PROJ_GLS=7,Projection.PROJ_MERCATOR=8,Projection.PROJ_MER=8,Projection.PROJ_LAM=9,Projection.PROJ_LAMBERT=9,Projection.PROJ_TSC=10,Projection.PROJ_QSC=11,Projection.PROJ_LIST=["Mercator",Projection.PROJ_MERCATOR,"Gnomonic",Projection.PROJ_TAN,"Stereographic",Projection.PROJ_TAN2,"Orthographic",Projection.PROJ_SIN,"Zenithal",Projection.PROJ_ZEA,"Schmidt",Projection.PROJ_SCHMIDT,"Aitoff",Projection.PROJ_AITOFF,"Lambert",Projection.PROJ_LAMBERT],Projection.PROJ_NAME=["-","Gnomonic","Stereographic","Orthographic","Equal-area","Schmidt plates","Aitoff","Global sin","Mercator","Lambert"],Projection.prototype={setCenter:function(t,e){this.ROT=this.tr_oR(t,e)},setProjection:function(t){this.PROJECTION=t},project:function(t,e){var i=this.tr_ou(t,e),r=this.tr_uu(i,this.ROT),o=this.tr_up(this.PROJECTION,r);return null==o?null:{X:-o[0],Y:-o[1]}},unproject:function(t,e){t=-t,e=-e;var i=this.tr_pu(this.PROJECTION,t,e),r=this.tr_uu1(i,this.ROT),o=this.tr_uo(r);return{ra:o[0],dec:o[1]}},tr_up:function(t,e){var i,r,o,s,a,n=e[0],h=e[1],l=e[2];if(i=AstroMath.hypot(n,h),0==i&&0==l)return null;switch(t){default:o=null;break;case Projection.PROJ_AITOFF:r=Math.sqrt(i*(i+n)/2),s=Math.sqrt(2*i*(i-n)),r=Math.sqrt((1+r)/2),s/=r,a=l/r,0>h&&(s=-s),o=[s,a];break;case Projection.PROJ_GLS:a=Math.asin(l),s=0!=i?Math.atan2(h,n)*i:0,o=[s,a];break;case Projection.PROJ_MERCATOR:0!=i?(s=Math.atan2(h,n),a=AstroMath.atanh(l),o=[s,a]):o=null;break;case Projection.PROJ_TAN:n>0?(s=h/n,a=l/n,o=[s,a]):o=null;break;case Projection.PROJ_TAN2:r=(1+n)/2,r>0?(s=h/r,a=l/r,o=[s,a]):o=null;break;case Projection.PROJ_ARC:-1>=n?(s=Math.PI,a=0):(i=AstroMath.hypot(h,l),r=n>0?AstroMath.asinc(i):Math.acos(n)/i,s=h*r,a=l*r),o=[s,a];break;case Projection.PROJ_SIN:n>=0?(s=h,a=l,o=[s,a]):o=null;break;case Projection.PROJ_SIN2:r=Math.sqrt((1+n)/2),0!=r?(s=h/r,a=l/r):(s=2,a=0),o=[s,a];break;case Projection.PROJ_LAMBERT:a=l,s=0,0!=i&&(s=Math.atan2(h,n)),o=[s,a]}return o},tr_pu:function(t,e,i){var r,o,s,a,n;switch(t){default:return null;case Projection.PROJ_AITOFF:if(r=e*e/8+i*i/2,r>1)return null;s=1-r,o=Math.sqrt(1-r/2),a=e*o/2,n=i*o,r=AstroMath.hypot(s,a),0!=r&&(o=s,s=(o*o-a*a)/r,a=2*o*a/r);break;case Projection.PROJ_GLS:if(n=Math.sin(i),r=1-n*n,0>r)return null;r=Math.sqrt(r),o=0!=r?e/r:0,s=r*Math.cos(o),a=r*Math.sin(o);break;case Projection.PROJ_MERCATOR:n=AstroMath.tanh(i),r=1/AstroMath.cosh(i),s=r*Math.cos(e),a=r*Math.sin(e);break;case Projection.PROJ_LAMBERT:if(n=i,r=1-n*n,0>r)return null;r=Math.sqrt(r),s=r*Math.cos(e),a=r*Math.sin(e);break;case Projection.PROJ_TAN:s=1/Math.sqrt(1+e*e+i*i),a=e*s,n=i*s;break;case Projection.PROJ_TAN2:r=(e*e+i*i)/4,o=1+r,s=(1-r)/o,a=e/o,n=i/o;break;case Projection.PROJ_ARC:if(r=AstroMath.hypot(e,i),r>Math.PI)return null;o=AstroMath.sinc(r),s=Math.cos(r),a=o*e,n=o*i;break;case Projection.PROJ_SIN:if(o=1-e*e-i*i,0>o)return null;s=Math.sqrt(o),a=e,n=i;break;case Projection.PROJ_SIN2:if(r=(e*e+i*i)/4,r>1)return null;o=Math.sqrt(1-r),s=1-2*r,a=o*e,n=o*i}return[s,a,n]},tr_oR:function(t,e){var i=Array(3);return i[0]=Array(3),i[1]=Array(3),i[2]=Array(3),i[2][2]=AstroMath.cosd(e),i[0][2]=AstroMath.sind(e),i[1][1]=AstroMath.cosd(t),i[1][0]=-AstroMath.sind(t),i[1][2]=0,i[0][0]=i[2][2]*i[1][1],i[0][1]=-i[2][2]*i[1][0],i[2][0]=-i[0][2]*i[1][1],i[2][1]=i[0][2]*i[1][0],i
-},tr_ou:function(t,e){var i=Array(3),r=AstroMath.cosd(e);return i[0]=r*AstroMath.cosd(t),i[1]=r*AstroMath.sind(t),i[2]=AstroMath.sind(e),i},tr_uu:function(t,e){var i=Array(3),r=t[0],o=t[1],s=t[2];return i[0]=e[0][0]*r+e[0][1]*o+e[0][2]*s,i[1]=e[1][0]*r+e[1][1]*o+e[1][2]*s,i[2]=e[2][0]*r+e[2][1]*o+e[2][2]*s,i},tr_uu1:function(t,e){var i=Array(3),r=t[0],o=t[1],s=t[2];return i[0]=e[0][0]*r+e[1][0]*o+e[2][0]*s,i[1]=e[0][1]*r+e[1][1]*o+e[2][1]*s,i[2]=e[0][2]*r+e[1][2]*o+e[2][2]*s,i},tr_uo:function(t){var e,i,r=t[0],o=t[1],s=t[2],a=r*r+o*o;if(0==a){if(0==s)return null;e=0,i=s>0?90:-90}else i=AstroMath.atand(s/Math.sqrt(a)),e=AstroMath.atan2d(o,r),0>e&&(e+=360);return[e,i]}},Coo.factor=[3600,60,1],Coo.prototype={setFrame:function(t){this.frame=t},computeDirCos:function(){var t=AstroMath.cosd(this.lat);this.x=t*AstroMath.cosd(this.lon),this.y=t*AstroMath.sind(this.lon),this.z=AstroMath.sind(this.lat)},computeLonLat:function(){var t=this.x*this.x+this.y*this.y;this.lon=0,0==t?0==this.z?(this.lon=0/0,this.lat=0/0):this.lat=this.z>0?90:-90:(this.lon=AstroMath.atan2d(this.y,this.x),this.lat=AstroMath.atan2d(this.z,Math.sqrt(t)),0>this.lon&&(this.lon+=360))},dist2:function(t){var e=t.x-this.x,i=e*e;return e=t.y-this.y,i+=e*e,e=t.z-this.z,i+=e*e},distance:function(t){return 0==t.x&&0==t.y&&0==t.z?0/0:0==this.x&&0==this.y&&0==this.z?0/0:2*AstroMath.asind(.5*Math.sqrt(this.dist2(t)))},convertTo:function(t){this.frame.equals(t)||(this.frame.toICRS(this.coo),t.fromICRS(this.coo),this.frame=t,this.lon=this.lat=0/0)},rotate:function(t){var e,i,r;t!=Umatrix3&&(e=t[0][0]*this.x+t[0][1]*this.y+t[0][2]*this.z,i=t[1][0]*this.x+t[1][1]*this.y+t[1][2]*this.z,r=t[2][0]*this.x+t[2][1]*this.y+t[2][2]*this.z,this.x=e,this.y=i,this.z=r,this.lon=this.lat=0/0)},rotate_1:function(t){var e,i,r;t!=Umatrix3&&(e=t[0][0]*this.x+t[1][0]*this.y+t[2][0]*this.z,i=t[0][1]*this.x+t[1][1]*this.y+t[2][1]*this.z,r=t[0][2]*this.x+t[1][2]*this.y+t[2][2]*this.z,this.x=e,this.y=i,this.z=r,this.lon=this.lat=0/0)},equals:function(t){return this.x==t.x&&this.y==t.y&&this.z==t.z},parse:function(t){var e=t.indexOf("+");if(0>e&&(e=t.indexOf("-")),0>e&&(e=t.indexOf(" ")),0>e)return this.lon=0/0,this.lat=0/0,this.prec=0,!1;var i=t.substring(0,e),r=t.substring(e);return this.lon=this.parseLon(i),this.lat=this.parseLat(r),!0},parseLon:function(t){var t=t.trim();if(t=t.replace(/:/g," "),0>t.indexOf(" ")){var e=t.indexOf(".");return this.prec=0>e?0:t.length-e-1,parseFloat(t)}for(var i=new Tokenizer(t," "),r=0,o=0,s=0;i.hasMore();){var a=i.nextToken(),n=a.indexOf(".");switch(o+=parseFloat(a)*Coo.factor[r],r){case 0:s=0>n?1:2;break;case 1:s=0>n?3:4;break;case 2:s=0>n?5:4+a.length-n;default:}r++}return this.prec=s,15*o/3600},parseLat:function(t){var t=t.trim();t=t.replace(/:/g," ");var e;if("-"==t.charAt(0)?(e=-1,t=t.substring(1)):"-"==t.charAt(0)?(e=1,t=t.substring(1)):e=1,0>t.indexOf(" ")){var i=t.indexOf(".");return this.prec=0>i?0:t.length-i-1,parseFloat(t)*e}for(var r=new Tokenizer(t," "),o=0,s=0,a=0;r.hasMore();){var n=r.nextToken(),h=n.indexOf(".");switch(s+=parseFloat(n)*Coo.factor[o],o){case 0:a=0>h?1:2;break;case 1:a=0>h?3:4;break;case 2:a=0>h?5:4+n.length-h;default:}o++}return this.prec=a,s*e/3600},format:function(t){isNaN(this.lon)&&this.computeLonLat();var e="",i="";if(t.indexOf("d")>=0)e=Numbers.format(this.lon,this.prec),i=Numbers.format(this.lat,this.prec);else var r=this.lon/15,e=Numbers.toSexagesimal(r,this.prec+1,!1),i=Numbers.toSexagesimal(this.lat,this.prec,!1);return this.lat>0&&(i="+"+i),t.indexOf("/")>=0?e+" "+i:t.indexOf("2")>=0?[e,i]:e+i}},Tokenizer.prototype={hasMore:function(){return this.pos<this.string.length},nextToken:function(){for(var t=this.pos;this.string.length>t&&this.string.charAt(t)==this.sep;)t++;for(var e=t;this.string.length>e&&this.string.charAt(e)!=this.sep;)e++;return this.pos=e,this.string.substring(t,e)}},Strings.trim=function(t,e){for(var i=0,r=t.length-1;t.length>i&&t.charAt(i)==e;)i++;if(i==t.length)return"";for(;r>i&&t.charAt(r)==e;)r--;return t.substring(i,r+1)},Numbers.pow10=[1,10,100,1e3,1e4,1e5,1e6,1e7,1e8,1e9,1e10,1e11,1e12,1e13,1e14],Numbers.rndval=[.5,.05,.005,5e-4,5e-5,5e-6,5e-7,5e-8,5e-9,5e-10,5e-11,5e-12,5e-13,5e-14,5e-14],Numbers.format=function(t,e){if(0>=e)return""+Math.round(t);var i=""+t,r=i.indexOf("."),o=r>=0?i.length-r-1:0;if(e>=o){0>r&&(i+=".");for(var s=0;e-o>s;s++)i+="0";return i}return i=""+(t+Numbers.rndval[e]),i.substr(0,r+e+1)},Numbers.toSexagesimal=function(t,e,i){var r=0>t?"-":i?"+":"",o=Math.abs(t);switch(e){case 1:var s=Math.round(o);return r+(""+s);case 2:return r+Numbers.format(o,1);case 3:var s=Math.floor(o),a=Math.round(60*(o-s));return r+s+" "+a;case 4:var s=Math.floor(o),a=60*(o-s);return r+s+" "+Numbers.format(a,1);case 5:var s=Math.floor(o),a=60*(o-s),n=Math.floor(a),h=Math.round(60*(a-n));return r+s+" "+n+" "+h;case 6:case 7:case 8:var s=Math.floor(o);10>s&&(s="0"+s);var a=60*(o-s),n=Math.floor(a);10>n&&(n="0"+n);var h=60*(a-n);return r+s+" "+n+" "+Numbers.format(h,e-5);default:return r+Numbers.format(o,1)}},CooConversion=function(){var t={};return t.GALACTIC_TO_J2000=[-.0548755604024359,.4941094279435681,-.867666148981161,-.8734370902479237,-.4448296299195045,-.1980763734646737,-.4838350155267381,.7469822444763707,.4559837762325372],t.J2000_TO_GALACTIC=[-.0548755604024359,-.873437090247923,-.4838350155267381,.4941094279435681,-.4448296299195045,.7469822444763707,-.867666148981161,-.1980763734646737,.4559837762325372],t.Transform=function(t,e){t[0]=t[0]*Math.PI/180,t[1]=t[1]*Math.PI/180;var i=[Math.cos(t[0])*Math.cos(t[1]),Math.sin(t[0])*Math.cos(t[1]),Math.sin(t[1])],r=[i[0]*e[0]+i[1]*e[1]+i[2]*e[2],i[0]*e[3]+i[1]*e[4]+i[2]*e[5],i[0]*e[6]+i[1]*e[7]+i[2]*e[8]],o=Math.sqrt(r[0]*r[0]+r[1]*r[1]+r[2]*r[2]),s=[0,0];s[1]=Math.asin(r[2]/o);var a=r[0]/o/Math.cos(s[1]),n=r[1]/o/Math.cos(s[1]);return s[0]=Math.atan2(n,a),0>s[0]&&(s[0]=s[0]+2*Math.PI),s[0]=180*s[0]/Math.PI,s[1]=180*s[1]/Math.PI,s},t.GalacticToJ2000=function(e){return t.Transform(e,t.GALACTIC_TO_J2000)},t.J2000ToGalactic=function(e){return t.Transform(e,t.J2000_TO_GALACTIC)},t}(),Sesame=function(){return Sesame={},Sesame.cache={},Sesame.getTargetRADec=function(t,e,i){if(e){var r=/[a-zA-Z]/.test(t);if(r)Sesame.resolve(t,function(t){e({ra:t.Target.Resolver.jradeg,dec:t.Target.Resolver.jdedeg})},function(){i&&i()});else{var o=new Coo;o.parse(t),e&&e({ra:o.lon,dec:o.lat})}}},Sesame.resolve=function(t,e,i){var r="http://cds.u-strasbg.fr/cgi-bin/nph-sesame.jsonp?";$.ajax({url:r,data:{object:t},method:"GET",dataType:"jsonp",success:function(t){t.Target&&t.Target.Resolver&&t.Target.Resolver?e(t):i(t)},error:i})},Sesame}(),HealpixCache=function(){var t={};return t.staticCache={corners:{nside8:[]}},t.dynamicCache={},t.lastNside=8,t.hpxIdxCache=null,t.init=function(){var e=new HealpixIndex(8);e.init();for(var i=HealpixIndex.nside2Npix(8),r=0;i>r;r++)t.staticCache.corners.nside8[r]=e.corners_nest(r,1);t.hpxIdxCache=e},t.corners_nest=function(e,i){return 8==i?t.staticCache.corners.nside8[e]:(i!=t.lastNside&&(t.hpxIdxCache=new HealpixIndex(i),t.hpxIdxCache.init(),t.lastNside=i),t.hpxIdxCache.corners_nest(e,1))},t}(),Utils=Utils||{},Utils.cssScale=void 0,HTMLCanvasElement.prototype.relMouseCoords=relMouseCoords,Function.prototype.bind||(Function.prototype.bind=function(t){if("function"!=typeof this)throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");var e=[].slice,i=e.call(arguments,1),r=this,o=function(){},s=function(){return r.apply(this instanceof o?this:t||{},i.concat(e.call(arguments)))};return s.prototype=this.prototype,s}),$=$||jQuery,$.urlParam=function(t,e){return void 0===e&&(e=location.search),decodeURIComponent((RegExp("[?|&]"+t+"="+"([^&;]+?)(&|#|;|$)").exec(e)||[,""])[1].replace(/\+/g,"%20"))||null},Utils.isNumber=function(t){return!isNaN(parseFloat(t))&&isFinite(t)},Utils.debounce=function(t,e){var i=null;return function(){var r=this,o=arguments;clearTimeout(i),i=setTimeout(function(){t.apply(r,o)},e)}},Utils.LRUCache=function(t){this._keys=[],this._items={},this._expires={},this._size=0,this._maxsize=t||1024},Utils.LRUCache.prototype={set:function(t,e){var i=this._keys,r=this._items,o=this._expires,s=this._size,a=this._maxsize;s>=a&&(i.sort(function(t,e){return o[t]>o[e]?-1:o[t]<o[e]?1:0}),s--,delete o[i[s]],delete r[i[s]]),i[s]=t,r[t]=e,o[t]=Date.now(),s++,this._keys=i,this._items=r,this._expires=o,this._size=s},get:function(t){var e=this._items[t];return e&&(this._expires[t]=Date.now()),e},keys:function(){return this._keys}},URLBuilder=function(){return URLBuilder={buildSimbadCSURL:function(t,e){if(t&&"object"==typeof t&&"ra"in t&&"dec"in t){var i=new Coo(t.ra,t.dec,7);t=i.format("s")}return"http://alasky.u-strasbg.fr/cgi/simbad-flat/simbad-cs.py?target="+encodeURIComponent(t)+"&SR="+e+"&format=votable&SRUNIT=deg&SORTBY=nbref"},buildNEDPositionCSURL:function(t,e,i){return"http://nedwww.ipac.caltech.edu/cgi-bin/nph-objsearch?search_type=Near+Position+Search&of=xml_main&RA="+t+"&DEC="+e+"&SR="+i},buildNEDObjectCSURL:function(t,e){return"http://ned.ipac.caltech.edu/cgi-bin/nph-objsearch?search_type=Near+Name+Search&radius="+60*e+"&of=xml_main&objname="+t},buildVizieRCSURL:function(t,e,i){if(e&&"object"==typeof e&&"ra"in e&&"dec"in e){var r=new Coo(e.ra,e.dec,7);e=r.format("s")}return"http://vizier.u-strasbg.fr/viz-bin/votable?-source="+t+"&-c="+encodeURIComponent(e)+"&-out.max=999999&-c.rd="+i}}}(),MeasurementTable=function(){return MeasurementTable=function(t){this.isShowing=!1,this.divEl=$('<div class="aladin-measurement-div"></div>'),$(t).append(this.divEl)},MeasurementTable.prototype.showMeasurement=function(t){this.divEl.empty();var e="<thead><tr>",i="<tr>";for(key in t.data)e+="<th>"+key+"</th>",i+="<td>"+t.data[key]+"</td>";e+="</tr></thead>",i+="</tr>",this.divEl.append("<table>"+e+i+"</table>"),this.show()},MeasurementTable.prototype.show=function(){this.divEl.show()},MeasurementTable.prototype.hide=function(){this.divEl.hide()},MeasurementTable}(),Color=function(){return Color={},Color.curIdx=0,Color.colors=["#ff0000","#0000ff","#99cc00","#ffff00","#000066","#00ffff","#9900cc","#0099cc","#cc9900","#cc0099","#00cc99","#663333","#ffcc9a","#ff9acc","#ccff33","#660000","#ffcc33","#ff00ff","#00ff00","#ffffff"],Color.getNextColor=function(){var t=Color.colors[Color.curIdx%Color.colors.length];return Color.curIdx++,t},Color.getLabelColorForBackground=function(t){var e="#eee",i="#111";if(rgb=t.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/),null==rgb)return i;r=parseInt(rgb[1]),g=parseInt(rgb[2]),b=parseInt(rgb[3]);var o=1-(.299*r+.587*g+.114*b)/255;return.5>o?i:e},Color}(),AladinUtils=function(){return{xyToView:function(t,e,i,r,o,s,a){return void 0==a&&(a=!1),a?{vx:o/2*(1+s*t)-(o-i)/2,vy:o/2*(1+s*e)-(o-r)/2}:{vx:AladinUtils.myRound(o/2*(1+s*t)-(o-i)/2),vy:AladinUtils.myRound(o/2*(1+s*e)-(o-r)/2)}},viewToXy:function(t,e,i,r,o,s){return{x:((2*t+(o-i))/o-1)/s,y:((2*e+(o-r))/o-1)/s}},radecToViewXy:function(t,e,i,r,o,s,a,n){var h;if(r!=CooFrameEnum.J2000){var l=CooConversion.J2000ToGalactic([t,e]);h=i.project(l[0],l[1])}else h=i.project(t,e);return h?AladinUtils.xyToView(h.X,h.Y,o,s,a,n,!0):null},myRound:function(t){return 0>t?-1*(0|-t):0|t},isHpxPixVisible:function(t,e,i){for(var r=0;t.length>r;r++)if(t[r].vx>=-20&&e+20>t[r].vx&&t[r].vy>=-20&&i+20>t[r].vy)return!0;return!1},ipixToIpix:function(t,e,i){},getZoomFactorForAngle:function(t,e){var i={ra:0,dec:0},r={ra:t,dec:0},o=new Projection(t/2,0);o.setProjection(e);var s=o.project(i.ra,i.dec),a=o.project(r.ra,r.dec),n=1/(s.X-a.Y);return n}}}(),ProjectionEnum={SIN:Projection.PROJ_SIN,AITOFF:Projection.PROJ_AITOFF},CooFrameEnum=function(){return{J2000:"J2000",GAL:"Galactic"}}(),CooFrameEnum.fromString=function(t,e){return t?(t=t.toLowerCase().replace(/^\s+|\s+$/g,""),0==t.indexOf("j2000")||0==t.indexOf("icrs")?CooFrameEnum.J2000:0==t.indexOf("gal")?CooFrameEnum.GAL:e?e:null):e?e:null},CooFrameEnum.shortName=function(t){return t==CooFrameEnum.J2000?"J2000":t==CooFrameEnum.GAL?"GAL":null},Downloader=function(){var t=4,e=!1,i=700,r=function(t){this.view=t,this.nbDownloads=0,this.dlQueue=[],this.urlsInQueue={}};return r.prototype.requestDownload=function(t,e,i){e in this.urlsInQueue||(this.dlQueue.push({img:t,url:e,cors:i}),this.urlsInQueue[e]=1,this.tryDownload())},r.prototype.tryDownload=function(){for(;this.dlQueue.length>0&&t>this.nbDownloads;)this.startDownloadNext()},r.prototype.startDownloadNext=function(){var t=this.dlQueue.shift();if(t){this.nbDownloads++;var e=this;t.img.onload=function(){e.completeDownload(this,!0)},t.img.onerror=function(){e.completeDownload(this,!1)},t.cors?t.img.crossOrigin="anonymous":void 0!==t.img.crossOrigin&&delete t.img.crossOrigin,t.img.src=t.url}},r.prototype.completeDownload=function(t,r){if(delete this.urlsInQueue[t.src],t.onerror=null,t.onload=null,this.nbDownloads--,r){if(e){var o=(new Date).getTime();t.fadingStart=o,t.fadingEnd=o+i}this.view.requestRedraw()}else t.dlError=!0;this.tryDownload()},r}(),function(){var t,e,i,r,o,s,a,n,h,l,c,u,d,p,f,g,v={}.hasOwnProperty,m=function(t,e){function i(){this.constructor=t}for(var r in e)v.call(e,r)&&(t[r]=e[r]);return i.prototype=e.prototype,t.prototype=new i,t.__super__=e.prototype,t},y=[].slice;null==this.astro&&(this.astro={}),t=function(){function t(){}return t.include=function(t){var e,i;for(e in t)i=t[e],this.prototype[e]=i;return this},t.extend=function(t){var e,i;for(e in t)i=t[e],this[e]=i;return this},t.prototype.proxy=function(t){var e=this;return function(){return t.apply(e,arguments)}},t.prototype.invoke=function(t,e,i){var r;return r=null!=(null!=e?e.context:void 0)?e.context:this,null!=t?t.call(r,i,e):void 0},t}(),u=function(t){function e(t,e,i){var r,o=this;this.arg=t,this.callback=e,this.opts=i,this.hdus=[],this.blockCount=0,this.begin=0,this.end=this.BLOCKLENGTH,this.offset=0,this.headerStorage=new Uint8Array,"string"==typeof this.arg?(this.readNextBlock=this._readBlockFromBuffer,r=new XMLHttpRequest,r.open("GET",this.arg),r.responseType="arraybuffer",r.onload=function(){return 200!==r.status?(o.invoke(o.callback,o.opts),void 0):(o.arg=r.response,o.length=o.arg.byteLength,o.readFromBuffer())},r.send()):(this.length=this.arg.size,this.readNextBlock=this._readBlockFromFile,this.readFromFile())}return m(e,t),e.prototype.LINEWIDTH=80,e.prototype.BLOCKLENGTH=2880,File.prototype.slice=File.prototype.slice||File.prototype.webkitSlice,Blob.prototype.slice=Blob.prototype.slice||Blob.prototype.webkitSlice,e.prototype.readFromBuffer=function(){var t;return t=this.arg.slice(this.begin+this.offset,this.end+this.offset),this.readBlock(t)},e.prototype.readFromFile=function(){var t,e=this;return this.reader=new FileReader,this.reader.onloadend=function(t){return e.readBlock(t.target.result)},t=this.arg.slice(this.begin+this.offset,this.end+this.offset),this.reader.readAsArrayBuffer(t)},e.prototype.readBlock=function(t){var e,i,r,o,s,h,l,c,u,d,p,f,g;for(e=new Uint8Array(t),u=new Uint8Array(this.headerStorage),this.headerStorage=new Uint8Array(this.end),this.headerStorage.set(u,0),this.headerStorage.set(e,this.begin),h=this.BLOCKLENGTH/this.LINEWIDTH;h--;)if(s=h*this.LINEWIDTH,32!==e[s]){if(69===e[s]&&78===e[s+1]&&68===e[s+2]&&32===e[s+3]){for(l="",g=this.headerStorage,p=0,f=g.length;f>p;p++)d=g[p],l+=String.fromCharCode(d);return o=new n(l),this.start=this.end+this.offset,i=o.getDataLength(),c=this.arg.slice(this.start,this.start+i),o.hasDataUnit()&&(r=this.createDataUnit(o,c)),this.hdus.push(new a(o,r)),this.offset+=this.end+i+this.excessBytes(i),this.offset===this.length?(this.headerStorage=null,this.invoke(this.callback,this.opts,this),void 0):(this.blockCount=0,this.begin=this.blockCount*this.BLOCKLENGTH,this.end=this.begin+this.BLOCKLENGTH,this.headerStorage=new Uint8Array,t=this.arg.slice(this.begin+this.offset,this.end+this.offset),this.readNextBlock(t),void 0)}break}this.blockCount+=1,this.begin=this.blockCount*this.BLOCKLENGTH,this.end=this.begin+this.BLOCKLENGTH,t=this.arg.slice(this.begin+this.offset,this.end+this.offset),this.readNextBlock(t)},e.prototype._readBlockFromBuffer=function(t){return this.readBlock(t)},e.prototype._readBlockFromFile=function(t){return this.reader.readAsArrayBuffer(t)},e.prototype.createDataUnit=function(t,e){var i;return i=t.getDataType(),new astro.FITS[i](t,e)},e.prototype.excessBytes=function(t){return(this.BLOCKLENGTH-t%this.BLOCKLENGTH)%this.BLOCKLENGTH},e.prototype.isEOF=function(){return this.offset===this.length?!0:!1},e}(t),s=function(t){function e(t,e,i){var r,o=this;this.arg=t,r=new u(this.arg,function(){return o.hdus=r.hdus,o.invoke(e,i,o)})}return m(e,t),e.prototype.getHDU=function(t){var e,i,r,o;if(null!=t&&null!=this.hdus[t])return this.hdus[t];for(o=this.hdus,i=0,r=o.length;r>i;i++)if(e=o[i],e.hasData())return e},e.prototype.getHeader=function(t){return this.getHDU(t).header},e.prototype.getDataUnit=function(t){return this.getHDU(t).data},e}(t),s.version="0.6.5",this.astro.FITS=s,r=function(t){function e(t,e){e instanceof ArrayBuffer?this.buffer=e:this.blob=e}return m(e,t),e.swapEndian={B:function(t){return t},I:function(t){return t<<8|t>>8},J:function(t){return(255&t)<<24|(65280&t)<<8|65280&t>>8|255&t>>24}},e.swapEndian[8]=e.swapEndian.B,e.swapEndian[16]=e.swapEndian.I,e.swapEndian[32]=e.swapEndian.J,e}(t),this.astro.FITS.DataUnit=r,h={verifyOrder:function(t,e){return e!==this.cardIndex?console.warn(""+t+" should appear at index "+this.cardIndex+" in the FITS header"):void 0},verifyBetween:function(t,e,i,r){if(!(e>=i&&r>=e))throw"The "+t+" value of "+e+" is not between "+i+" and "+r},verifyBoolean:function(t){return"T"===t?!0:!1},VerifyFns:{SIMPLE:function(){var t,e;return t=arguments.length>=1?y.call(arguments,0):[],e=arguments[0],this.primary=!0,this.verifyOrder("SIMPLE",0),this.verifyBoolean(e)},XTENSION:function(){var t;return t=arguments.length>=1?y.call(arguments,0):[],this.extension=!0,this.extensionType=arguments[0],this.verifyOrder("XTENSION",0),this.extensionType},BITPIX:function(){var t,e,i;if(t=arguments.length>=1?y.call(arguments,0):[],e="BITPIX",i=parseInt(arguments[0]),this.verifyOrder(e,1),8!==i&&16!==i&&32!==i&&-32!==i&&-64!==i)throw""+e+" value "+i+" is not permitted";return i},NAXIS:function(){var t,e,i,r,o,s;if(t=arguments.length>=1?y.call(arguments,0):[],i="NAXIS",o=parseInt(arguments[0]),e=arguments[1],!e&&(this.verifyOrder(i,2),this.verifyBetween(i,o,0,999),this.isExtension()&&("TABLE"===(s=this.extensionType)||"BINTABLE"===s)&&(r=2,o!==r)))throw""+i+" must be "+r+" for TABLE and BINTABLE extensions";return o},PCOUNT:function(){var t,e,i,r,o,s;if(t=arguments.length>=1?y.call(arguments,0):[],e="PCOUNT",o=parseInt(arguments[0]),i=3+this.get("NAXIS"),this.verifyOrder(e,i),this.isExtension()&&("IMAGE"===(s=this.extensionType)||"TABLE"===s)&&(r=0,o!==r))throw""+e+" must be "+r+" for the "+this.extensionType+" extensions";return o},GCOUNT:function(){var t,e,i,r,o,s;if(t=arguments.length>=1?y.call(arguments,0):[],e="GCOUNT",o=parseInt(arguments[0]),i=3+this.get("NAXIS")+1,this.verifyOrder(e,i),this.isExtension()&&("IMAGE"===(s=this.extensionType)||"TABLE"===s||"BINTABLE"===s)&&(r=1,o!==r))throw""+e+" must be "+r+" for the "+this.extensionType+" extensions";return o},EXTEND:function(){var t,e;if(t=arguments.length>=1?y.call(arguments,0):[],e=arguments[0],!this.isPrimary())throw"EXTEND must only appear in the primary header";return this.verifyBoolean(e)},BSCALE:function(){var t;return t=arguments.length>=1?y.call(arguments,0):[],parseFloat(arguments[0])},BZERO:function(){var t;return t=arguments.length>=1?y.call(arguments,0):[],parseFloat(arguments[0])},BLANK:function(){var t,e;return t=arguments.length>=1?y.call(arguments,0):[],e=arguments[0],this.get("BITPIX")>0||console.warn("BLANK is not to be used for BITPIX = "+this.get("BITPIX")),parseInt(e)},DATAMIN:function(){var t;return t=arguments.length>=1?y.call(arguments,0):[],parseFloat(arguments[0])},DATAMAX:function(){var t;return t=arguments.length>=1?y.call(arguments,0):[],parseFloat(arguments[0])},EXTVER:function(){var t;return t=arguments.length>=1?y.call(arguments,0):[],parseInt(arguments[0])},EXTLEVEL:function(){var t;return t=arguments.length>=1?y.call(arguments,0):[],parseInt(arguments[0])},TFIELDS:function(){var t,e;return t=arguments.length>=1?y.call(arguments,0):[],e=parseInt(arguments[0]),this.verifyBetween("TFIELDS",e,0,999),e},TBCOL:function(){var t,e,i;return t=arguments.length>=1?y.call(arguments,0):[],i=arguments[0],e=arguments[2],this.verifyBetween("TBCOL",e,0,this.get("TFIELDS")),i},ZIMAGE:function(){var t;return t=arguments.length>=1?y.call(arguments,0):[],this.verifyBoolean(arguments[0])},ZCMPTYPE:function(){var t,e;if(t=arguments.length>=1?y.call(arguments,0):[],e=arguments[0],"GZIP_1"!==e&&"RICE_1"!==e&&"PLIO_1"!==e&&"HCOMPRESS_1"!==e)throw"ZCMPTYPE value "+e+" is not permitted";if("RICE_1"!==e)throw"Compress type "+e+" is not yet implement";return e},ZBITPIX:function(){var t,e;if(t=arguments.length>=1?y.call(arguments,0):[],e=parseInt(arguments[0]),8!==e&&16!==e&&32!==e&&64!==e&&-32!==e&&-64!==e)throw"ZBITPIX value "+e+" is not permitted";return e},ZNAXIS:function(){var t,e,i;return t=arguments.length>=1?y.call(arguments,0):[],i=parseInt(arguments[0]),e=arguments[1],i=i,e||this.verifyBetween("ZNAXIS",i,0,999),i},ZTILE:function(){var t;return t=arguments.length>=1?y.call(arguments,0):[],parseInt(arguments[0])},ZSIMPLE:function(){var t;return t=arguments.length>=1?y.call(arguments,0):[],"T"===arguments[0]?!0:!1},ZPCOUNT:function(){var t;return t=arguments.length>=1?y.call(arguments,0):[],parseInt(arguments[0])},ZGCOUNT:function(){var t;return t=arguments.length>=1?y.call(arguments,0):[],parseInt(arguments[0])},ZDITHER0:function(){var t;return t=arguments.length>=1?y.call(arguments,0):[],parseInt(arguments[0])}}},this.astro.FITS.HeaderVerify=h,n=function(t){function e(t){var e,i,r;this.primary=!1,this.extension=!1,this.verifyCard={},r=this.VerifyFns;for(i in r)e=r[i],this.verifyCard[i]=this.proxy(e);this.cards={},this.cards.COMMENT=[],this.cards.HISTORY=[],this.cardIndex=0,this.block=t,this.readBlock(t)}return m(e,t),e.include(h),e.prototype.arrayPattern=/(\D+)(\d+)/,e.prototype.maxLines=600,e.prototype.get=function(t){return this.contains(t)?this.cards[t].value:null},e.prototype.set=function(t,e,i){return i=i||"",this.cards[t]={index:this.cardIndex,value:e,comment:i},this.cardIndex+=1},e.prototype.contains=function(t){return this.cards.hasOwnProperty(t)},e.prototype.readLine=function(t){var e,i,r,o,s,a,n;return s=t.slice(0,8).trim(),(e=""===s)?void 0:(o=t.slice(8,10),a=t.slice(10),"= "!==o?(("COMMENT"===s||"HISTORY"===s)&&this.cards[s].push(a.trim()),void 0):(n=a.split(" /"),a=n[0],i=n[1],a=a.trim(),r=a[0],"'"===r?a=a.slice(1,-1).trim():"T"!==a&&"F"!==a&&(a=parseFloat(a)),a=this.validate(s,a),this.set(s,a,i)))},e.prototype.validate=function(t,e){var i,r,o,s,a;return r=null,i=t,o=this.arrayPattern.test(t),o&&(s=this.arrayPattern.exec(t),a=s.slice(1),i=a[0],r=a[1]),i in this.verifyCard&&(e=this.verifyCard[i](e,o,r)),e},e.prototype.readBlock=function(t){var e,i,r,o,s,a,n;for(r=80,o=t.length/r,o=this.maxLines>o?o:this.maxLines,n=[],e=s=0,a=o-1;a>=0?a>=s:s>=a;e=a>=0?++s:--s)i=t.slice(e*r,(e+1)*r),n.push(this.readLine(i));return n},e.prototype.hasDataUnit=function(){return 0===this.get("NAXIS")?!1:!0},e.prototype.getDataLength=function(){var t,e,i,r,o;if(!this.hasDataUnit())return 0;for(i=[],t=r=1,o=this.get("NAXIS");o>=1?o>=r:r>=o;t=o>=1?++r:--r)i.push(this.get("NAXIS"+t));return e=i.reduce(function(t,e){return t*e})*Math.abs(this.get("BITPIX"))/8,e+=this.get("PCOUNT")},e.prototype.getDataType=function(){switch(this.extensionType){case"BINTABLE":return this.contains("ZIMAGE")?"CompressedImage":"BinaryTable";case"TABLE":return"Table";default:return this.hasDataUnit()?"Image":null}},e.prototype.isPrimary=function(){return this.primary},e.prototype.isExtension=function(){return this.extension},e}(t),this.astro.FITS.Header=n,c={getExtent:function(t){var e,i,r,o;for(e=t.length;e--;)if(o=t[e],!isNaN(o)){r=i=o;break}if(-1===e)return[0/0,0/0];for(;e--;)o=t[e],isNaN(o)||(r>o&&(r=o),o>i&&(i=o));return[r,i]},getPixel:function(t,e,i){return t[i*this.width+e]}},this.astro.FITS.ImageUtils=c,l=function(t){function e(t){var i,r,o,s,a,n,h;for(e.__super__.constructor.apply(this,arguments),s=t.get("NAXIS"),this.bitpix=t.get("BITPIX"),this.naxis=[],o=a=1;s>=1?s>=a:a>=s;o=s>=1?++a:--a)this.naxis.push(t.get("NAXIS"+o));for(this.width=t.get("NAXIS1"),this.height=t.get("NAXIS2")||1,this.depth=t.get("NAXIS3")||1,this.bzero=t.get("BZERO")||0,this.bscale=t.get("BSCALE")||1,this.bytes=Math.abs(this.bitpix)/8,this.length=this.naxis.reduce(function(t,e){return t*e})*Math.abs(this.bitpix)/8,this.frame=0,this.frameOffsets=[],this.frameLength=this.bytes*this.width*this.height,this.nBuffers=null!=this.buffer?1:2,o=n=0,h=this.depth-1;h>=0?h>=n:n>=h;o=h>=0?++n:--n)i=o*this.frameLength,r={begin:i},null!=this.buffer&&(r.buffers=[this.buffer.slice(i,i+this.frameLength)]),this.frameOffsets.push(r)}return m(e,t),e.include(c),e.prototype.allocationSize=16777216,e.prototype._getFrame=function(t,e,i,r){var o,s,a,n,h,l,c,u;if(s=Math.abs(e)/8,h=n=t.byteLength/s,a=Math.abs(e),e>0){switch(e){case 8:c=new Uint8Array(t),c=new Uint16Array(c),l=function(t){return t};break;case 16:c=new Int16Array(t),l=function(t){return(255&t)<<8|255&t>>8};break;case 32:c=new Int32Array(t),l=function(t){return(255&t)<<24|(65280&t)<<8|65280&t>>8|255&t>>24}}for(o=parseInt(i)!==i||parseInt(r)!==r?new Float32Array(c.length):c;h--;)c[h]=l(c[h]),o[h]=i+r*c[h]}else{for(o=new Uint32Array(t),l=function(t){return(255&t)<<24|(65280&t)<<8|65280&t>>8|255&t>>24};n--;)u=o[n],o[n]=l(u);for(o=new Float32Array(t);h--;)o[h]=i+r*o[h]}return o},e.prototype._getFrameAsync=function(t,e,i){var r,o,s,a,n,h,l,c,u,d,p,f,g,v,m=this;u=function(t){var e,i,r,o,s,a,n;return a=t.data,o=a.buffer,i=a.bitpix,s=a.bzero,r=a.bscale,n=a.url,importScripts(n),e=_getFrame(o,i,s,r),postMessage(e)},a=(""+u).replace("return postMessage","postMessage"),a="onmessage = "+a,n=""+this._getFrame,n=n.replace("function","function _getFrame"),l="application/javascript",s=new Blob([a],{type:l}),o=new Blob([n],{type:l}),r=window.URL||window.webkitURL,g=r.createObjectURL(s),f=r.createObjectURL(o),v=new Worker(g),c={buffer:t[0],bitpix:this.bitpix,bzero:this.bzero,bscale:this.bscale,url:f},h=0,d=null,p=0,v.onmessage=function(o){var s;return s=o.data,null==d&&(d=new s.constructor(m.width*m.height)),d.set(s,p),p+=s.length,h+=1,h===m.nBuffers?(m.invoke(e,i,d),r.revokeObjectURL(g),r.revokeObjectURL(f),v.terminate()):(c.buffer=t[h],v.postMessage(c,[t[h]]))},v.postMessage(c,[t[0]])},e.prototype.getFrame=function(t,e,i){var r,o,s,a,n,h,l,c,u,d,p,f,g=this;if(this.frame=t||this.frame,h=this.frameOffsets[this.frame],a=h.buffers,(null!=a?a.length:void 0)===this.nBuffers)return this._getFrameAsync(a,e,i);for(this.frameOffsets[this.frame].buffers=[],r=h.begin,o=this.blob.slice(r,r+this.frameLength),s=[],c=Math.floor(this.height/this.nBuffers),n=c*this.bytes*this.width,l=p=0,f=this.nBuffers-1;f>=0?f>=p:p>=f;l=f>=0?++p:--p)d=l*n,l===this.nBuffers-1?s.push(o.slice(d)):s.push(o.slice(d,d+n));return a=[],u=new FileReader,u.frame=this.frame,l=0,u.onloadend=function(r){var o;return t=r.target.frame,o=r.target.result,g.frameOffsets[t].buffers.push(o),l+=1,l===g.nBuffers?g.getFrame(t,e,i):u.readAsArrayBuffer(s[l])},u.readAsArrayBuffer(s[0])},e.prototype.getFrames=function(t,e,i,r){var o,s=this;return o=function(r,a){return s.invoke(i,a,r),e-=1,t+=1,e?s.getFrame(t,o,a):void 0},this.getFrame(t,o,r)},e.prototype.isDataCube=function(){return this.naxis.length>2?!0:!1},e}(r),this.astro.FITS.Image=l,p=function(t){function e(t){e.__super__.constructor.apply(this,arguments),this.rowByteSize=t.get("NAXIS1"),this.rows=t.get("NAXIS2"),this.cols=t.get("TFIELDS"),this.length=this.rowByteSize*this.rows,this.heapLength=t.get("PCOUNT"),this.columns=this.getColumns(t),null!=this.buffer?(this.rowsInMemory=this._rowsInMemoryBuffer,this.heap=this.buffer.slice(this.length,this.length+this.heapLength)):(this.rowsInMemory=this._rowsInMemoryBlob,this.firstRowInBuffer=this.lastRowInBuffer=0,this.nRowsInBuffer=Math.floor(this.maxMemory/this.rowByteSize)),this.accessors=[],this.descriptors=[],this.elementByteLengths=[],this.setAccessors(t)}return m(e,t),e.prototype.maxMemory=1048576,e.prototype._rowsInMemoryBuffer=function(){return!0},e.prototype._rowsInMemoryBlob=function(t,e){return this.firstRowInBuffer>t?!1:e>this.lastRowInBuffer?!1:!0},e.prototype.getColumns=function(t){var e,i,r,o,s;for(e=[],i=o=1,s=this.cols;s>=1?s>=o:o>=s;i=s>=1?++o:--o){if(r="TTYPE"+i,!t.contains(r))return null;e.push(t.get(r))}return e},e.prototype.getColumn=function(t,e,i){var r,o,s,a,n,h,l,c,u,d,p,f=this;return null!=this.blob?(u=this.columns.indexOf(t),a=this.descriptors[u],r=this.accessors[u],n=this.elementByteLengths[u],h=this.elementByteLengths.slice(0,u),h=0===h.length?0:h.reduce(function(t,e){return t+e}),s=null!=this.typedArray[a]?new this.typedArray[a](this.rows):[],p=~~(this.maxMemory/this.rowByteSize),p=Math.min(p,this.rows),l=this.rows/p,d=Math.floor(l)===l?l:Math.floor(l)+1,c=0,u=0,o=function(t,i){var a,n,l,g;for(a=t.byteLength/f.rowByteSize,g=new DataView(t),n=h;a--;)s[c]=r(g,n)[0],c+=1,n+=f.rowByteSize;return d-=1,u+=1,d?(l=u*p,f.getTableBuffer(l,p,o,i)):(f.invoke(e,i,s),void 0)},this.getTableBuffer(0,p,o,i)):(o=function(i,r){return s=i.map(function(e){return e[t]}),f.invoke(e,r,s)},this.getRows(0,this.rows,o,i))},e.prototype.getTableBuffer=function(t,e,i,r){var o,s,a,n,h=this;return e=Math.min(this.rows-t,e),o=t*this.rowByteSize,a=o+e*this.rowByteSize,s=this.blob.slice(o,a),n=new FileReader,n.row=t,n.number=e,n.onloadend=function(t){return h.invoke(i,r,t.target.result)},n.readAsArrayBuffer(s)},e.prototype.getRows=function(t,e,i,r){var o,s,a,n,h,l,c=this;return this.rowsInMemory(t,t+e)?(null!=this.blob?a=this.buffer:(o=t*this.rowByteSize,n=o+e*this.rowByteSize,a=this.buffer.slice(o,n)),l=this._getRows(a,e),this.invoke(i,r,l),l):(o=t*this.rowByteSize,n=o+Math.max(this.nRowsInBuffer*this.rowByteSize,e*this.rowByteSize),s=this.blob.slice(o,n),h=new FileReader,h.row=t,h.number=e,h.onloadend=function(o){var s;return s=o.target,c.buffer=s.result,c.firstRowInBuffer=c.lastRowInBuffer=s.row,c.lastRowInBuffer+=s.number,c.getRows(t,e,i,r)},h.readAsArrayBuffer(s))},e}(r),this.astro.FITS.Tabular=p,d=function(t){function e(){return f=e.__super__.constructor.apply(this,arguments)}return m(e,t),e.prototype.dataAccessors={A:function(t){return t.trim()},I:function(t){return parseInt(t)},F:function(t){return parseFloat(t)},E:function(t){return parseFloat(t)},D:function(t){return parseFloat(t)}},e.prototype.setAccessors=function(t){var e,i,r,o,s,a,n,h,l,c=this;for(s=/([AIFED])(\d+)\.*(\d+)*/,l=[],r=n=1,h=this.cols;h>=1?h>=n:n>=h;r=h>=1?++n:--n)i=t.get("TFORM"+r),a=t.get("TTYPE"+r),o=s.exec(i),e=o[1],l.push(function(t){var e;return e=function(e){return c.dataAccessors[t](e)},c.accessors.push(e)}(e));return l},e.prototype._getRows=function(t){var e,i,r,o,s,a,n,h,l,c,u,d,p,f,g,v,m,y,w;for(h=t.byteLength/this.rowByteSize,i=new Uint8Array(t),c=[],s=p=0,y=h-1;y>=0?y>=p:p>=y;s=y>=0?++p:--p){for(r=s*this.rowByteSize,o=r+this.rowByteSize,u=i.subarray(r,o),n="",f=0,v=u.length;v>f;f++)d=u[f],n+=String.fromCharCode(d);for(n=n.trim().split(/\s+/),l={},w=this.accessors,a=g=0,m=w.length;m>g;a=++g)e=w[a],d=n[a],l[this.columns[a]]=e(d);c.push(l)}return c},e}(p),this.astro.FITS.Table=d,e=function(t){function e(){return g=e.__super__.constructor.apply(this,arguments)}return m(e,t),e.prototype.typedArray={B:Uint8Array,I:Uint16Array,J:Uint32Array,E:Float32Array,D:Float64Array,1:Uint8Array,2:Uint16Array,4:Uint32Array},e.offsets={L:1,B:1,I:2,J:4,K:8,A:1,E:4,D:8,C:8,M:16},e.prototype.dataAccessors={L:function(t,e){var i,r;return r=t.getInt8(e),e+=1,i=84===r?!0:!1,[i,e]},B:function(t,e){var i;return i=t.getUint8(e),e+=1,[i,e]},I:function(t,e){var i;return i=t.getInt16(e),e+=2,[i,e]},J:function(t,e){var i;return i=t.getInt32(e),e+=4,[i,e]},K:function(t,e){var i,r,o,s,a;return r=Math.abs(t.getInt32(e)),e+=4,o=Math.abs(t.getInt32(e)),e+=4,s=r%10,i=s?-1:1,r-=s,a=i*(r<<32|o),[a,e]
-},A:function(t,e){var i;return i=t.getUint8(e),i=String.fromCharCode(i),e+=1,[i,e]},E:function(t,e){var i;return i=t.getFloat32(e),e+=4,[i,e]},D:function(t,e){var i;return i=t.getFloat64(e),e+=8,[i,e]},C:function(t,e){var i,r,o;return r=t.getFloat32(e),e+=4,o=t.getFloat32(e),e+=4,i=[r,o],[i,e]},M:function(t,e){var i,r,o;return r=t.getFloat64(e),e+=8,o=t.getFloat64(e),e+=8,i=[r,o],[i,e]}},e.prototype.toBits=function(t){var e,i;for(e=[],i=128;i>=1;)e.push(t&i?1:0),i/=2;return e},e.prototype.getFromHeap=function(t,e,i){var r,o,s,a,n;for(n=t.getInt32(e),e+=4,o=t.getInt32(e),e+=4,s=this.heap.slice(o,o+n),r=new this.typedArray[i](s),a=r.length;a--;)r[a]=this.constructor.swapEndian[i](r[a]);return[r,e]},e.prototype.setAccessors=function(t){var e,i,r,s,a,n,h,l,c,u,d,p=this;for(h=/(\d*)([P|Q]*)([L|X|B|I|J|K|A|E|D|C|M]{1})/,d=[],s=c=1,u=this.cols;u>=1?u>=c:c>=u;s=u>=1?++c:--c)r=t.get("TFORM"+s),l=t.get("TTYPE"+s),n=h.exec(r),e=parseInt(n[1])||1,a=n[2],i=n[3],d.push(function(t,e){var i,r;if(p.descriptors.push(t),p.elementByteLengths.push(p.constructor.offsets[t]*e),a)switch(l){case"COMPRESSED_DATA":i=function(e,i){var r,s,a;return a=p.getFromHeap(e,i,t),r=a[0],i=a[1],s=new p.typedArray[p.algorithmParameters.BYTEPIX](p.ztile[0]),o.Rice(r,p.algorithmParameters.BLOCKSIZE,p.algorithmParameters.BYTEPIX,s,p.ztile[0],o.RiceSetup),[s,i]};break;case"GZIP_COMPRESSED_DATA":i=function(t,e){var i;for(i=new Float32Array(p.width),s=i.length;s--;)i[s]=0/0;return[i,e]};break;default:i=function(e,i){return p.getFromHeap(e,i,t)}}else 1===e?i=function(e,i){var r,o;return o=p.dataAccessors[t](e,i),r=o[0],i=o[1],[r,i]}:"X"===t?(r=Math.log(e)/Math.log(2),i=function(t,i){var o,s,a,n,h,l,c;for(a=t.buffer.slice(i,i+r),h=new Uint8Array(a),s=[],l=0,c=h.length;c>l;l++)n=h[l],o=p.toBits(n),s=s.concat(o);return i+=r,[s.slice(0,+(e-1)+1||9e9),i]}):i="A"===t?function(t,i){var r,o,s,a,n,h;for(o=t.buffer.slice(i,i+e),r=new Uint8Array(o),s="",n=0,h=r.length;h>n;n++)a=r[n],s+=String.fromCharCode(a);return s=s.trim(),i+=e,[s,i]}:function(i,r){var o,a,n;for(s=e,o=[];s--;)n=p.dataAccessors[t](i,r),a=n[0],r=n[1],o.push(a);return[o,r]};return p.accessors.push(i)}(i,e));return d},e.prototype._getRows=function(t,e){var i,r,o,s,a,n,h,l,c,u,d;for(h=new DataView(t),o=0,a=[];e--;){for(s={},u=this.accessors,r=l=0,c=u.length;c>l;r=++l)i=u[r],d=i(h,o),n=d[0],o=d[1],s[this.columns[r]]=n;a.push(s)}return a},e}(p),this.astro.FITS.BinaryTable=e,o={RiceSetup:{1:function(t){var e,i,r,o;return o=1,e=3,i=6,r=t[0],[e,i,r,o]},2:function(t){var e,i,r,o,s;return s=2,i=4,r=14,o=0,e=t[0],o|=e<<8,e=t[1],o|=e,[i,r,o,s]},4:function(t){var e,i,r,o,s;return s=4,i=5,r=25,o=0,e=t[0],o|=e<<24,e=t[1],o|=e<<16,e=t[2],o|=e<<8,e=t[3],o|=e,[i,r,o,s]}},Rice:function(t,e,i,r,o,s){var a,n,h,l,c,u,d,p,f,g,v,m,y,w,C,S;for(n=1<<c,C=s[i](t),c=C[0],u=C[1],g=C[2],w=C[3],m=new Uint8Array(256),y=8,S=[128,255],f=S[0],d=S[1];d>=0;){for(;d>=f;)m[d]=y,d-=1;f/=2,y-=1}for(m[0]=0,a=t[w++],v=8,d=0;o>d;){for(v-=c;0>v;)a=a<<8|t[w++],v+=8;if(l=(a>>v)-1,a&=(1<<v)-1,p=d+e,p>o&&(p=o),0>l)for(;p>d;)r[d]=g,d+=1;else if(l===u)for(;p>d;){for(f=n-v,h=a<<f,f-=8;f>=0;)a=t[w++],h|=a<<f,f-=8;v>0?(a=t[w++],h|=a>>-f,a&=(1<<v)-1):a=0,0===(1&h)?h>>=1:h=~(h>>1),r[d]=h+g,g=r[d],d++}else for(;p>d;){for(;0===a;)v+=8,a=t[w++];for(y=v-m[a],v-=y+1,a^=1<<v,v-=l;0>v;)a=a<<8|t[w++],v+=8;h=y<<l|a>>v,a&=(1<<v)-1,0===(1&h)?h>>=1:h=~(h>>1),r[d]=h+g,g=r[d],d++}}return r}},this.astro.FITS.Decompress=o,i=function(t){function e(t){var i,r,o,s,a,n;for(e.__super__.constructor.apply(this,arguments),this.zcmptype=t.get("ZCMPTYPE"),this.zbitpix=t.get("ZBITPIX"),this.znaxis=t.get("ZNAXIS"),this.zblank=t.get("ZBLANK"),this.blank=t.get("BLANK"),this.zdither=t.get("ZDITHER0")||0,this.ztile=[],i=a=1,n=this.znaxis;n>=1?n>=a:a>=n;i=n>=1?++a:--a)s=t.contains("ZTILE"+i)?t.get("ZTILE"+i):1===i?t.get("ZNAXIS1"):1,this.ztile.push(s);for(this.width=t.get("ZNAXIS1"),this.height=t.get("ZNAXIS2")||1,this.algorithmParameters={},"RICE_1"===this.zcmptype&&(this.algorithmParameters.BLOCKSIZE=32,this.algorithmParameters.BYTEPIX=4),i=1;;){if(r="ZNAME"+i,!t.contains(r))break;o="ZVAL"+i,this.algorithmParameters[t.get(r)]=t.get(o),i+=1}this.zmaskcmp=t.get("ZMASKCMP"),this.zquantiz=t.get("ZQUANTIZ")||"LINEAR_SCALING",this.bzero=t.get("BZERO")||0,this.bscale=t.get("BSCALE")||1}return m(e,t),e.include(c),e.extend(o),e.randomGenerator=function(){var t,e,i,r,o,s,a;for(t=16807,i=2147483647,o=1,r=new Float32Array(1e4),e=a=0;9999>=a;e=++a)s=t*o,o=s-i*parseInt(s/i),r[e]=o/i;return r},e.randomSequence=e.randomGenerator(),e.prototype._getRows=function(t,e){var i,r,o,s,a,n,h,l,c,u,d,p,f,g,v,m,y,w,C,S,x,M,b;for(m=new DataView(t),l=0,r=new Float32Array(this.width*this.height);e--;){for(d={},M=this.accessors,n=w=0,S=M.length;S>w;n=++w)i=M[n],b=i(m,l),v=b[0],l=b[1],d[this.columns[n]]=v;for(s=d.COMPRESSED_DATA||d.UNCOMPRESSED_DATA||d.GZIP_COMPRESSED_DATA,o=d.ZBLANK||this.zblank,p=d.ZSCALE||this.bscale,y=d.ZZERO||this.bzero,h=this.height-e,f=h+this.zdither-1,g=(f-1)%1e4,u=parseInt(500*this.constructor.randomSequence[g]),n=C=0,x=s.length;x>C;n=++C)v=s[n],a=(h-1)*this.width+n,-2147483647===v?r[a]=0/0:-2147483646===v?r[a]=0:(c=this.constructor.randomSequence[u],r[a]=(v-c+.5)*p+y),u+=1,1e4===u&&(g=(g+1)%1e4,u=parseInt(500*this.randomSequence[g]))}return r},e.prototype.getFrame=function(t,e,i){var r,o,s=this;return this.heap?(this.frame=t||this.frame,this.getRows(0,this.rows,e,i)):(r=this.blob.slice(this.length,this.length+this.heapLength),o=new FileReader,o.onloadend=function(r){return s.heap=r.target.result,s.getFrame(t,e,i)},o.readAsArrayBuffer(r))},e}(e),this.astro.FITS.CompressedImage=i,a=function(){function t(t,e){this.header=t,this.data=e}return t.prototype.hasData=function(){return null!=this.data?!0:!1},t}(),this.astro.FITS.HDU=a}.call(this),MOC=function(){function t(t){return Math.log(t)/Math.LN2}MOC=function(t){this.norder=void 0,this._highResCells={},this._lowResCells={},t=t||{},this.name=t.name||"MOC",this.color=t.color||Color.getNextColor(),this.lineWidth=t.lineWidth||1,this.isShowing=!0},MOC.MAX_NORDER=13,MOC.LOWRES_MAXORDER=5,MOC.HIGHRES_MAXORDER=11,MOC.PIVOT_FOV=20,MOC.prototype.dataFromURL=function(e,i){var r=this,o=function(){var e;try{e=this.getHeader(0)}catch(o){return console.err("Could not get header of extension #0"),void 0}var s=this.getHeader(1);if(e.contains("HPXMOC"))r.order=e.get("HPXMOC");else if(e.contains("MOCORDER"))r.order=e.get("MOCORDER");else if(s.contains("HPXMOC"))r.order=s.get("HPXMOC");else{if(!s.contains("MOCORDER"))return console.err("Can not find MOC order in FITS file"),void 0;r.order=s.get("MOCORDER")}var a=this.getDataUnit(1),n=a.columns[0];a.getRows(0,a.rows,function(e){for(var i=0;e.length>i;i++){var o=e[i][n],s=Math.floor(Math.floor(t(Math.floor(o/4)))/2),a=o-4*Math.pow(4,s);if(MOC.LOWRES_MAXORDER>=s)s in r._lowResCells||(r._lowResCells[s]=[],r._highResCells[s]=[]),r._lowResCells[s].push(a),r._highResCells[s].push(a);else if(MOC.HIGHRES_MAXORDER>=s){s in r._highResCells||(r._highResCells[s]=[]),r._highResCells[s].push(a);var h=MOC.LOWRES_MAXORDER,l=Math.floor(a/Math.pow(4,s-h));h in r._lowResCells||(r._lowResCells=[]),r._lowResCells[h].push(l)}else{var h=MOC.LOWRES_MAXORDER,l=Math.floor(a/Math.pow(4,s-h));h in r._lowResCells||(r._lowResCells=[]),r._lowResCells[h].push(l),h=MOC.HIGHRES_MAXORDER,l=Math.floor(a/Math.pow(4,s-h)),h in r._highResCells||(r._highResCells=[]),r._highResCells[h].push(l)}}}),a=null,i&&i()};this.dataURL=e;var s=Aladin.JSONP_PROXY+"?url="+encodeURIComponent(this.dataURL);new astro.FITS(s,o)},MOC.prototype.setView=function(t){this.view=t},MOC.prototype.draw=function(t,e,i,r,o,s,a,n){if(this.isShowing){var h=n>MOC.PIVOT_FOV?this._lowResCells:this._highResCells;this._drawCells(t,h,n,e,i,CooFrameEnum.J2000,r,o,s,a)}},MOC.prototype._drawCells=function(t,r,o,s,a,n,h,l,c,u){t.lineWidth=this.lineWidth,t.strokeStyle=this.color,t.beginPath();var d=[];for(key in r)d.push(key);d.sort();var p,f,g;if(o>80)for(var v,m=0;d.length>m;m++){v=parseInt(d[m]),p=1<<v;for(var y=0;r[v].length>y;y++)if(g=r[v][y],v>=3)f=i(p,g,a,n,h,l,c,u,s),f&&e(t,f);else for(var w=Math.pow(4,3-v),C=g*w,S=0;w>S;S++)f=i(8,C+S,a,n,h,l,c,u,s),f&&e(t,f)}else{this.view.getVisiblePixList(3,CooFrameEnum.J2000);for(var x={},M=parseInt(d[d.length-1]),v=1;M>=v;v++)if(p=1<<v,3>=v)for(var y=0;r[v].length>y;y++){g=r[v][y];for(var w=Math.pow(4,3-v),C=g*w,S=0;w>S;S++)norder3Ipix=C+S,f=i(8,norder3Ipix,a,n,h,l,c,u,s),f&&e(t,f),x[norder3Ipix]=1}else for(var y=0;r[v].length>y;y++){g=r[v][y];var b=Math.floor(g/Math.pow(4,v-3));b in x||(f=i(p,g,a,n,h,l,c,u,s),f&&e(t,f))}}t.stroke()};var e=function(t,e){t.moveTo(e[0].vx,e[0].vy),t.lineTo(e[1].vx,e[1].vy),t.lineTo(e[2].vx,e[2].vy),t.lineTo(e[3].vx,e[3].vy),t.lineTo(e[0].vx,e[0].vy)},i=function(t,e,i,r,o,s,a,n,h){for(var l=[],c=[],u=new SpatialVector,d=HealpixCache.corners_nest(e,t),p=0;4>p;p++){if(u.setXYZ(d[p].x,d[p].y,d[p].z),r&&r!=i){if(r==CooFrameEnum.J2000){var f=CooConversion.J2000ToGalactic([u.ra(),u.dec()]);lon=f[0],lat=f[1]}else if(r==CooFrameEnum.GAL){var f=CooConversion.GalacticToJ2000([u.ra(),u.dec()]);lon=f[0],lat=f[1]}}else lon=u.ra(),lat=u.dec();c[p]=h.project(lon,lat)}if(null==c[0]||null==c[1]||null==c[2]||null==c[3])return null;for(var p=0;4>p;p++)l[p]=AladinUtils.xyToView(c[p].X,c[p].Y,o,s,a,n);return 0>l[0].vx&&0>l[1].vx&&0>l[2].vx&&0>l[3].vx?null:0>l[0].vy&&0>l[1].vy&&0>l[2].vy&&0>l[3].vy?null:l[0].vx>=o&&l[1].vx>=o&&l[2].vx>=o&&l[3].vx>=o?null:l[0].vy>=s&&l[1].vy>=s&&l[2].vy>=s&&l[3].vy>=s?null:l};return MOC.prototype.reportChange=function(){this.view.requestRedraw()},MOC.prototype.show=function(){this.isShowing||(this.isShowing=!0,this.reportChange())},MOC.prototype.hide=function(){this.isShowing&&(this.isShowing=!1,this.reportChange())},MOC}(),CooGrid=function(){function t(t,e,i,r,o,s,a){var n,h=AladinUtils.viewToXy(e,i,r,o,s,a);try{n=t.unproject(h.x,h.y)}catch(l){return null}return{lon:n.ra,lat:n.dec}}var e=function(){};return e.prototype.redraw=function(e,i,r,o,s,a,n,h){if(!(h>60)){var l=0,c=359.9999,u=-90,d=90,p=t(i,0,0,o,s,a,n),f=t(i,o-1,s-1,o,s,a,n);c=Math.min(p.lon,f.lon),l=Math.max(p.lon,f.lon),d=Math.min(p.lat,f.lat),u=Math.max(p.lat,f.lat);var g=t(i,0,s-1,o,s,a,n);c=Math.min(c,g.lon),l=Math.max(l,g.lon),d=Math.min(d,g.lat),u=Math.max(u,g.lat);var v=t(i,o-1,0,o,s,a,n);c=Math.min(c,v.lon),l=Math.max(l,v.lon),d=Math.min(d,v.lat),u=Math.max(u,v.lat);var m,y,w=l-c,C=u-d;h>10?(m=4,y=4):h>1?(m=1,y=1):h>.1?(m=.1,y=.1):(m=.01,y=.01);var S=Math.round(c%m)*m,x=Math.round(d%y)*y;e.lineWidth=1,e.strokeStyle="rgb(120,120,255)";for(var M=x;u+y>M;M+=y){e.beginPath();var b;if(b=AladinUtils.radecToViewXy(c,M,i,CooFrameEnum.J2000,o,s,a,n)){e.moveTo(b.vx,b.vy);for(var T=0,I=c;l+m>I;I+=w/10)T++,b=AladinUtils.radecToViewXy(I,M,i,CooFrameEnum.J2000,o,s,a,n),e.lineTo(b.vx,b.vy),3==T&&e.strokeText(M.toFixed(2),b.vx,b.vy-2);e.stroke()}}for(var I=S;l+m>I;I+=m){e.beginPath();var b;if(b=AladinUtils.radecToViewXy(I,d,i,CooFrameEnum.J2000,o,s,a,n)){e.moveTo(b.vx,b.vy);for(var T=0,M=d;u+y>M;M+=C/10)T++,b=AladinUtils.radecToViewXy(I,M,i,CooFrameEnum.J2000,o,s,a,n),e.lineTo(b.vx,b.vy),3==T&&e.strokeText(I.toFixed(2),b.vx,b.vy-2);e.stroke()}}}},e}(),Footprint=function(){return Footprint=function(t){this.polygons=t,this.overlay=null,this.isShowing=!0,this.isSelected=!1},Footprint.prototype.setOverlay=function(t){this.overlay=t},Footprint.prototype.show=function(){this.isShowing||(this.isShowing=!0,this.overlay&&this.overlay.reportChange())},Footprint.prototype.hide=function(){this.isShowing&&(this.isShowing=!1,this.overlay&&this.overlay.reportChange())},Footprint.prototype.select=function(){this.isSelected||(this.isSelected=!0,this.overlay&&this.overlay.reportChange())},Footprint.prototype.deselect=function(){this.isSelected&&(this.isSelected=!1,this.overlay&&this.overlay.reportChange())},Footprint}(),Popup=function(){return Popup=function(t){this.domEl=$('<div class="aladin-popup-container"><div class="aladin-popup"><a class="aladin-closeBtn">&times;</a><div class="aladin-popupTitle"></div><div class="aladin-popupText"></div></div><div class="aladin-popup-arrow"></div></div>'),this.domEl.appendTo(t);var e=this;this.domEl.find(".aladin-closeBtn").click(function(){e.hide()})},Popup.prototype.hide=function(){this.domEl.hide()},Popup.prototype.show=function(){this.domEl.show()},Popup.prototype.setTitle=function(t){this.domEl.find(".aladin-popupTitle").html(t||"")},Popup.prototype.setText=function(t){this.domEl.find(".aladin-popupText").html(t||""),this.w=this.domEl.outerWidth(),this.h=this.domEl.outerHeight()},Popup.prototype.setSource=function(t){this.source&&(this.source.popup=null),t.popup=this,this.source=t,this.setPosition(t.x,t.y)},Popup.prototype.setPosition=function(t,e){var i=t-this.w/2,r=e-this.h+this.source.catalog.sourceSize/2;this.domEl[0].style.left=i+"px",this.domEl[0].style.top=r+"px"},Popup}(),Circle=function(){return Circle=function(t,e,i){i=i||{},this.color=i.color||void 0,this.setCenter(t),this.setRadius(e),this.overlay=null,this.isShowing=!0,this.isSelected=!1},Circle.prototype.setOverlay=function(t){this.overlay=t},Circle.prototype.show=function(){this.isShowing||(this.isShowing=!0,this.overlay&&this.overlay.reportChange())},Circle.prototype.hide=function(){this.isShowing&&(this.isShowing=!1,this.overlay&&this.overlay.reportChange())},Circle.prototype.select=function(){this.isSelected||(this.isSelected=!0,this.overlay&&this.overlay.reportChange())},Circle.prototype.deselect=function(){this.isSelected&&(this.isSelected=!1,this.overlay&&this.overlay.reportChange())},Circle.prototype.setCenter=function(t){this.centerRaDec=t,this.overlay&&this.overlay.reportChange()},Circle.prototype.setRadius=function(t){this.radiusDegrees=t,this.overlay&&this.overlay.reportChange()},Circle.prototype.draw=function(t,e,i,r,o,s,a){if(this.isShowing){var n;if(i!=CooFrameEnum.J2000){var h=CooConversion.J2000ToGalactic([this.centerRaDec[0],this.centerRaDec[1]]);n=e.project(h[0],h[1])}else n=e.project(this.centerRaDec[0],this.centerRaDec[1]);if(n){var l,c=AladinUtils.xyToView(n.X,n.Y,r,o,s,a,!0),u=this.centerRaDec[0],d=this.centerRaDec[1]+(u>0?-this.radiusDegrees:this.radiusDegrees);if(i!=CooFrameEnum.J2000){var h=CooConversion.J2000ToGalactic([u,d]);l=e.project(h[0],h[1])}else l=e.project(u,d);if(l){var p=AladinUtils.xyToView(l.X,l.Y,r,o,s,a,!0),f=p.vx-c.vx,g=p.vy-c.vy,v=Math.sqrt(f*f+g*g);this.color&&(t.strokeStyle=this.color),t.beginPath(),t.arc(c.vx,c.vy,v,0,2*Math.PI,!1),t.stroke()}}}},Circle}(),Polyline=function(){return Polyline=function(t,e){e=e||{},this.color=e.color||void 0,this.radecArray=t,this.overlay=null,this.isShowing=!0,this.isSelected=!1},Polyline.prototype.setOverlay=function(t){this.overlay=t},Polyline.prototype.show=function(){this.isShowing||(this.isShowing=!0,this.overlay&&this.overlay.reportChange())},Polyline.prototype.hide=function(){this.isShowing&&(this.isShowing=!1,this.overlay&&this.overlay.reportChange())},Polyline.prototype.select=function(){this.isSelected||(this.isSelected=!0,this.overlay&&this.overlay.reportChange())},Polyline.prototype.deselect=function(){this.isSelected&&(this.isSelected=!1,this.overlay&&this.overlay.reportChange())},Polyline.prototype.draw=function(t,e,i,r,o,s,a){if(this.isShowing&&this.radecArray&&!(2>this.radecArray.length)){this.color&&(t.strokeStyle=this.color);var n=AladinUtils.radecToViewXy(this.radecArray[0][0],this.radecArray[0][1],e,i,r,o,s,a);if(n){t.moveTo(n.vx,n.vy);for(var h,l=1;this.radecArray.length>l&&(h=AladinUtils.radecToViewXy(this.radecArray[l][0],this.radecArray[l][1],e,i,r,o,s,a),h);l++)t.lineTo(h.vx,h.vy);t.stroke()}}},Polyline}(),Overlay=function(){return Overlay=function(t){t=t||{},this.name=t.name||"overlay",this.color=t.color||Color.getNextColor(),this.lineWidth=t.lineWidth||2,this.overlays=[],this.overlay_items=[],this.isShowing=!0},Overlay.prototype.show=function(){this.isShowing||(this.isShowing=!0,this.reportChange())},Overlay.prototype.hide=function(){this.isShowing&&(this.isShowing=!1,this.reportChange())},Overlay.parseSTCS=function(t){for(var e,i=[],r=t.match(/\S+/g),o=0,s=r.length;s>o;){var a=r[o].toLowerCase();if("polygon"==a&&(e=[],o++,frame=r[o].toLowerCase(),"icrs"==frame||"j2000"==frame)){for(;s>o+2;){var n=parseFloat(r[o+1]);if(isNaN(n))break;var h=parseFloat(r[o+2]);e.push([n,h]),o+=2}e.push(e[0]),i.push(e)}o++}return i},Overlay.prototype.addFootprints=function(t){this.overlays=this.overlays.concat(t);for(var e=0,i=t.length;i>e;e++)t[e].setOverlay(this);this.view.requestRedraw()},Overlay.prototype.add=function(t){this.overlay_items.push(t),t.setOverlay(this),this.view.requestRedraw()},Overlay.prototype.getFootprint=function(t){return this.footprints.length>t?this.footprints[t]:null},Overlay.prototype.setView=function(t){this.view=t},Overlay.prototype.removeAll=function(){this.overlays=[],this.overlay_items=[]},Overlay.prototype.draw=function(t,e,i,r,o,s,a){if(this.isShowing){t.strokeStyle=this.color,t.lineWidth=this.lineWidth,t.beginPath(),xyviews=[];for(var n=0,h=this.overlays.length;h>n;n++)xyviews.push(this.drawFootprint(this.overlays[n],t,e,i,r,o,s,a));t.stroke(),t.strokeStyle=Overlay.increase_brightness(this.color,80),t.beginPath();for(var n=0,h=this.overlays.length;h>n;n++)this.overlays[n].isSelected&&this.drawFootprintSelected(t,xyviews[n]);t.stroke();for(var n=0;this.overlay_items.length>n;n++)this.overlay_items[n].draw(t,e,i,r,o,s,a)}},Overlay.increase_brightness=function(t,e){t=t.replace(/^\s*#|\s*$/g,""),3==t.length&&(t=t.replace(/(.)/g,"$1$1"));var i=parseInt(t.substr(0,2),16),r=parseInt(t.substr(2,2),16),o=parseInt(t.substr(4,2),16);return"#"+(0|256+i+(256-i)*e/100).toString(16).substr(1)+(0|256+r+(256-r)*e/100).toString(16).substr(1)+(0|256+o+(256-o)*e/100).toString(16).substr(1)},Overlay.prototype.drawFootprint=function(t,e,i,r,o,s,a,n){if(!t.isShowing)return null;for(var h=[],l=!1,c=t.polygons,u=0,d=c.length;d>u;u++){var p;if(r!=CooFrameEnum.J2000){var f=CooConversion.J2000ToGalactic([c[u][0],c[u][1]]);p=i.project(f[0],f[1])}else p=i.project(c[u][0],c[u][1]);if(!p)return null;var g=AladinUtils.xyToView(p.X,p.Y,o,s,a,n);h.push(g),!l&&o>g.vx&&g.vx>=0&&s>=g.vy&&g.vy>=0&&(l=!0)}if(l){e.moveTo(h[0].vx,h[0].vy);for(var u=1,d=h.length;d>u;u++)e.lineTo(h[u].vx,h[u].vy)}return h},Overlay.prototype.drawFootprintSelected=function(t,e){if(e){var i=e;t.moveTo(i[0].vx,i[0].vy);for(var r=1,o=i.length;o>r;r++)t.lineTo(i[r].vx,i[r].vy)}},Overlay.prototype.reportChange=function(){this.view.requestRedraw()},Overlay}(),cds.Source=function(){return cds.Source=function(t,e,i,r){this.ra=t,this.dec=e,this.data=i,this.catalog=null,this.marker=r&&r.marker||!1,this.marker&&(this.popupTitle=r&&r.popupTitle?r.popupTitle:"",this.popupDesc=r&&r.popupDesc?r.popupDesc:""),this.isShowing=!0,this.isSelected=!1},cds.Source.prototype.setCatalog=function(t){this.catalog=t},cds.Source.prototype.show=function(){this.isShowing||(this.isShowing=!0,this.catalog&&this.catalog.reportChange())},cds.Source.prototype.hide=function(){this.isShowing&&(this.isShowing=!1,this.catalog&&this.catalog.reportChange())},cds.Source.prototype.select=function(){this.isSelected||(this.isSelected=!0,this.catalog&&this.catalog.reportChange())},cds.Source.prototype.deselect=function(){this.isSelected&&(this.isSelected=!1,this.catalog&&this.catalog.reportChange())},cds.Source.prototype.actionClicked=function(){if(this.catalog&&this.catalog.onClick){var t=this.catalog.view;if("showTable"==this.catalog.onClick)t.aladin.measurementTable.showMeasurement(this),this.select();else if("showPopup"==this.catalog.onClick){t.popup.setTitle("<br><br>");var e='<div class="aladin-marker-measurement">';e+="<table>";for(var i in this.data)e+="<tr><td>"+i+"</td><td>"+this.data[i]+"</td></tr>";e+="</table>",e+="</div>",t.popup.setText(e),t.popup.setSource(this),t.popup.show()}}},cds.Source.prototype.actionOtherObjectClicked=function(){this.catalog&&this.catalog.onClick&&"showTable"==this.catalog.onClick&&this.deselect()},cds.Source}(),ProgressiveCat=function(){function t(t,e){var i=["name","ID","ucd","utype","unit","datatype","arraysize","width","precision"],r=[],o=0;return t.keyRa=t.keyDec=null,$(e).find("FIELD").each(function(){for(var e={},s=0;i.length>s;s++){var a=i[s];$(this).attr(a)&&(e[a]=$(this).attr(a))}e.ID||(e.ID="col_"+o),t.keyRa||!e.ucd||0!=e.ucd.indexOf("pos.eq.ra")&&0!=e.ucd.indexOf("POS_EQ_RA")||(t.keyRa=e.name?e.name:e.ID),t.keyDec||!e.ucd||0!=e.ucd.indexOf("pos.eq.dec")&&0!=e.ucd.indexOf("POS_EQ_DEC")||(t.keyDec=e.name?e.name:e.ID),r.push(e),o++}),r}function e(t,e,i){if(!t.keyRa||!t.keyDec)return[];lines=e.split("\n");for(var r=[],o=0;i.length>o;o++)i[o].name?r.push(i[o].name):r.push(i[o].ID);for(var s=[],a=new Coo,n=2;lines.length>n;n++){var h={},l=lines[n].split("	");if(!(l.length<r.length)){for(var c=0;r.length>c;c++)h[r[c]]=l[c];var u,d;Utils.isNumber(h[t.keyRa])&&Utils.isNumber(h[t.keyDec])?(u=parseFloat(h[t.keyRa]),d=parseFloat(h[t.keyDec])):(a.parse(h[t.keyRa]+" "+h[t.keyDec]),u=a.lon,d=a.lat),s.push(new cds.Source(u,d,h))}}return s}return ProgressiveCat=function(t,e,i,r){r=r||{},this.type="progressivecat",this.rootUrl=t,this.frame=CooFrameEnum.fromString(e)||CooFrameEnum.J2000,this.maxOrder=i,this.isShowing=!0,this.name=r.name||"progressive-cat",this.color=r.color||Color.getNextColor(),this.sourceSize=r.sourceSize||10,this.sourcesCache=new Utils.LRUCache(100),this.cacheCanvas=document.createElement("canvas"),this.cacheCanvas.width=this.sourceSize,this.cacheCanvas.height=this.sourceSize;var o=this.cacheCanvas.getContext("2d");o.beginPath(),o.strokeStyle=this.color,o.lineWidth=2,o.moveTo(0,0),o.lineTo(0,this.sourceSize),o.lineTo(this.sourceSize,this.sourceSize),o.lineTo(this.sourceSize,0),o.lineTo(0,0),o.stroke()},ProgressiveCat.prototype={init:function(t){this.view=t,this.level3Sources||this.loadLevel2Sources()},loadLevel2Sources:function(){var i=this;$.ajax({url:i.rootUrl+"/"+"Norder2/Allsky.xml",method:"GET",success:function(r){i.fields=t(i,r),i.level2Sources=e(i,$(r).find("CSV").text(),i.fields),i.loadLevel3Sources()},error:function(t){console.log("Something went wrong: "+t)}})},loadLevel3Sources:function(){var t=this;$.ajax({url:t.rootUrl+"/"+"Norder3/Allsky.xml",method:"GET",success:function(i){t.level3Sources=e(t,$(i).find("CSV").text(),t.fields),t.view.requestRedraw()},error:function(t){console.log("Something went wrong: "+t)}})},draw:function(t,e,i,r,o,s,a){if(this.isShowing&&this.level3Sources&&(this.drawSources(this.level2Sources,t,e,i,r,o,s,a),this.drawSources(this.level3Sources,t,e,i,r,o,s,a),this.tilesInView))for(var n,h,l,c=0;this.tilesInView.length>c;c++)l=this.tilesInView[c],h=l[0]+"-"+l[1],n=this.sourcesCache.get(h),n&&this.drawSources(n,t,e,i,r,o,s,a)},drawSources:function(t,e,i,r,o,s,a,n){for(var h=0,l=t.length;l>h;h++)this.drawSource(t[h],e,i,r,o,s,a,n)},getSources:function(){var t=[];if(this.level2Sources&&(t=t.concat(this.level2Sources)),this.level3Sources&&(t=t.concat(this.level3Sources)),this.tilesInView)for(var e,i,r,o=0;this.tilesInView.length>o;o++)r=this.tilesInView[o],i=r[0]+"-"+r[1],e=this.sourcesCache.get(i),e&&(t=t.concat(e));return t},drawSource:function(t,e,i,r,o,s,a,n){if(t.isShowing){var h,l=this.sourceSize;if(r!=CooFrameEnum.J2000){var c=CooConversion.J2000ToGalactic([t.ra,t.dec]);h=i.project(c[0],c[1])}else h=i.project(t.ra,t.dec);if(h){var u=AladinUtils.xyToView(h.X,h.Y,o,s,a,n);if(u){if(u.vx>o+l||0-l>u.vx||u.vy>s+l||0-l>u.vy)return t.x=t.y=void 0,void 0;t.x=u.vx,t.y=u.vy,e.drawImage(this.cacheCanvas,t.x-l/2,t.y-l/2)}}}},deselectAll:function(){for(var t=0;this.level2Sources.length>t;t++)this.level2Sources[t].deselect();for(var t=0;this.level3Sources.length>t;t++)this.level3Sources[t].deselect();var e=this.sourcesCache.keys();for(key in e)if(this.sourcesCache[key])for(var i=this.sourcesCache[key],t=0;i.length>t;t++)i[t].deselect()},show:function(){this.isShowing||(this.isShowing=!0,this.reportChange())},hide:function(){this.isShowing&&(this.isShowing=!1,this.reportChange())},reportChange:function(){this.view.requestRedraw()},getTileURL:function(t,e){var i=1e4*Math.floor(e/1e4);return this.rootUrl+"/"+"Norder"+t+"/Dir"+i+"/Npix"+e+".tsv"},loadNeededTiles:function(){this.tilesInView=[],this.otherSources=[];var t=this.view.realNorder;if(t>this.maxOrder&&(t=this.maxOrder),!(3>=t)){for(var i,r,o=this.view.getVisibleCells(t,this.frame),s=4;t>=s;s++){i=[];for(var a=0;o.length>a;a++)r=Math.floor(o[a].ipix/Math.pow(4,t-s)),0>i.indexOf(r)&&i.push(r);for(var n=0;i.length>n;n++)this.tilesInView.push([s,i[n]])}for(var h,l,a=0;this.tilesInView.length>a;a++)h=this.tilesInView[a],l=h[0]+"-"+h[1],this.sourcesCache.get(l)||function(t,i,r){var o=i+"-"+r;$.ajax({url:t.getTileURL(i,r),method:"GET",success:function(i){t.sourcesCache.set(o,e(t,i,t.fields)),t.view.requestRedraw()},error:function(){t.sourcesCache.set(o,[])}})}(this,h[0],h[1])}}},ProgressiveCat}(),cds.Catalog=function(){return cds.Catalog=function(t){t=t||{},this.type="catalog",this.name=t.name||"catalog",this.color=t.color||Color.getNextColor(),this.sourceSize=t.sourceSize||6,this.markerSize=t.sourceSize||12,this.shape=t.shape||"square",this.maxNbSources=t.limit||void 0,this.onClick=t.onClick||void 0,this.displayLabel=t.displayLabel||!1,this.labelColor=t.labelColor||this.color,this.labelFont=t.labelFont||"10px sans-serif",this.displayLabel&&(this.labelColumn=t.labelColumn,this.labelColumn||(this.displayLabel=!1)),this.shape instanceof Image&&(this.sourceSize=this.shape.width),this.selectSize=this.sourceSize+2,this.isShowing=!0,this.indexationNorder=5,this.sources=[],this.hpxIdx=new HealpixIndex(this.indexationNorder),this.hpxIdx.init(),this.selectionColor="#00ff00",this.cacheCanvas=cds.Catalog.createShape(this.shape,this.color,this.sourceSize),this.cacheMarkerCanvas=document.createElement("canvas"),this.cacheMarkerCanvas.width=this.markerSize,this.cacheMarkerCanvas.height=this.markerSize;var e=this.cacheMarkerCanvas.getContext("2d");e.fillStyle=this.color,e.beginPath();var i=this.markerSize/2;e.arc(i,i,i-2,0,2*Math.PI,!1),e.fill(),e.lineWidth=2,e.strokeStyle="#ccc",e.stroke(),this.cacheSelectCanvas=document.createElement("canvas"),this.cacheSelectCanvas.width=this.selectSize,this.cacheSelectCanvas.height=this.selectSize;var r=this.cacheSelectCanvas.getContext("2d");r.beginPath(),r.strokeStyle=this.selectionColor,r.lineWidth=2,r.moveTo(0,0),r.lineTo(0,this.selectSize),r.lineTo(this.selectSize,this.selectSize),r.lineTo(this.selectSize,0),r.lineTo(0,0),r.stroke()},cds.Catalog.createShape=function(t,e,i){if(t instanceof Image)return t;var r=document.createElement("canvas");r.width=r.height=i;var o=r.getContext("2d");return o.beginPath(),o.strokeStyle=e,o.lineWidth=2,"plus"==t?(o.moveTo(i/2,0),o.lineTo(i/2,i),o.stroke(),o.moveTo(0,i/2),o.lineTo(i,i/2),o.stroke()):"cross"==t?(o.moveTo(0,0),o.lineTo(i-1,i-1),o.stroke(),o.moveTo(i-1,0),o.lineTo(0,i-1),o.stroke()):"rhomb"==t?(o.moveTo(i/2,0),o.lineTo(0,i/2),o.lineTo(i/2,i),o.lineTo(i,i/2),o.lineTo(i/2,0),o.stroke()):"triangle"==t?(o.moveTo(i/2,0),o.lineTo(0,i-1),o.lineTo(i-1,i-1),o.lineTo(i/2,0),o.stroke()):(o.moveTo(0,0),o.lineTo(0,i),o.lineTo(i,i),o.lineTo(i,0),o.lineTo(0,0),o.stroke()),r},cds.Catalog.parseVOTable=function(t,e,i){function r(t,e){t=t.replace(/^\s+/g,"");var r=["name","ID","ucd","utype","unit","datatype","arraysize","width","precision"],o=[],s=0;$(t).find("FIELD").each(function(){for(var t={},e=0;r.length>e;e++){var i=r[e];$(this).attr(i)&&(t[i]=$(this).attr(i))}t.ID||(t.ID="col_"+s),o.push(t),s++});var a,n;a=n=null;for(var h=0,l=o.length;l>h;h++){var c=o[h];if(!a&&c.ucd){var u=c.ucd.toLowerCase();if(u.indexOf("pos.eq.ra")>=0||u.indexOf("pos_eq_ra")>=0){a=h;continue}}if(!n&&c.ucd){var u=c.ucd.toLowerCase();if(u.indexOf("pos.eq.dec")>=0||u.indexOf("pos_eq_dec")>=0){n=h;continue}}}var d,p,f=[],g=new Coo;$(t).find("TR").each(function(){var t={},e=0;$(this).find("TD").each(function(){var i=o[e].name?o[e].name:o[e].id;t[i]=$(this).text(),e++});var r=o[a].name?o[a].name:o[a].id,s=o[n].name?o[n].name:o[n].id;return Utils.isNumber(t[r])&&Utils.isNumber(t[s])?(d=parseFloat(t[r]),p=parseFloat(t[s])):(g.parse(t[r]+" "+t[s]),d=g.lon,p=g.lat),f.push(new cds.Source(d,p,t)),i&&f.length==i?!1:void 0}),e&&e(f)}$.ajax({url:Aladin.JSONP_PROXY,data:{url:t},method:"GET",dataType:"text",success:function(t){r(t,e)}})},cds.Catalog.prototype.addSources=function(t){this.sources=this.sources.concat(t);for(var e=0,i=t.length;i>e;e++)t[e].setCatalog(this);this.view.requestRedraw()},cds.Catalog.prototype.getSources=function(){return this.sources},cds.Catalog.prototype.selectAll=function(){if(this.sources)for(var t=0;this.sources.length>t;t++)this.sources[t].select()},cds.Catalog.prototype.deselectAll=function(){if(this.sources)for(var t=0;this.sources.length>t;t++)this.sources[t].deselect()},cds.Catalog.prototype.getSource=function(t){return this.sources.length>t?this.sources[t]:null},cds.Catalog.prototype.setView=function(t){this.view=t},cds.Catalog.prototype.removeAll=cds.Catalog.prototype.clear=function(){this.sources=[]},cds.Catalog.prototype.draw=function(t,e,i,r,o,s,a){if(this.isShowing){for(var n=0,h=this.sources.length;h>n;n++)this.drawSource(this.sources[n],t,e,i,r,o,s,a);t.strokeStyle=this.selectionColor;for(var n=0,h=this.sources.length;h>n;n++)this.sources[n].isSelected&&this.drawSourceSelection(this.sources[n],t);if(this.displayLabel){t.fillStyle=this.labelColor,t.font=this.labelFont;for(var n=0,h=this.sources.length;h>n;n++)this.drawSourceLabel(this.sources[n],t)}}},cds.Catalog.prototype.drawSource=function(t,e,i,r,o,s,a,n){if(t.isShowing){var h,l=this.sourceSize;if(r!=CooFrameEnum.J2000){var c=CooConversion.J2000ToGalactic([t.ra,t.dec]);h=i.project(c[0],c[1])}else h=i.project(t.ra,t.dec);if(h){var u=AladinUtils.xyToView(h.X,h.Y,o,s,a,n),d=t.popup?100:t.sourceSize;if(u){if(u.vx>o+d||0-d>u.vx||u.vy>s+d||0-d>u.vy)return t.x=t.y=void 0,void 0;t.x=u.vx,t.y=u.vy,t.marker?e.drawImage(this.cacheMarkerCanvas,t.x-l/2,t.y-l/2):e.drawImage(this.cacheCanvas,t.x-this.cacheCanvas.width/2,t.y-this.cacheCanvas.height/2),t.popup&&t.popup.setPosition(t.x,t.y)}}}},cds.Catalog.prototype.drawSourceSelection=function(t,e){if(t&&t.isShowing&&t.x&&t.y){var i=this.selectSize;e.drawImage(this.cacheSelectCanvas,t.x-i/2,t.y-i/2)}},cds.Catalog.prototype.drawSourceLabel=function(t,e){if(t&&t.isShowing&&t.x&&t.y){var i=t.data[this.labelColumn];i&&e.fillText(i,t.x,t.y)}},cds.Catalog.prototype.reportChange=function(){this.view.requestRedraw()},cds.Catalog.prototype.show=function(){this.isShowing||(this.isShowing=!0,this.reportChange())},cds.Catalog.prototype.hide=function(){this.isShowing&&(this.isShowing=!1,this.view&&this.view.popup&&this.view.popup.source&&this.view.popup.source.catalog==this&&this.view.popup.hide(),this.reportChange())},cds.Catalog}(),Tile=function(){function t(t,e){this.img=t,this.url=e}return t.isImageOk=function(t){return t.allSkyTexture?!0:t.src?t.complete?t.naturalWidth!==void 0&&0==t.naturalWidth?!1:!0:!1:!1},t}(),TileBuffer=function(){function t(){this.pointer=0,this.tilesMap={},this.tilesArray=Array(e);for(var t=0;e>t;t++)this.tilesArray[t]=new Tile(new Image,null)}var e=800;return t.prototype.addTile=function(t){if(this.getTile(t))return null;var i=this.tilesArray[this.pointer];return null!=i.url&&(i.img.src=null,delete this.tilesMap[i.url]),this.tilesArray[this.pointer].url=t,this.tilesMap[t]=this.tilesArray[this.pointer],this.pointer++,this.pointer>=e&&(this.pointer=0),this.tilesMap[t]},t.prototype.getTile=function(t){return this.tilesMap[t]},t}(),ColorMap=function(){return ColorMap=function(t){this.view=t,this.reversed=!1,this.map="native",this.sig=this.signature()},ColorMap.MAPS={},ColorMap.MAPS.eosb={name:"Eos B",r:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,9,18,27,36,45,49,57,72,81,91,100,109,118,127,136,131,139,163,173,182,191,200,209,218,227,213,221,255,255,255,255,255,255,255,255,229,229,255,255,255,255,255,255,255,255,229,229,255,255,255,255,255,255,255,255,229,229,255,255,255,255,255,255,255,255,229,229,255,255,255,255,255,255,255,255,229,229,255,255,255,255,255,255,255,255,229,229,255,255,255,255,255,255,255,255,229,229,255,255,255,255,255,255,255,255,229,229,255,255,255,255,255,255,255,255,229,229,255,253,251,249,247,245,243,241,215,214,235,234,232,230,228,226,224,222,198,196,216,215,213,211,209,207,205,203,181,179,197,196,194,192,190,188,186,184,164,162,178,176,175,173,171,169,167,165,147,145,159,157,156,154,152,150,148,146,130,128,140,138,137,135,133,131,129,127,113,111,121,119,117,117],g:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,15,23,31,39,47,55,57,64,79,87,95,103,111,119,127,135,129,136,159,167,175,183,191,199,207,215,200,207,239,247,255,255,255,255,255,255,229,229,255,255,255,255,255,255,255,255,229,229,255,255,255,255,255,255,255,255,229,229,255,250,246,242,238,233,229,225,198,195,212,208,204,199,195,191,187,182,160,156,169,165,161,157,153,148,144,140,122,118,127,125,123,121,119,116,114,112,99,97,106,104,102,99,97,95,93,91,80,78,84,82,80,78,76,74,72,70,61,59,63,61,59,57,55,53,50,48,42,40,42,40,38,36,33,31,29,27,22,21,21,19,16,14,12,13,8,6,3,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],b:[116,121,127,131,136,140,144,148,153,157,145,149,170,174,178,182,187,191,195,199,183,187,212,216,221,225,229,233,238,242,221,225,255,247,239,231,223,215,207,199,172,164,175,167,159,151,143,135,127,119,100,93,95,87,79,71,63,55,47,39,28,21,15,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},ColorMap.MAPS.rainbow={name:"Rainbow",r:[0,4,9,13,18,22,27,31,36,40,45,50,54,58,61,64,68,69,72,74,77,79,80,82,83,85,84,86,87,88,86,87,87,87,85,84,84,84,83,79,78,77,76,71,70,68,66,60,58,55,53,46,43,40,36,33,25,21,16,12,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,8,12,21,25,29,33,42,46,51,55,63,67,72,76,80,89,93,97,101,110,114,119,123,131,135,140,144,153,157,161,165,169,178,182,187,191,199,203,208,212,221,225,229,233,242,246,250,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255],g:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,8,16,21,25,29,38,42,46,51,55,63,67,72,76,84,89,93,97,106,110,114,119,127,131,135,140,144,152,157,161,165,174,178,182,187,195,199,203,208,216,220,225,229,233,242,246,250,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,250,242,238,233,229,221,216,212,208,199,195,191,187,178,174,170,165,161,153,148,144,140,131,127,123,119,110,106,102,97,89,85,80,76,72,63,59,55,51,42,38,34,29,21,17,12,8,0],b:[0,3,7,10,14,19,23,28,32,38,43,48,53,59,63,68,72,77,81,86,91,95,100,104,109,113,118,122,127,132,136,141,145,150,154,159,163,168,173,177,182,186,191,195,200,204,209,214,218,223,227,232,236,241,245,250,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,246,242,238,233,225,220,216,212,203,199,195,191,187,178,174,170,165,157,152,148,144,135,131,127,123,114,110,106,102,97,89,84,80,76,67,63,59,55,46,42,38,34,25,21,16,12,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},ColorMap.MAPS_CUSTOM=["rainbow","eosb"],ColorMap.MAPS_NAMES=["native","grayscale"].concat(ColorMap.MAPS_CUSTOM),ColorMap.prototype.reverse=function(t){this.reversed=t?t:!this.reversed,this.sig=this.signature(),this.view.requestRedraw()
-},ColorMap.prototype.signature=function(){var t=this.map;return this.reversed&&(t+=" reversed"),t},ColorMap.prototype.update=function(t){this.map=t,this.sig=this.signature(),this.view.requestRedraw()},ColorMap.prototype.apply=function(t){if("native"==this.sig)return t;if(t.cmSig==this.sig)return t.cmImg;var e=document.createElement("canvas");e.width=t.width,e.height=t.height;var i=e.getContext("2d");i.drawImage(t,0,0);var r,o,s,a=i.getImageData(0,0,e.width,e.height),n=a.data,h=n.length,l=3;"grayscale"==this.map?l=1:ColorMap.MAPS_CUSTOM.indexOf(this.map)>=0&&(l=2);for(var c=0;h>c;c+=4){switch(l){case 1:r=o=s=AladinUtils.myRound((n[c]+n[c+1]+n[c+2])/3);break;case 2:this.reversed?(r=ColorMap.MAPS[this.map].r[255-n[c]],o=ColorMap.MAPS[this.map].g[255-n[c+1]],s=ColorMap.MAPS[this.map].b[255-n[c+2]]):(r=ColorMap.MAPS[this.map].r[n[c]],o=ColorMap.MAPS[this.map].g[n[c+1]],s=ColorMap.MAPS[this.map].b[n[c+2]]);break;default:r=n[c],o=n[c+1],s=n[c+2]}2!=l&&this.reversed&&(r=255-r,o=255-o,s=255-s),n[c]=r,n[c+1]=o,n[c+2]=s}return a.data=n,i.putImageData(a,0,0),t.cmSig=this.sig,t.cmImg=e,t.cmImg},ColorMap}(),HpxImageSurvey=function(){function t(t,e,i,r,o,s,a,n,h,l,c,u,d,p,f,g,v,m){g=g||0,v=v||0,m||(m=!1),h+=g,c+=g,d+=g,l+=v,u+=v,p+=v;var y=(i+o+a)/3,w=(r+s+n)/3,y=(i+o+a)/3,w=(r+s+n)/3;t.save(),f&&(t.globalAlpha=f);var C=.01;m&&(C=.01),t.beginPath(),t.moveTo((1+C)*i-y*C,(1+C)*r-w*C),t.lineTo((1+C)*o-y*C,(1+C)*s-w*C),t.lineTo((1+C)*a-y*C,(1+C)*n-w*C),t.closePath(),t.clip(),m&&(C=.03,i=(1+C)*i-y*C,r=(1+C)*r-w*C,o=(1+C)*o-y*C,s=(1+C)*s-w*C,a=(1+C)*a-y*C,n=(1+C)*n-w*C);var S=1/(h*(p-u)-c*p+d*u+(c-d)*l);t.transform(-(l*(a-o)-u*a+p*o+(u-p)*i)*S,(u*n+l*(s-n)-p*s+(p-u)*r)*S,(h*(a-o)-c*a+d*o+(c-d)*i)*S,-(c*n+h*(s-n)-d*s+(d-c)*r)*S,(h*(p*o-u*a)+l*(c*a-d*o)+(d*u-c*p)*i)*S,(h*(p*s-u*n)+l*(c*n-d*s)+(d*u-c*p)*r)*S),t.drawImage(e,0,0),t.restore()}var e=function(t,i,r,o,s,a){this.id=t,this.name=i,this.rootUrl="/"===r.slice(-1)?r.substr(0,r.length-1):r,a=a||{},this.imgFormat=a.imgFormat||"jpg",this.minOrder=a.minOrder||null,this.cooFrame=CooFrameEnum.fromString(o,CooFrameEnum.J2000),this.rootUrl.indexOf("/glimpse360/aladin/data")>=0&&(this.cooFrame=CooFrameEnum.J2000),this.maxOrder=s,this.allskyTexture=null,this.alpha=0,this.allskyTextureSize=0,this.lastUpdateDateNeededTiles=0;for(var n=!1,h=0;e.SURVEYS.length>h;h++)e.SURVEYS[h].id==this.id&&(n=!0);n||e.SURVEYS.push({id:this.id,url:this.rootUrl,name:this.name,maxOrder:this.maxOrder,frame:this.cooFrame}),e.SURVEYS_OBJECTS[this.id]=this};e.UPDATE_NEEDED_TILES_DELAY=1e3,e.prototype.init=function(t,e){this.view=t,this.cm||(this.cm=new ColorMap(this.view)),this.tileBuffer=this.view.tileBuffer,this.useCors=!1;var i=this;$.support.cors?$.ajax({type:"GET",url:this.rootUrl+"/properties",contentType:"text/plain",xhrFields:{},headers:{},success:function(){i.useCors=!0,i.retrieveAllskyTextures(),e&&e()},error:function(){i.retrieveAllskyTextures(),e&&e()}}):(this.retrieveAllskyTextures(),e())},e.DEFAULT_SURVEY_ID="P/DSS2/color",e.SURVEYS_OBJECTS={},e.SURVEYS=[{id:"P/2MASS/color",url:"http://alasky.u-strasbg.fr/2MASS/Color",name:"2MASS colored",maxOrder:9,frame:"equatorial",format:"jpeg"},{id:"P/DSS2/color",url:"http://alasky.u-strasbg.fr/DSS/DSSColor",name:"DSS colored",maxOrder:9,frame:"equatorial",format:"jpeg"},{id:"P/DSS2/red",url:"http://alasky.u-strasbg.fr/DSS/DSS2Merged",name:"DSS2 Red (F+R)",maxOrder:9,frame:"equatorial",format:"jpeg fits"},{id:"P/Fermi/color",url:"http://alasky.u-strasbg.fr/Fermi/Color",name:"Fermi color",maxOrder:3,frame:"equatorial",format:"jpeg"},{id:"P/Finkbeiner",url:"http://alasky.u-strasbg.fr/FinkbeinerHalpha",maxOrder:3,frame:"galactic",format:"jpeg fits",name:"Halpha"},{id:"P/GALEXGR6/AIS/color",url:"http://alasky.u-strasbg.fr/GALEX/GR6-02-Color",name:"GALEX Allsky Imaging Survey colored",maxOrder:8,frame:"equatorial",format:"jpeg"},{id:"P/IRIS/color",url:"http://alasky.u-strasbg.fr/IRISColor",name:"IRIS colored",maxOrder:3,frame:"galactic",format:"jpeg"},{id:"P/Mellinger/color",url:"http://alasky.u-strasbg.fr/MellingerRGB",name:"Mellinger colored",maxOrder:4,frame:"galactic",format:"jpeg"},{id:"P/SDSS9/color",url:"http://alasky.u-strasbg.fr/SDSS/DR9/color",name:"SDSS9 colored",maxOrder:10,frame:"equatorial",format:"jpeg"},{id:"P/SPITZER/color",url:"http://alasky.u-strasbg.fr/SpitzerI1I2I4color",name:"IRAC color I1,I2,I4 - (GLIMPSE, SAGE, SAGE-SMC, SINGS)",maxOrder:9,frame:"galactic",format:"jpeg"},{id:"P/VTSS/Ha",url:"http://alasky.u-strasbg.fr/VTSS/Ha",maxOrder:3,frame:"galactic",format:"png jpeg fits",name:"VTSS-Ha"},{id:"P/XMM/EPIC",url:"http://saada.u-strasbg.fr/xmmallsky",name:"XMM-Newton stacked EPIC images (no phot. normalization)",maxOrder:7,frame:"equatorial",format:"png jpeg fits"},{id:"P/XMM/PN/color",url:"http://saada.unistra.fr/xmmpnsky",name:"XMM PN colored",maxOrder:7,frame:"equatorial",format:"png jpeg"},{id:"P/allWISE/color",url:"http://alasky.u-strasbg.fr/AllWISE/RGB-W4-W2-W1/",name:"AllWISE color",maxOrder:8,frame:"equatorial",format:"jpeg"},{id:"P/GLIMPSE360",url:"http://www.spitzer.caltech.edu/glimpse360/aladin/data",name:"GLIMPSE360",maxOrder:9,frame:"equatorial",format:"jpeg"}],e.getAvailableSurveys=function(){return e.SURVEYS},e.getSurveyInfoFromId=function(t){for(var i=e.getAvailableSurveys(),r=0;i.length>r;r++)if(i[r].id==t)return i[r];return null},e.getSurveyFromId=function(t){if(e.SURVEYS_OBJECTS[t])return e.SURVEYS_OBJECTS[t];var i=e.getSurveyInfoFromId(t);return i?new e(i.id,i.name,i.url,i.frame,i.maxOrder):null},e.prototype.getTileURL=function(t,e){var i=1e4*Math.floor(e/1e4);return this.rootUrl+"/"+"Norder"+t+"/Dir"+i+"/Npix"+e+"."+this.imgFormat},e.prototype.retrieveAllskyTextures=function(){var t=new Image;this.useCors&&(t.crossOrigin="anonymous");var e=this;t.onload=function(){e.allskyTextureSize=t.width/27,e.allskyTexture=t,e.view.requestRedraw()},t.src=this.rootUrl+"/Norder3/Allsky."+this.imgFormat},e.prototype.redrawAllsky=function(t,e,i){if(!(this.view.curNorder>6)&&this.allskyTexture)for(var r,o,s,a=0,n=0,h=e.length;h>n;n++)if(r=e[n],s=r.ipix,this.allskyTexture&&Tile.isImageOk(this.allskyTexture)){var l=this.allskyTextureSize*Math.floor(s/27),c=this.allskyTextureSize*(s-27*Math.floor(s/27));if(i>40){a=.02,a=0,o={x:(r[0].vx+r[2].vx)/2,y:(r[0].vy+r[2].vy)/2};for(var u=0;4>u;u++){var d={x:r[u].vx-o.x,y:r[u].vy-o.y};r[u].vx+=a*d.x,r[u].vy+=a*d.y}}this.drawOneTile(t,this.allskyTexture,r,this.allskyTextureSize,null,c,l,!0)}},e.prototype.getColorMap=function(){return this.cm};var i=!0;return e.prototype.redrawHighres=function(t,r,o){if(0!=r.length){i=!i;var s,a,n,h,l,c,u,d,p=(new Date).getTime(),f=p-this.lastUpdateDateNeededTiles>e.UPDATE_NEEDED_TILES_DELAY,g=o-1,v=[],m=[],y={},w=!1,C=[],S=[];if(f){var x=[(r[0][0].vx+r[0][1].vx)/2,(r[0][0].vy+r[0][1].vy)/2],M=r.sort(function(t,e){var i=[(t[0].vx+t[2].vx)/2,(t[0].vy+t[2].vy)/2],r=[(e[0].vx+e[2].vx)/2,(e[0].vy+e[2].vy)/2],o=(i[0]-x[0])*(i[0]-x[0])+(i[1]-x[1])*(i[1]-x[1]),s=(r[0]-x[0])*(r[0]-x[0])+(r[1]-x[1])*(r[1]-x[1]);return o-s});r=M}for(var b=0,T=r.length;T>b;b++)if(l=r[b],d=l.ipix,u=~~(d/4),h=this.getTileURL(g,u),f&&g>=3&&(n=this.tileBuffer.addTile(h),n&&S.push({img:n.img,url:h})),a=this.getTileURL(o,d),s=this.tileBuffer.getTile(a))Tile.isImageOk(s.img)?v.push({img:s.img,corners:l}):(w=!0,f&&!s.img.dlError&&C.push({img:s.img,url:a}),g>=3&&!y[u]&&(n=this.tileBuffer.getTile(h),n&&Tile.isImageOk(n.img)&&(c=this.view.getPositionsInView(u,g),c&&m.push({img:n.img,corners:c,ipix:u})),y[u]=1));else{if(w=!0,f){var s=this.tileBuffer.addTile(a);s&&C.push({img:s.img,url:a})}g>=3&&!y[u]&&(n=this.tileBuffer.getTile(h),n&&Tile.isImageOk(n.img)&&(c=this.view.getPositionsInView(u,g),c&&m.push({img:n.img,corners:c,ipix:u})),y[u]=1)}for(var b=0,T=m.length;T>b;b++)this.drawOneTile(t,m[b].img,m[b].corners,m[b].img.width);for(var b=0,T=v.length;T>b;b++){var I=null,A=v[b].img;A.fadingStart&&A.fadingEnd&&A.fadingEnd>p&&(I=.2+.8*((p-A.fadingStart)/(A.fadingEnd-A.fadingStart))),this.drawOneTile(t,A,v[b].corners,A.width,I)}if(f){for(var b=0,T=C.length;T>b;b++)this.view.downloader.requestDownload(C[b].img,C[b].url,this.useCors);for(var b=0,T=S.length;T>b;b++)this.view.downloader.requestDownload(S[b].img,S[b].url,this.useCors);this.lastUpdateDateNeededTiles=p}w&&this.view.requestRedrawAtDate(p+e.UPDATE_NEEDED_TILES_DELAY+10)}},e.prototype.drawOneTile=function(e,i,r,o,s,a,n,h){var l=this.useCors?this.cm.apply(i):i;t(e,l,r[0].vx,r[0].vy,r[1].vx,r[1].vy,r[3].vx,r[3].vy,o-1,o-1,o-1,0,0,o-1,s,a,n,h),t(e,l,r[1].vx,r[1].vy,r[3].vx,r[3].vy,r[2].vx,r[2].vy,o-1,0,0,o-1,0,0,s,a,n,h)},e.prototype.setAlpha=function(t){t=+t,this.alpha=Math.max(0,Math.min(t,1)),this.view.requestRedraw()},e.prototype.getAlpha=function(){return this.alpha},e}(),HealpixGrid=function(){var t=function(){};return t.prototype.redraw=function(t,e,i,r){t.lineWidth=1,t.strokeStyle="rgb(150,150,220)",t.beginPath();for(var o,s=0,a=e.length;a>s;s++)o=e[s],ipix=o.ipix,t.moveTo(o[0].vx,o[0].vy),t.lineTo(o[1].vx,o[1].vy),t.lineTo(o[2].vx,o[2].vy);t.stroke(),t.strokeStyle="#FFDDDD",t.beginPath();for(var s=0,a=e.length;a>s;s++)o=e[s],ipix=o.ipix,t.strokeText(r+"/"+ipix,(o[0].vx+o[2].vx)/2,(o[0].vy+o[2].vy)/2);t.stroke()},t}(),Location=function(){return Location=function(t){this.div=$(t)},Location.prototype.update=function(t,e,i){var r=new Coo(t,e,7);i==CooFrameEnum.J2000?this.div.html(r.format("s/")):this.div.html(r.format("d/"))},Location}(),View=function(){function t(e,i,r,o,s){this.aladin=e,this.options=e.options,this.aladinDiv=this.aladin.aladinDiv,this.popup=new Popup(this.aladinDiv),this.createCanvases(),this.location=i,this.fovDiv=r,this.mustClearCatalog=!0,this.mustRedrawReticle=!0,this.mode=t.PAN,this.minFOV=this.maxFOV=null,this.healpixGrid=new HealpixGrid(this.imageCanvas),this.cooFrame=o?o:CooFrameEnum.GAL;var a,n;a=n=0,this.projectionMethod=ProjectionEnum.SIN,this.projection=new Projection(a,n),this.projection.setProjection(this.projectionMethod),this.zoomLevel=0,this.zoomFactor=this.computeZoomFactor(this.zoomLevel),this.viewCenter={lon:a,lat:n},s&&this.setZoom(s),this.imageSurvey=null,this.catalogs=[],this.overlays=[],this.mocs=[],this.tileBuffer=new TileBuffer,this.fixLayoutDimensions(),this.curNorder=1,this.realNorder=1,this.curOverlayNorder=1,this.dragging=!1,this.dragx=null,this.dragy=null,this.needRedraw=!0,this.downloader=new Downloader(this),this.flagForceRedraw=!1,this.fadingLatestUpdate=null,this.dateRequestRedraw=null,this.showGrid=!1,init(this),this.resizeTimer=null;var h=this;$(window).resize(function(){clearTimeout(h.resizeTimer),h.resizeTimer=setTimeout(function(){h.fixLayoutDimensions(h)},100)})}function e(t,e,i,r){if(t.projection){var o,s=AladinUtils.viewToXy(e,i,t.width,t.height,t.largestDim,t.zoomFactor);try{o=t.projection.unproject(s.x,s.y)}catch(a){}o&&t.location.update(o.ra,o.dec,t.cooFrame,r)}}t.PAN=0,t.SELECT=1,t.DRAW_SOURCES_WHILE_DRAGGING=!0,t.DRAW_MOCS_WHILE_DRAGGING=!0,t.prototype.createCanvases=function(){var t=$(this.aladinDiv);t.find(".aladin-imageCanvas").remove(),t.find(".aladin-catalogCanvas").remove(),t.find(".aladin-reticleCanvas").remove(),this.imageCanvas=$("<canvas class='aladin-imageCanvas'></canvas>").appendTo(this.aladinDiv)[0],this.catalogCanvas=$("<canvas class='aladin-catalogCanvas'></canvas>").appendTo(this.aladinDiv)[0],this.reticleCanvas=$("<canvas class='aladin-reticleCanvas'></canvas>").appendTo(this.aladinDiv)[0]},t.prototype.fixLayoutDimensions=function(){Utils.cssScale=void 0,this.width=$(this.aladinDiv).width(),this.height=$(this.aladinDiv).height(),this.width=Math.max(this.width,1),this.height=Math.max(this.height,1),this.cx=this.width/2,this.cy=this.height/2,this.largestDim=Math.max(this.width,this.height),this.smallestDim=Math.min(this.width,this.height),this.ratio=this.largestDim/this.smallestDim,this.mouseMoveIncrement=160/this.largestDim,this.imageCtx=this.imageCanvas.getContext("2d"),this.catalogCtx=this.catalogCanvas.getContext("2d"),this.reticleCtx=this.reticleCanvas.getContext("2d"),this.imageCtx.canvas.width=this.width,this.catalogCtx.canvas.width=this.width,this.reticleCtx.canvas.width=this.width,this.imageCtx.canvas.height=this.height,this.catalogCtx.canvas.height=this.height,this.reticleCtx.canvas.height=this.height,this.computeNorder(),this.requestRedraw()},t.prototype.setMode=function(e){this.mode=e,this.mode==t.SELECT?this.setCursor("crosshair"):this.setCursor("default")},t.prototype.setCursor=function(t){this.reticleCanvas.style.cursor!=t&&(this.reticleCanvas.style.cursor=t)},t.prototype.getCanvasDataURL=function(t){t=t||"image/png";var e=document.createElement("canvas");e.width=this.width,e.height=this.height;var i=e.getContext("2d");return i.drawImage(this.imageCanvas,0,0),i.drawImage(this.catalogCanvas,0,0),i.drawImage(this.reticleCanvas,0,0),e.toDataURL(t)},computeFov=function(t){var e=doComputeFov(t,t.zoomFactor);return t.mouseMoveIncrement=e/t.imageCanvas.width,e},doComputeFov=function(t,e){if(1>t.zoomFactor)fov=180;else{var i=AladinUtils.viewToXy(0,t.cy,t.width,t.height,t.largestDim,e),r=t.projection.unproject(i.x,i.y),o=AladinUtils.viewToXy(t.imageCanvas.width-1,t.cy,t.width,t.height,t.largestDim,e),s=t.projection.unproject(o.x,o.y);fov=new Coo(r.ra,r.dec).distance(new Coo(s.ra,s.dec))}return fov},updateFovDiv=function(t){if(isNaN(t.fov))return t.fovDiv.html("FoV:"),void 0;var e;e=t.fov>1?Math.round(100*t.fov)/100+"°":60*t.fov>1?Math.round(100*60*t.fov)/100+"'":Math.round(100*3600*t.fov)/100+'"',t.fovDiv.html("FoV: "+e)},createListeners=function(i){var r=!1;"ontouchstart"in window&&(r=!0),onDblClick=function(t){var e=i.imageCanvas.relMouseCoords(t),r=AladinUtils.viewToXy(e.x,e.y,i.width,i.height,i.largestDim,i.zoomFactor);try{var o=i.projection.unproject(r.x,r.y)}catch(s){return}radec=[],radec=i.cooFrame==CooFrameEnum.GAL?CooConversion.GalacticToJ2000([o.ra,o.dec]):[o.ra,o.dec],i.pointTo(radec[0],radec[1])},r||$(i.reticleCanvas).dblclick(onDblClick),$(i.reticleCanvas).bind("mousedown touchstart",function(e){var r=i.imageCanvas.relMouseCoords(e);return e.originalEvent&&e.originalEvent.targetTouches?(i.dragx=e.originalEvent.targetTouches[0].clientX,i.dragy=e.originalEvent.targetTouches[0].clientY):(i.dragx=r.x,i.dragy=r.y),i.dragging=!0,i.mode==t.PAN?i.setCursor("move"):i.mode==t.SELECT&&(i.selectStartCoo={x:i.dragx,y:i.dragy}),!1});var o;$(i.reticleCanvas).bind("mouseup mouseout touchend",function(e){if(i.mode==t.SELECT&&i.dragging&&i.aladin.fire("selectend",i.getObjectsInBBox(i.selectStartCoo.x,i.selectStartCoo.y,i.dragx-i.selectStartCoo.x,i.dragy-i.selectStartCoo.y)),i.dragging&&(i.setCursor("default"),i.dragging=!1),i.mustClearCatalog=!0,i.mustRedrawReticle=!0,i.dragx=i.dragy=null,"mouseout"===e.type)return i.requestRedraw(),void 0;var r=i.imageCanvas.relMouseCoords(e),s=i.closestObjects(r.x,r.y,5);if(s){var a=s[0];a.marker?(i.popup.setTitle(a.popupTitle),i.popup.setText(a.popupDesc),i.popup.setSource(a),i.popup.show()):(i.aladin.objClickedFunction?i.aladin.objClickedFunction(a):(o&&o.actionOtherObjectClicked(),a.actionClicked()),o=a)}else o&&(i.aladin.measurementTable.hide(),o.actionOtherObjectClicked(),o=null,i.aladin.objClickedFunction&&i.aladin.objClickedFunction(null));i.refreshProgressiveCats(),i.requestRedraw()});var s;$(i.reticleCanvas).bind("mousemove touchmove",function(o){o.preventDefault();var a=i.imageCanvas.relMouseCoords(o);if(!i.dragging||r){if(e(i,a.x,a.y,!0),!i.dragging&&!i.mode==t.SELECT){var n=i.closestObjects(a.x,a.y,5);n?(i.setCursor("pointer"),i.aladin.objHoveredFunction&&n[0]!=s&&i.aladin.objHoveredFunction(n[0]),s=n[0]):(i.setCursor("default"),i.aladin.objHoveredFunction&&s&&(s=null,i.aladin.objHoveredFunction(null)))}if(!r)return}var h,l,c,u;if(o.originalEvent&&o.originalEvent.targetTouches){h=o.originalEvent.targetTouches[0].clientX-i.dragx,l=o.originalEvent.targetTouches[0].clientY-i.dragy;var d=AladinUtils.viewToXy(o.originalEvent.targetTouches[0].clientX,o.originalEvent.targetTouches[0].clientY,i.width,i.height,i.largestDim,i.zoomFactor),p=AladinUtils.viewToXy(i.dragx,i.dragy,i.width,i.height,i.largestDim,i.zoomFactor);c=i.projection.unproject(d.x,d.y),u=i.projection.unproject(p.x,p.y)}else{h=a.x-i.dragx,l=a.y-i.dragy;var d=AladinUtils.viewToXy(a.x,a.y,i.width,i.height,i.largestDim,i.zoomFactor),p=AladinUtils.viewToXy(i.dragx,i.dragy,i.width,i.height,i.largestDim,i.zoomFactor);c=i.projection.unproject(d.x,d.y),u=i.projection.unproject(p.x,p.y)}return o.originalEvent&&o.originalEvent.targetTouches?(i.dragx=o.originalEvent.targetTouches[0].clientX,i.dragy=o.originalEvent.targetTouches[0].clientY):(i.dragx=a.x,i.dragy=a.y),i.mode==t.SELECT?(i.requestRedraw(),void 0):(i.viewCenter.lon+=u.ra-c.ra,i.viewCenter.lat+=u.dec-c.dec,i.viewCenter.lat>90?i.viewCenter.lat=90:-90>i.viewCenter.lat&&(i.viewCenter.lat=-90),0>i.viewCenter.lon?i.viewCenter.lon=360+i.viewCenter.lon:i.viewCenter.lon>360&&(i.viewCenter.lon=i.viewCenter.lon%360),i.requestRedraw(),void 0)}),$(i.aladinDiv).onselectstart=function(){return!1},$(i.reticleCanvas).on("mousewheel",function(t){t.preventDefault(),t.stopPropagation();var e=i.zoomLevel,r=t.deltaY;return r>0?e+=1:e-=1,i.setZoomLevel(e),!1})},init=function(t){var e=new Stats;e.domElement.style.top="50px",$("#aladin-statsDiv").length>0&&$("#aladin-statsDiv")[0].appendChild(e.domElement),t.stats=e,createListeners(t),t.displayHpxGrid=!1,t.displaySurvey=!0,t.displayCatalog=!1,t.displayReticle=!0,t.fov=computeFov(t),updateFovDiv(t),t.redraw()},t.prototype.requestRedrawAtDate=function(t){this.dateRequestDraw=t},t.prototype.redraw=function(){var e=this.needRedraw;requestAnimFrame(this.redraw.bind(this));var i=(new Date).getTime();if(this.dateRequestDraw&&i>this.dateRequestDraw)this.dateRequestDraw=null;else if(!this.needRedraw){if(!this.flagForceRedraw)return;this.flagForceRedraw=!1}this.stats.update();var r=this.imageCtx;r.clearRect(0,0,this.imageCanvas.width,this.imageCanvas.height),this.projectionMethod==ProjectionEnum.SIN&&(this.fov>80?(r.fillStyle="rgb(0,0,0)",r.beginPath(),r.arc(this.cx,this.cy,this.cx*this.zoomFactor,0,2*Math.PI,!0),r.fill()):60>this.fov&&(r.fillStyle="rgb(0,0,0)",r.fillRect(0,0,this.imageCanvas.width,this.imageCanvas.height))),this.projection?this.projection.setCenter(this.viewCenter.lon,this.viewCenter.lat):this.projection=new Projection(this.viewCenter.lon,this.viewCenter.lat),this.projection.setProjection(this.projectionMethod);var o=this.getVisibleCells(3),s=null;if(this.curNorder>=3&&(s=3==this.curNorder?o:this.getVisibleCells(this.curNorder)),this.imageSurvey&&this.imageSurvey.isReady&&this.displaySurvey&&(this.imageSurvey.redrawAllsky(r,o,this.fov,this.curNorder),this.curNorder>=3&&this.imageSurvey.redrawHighres(r,s,this.curNorder)),this.overlayImageSurvey&&this.overlayImageSurvey.isReady){if(r.globalAlpha=this.overlayImageSurvey.getAlpha(),this.fov>50&&this.overlayImageSurvey.redrawAllsky(r,o,this.fov,this.curOverlayNorder),this.curOverlayNorder>=3){var a=Math.min(this.curOverlayNorder,this.overlayImageSurvey.maxOrder);a!=this.curNorder&&(s=this.getVisibleCells(a)),this.overlayImageSurvey.redrawHighres(r,s,a)}r.globalAlpha=1}this.displayHpxGrid&&(s&&this.curNorder>3?this.healpixGrid.redraw(r,s,this.fov,this.curNorder):this.healpixGrid.redraw(r,o,this.fov,3)),this.showGrid&&(null==this.cooGrid&&(this.cooGrid=new CooGrid),this.cooGrid.redraw(r,this.projection,this.cooFrame,this.width,this.height,this.largestDim,this.zoomFactor,this.fov));var n=this.catalogCtx,h=!1;if(this.mustClearCatalog&&(n.clearRect(0,0,this.width,this.height),h=!0,this.mustClearCatalog=!1),this.catalogs&&this.catalogs.length>0&&this.displayCatalog&&(!this.dragging||t.DRAW_SOURCES_WHILE_DRAGGING)){h||(n.clearRect(0,0,this.width,this.height),h=!0);for(var l=0;this.catalogs.length>l;l++)this.catalogs[l].draw(n,this.projection,this.cooFrame,this.width,this.height,this.largestDim,this.zoomFactor)}var c=this.catalogCtx;if(this.overlays&&this.overlays.length>0&&(!this.dragging||t.DRAW_SOURCES_WHILE_DRAGGING)){h||(n.clearRect(0,0,this.width,this.height),h=!0);for(var l=0;this.overlays.length>l;l++)this.overlays[l].draw(c,this.projection,this.cooFrame,this.width,this.height,this.largestDim,this.zoomFactor)}var u=this.catalogCtx;if(this.mocs&&this.mocs.length>0&&(!this.dragging||t.DRAW_MOCS_WHILE_DRAGGING)){h||(n.clearRect(0,0,this.width,this.height),h=!0);for(var l=0;this.mocs.length>l;l++)this.mocs[l].draw(u,this.projection,this.cooFrame,this.width,this.height,this.largestDim,this.zoomFactor,this.fov)}this.mode==t.SELECT&&(mustRedrawReticle=!0);var d=this.reticleCtx;if((this.mustRedrawReticle||this.mode==t.SELECT)&&d.clearRect(0,0,this.width,this.height),this.displayReticle){if(!this.reticleCache){var p=document.createElement("canvas"),f=this.options.reticleSize;p.width=f,p.height=f;var g=p.getContext("2d");g.lineWidth=2,g.strokeStyle=this.options.reticleColor,g.beginPath(),g.moveTo(f/2,f/2+(f/2-1)),g.lineTo(f/2,f/2+2),g.moveTo(f/2,f/2-(f/2-1)),g.lineTo(f/2,f/2-2),g.moveTo(f/2+(f/2-1),f/2),g.lineTo(f/2+2,f/2),g.moveTo(f/2-(f/2-1),f/2),g.lineTo(f/2-2,f/2),g.stroke(),this.reticleCache=p}d.drawImage(this.reticleCache,this.width/2-this.reticleCache.width/2,this.height/2-this.reticleCache.height/2),this.mustRedrawReticle=!1}if(this.mode==t.SELECT&&this.dragging){d.fillStyle="rgba(100, 240, 110, 0.25)";var v=this.dragx-this.selectStartCoo.x,m=this.dragy-this.selectStartCoo.y;d.fillRect(this.selectStartCoo.x,this.selectStartCoo.y,v,m)}e==this.needRedraw&&(this.needRedraw=!1),this.dragging||this.updateObjectsLookup()},t.prototype.forceRedraw=function(){this.flagForceRedraw=!0},t.prototype.refreshProgressiveCats=function(){if(this.catalogs)for(var t=0;this.catalogs.length>t;t++)"progressivecat"==this.catalogs[t].type&&this.catalogs[t].loadNeededTiles()},t.prototype.getVisiblePixList=function(t,e){var i,r=Math.pow(2,t),o=HealpixIndex.nside2Npix(r);if(this.fov>80){i=[];for(var s=0;o>s;s++)i.push(s)}else{var a=new HealpixIndex(r);a.init();var n=new SpatialVector,h=AladinUtils.viewToXy(this.cx,this.cy,this.width,this.height,this.largestDim,this.zoomFactor),l=this.projection.unproject(h.x,h.y),c=[];e&&e!=this.cooFrame?e==CooFrameEnum.J2000?c=CooConversion.GalacticToJ2000([l.ra,l.dec]):e==CooFrameEnum.GAL&&(c=CooConversion.J2000ToGalactic([l.ra,l.dec])):c=[l.ra,l.dec],n.set(c[0],c[1]);var u=.5*this.fov*this.ratio;u*=this.fov>60?1.6:this.fov>12?1.45:1.1,i=a.queryDisc(n,u*Math.PI/180,!0,!0);var d=Utils.radecToPolar(c[0],c[1]);ipixCenter=a.ang2pix_nest(d.theta,d.phi),i.unshift(ipixCenter)}return i},t.prototype.getVisibleCells=function(t,e){!e&&this.imageSurvey&&(e=this.imageSurvey.cooFrame);var i,r=[],o=[],s=new SpatialVector,a=Math.pow(2,t),n=HealpixIndex.nside2Npix(a),h=null;if(this.fov>80){i=[];for(var l=0;n>l;l++)i.push(l)}else{var c=new HealpixIndex(a);c.init();var u=new SpatialVector,d=AladinUtils.viewToXy(this.cx,this.cy,this.width,this.height,this.largestDim,this.zoomFactor),p=this.projection.unproject(d.x,d.y),f=[];e&&e!=this.cooFrame?e==CooFrameEnum.J2000?f=CooConversion.GalacticToJ2000([p.ra,p.dec]):e==CooFrameEnum.GAL&&(f=CooConversion.J2000ToGalactic([p.ra,p.dec])):f=[p.ra,p.dec],u.set(f[0],f[1]);var g=.5*this.fov*this.ratio;g*=this.fov>60?1.6:this.fov>12?1.45:1.1,i=c.queryDisc(u,g*Math.PI/180,!0,!0);var v=Utils.radecToPolar(f[0],f[1]);h=c.ang2pix_nest(v.theta,v.phi),i.unshift(h)}for(var l,m,y,w=0,C=i.length;C>w;w++)if(l=i[w],!(l==h&&w>0)){var S=[];corners=HealpixCache.corners_nest(l,a);for(var x=0;4>x;x++){if(s.setXYZ(corners[x].x,corners[x].y,corners[x].z),e&&e!=this.cooFrame){if(e==CooFrameEnum.J2000){var p=CooConversion.J2000ToGalactic([s.ra(),s.dec()]);m=p[0],y=p[1]}else if(e==CooFrameEnum.GAL){var p=CooConversion.GalacticToJ2000([s.ra(),s.dec()]);m=p[0],y=p[1]}}else m=s.ra(),y=s.dec();o[x]=this.projection.project(m,y)}if(null!=o[0]&&null!=o[1]&&null!=o[2]&&null!=o[3]){for(var x=0;4>x;x++)S[x]=AladinUtils.xyToView(o[x].X,o[x].Y,this.width,this.height,this.largestDim,this.zoomFactor);if(!(0>S[0].vx&&0>S[1].vx&&0>S[2].vx&&0>S[3].vx||0>S[0].vy&&0>S[1].vy&&0>S[2].vy&&0>S[3].vy||S[0].vx>=this.width&&S[1].vx>=this.width&&S[2].vx>=this.width&&S[3].vx>=this.width||S[0].vy>=this.height&&S[1].vy>=this.height&&S[2].vy>=this.height&&S[3].vy>=this.height)){if(this.projection.PROJECTION==ProjectionEnum.AITOFF){var M=S[0].vx-S[2].vx,b=S[0].vy-S[2].vy,T=Math.sqrt(M*M+b*b);if(T>this.largestDim/5)continue;if(M=S[1].vx-S[3].vx,b=S[1].vy-S[3].vy,T=Math.sqrt(M*M+b*b),T>this.largestDim/5)continue}S.ipix=l,r.push(S)}}}return r},t.prototype.getPositionsInView=function(t,e){for(var i,r,o=[],s=new SpatialVector,a=Math.pow(2,e),n=[],h=HealpixCache.corners_nest(t,a),l=0;4>l;l++){if(s.setXYZ(h[l].x,h[l].y,h[l].z),this.imageSurvey&&this.imageSurvey.cooFrame!=this.cooFrame){if(this.imageSurvey.cooFrame==CooFrameEnum.J2000){var c=CooConversion.J2000ToGalactic([s.ra(),s.dec()]);i=c[0],r=c[1]}else if(this.imageSurvey.cooFrame==CooFrameEnum.GAL){var c=CooConversion.GalacticToJ2000([s.ra(),s.dec()]);i=c[0],r=c[1]}}else i=s.ra(),r=s.dec();o[l]=this.projection.project(i,r)}if(null==o[0]||null==o[1]||null==o[2]||null==o[3])return null;for(var l=0;4>l;l++)n[l]=AladinUtils.xyToView(o[l].X,o[l].Y,this.width,this.height,this.largestDim,this.zoomFactor);return n},t.prototype.computeZoomFactor=function(t){return t>0?AladinUtils.getZoomFactorForAngle(180/Math.pow(1.15,t),this.projectionMethod):1+.1*t},t.prototype.setZoom=function(t){if(!(0>t||t>180)){var e=Math.log(180/t)/Math.log(1.15);this.setZoomLevel(e)}},t.prototype.setShowGrid=function(t){this.showGrid=t,this.requestRedraw()},t.prototype.setZoomLevel=function(t){if(this.minFOV||this.maxFOV){var e=doComputeFov(this,this.computeZoomFactor(Math.max(-2,t)));if(this.maxFOV&&e>this.maxFOV||this.minFOV&&this.minFOV>e)return}if(this.zoomLevel=this.projectionMethod==ProjectionEnum.SIN?this.aladin.options.allowFullZoomout===!0?this.width/this.height>2?Math.max(-7,t):.5>this.width/this.height?Math.max(-2,t):Math.max(-6,t):Math.max(-2,t):Math.max(-7,t),this.zoomFactor=this.computeZoomFactor(this.zoomLevel),this.fov=computeFov(this),updateFovDiv(this),this.computeNorder(),this.forceRedraw(),this.requestRedraw(),!this.debounceProgCatOnZoom){var i=this;this.debounceProgCatOnZoom=Utils.debounce(function(){i.refreshProgressiveCats()},300)}this.debounceProgCatOnZoom()},t.prototype.computeNorder=function(){var t=this.fov/this.largestDim,e=512,i=HealpixIndex.calculateNSide(3600*e*t),r=Math.log(i)/Math.log(2);r=Math.max(r,1),this.realNorder=r,50>=this.fov&&2>=r&&(r=3),this.imageSurvey&&2>=r&&this.imageSurvey.minOrder>2&&(r=this.imageSurvey.minOrder);var o=r;this.imageSurvey&&r>this.imageSurvey.maxOrder&&(r=this.imageSurvey.maxOrder),this.overlayImageSurvey&&o>this.overlayImageSurvey.maxOrder&&(o=this.overlayImageSurvey.maxOrder),r>HealpixIndex.ORDER_MAX&&(r=HealpixIndex.ORDER_MAX),o>HealpixIndex.ORDER_MAX&&(o=HealpixIndex.ORDER_MAX),this.curNorder=r,this.curOverlayNorder=o},t.prototype.untaintCanvases=function(){this.createCanvases(),createListeners(this),this.fixLayoutDimensions()},t.prototype.setOverlayImageSurvey=function(t,e){if(!t)return this.overlayImageSurvey=null,this.requestRedraw(),void 0;$.support.cors&&this.overlayImageSurvey&&!this.overlayImageSurvey.useCors&&this.untaintCanvases();var i;"string"==typeof t?(i=HpxImageSurvey.getSurveyFromId(t),i||(i=HpxImageSurvey.getSurveyFromId(HpxImageSurvey.DEFAULT_SURVEY_ID))):i=t,i.isReady=!1,this.overlayImageSurvey=i;var r=this;i.init(this,function(){r.computeNorder(),i.isReady=!0,r.requestRedraw(),r.updateObjectsLookup(),e&&e()})},t.prototype.setUnknownSurveyIfNeeded=function(){i&&(this.setImageSurvey(i),i=void 0)};var i=void 0;return t.prototype.setImageSurvey=function(t,e){if(t){$.support.cors&&this.imageSurvey&&!this.imageSurvey.useCors&&this.untaintCanvases();var r;"string"==typeof t?(r=HpxImageSurvey.getSurveyFromId(t),r||(r=HpxImageSurvey.getSurveyFromId(HpxImageSurvey.DEFAULT_SURVEY_ID),i=t,console.log(i))):r=t,this.tileBuffer=new TileBuffer,r.isReady=!1,this.imageSurvey=r;var o=this;r.init(this,function(){o.computeNorder(),r.isReady=!0,o.requestRedraw(),o.updateObjectsLookup(),e&&e()})}},t.prototype.requestRedraw=function(){this.needRedraw=!0},t.prototype.changeProjection=function(t){this.projectionMethod=t,this.requestRedraw()},t.prototype.changeFrame=function(t){if(this.cooFrame=t,this.cooFrame==CooFrameEnum.GAL){var e=CooConversion.J2000ToGalactic([this.viewCenter.lon,this.viewCenter.lat]);this.viewCenter.lon=e[0],this.viewCenter.lat=e[1]}else if(this.cooFrame==CooFrameEnum.J2000){var i=CooConversion.GalacticToJ2000([this.viewCenter.lon,this.viewCenter.lat]);this.viewCenter.lon=i[0],this.viewCenter.lat=i[1]}this.requestRedraw()},t.prototype.showHealpixGrid=function(t){this.displayHpxGrid=t,this.requestRedraw()},t.prototype.showSurvey=function(t){this.displaySurvey=t,this.requestRedraw()},t.prototype.showCatalog=function(t){this.displayCatalog=t,this.displayCatalog||(this.mustClearCatalog=!0),this.requestRedraw()},t.prototype.showReticle=function(t){this.displayReticle=t,this.mustRedrawReticle=!0,this.requestRedraw()},t.prototype.pointTo=function(t,e){if(t=parseFloat(t),e=parseFloat(e),!isNaN(t)&&!isNaN(e)){if(this.cooFrame==CooFrameEnum.J2000)this.viewCenter.lon=t,this.viewCenter.lat=e;else if(this.cooFrame==CooFrameEnum.GAL){var i=CooConversion.J2000ToGalactic([t,e]);this.viewCenter.lon=i[0],this.viewCenter.lat=i[1]}this.forceRedraw(),this.requestRedraw();var r=this;setTimeout(function(){r.refreshProgressiveCats()},1e3)}},t.prototype.makeUniqLayerName=function(t){if(!this.layerNameExists(t))return t;for(var e=1;;++e){var i=t+"_"+e;if(!this.layerNameExists(i))return i}},t.prototype.layerNameExists=function(t){for(var e=this.catalogs,i=0;e.length>i;i++)if(t==e[i].name)return!0;return!1},t.prototype.removeLayers=function(){this.catalogs=[],this.overlays=[],this.requestRedraw()},t.prototype.addCatalog=function(t){t.name=this.makeUniqLayerName(t.name),this.catalogs.push(t),"catalog"==t.type?t.setView(this):"progressivecat"==t.type&&t.init(this)},t.prototype.addOverlay=function(t){this.overlays.push(t),t.setView(this)},t.prototype.addMOC=function(t){this.mocs.push(t),t.setView(this)},t.prototype.getObjectsInBBox=function(t,e,i,r){0>i&&(t+=i,i=-i),0>r&&(e+=r,r=-r);var o,s,a,n=[];if(this.catalogs)for(var h=0;this.catalogs.length>h;h++)if(o=this.catalogs[h],o.isShowing){s=o.getSources();for(var l=0;s.length>l;l++)a=s[l],a.isShowing&&a.x&&a.y&&a.x>=t&&t+i>=a.x&&a.y>=e&&e+r>=a.y&&n.push(a)}return n},t.prototype.updateObjectsLookup=function(){this.objLookup=[];var t,e,i,r,o;if(this.catalogs)for(var s=0;this.catalogs.length>s;s++)if(t=this.catalogs[s],t.isShowing){e=t.getSources();for(var a=0;e.length>a;a++)i=e[a],i.isShowing&&i.x&&i.y&&(r=i.x,o=i.y,this.objLookup[r]||(this.objLookup[r]=[]),this.objLookup[r][o]||(this.objLookup[r][o]=[]),this.objLookup[r][o].push(i))}},t.prototype.closestObjects=function(t,e,i){if(!this.objLookup)return null;for(var r,o,s=0;i>=s;s++){r=o=null;for(var a=-i;i>=a;a++)if(this.objLookup[t+a])for(var n=-i;i>=n;n++)if(this.objLookup[t+a][e+n])if(r){var h=a*a+n*n;o>h&&(o=h,r=this.objLookup[t+a][e+n])}else r=this.objLookup[t+a][e+n];if(r)return r}return null},t}(),Aladin=function(){var t=function(e,i){if(0==$(e).length)return console.log("Could not find div "+e+". Aborting creation of Aladin Lite instance"),void 0;HealpixCache.init();var r=this;if(void 0===i&&(i=this.getOptionsFromQueryString()),i=i||{},"zoom"in i){var o=i.zoom;delete i.zoom,i.fov=o}var s={};for(var a in t.DEFAULT_OPTIONS)s[a]=void 0!==i[a]?i[a]:t.DEFAULT_OPTIONS[a];for(var a in i)void 0===t.DEFAULT_OPTIONS[a]&&(s[a]=i[a]);this.options=s,this.aladinDiv=e,$(e).addClass("aladin-container");var n=CooFrameEnum.fromString(s.cooFrame,CooFrameEnum.J2000),h=n==CooFrameEnum.J2000,l=$('<div class="aladin-location">'+(s.showFrame?'<select class="aladin-frameChoice"><option value="'+CooFrameEnum.J2000+'" '+(h?'selected="selected"':"")+'>J2000</option><option value="'+CooFrameEnum.GAL+'" '+(h?"":'selected="selected"')+">GAL</option></select>":"")+'<span class="aladin-location-text"></span></div>').appendTo(e),c=$('<div class="aladin-fov"></div>').appendTo(e);s.showZoomControl&&$('<div class="aladin-zoomControl"><a href="#" class="zoomPlus" title="Zoom in">+</a><a href="#" class="zoomMinus" title="Zoom out">&ndash;</a></div>').appendTo(e),s.showFullscreenControl&&$('<div class="aladin-fullscreenControl aladin-maximize" title="Full screen"></div>').appendTo(e),this.fullScreenBtn=$(e).find(".aladin-fullscreenControl"),this.fullScreenBtn.click(function(){r.toggleFullscreen()
-}),$("<div class='aladin-logo-container'><a href='http://aladin.u-strasbg.fr/' title='Powered by Aladin Lite' target='_blank'><div class='aladin-logo'></div></a></div>").appendTo(e),this.boxes=[],this.measurementTable=new MeasurementTable(e);var u=new Location(l.find(".aladin-location-text"));if(this.view=new View(this,u,c,n,s.fov),this.view.setShowGrid(s.showCooGrid),$.ajax({url:"http://aladin.u-strasbg.fr/java/nph-aladin.pl",data:{frame:"aladinLiteDic"},method:"GET",dataType:"jsonp",success:function(t){for(var e={},i=0;t.length>i;i++)e[t[i].id]=!0;for(var i=0;HpxImageSurvey.SURVEYS.length>i;i++)e[HpxImageSurvey.SURVEYS[i].id]||t.push(HpxImageSurvey.SURVEYS[i]);HpxImageSurvey.SURVEYS=t,r.view.setUnknownSurveyIfNeeded()},error:function(){}}),s.showLayersControl){var d=$('<div class="aladin-layersControl-container" title="Manage layers"><div class="aladin-layersControl"></div></div>');d.appendTo(e);var p=$('<div class="aladin-box aladin-layerBox aladin-cb-list"></div>');p.appendTo(e),this.boxes.push(p),d.click(function(){return r.hideBoxes(),r.showLayerBox(),!1})}if(s.showGotoControl){var d=$('<div class="aladin-gotoControl-container" title="Go to position"><div class="aladin-gotoControl"></div></div>');d.appendTo(e);var f=$('<div class="aladin-box aladin-gotoBox"><a class="aladin-closeBtn">&times;</a><div style="clear: both;"></div><form class="aladin-target-form">Go to: <input type="text" placeholder="Object name/position" /></form></div>');f.appendTo(e),this.boxes.push(f);var g=f.find(".aladin-target-form input");g.on("paste keydown",function(){$(this).removeClass("aladin-unknownObject")}),d.click(function(){return r.hideBoxes(),g.val(""),g.removeClass("aladin-unknownObject"),f.show(),g.focus(),!1}),f.find(".aladin-closeBtn").click(function(){return r.hideBoxes(),!1})}if(s.showShareControl){var d=$('<div class="aladin-shareControl-container" title="Share current view"><div class="aladin-shareControl"></div></div>');d.appendTo(e);var v=$('<div class="aladin-box aladin-shareBox"><a class="aladin-closeBtn">&times;</a><div style="clear: both;"></div><b>Share</b><input type="text" class="aladin-shareInput" /></div>');v.appendTo(e),this.boxes.push(v),d.click(function(){return r.hideBoxes(),v.show(),!1}),v.find(".aladin-closeBtn").click(function(){return r.hideBoxes(),!1})}if(this.gotoObject(s.target),s.log){var m=i;m.version=t.VERSION,Logger.log("startup",m)}if(this.showReticle(s.showReticle),s.catalogUrls)for(var y=0,w=s.catalogUrls.length;w>y;y++)this.createCatalogFromVOTable(s.catalogUrls[y]);this.setImageSurvey(s.survey),this.view.showCatalog(s.showCatalog);var C=this;$(e).find(".aladin-frameChoice").change(function(){C.setFrame($(this).val())}),$("#projectionChoice").change(function(){C.setProjection($(this).val())}),$(e).find(".aladin-target-form").submit(function(){return C.gotoObject($(this).find("input").val(),function(){$(e).find(".aladin-target-form input").addClass("aladin-unknownObject")}),!1});var S=$(e).find(".zoomPlus");S.click(function(){return C.increaseZoom(),!1}),S.bind("mousedown",function(t){t.preventDefault()});var x=$(e).find(".zoomMinus");x.click(function(){return C.decreaseZoom(),!1}),x.bind("mousedown",function(t){t.preventDefault()}),s.fullScreen&&window.setTimeout(function(){r.toggleFullscreen()},1e3)};t.VERSION="2015-10-16",t.JSONP_PROXY="http://alasky.u-strasbg.fr/cgi/JSONProxy",t.DEFAULT_OPTIONS={target:"0 +0",cooFrame:"J2000",survey:"P/DSS2/color",fov:60,showReticle:!0,showZoomControl:!0,showFullscreenControl:!0,showLayersControl:!0,showGotoControl:!0,showShareControl:!1,showCatalog:!0,showFrame:!0,showCooGrid:!1,fullScreen:!1,reticleColor:"rgb(178, 50, 178)",reticleSize:22,log:!0,allowFullZoomout:!1},t.prototype.toggleFullscreen=function(){this.fullScreenBtn.toggleClass("aladin-maximize aladin-restore");var t=this.fullScreenBtn.hasClass("aladin-restore");this.fullScreenBtn.attr("title",t?"Restore original size":"Full screen"),$(this.aladinDiv).toggleClass("aladin-fullscreen"),this.view.fixLayoutDimensions()},t.prototype.updateSurveysDropdownList=function(t){t=t.sort(function(t,e){return t.order?t.order&&t.order>e.order?1:-1:t.id>e.id});var e=$(this.aladinDiv).find(".aladin-surveySelection");e.empty();for(var i=0;t.length>i;i++){var r=this.view.imageSurvey.id==t[i].id;e.append($("<option />").attr("selected",r).val(t[i].id).text(t[i].name))}},t.prototype.getOptionsFromQueryString=function(){var t={},e=$.urlParam("target");e&&(t.target=e);var i=$.urlParam("frame");i&&CooFrameEnum[i]&&(t.frame=i);var r=$.urlParam("survey");r&&HpxImageSurvey.getSurveyInfoFromId(r)&&(t.survey=r);var o=$.urlParam("zoom");o&&o>0&&180>o&&(t.zoom=o);var s=$.urlParam("showReticle");s&&(t.showReticle="true"==s.toLowerCase());var a=$.urlParam("cooFrame");a&&(t.cooFrame=a);var n=$.urlParam("fullScreen");return void 0!==n&&(t.fullScreen=n),t},t.prototype.setZoom=function(t){this.view.setZoom(t)},t.prototype.setFoV=function(t){this.view.setZoom(t)},t.prototype.setFrame=function(t){if(t){var e=CooFrameEnum.fromString(t,CooFrameEnum.J2000);e!=this.view.cooFrame&&(this.view.changeFrame(e),$(this.aladinDiv).find(".aladin-frameChoice").val(e))}},t.prototype.setProjection=function(t){if(t)switch(t=t.toLowerCase()){case"aitoff":this.view.changeProjection(ProjectionEnum.AITOFF);break;case"sinus":default:this.view.changeProjection(ProjectionEnum.SIN)}},t.prototype.gotoObject=function(t,e){var i=/[a-zA-Z]/.test(t);if(i){var r=this;Sesame.resolve(t,function(t){var e=t.Target.Resolver.jradeg,i=t.Target.Resolver.jdedeg;r.view.pointTo(e,i)},function(i){console&&(console.log("Could not resolve object name "+t),console.log(i)),e&&e()})}else{var o=new Coo;o.parse(t);var s=[o.lon,o.lat];this.view.cooFrame==CooFrameEnum.GAL&&(s=CooConversion.GalacticToJ2000(s)),this.view.pointTo(s[0],s[1])}},t.prototype.gotoPosition=function(t,e){var i;i=this.view.cooFrame==CooFrameEnum.GAL?CooConversion.GalacticToJ2000([t,e]):[t,e],this.view.pointTo(i[0],i[1])};var e=function(t){var i=t.animationParams;if(null!=i){var r=(new Date).getTime();if(r>i.end)return t.gotoRaDec(i.raEnd,i.decEnd),i.complete&&i.complete(),void 0;var o=i.raStart+(i.raEnd-i.raStart)*(r-i.start)/(i.end-i.start),s=i.decStart+(i.decEnd-i.decStart)*(r-i.start)/(i.end-i.start);t.gotoRaDec(o,s),setTimeout(function(){e(t)},50)}};return t.prototype.animateToRaDec=function(t,i,r,o){r=r||5,this.animationParams=null,e(this);var s={};s.start=(new Date).getTime(),s.end=(new Date).getTime()+1e3*r;var a=this.getRaDec();s.raStart=a[0],s.decStart=a[1],s.raEnd=t,s.decEnd=i,s.complete=o,this.animationParams=s,e(this)},t.prototype.getRaDec=function(){if(this.view.cooFrame==CooFrameEnum.J2000)return[this.view.viewCenter.lon,this.view.viewCenter.lat];var t=CooConversion.GalacticToJ2000([this.view.viewCenter.lon,this.view.viewCenter.lat]);return t},t.prototype.gotoRaDec=function(t,e){this.view.pointTo(t,e)},t.prototype.showHealpixGrid=function(t){this.view.showHealpixGrid(t)},t.prototype.showSurvey=function(t){this.view.showSurvey(t)},t.prototype.showCatalog=function(t){this.view.showCatalog(t)},t.prototype.showReticle=function(t){this.view.showReticle(t),$("#displayReticle").attr("checked",t)},t.prototype.removeLayers=function(){this.view.removeLayers()},t.prototype.addCatalog=function(t){this.view.addCatalog(t)},t.prototype.addOverlay=function(t){this.view.addOverlay(t)},t.prototype.addMOC=function(t){this.view.addMOC(t)},t.prototype.createImageSurvey=function(t,e,i,r,o,s){return new HpxImageSurvey(t,e,i,r,o,s)},t.prototype.getBaseImageLayer=function(){return this.view.imageSurvey},t.prototype.setImageSurvey=function(t,e){if(this.view.setImageSurvey(t,e),this.updateSurveysDropdownList(HpxImageSurvey.getAvailableSurveys()),this.options.log){var i=t;"string"!=typeof t&&(i=t.rootUrl),Logger.log("changeImageSurvey",i)}},t.prototype.setBaseImageLayer=t.prototype.setImageSurvey,t.prototype.getOverlayImageLayer=function(){return this.view.overlayImageSurvey},t.prototype.setOverlayImageLayer=function(t,e){this.view.setOverlayImageSurvey(t,e)},t.prototype.increaseZoom=function(t){t||(t=5),this.view.setZoomLevel(this.view.zoomLevel+t)},t.prototype.decreaseZoom=function(t){t||(t=5),this.view.setZoomLevel(this.view.zoomLevel-t)},t.prototype.createCatalog=function(t){return A.catalog(t)},t.prototype.createProgressiveCatalog=function(t,e,i,r){return new ProgressiveCat(t,e,i,r)},t.prototype.createSource=function(t,e,i){return new cds.Source(t,e,i)},t.prototype.createMarker=function(t,e,i,r){return i=i||{},i.marker=!0,new cds.Source(t,e,r,i)},t.prototype.createOverlay=function(t){return new Overlay(t)},t.prototype.createFootprintsFromSTCS=function(t){for(var e=Overlay.parseSTCS(t),i=[],r=0,o=e.length;o>r;r++)i.push(new Footprint(e[r]));return i},A.MOCFromURL=function(t,e,i){var r=new MOC(e);return r.dataFromURL(t,i),r},t.prototype.createCatalogFromVOTable=function(t,e){return A.catalogFromURL(t,e)},A.catalogFromURL=function(t,e,i){var r=A.catalog(e);return cds.Catalog.parseVOTable(t,function(t){r.addSources(t),i&&i(t)},r.maxNbSources),r},A.catalogFromSimbad=function(t,e,i,r){i=i||{},"name"in i||(i.name="Simbad");var o=URLBuilder.buildSimbadCSURL(t,e);return A.catalogFromURL(o,i,r)},A.catalogFromNED=function(t,e,i,r){i=i||{},"name"in i||(i.name="NED");var o;if(t&&"object"==typeof t)"ra"in t&&"dec"in t&&(o=URLBuilder.buildNEDPositionCSURL(t.ra,t.dec,e));else{var s=/[a-zA-Z]/.test(t);if(s)o=URLBuilder.buildNEDObjectCSURL(t,e);else{var a=new Coo;a.parse(t),o=URLBuilder.buildNEDPositionCSURL(a.lon,a.lat,e)}}return A.catalogFromURL(o,i,r)},A.catalogFromVizieR=function(t,e,i,r,o){r=r||{},"name"in r||(r.name="VizieR:"+t);var s=URLBuilder.buildVizieRCSURL(t,e,i);return A.catalogFromURL(s,r,o)},t.prototype.on=function(t,e){"select"===t?this.selectFunction=e:"objectClicked"==t?this.objClickedFunction=e:"objectHovered"==t&&(this.objHoveredFunction=e)},t.prototype.select=function(){this.fire("selectstart")},t.prototype.fire=function(t,e){"selectstart"===t?this.view.setMode(View.SELECT):"selectend"===t&&(this.view.setMode(View.PAN),this.selectFunction&&this.selectFunction(e))},t.prototype.hideBoxes=function(){if(this.boxes)for(var t=0;this.boxes.length>t;t++)this.boxes[t].hide()},t.prototype.updateCM=function(){},t.prototype.showLayerBox=function(){var t=this,e=$(this.aladinDiv).find(".aladin-layerBox");e.empty(),e.append('<a class="aladin-closeBtn">&times;</a><div style="clear: both;"></div><div class="aladin-label">Base image layer</div><select class="aladin-surveySelection"></select><div class="aladin-cmap">Color map:<div><select class="aladin-cmSelection"></select><button class="aladin-btn aladin-btn-small aladin-reverseCm" type="button">Reverse</button></div></div><div class="aladin-box-separator"></div><div class="aladin-label">Overlay layers</div>');for(var i=e.find(".aladin-cmap"),r=e.find(".aladin-cmSelection"),o=0;ColorMap.MAPS_NAMES.length>o;o++)r.append($("<option />").text(ColorMap.MAPS_NAMES[o]));r.val(t.getBaseImageLayer().getColorMap().map);for(var s=this.view.catalogs,a="<ul>",o=s.length-1;o>=0;o--){var n=s[o].name,h="";s[o].isShowing&&(h='checked="checked"');var l=s[o].getSources().length,c=l+" source"+(l>1?"s":""),u=s[o].color,d=$("<div></div>").css("color",u).css("color"),p=Color.getLabelColorForBackground(d);a+='<li><div class="aladin-layerIcon" style="background: '+u+';"></div><input type="checkbox" '+h+' id="aladin_lite_'+n+'"></input><label for="aladin_lite_'+n+'" class="aladin-layer-label" style="background: '+u+"; color:"+p+';" title="'+c+'">'+n+"</label></li>"}a+="</ul>",e.append(a),e.append('<div class="aladin-blank-separator"></div>');var h="";this.view.displayReticle&&(h='checked="checked"');var f=$('<input type="checkbox" '+h+' id="displayReticle" />');e.append(f).append('<label for="displayReticle">Reticle</label><br/>'),f.change(function(){t.showReticle($(this).is(":checked"))}),h="",this.view.displayHpxGrid&&(h='checked="checked"');var g=$('<input type="checkbox" '+h+' id="displayHpxGrid"/>');e.append(g).append('<label for="displayHpxGrid">HEALPix grid</label><br/>'),g.change(function(){t.showHealpixGrid($(this).is(":checked"))}),e.append('<div class="aladin-box-separator"></div><div class="aladin-label">Tools</div>');var v=$('<button class="aladin-btn" type="button">Export view as PNG</button>');e.append(v),v.click(function(){t.exportAsPNG()}),e.find(".aladin-closeBtn").click(function(){return t.hideBoxes(),!1}),this.updateSurveysDropdownList(HpxImageSurvey.getAvailableSurveys());var m=$(this.aladinDiv).find(".aladin-surveySelection");m.change(function(){var e=HpxImageSurvey.getAvailableSurveys()[$(this)[0].selectedIndex];t.setImageSurvey(e.id,function(){var e=t.getBaseImageLayer();e.useCors?(r.val(e.getColorMap().map),i.show(),v.show()):(i.hide(),v.hide())})}),i.find(".aladin-cmSelection").change(function(){var e=$(this).find(":selected").val();t.getBaseImageLayer().getColorMap().update(e)}),i.find(".aladin-reverseCm").click(function(){t.getBaseImageLayer().getColorMap().reverse()}),this.getBaseImageLayer().useCors?(i.show(),v.show()):(i.hide(),v.hide()),e.find(".aladin-reverseCm").parent().attr("disabled",!0),$(this.aladinDiv).find(".aladin-layerBox ul input").change(function(){var e=$(this).attr("id").substr(12),i=t.layerByName(e);$(this).is(":checked")?i.show():i.hide()}),e.show()},t.prototype.layerByName=function(t){for(var e=this.view.catalogs,i=0;this.view.catalogs.length>i;i++)if(t==e[i].name)return e[i];return null},t.prototype.exportAsPNG=function(){window.open(this.getViewDataURL(),"Aladin Lite snapshot")},t.prototype.getViewDataURL=function(t){return this.view.getCanvasDataURL(t)},t.prototype.setFOVRange=function(t,e){if(t>e){var i=t;t=e,e=i}this.view.minFOV=t,this.view.maxFOV=e},t.prototype.pix2world=function(t,e){var i,r=AladinUtils.viewToXy(t,e,this.view.width,this.view.height,this.view.largestDim,this.view.zoomFactor),o=this.view.projection.unproject(r.x,r.y);return i=this.view.cooFrame==CooFrameEnum.GAL?CooConversion.GalacticToJ2000([o.ra,o.dec]):[o.ra,o.dec]},t.prototype.world2pix=function(t,e){var i;if(this.view.cooFrame==CooFrameEnum.GAL){var r=CooConversion.J2000ToGalactic([t,e]);i=this.view.projection.project(r[0],r[1])}else i=this.view.projection.project(t,e);if(i){var o=AladinUtils.xyToView(i.X,i.Y,this.view.width,this.view.height,this.view.largestDim,this.view.zoomFactor);return[o.vx,o.vy]}return null},t.prototype.getFovCorners=function(t){(!t||1>t)&&(t=1);for(var e,i,r,o,s=[],a=0;4>a;a++){e=0==a||3==a?0:this.view.width-1,i=2>a?0:this.view.height-1,r=2>a?this.view.width-1:0,o=1==a||2==a?this.view.height-1:0;for(var n=0;t>n;n++)s.push(this.pix2world(e+n/t*(r-e),i+n/t*(o-i)))}return s},t.prototype.getFov=function(){var t=this.view.fov,e=this.getSize(),i=e[1]/e[0]*t;return t=Math.min(t,180),i=Math.min(i,180),[t,i]},t.prototype.getSize=function(){return[this.view.width,this.view.height]},t.prototype.getParentDiv=function(){return $(this.aladinDiv)},t}(),A.aladin=function(t,e){return new Aladin($(t)[0],e)},A.imageLayer=function(t,e,i,r){return new HpxImageSurvey(t,e,i,null,null,r)},A.source=function(t,e,i,r){return new cds.Source(t,e,i,r)},A.marker=function(t,e,i,r){return i=i||{},i.marker=!0,A.source(t,e,r,i)},A.polygon=function(t){var e=t.length;return e>0&&(t[0][0]!=t[e-1][0]||t[0][1]!=t[e-1][1])&&t.push([t[0][0],t[0][1]]),new Footprint(t)},A.polyline=function(t,e){return new Polyline(t,e)},A.circle=function(t,e,i,r){return new Circle([t,e],i,r)},A.graphicOverlay=function(t){return new Overlay(t)},A.catalog=function(t){return new cds.Catalog(t)},Aladin.prototype.displayFITS=function(t,e){e=e||{};var i={url:t};e.color&&(i.color=!0),e.outputFormat&&(i.format=e.outputFormat),e.order&&(i.order=e.order),e.nocache&&(i.nocache=e.nocache),$.ajax({url:"http://alasky.u-strasbg.fr/cgi/fits2HiPS",data:i,method:"GET",dataType:"json",success:function(t){if("success"!=t.status)return alert("An error occured: "+t.message),void 0;var i=e.label||"FITS image";aladin.setOverlayImageLayer(aladin.createImageSurvey(i,i,t.data.url,"equatorial",t.data.meta.max_norder,{imgFormat:"png"})),aladin.setFoV(t.data.meta.fov),aladin.gotoRaDec(t.data.meta.ra,t.data.meta.dec);var r=e&&e.transparency||1;aladin.getOverlayImageLayer().setAlpha(r)}})},Aladin.prototype.displayJPG=Aladin.prototype.displayPNG=function(t,e){e=e||{},e.color=!0,e.label="JPG/PNG image",e.outputFormat="png",this.displayFITS(t,e)},$&&($.aladin=A.aladin);
-console.log('=============== >  aladin.min.js ');
+// Copyright 2013 - UDS/CNRS
+// The Aladin Lite program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+// This file is part of Aladin Lite.
+//
+//    Aladin Lite is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Lite is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Lite.
+//
+
+
+
+// cds namespace
+
+var cds = cds || {};
+
+var A = A || {};
+/*
+    json2.js
+    2012-10-08
+
+    Public Domain.
+
+    NO WARRANTY EXPRESSED OR IMPLIED. USE AT YOUR OWN RISK.
+
+    See http://www.JSON.org/js.html
+
+
+    This code should be minified before deployment.
+    See http://javascript.crockford.com/jsmin.html
+
+    USE YOUR OWN COPY. IT IS EXTREMELY UNWISE TO LOAD CODE FROM SERVERS YOU DO
+    NOT CONTROL.
+
+
+    This file creates a global JSON object containing two methods: stringify
+    and parse.
+
+        JSON.stringify(value, replacer, space)
+            value       any JavaScript value, usually an object or array.
+
+            replacer    an optional parameter that determines how object
+                        values are stringified for objects. It can be a
+                        function or an array of strings.
+
+            space       an optional parameter that specifies the indentation
+                        of nested structures. If it is omitted, the text will
+                        be packed without extra whitespace. If it is a number,
+                        it will specify the number of spaces to indent at each
+                        level. If it is a string (such as '\t' or '&nbsp;'),
+                        it contains the characters used to indent at each level.
+
+            This method produces a JSON text from a JavaScript value.
+
+            When an object value is found, if the object contains a toJSON
+            method, its toJSON method will be called and the result will be
+            stringified. A toJSON method does not serialize: it returns the
+            value represented by the name/value pair that should be serialized,
+            or undefined if nothing should be serialized. The toJSON method
+            will be passed the key associated with the value, and this will be
+            bound to the value
+
+            For example, this would serialize Dates as ISO strings.
+
+                Date.prototype.toJSON = function (key) {
+                    function f(n) {
+                        // Format integers to have at least two digits.
+                        return n < 10 ? '0' + n : n;
+                    }
+
+                    return this.getUTCFullYear()   + '-' +
+                         f(this.getUTCMonth() + 1) + '-' +
+                         f(this.getUTCDate())      + 'T' +
+                         f(this.getUTCHours())     + ':' +
+                         f(this.getUTCMinutes())   + ':' +
+                         f(this.getUTCSeconds())   + 'Z';
+                };
+
+            You can provide an optional replacer method. It will be passed the
+            key and value of each member, with this bound to the containing
+            object. The value that is returned from your method will be
+            serialized. If your method returns undefined, then the member will
+            be excluded from the serialization.
+
+            If the replacer parameter is an array of strings, then it will be
+            used to select the members to be serialized. It filters the results
+            such that only members with keys listed in the replacer array are
+            stringified.
+
+            Values that do not have JSON representations, such as undefined or
+            functions, will not be serialized. Such values in objects will be
+            dropped; in arrays they will be replaced with null. You can use
+            a replacer function to replace those with JSON values.
+            JSON.stringify(undefined) returns undefined.
+
+            The optional space parameter produces a stringification of the
+            value that is filled with line breaks and indentation to make it
+            easier to read.
+
+            If the space parameter is a non-empty string, then that string will
+            be used for indentation. If the space parameter is a number, then
+            the indentation will be that many spaces.
+
+            Example:
+
+            text = JSON.stringify(['e', {pluribus: 'unum'}]);
+            // text is '["e",{"pluribus":"unum"}]'
+
+
+            text = JSON.stringify(['e', {pluribus: 'unum'}], null, '\t');
+            // text is '[\n\t"e",\n\t{\n\t\t"pluribus": "unum"\n\t}\n]'
+
+            text = JSON.stringify([new Date()], function (key, value) {
+                return this[key] instanceof Date ?
+                    'Date(' + this[key] + ')' : value;
+            });
+            // text is '["Date(---current time---)"]'
+
+
+        JSON.parse(text, reviver)
+            This method parses a JSON text to produce an object or array.
+            It can throw a SyntaxError exception.
+
+            The optional reviver parameter is a function that can filter and
+            transform the results. It receives each of the keys and values,
+            and its return value is used instead of the original value.
+            If it returns what it received, then the structure is not modified.
+            If it returns undefined then the member is deleted.
+
+            Example:
+
+            // Parse the text. Values that look like ISO date strings will
+            // be converted to Date objects.
+
+            myData = JSON.parse(text, function (key, value) {
+                var a;
+                if (typeof value === 'string') {
+                    a =
+/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)Z$/.exec(value);
+                    if (a) {
+                        return new Date(Date.UTC(+a[1], +a[2] - 1, +a[3], +a[4],
+                            +a[5], +a[6]));
+                    }
+                }
+                return value;
+            });
+
+            myData = JSON.parse('["Date(09/09/2001)"]', function (key, value) {
+                var d;
+                if (typeof value === 'string' &&
+                        value.slice(0, 5) === 'Date(' &&
+                        value.slice(-1) === ')') {
+                    d = new Date(value.slice(5, -1));
+                    if (d) {
+                        return d;
+                    }
+                }
+                return value;
+            });
+
+
+    This is a reference implementation. You are free to copy, modify, or
+    redistribute.
+*/
+
+/*jslint evil: true, regexp: true */
+
+/*members "", "\b", "\t", "\n", "\f", "\r", "\"", JSON, "\\", apply,
+    call, charCodeAt, getUTCDate, getUTCFullYear, getUTCHours,
+    getUTCMinutes, getUTCMonth, getUTCSeconds, hasOwnProperty, join,
+    lastIndex, length, parse, prototype, push, replace, slice, stringify,
+    test, toJSON, toString, valueOf
+*/
+
+
+// Create a JSON object only if one does not already exist. We create the
+// methods in a closure to avoid creating global variables.
+
+if (typeof JSON !== 'object') {
+    JSON = {};
+}
+
+(function () {
+    'use strict';
+
+    function f(n) {
+        // Format integers to have at least two digits.
+        return n < 10 ? '0' + n : n;
+    }
+
+    if (typeof Date.prototype.toJSON !== 'function') {
+
+        Date.prototype.toJSON = function (key) {
+
+            return isFinite(this.valueOf())
+                ? this.getUTCFullYear()     + '-' +
+                    f(this.getUTCMonth() + 1) + '-' +
+                    f(this.getUTCDate())      + 'T' +
+                    f(this.getUTCHours())     + ':' +
+                    f(this.getUTCMinutes())   + ':' +
+                    f(this.getUTCSeconds())   + 'Z'
+                : null;
+        };
+
+        String.prototype.toJSON      =
+            Number.prototype.toJSON  =
+            Boolean.prototype.toJSON = function (key) {
+                return this.valueOf();
+            };
+    }
+
+    var cx = /[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
+        escapable = /[\\\"\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
+        gap,
+        indent,
+        meta = {    // table of character substitutions
+            '\b': '\\b',
+            '\t': '\\t',
+            '\n': '\\n',
+            '\f': '\\f',
+            '\r': '\\r',
+            '"' : '\\"',
+            '\\': '\\\\'
+        },
+        rep;
+
+
+    function quote(string) {
+
+// If the string contains no control characters, no quote characters, and no
+// backslash characters, then we can safely slap some quotes around it.
+// Otherwise we must also replace the offending characters with safe escape
+// sequences.
+
+        escapable.lastIndex = 0;
+        return escapable.test(string) ? '"' + string.replace(escapable, function (a) {
+            var c = meta[a];
+            return typeof c === 'string'
+                ? c
+                : '\\u' + ('0000' + a.charCodeAt(0).toString(16)).slice(-4);
+        }) + '"' : '"' + string + '"';
+    }
+
+
+    function str(key, holder) {
+
+// Produce a string from holder[key].
+
+        var i,          // The loop counter.
+            k,          // The member key.
+            v,          // The member value.
+            length,
+            mind = gap,
+            partial,
+            value = holder[key];
+
+// If the value has a toJSON method, call it to obtain a replacement value.
+
+        if (value && typeof value === 'object' &&
+                typeof value.toJSON === 'function') {
+            value = value.toJSON(key);
+        }
+
+// If we were called with a replacer function, then call the replacer to
+// obtain a replacement value.
+
+        if (typeof rep === 'function') {
+            value = rep.call(holder, key, value);
+        }
+
+// What happens next depends on the value's type.
+
+        switch (typeof value) {
+        case 'string':
+            return quote(value);
+
+        case 'number':
+
+// JSON numbers must be finite. Encode non-finite numbers as null.
+
+            return isFinite(value) ? String(value) : 'null';
+
+        case 'boolean':
+        case 'null':
+
+// If the value is a boolean or null, convert it to a string. Note:
+// typeof null does not produce 'null'. The case is included here in
+// the remote chance that this gets fixed someday.
+
+            return String(value);
+
+// If the type is 'object', we might be dealing with an object or an array or
+// null.
+
+        case 'object':
+
+// Due to a specification blunder in ECMAScript, typeof null is 'object',
+// so watch out for that case.
+
+            if (!value) {
+                return 'null';
+            }
+
+// Make an array to hold the partial results of stringifying this object value.
+
+            gap += indent;
+            partial = [];
+
+// Is the value an array?
+
+            if (Object.prototype.toString.apply(value) === '[object Array]') {
+
+// The value is an array. Stringify every element. Use null as a placeholder
+// for non-JSON values.
+
+                length = value.length;
+                for (i = 0; i < length; i += 1) {
+                    partial[i] = str(i, value) || 'null';
+                }
+
+// Join all of the elements together, separated with commas, and wrap them in
+// brackets.
+
+                v = partial.length === 0
+                    ? '[]'
+                    : gap
+                    ? '[\n' + gap + partial.join(',\n' + gap) + '\n' + mind + ']'
+                    : '[' + partial.join(',') + ']';
+                gap = mind;
+                return v;
+            }
+
+// If the replacer is an array, use it to select the members to be stringified.
+
+            if (rep && typeof rep === 'object') {
+                length = rep.length;
+                for (i = 0; i < length; i += 1) {
+                    if (typeof rep[i] === 'string') {
+                        k = rep[i];
+                        v = str(k, value);
+                        if (v) {
+                            partial.push(quote(k) + (gap ? ': ' : ':') + v);
+                        }
+                    }
+                }
+            } else {
+
+// Otherwise, iterate through all of the keys in the object.
+
+                for (k in value) {
+                    if (Object.prototype.hasOwnProperty.call(value, k)) {
+                        v = str(k, value);
+                        if (v) {
+                            partial.push(quote(k) + (gap ? ': ' : ':') + v);
+                        }
+                    }
+                }
+            }
+
+// Join all of the member texts together, separated with commas,
+// and wrap them in braces.
+
+            v = partial.length === 0
+                ? '{}'
+                : gap
+                ? '{\n' + gap + partial.join(',\n' + gap) + '\n' + mind + '}'
+                : '{' + partial.join(',') + '}';
+            gap = mind;
+            return v;
+        }
+    }
+
+// If the JSON object does not yet have a stringify method, give it one.
+
+    if (typeof JSON.stringify !== 'function') {
+        JSON.stringify = function (value, replacer, space) {
+
+// The stringify method takes a value and an optional replacer, and an optional
+// space parameter, and returns a JSON text. The replacer can be a function
+// that can replace values, or an array of strings that will select the keys.
+// A default replacer method can be provided. Use of the space parameter can
+// produce text that is more easily readable.
+
+            var i;
+            gap = '';
+            indent = '';
+
+// If the space parameter is a number, make an indent string containing that
+// many spaces.
+
+            if (typeof space === 'number') {
+                for (i = 0; i < space; i += 1) {
+                    indent += ' ';
+                }
+
+// If the space parameter is a string, it will be used as the indent string.
+
+            } else if (typeof space === 'string') {
+                indent = space;
+            }
+
+// If there is a replacer, it must be a function or an array.
+// Otherwise, throw an error.
+
+            rep = replacer;
+            if (replacer && typeof replacer !== 'function' &&
+                    (typeof replacer !== 'object' ||
+                    typeof replacer.length !== 'number')) {
+                throw new Error('JSON.stringify');
+            }
+
+// Make a fake root object containing our value under the key of ''.
+// Return the result of stringifying the value.
+
+            return str('', {'': value});
+        };
+    }
+
+
+// If the JSON object does not yet have a parse method, give it one.
+
+    if (typeof JSON.parse !== 'function') {
+        JSON.parse = function (text, reviver) {
+
+// The parse method takes a text and an optional reviver function, and returns
+// a JavaScript value if the text is a valid JSON text.
+
+            var j;
+
+            function walk(holder, key) {
+
+// The walk method is used to recursively walk the resulting structure so
+// that modifications can be made.
+
+                var k, v, value = holder[key];
+                if (value && typeof value === 'object') {
+                    for (k in value) {
+                        if (Object.prototype.hasOwnProperty.call(value, k)) {
+                            v = walk(value, k);
+                            if (v !== undefined) {
+                                value[k] = v;
+                            } else {
+                                delete value[k];
+                            }
+                        }
+                    }
+                }
+                return reviver.call(holder, key, value);
+            }
+
+
+// Parsing happens in four stages. In the first stage, we replace certain
+// Unicode characters with escape sequences. JavaScript handles many characters
+// incorrectly, either silently deleting them, or treating them as line endings.
+
+            text = String(text);
+            cx.lastIndex = 0;
+            if (cx.test(text)) {
+                text = text.replace(cx, function (a) {
+                    return '\\u' +
+                        ('0000' + a.charCodeAt(0).toString(16)).slice(-4);
+                });
+            }
+
+// In the second stage, we run the text against regular expressions that look
+// for non-JSON patterns. We are especially concerned with '()' and 'new'
+// because they can cause invocation, and '=' because it can cause mutation.
+// But just to be safe, we want to reject all unexpected forms.
+
+// We split the second stage into 4 regexp operations in order to work around
+// crippling inefficiencies in IE's and Safari's regexp engines. First we
+// replace the JSON backslash pairs with '@' (a non-JSON character). Second, we
+// replace all simple value tokens with ']' characters. Third, we delete all
+// open brackets that follow a colon or comma or that begin the text. Finally,
+// we look to see that the remaining characters are only whitespace or ']' or
+// ',' or ':' or '{' or '}'. If that is so, then the text is safe for eval.
+
+            if (/^[\],:{}\s]*$/
+                    .test(text.replace(/\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g, '@')
+                        .replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, ']')
+                        .replace(/(?:^|:|,)(?:\s*\[)+/g, ''))) {
+
+// In the third stage we use the eval function to compile the text into a
+// JavaScript structure. The '{' operator is subject to a syntactic ambiguity
+// in JavaScript: it can begin a block or an object literal. We wrap the text
+// in parens to eliminate the ambiguity.
+
+                j = eval('(' + text + ')');
+
+// In the optional fourth stage, we recursively walk the new structure, passing
+// each name/value pair to a reviver function for possible transformation.
+
+                return typeof reviver === 'function'
+                    ? walk({'': j}, '')
+                    : j;
+            }
+
+// If the text is not JSON parseable, then a SyntaxError is thrown.
+
+            throw new SyntaxError('JSON.parse');
+        };
+    }
+}());// Copyright 2013 - UDS/CNRS
+// The Aladin Lite program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+// This file is part of Aladin Lite.
+//
+//    Aladin Lite is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Lite is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Lite.
+//
+
+
+
+// log 
+Logger = {};
+
+Logger.log = function(action, params) {
+    try {
+        var logUrl = "http://alasky.u-strasbg.fr/cgi/AladinLiteLogger/log.py";
+        var paramStr = "";
+        if (params) {
+            paramStr = JSON.stringify(params);
+        }
+        
+        $.ajax({
+            url: logUrl,
+            data: {"action": action, "params": paramStr, "pageUrl": window.location.href, "referer": document.referrer ? document.referrer : ""},
+            method: 'GET',
+            dataType: 'json' // as alasky supports CORS, we do not need JSONP any longer
+        });
+        
+    }
+    catch(e) {
+        window.console && console.log('Exception: ' + e);
+    }
+
+};
+/*!
+ * jQuery Mousewheel 3.1.13
+ *
+ * Copyright jQuery Foundation and other contributors
+ * Released under the MIT license
+ * http://jquery.org/license
+ */
+
+(function (factory) {
+    if ( typeof define === 'function' && define.amd ) {
+        // AMD. Register as an anonymous module.
+        define(['jquery'], factory);
+    } else if (typeof exports === 'object') {
+        // Node/CommonJS style for Browserify
+        module.exports = factory;
+    } else {
+        // Browser globals
+        factory(jQuery);
+    }
+}(function ($) {
+
+    var toFix  = ['wheel', 'mousewheel', 'DOMMouseScroll', 'MozMousePixelScroll'],
+        toBind = ( 'onwheel' in document || document.documentMode >= 9 ) ?
+                    ['wheel'] : ['mousewheel', 'DomMouseScroll', 'MozMousePixelScroll'],
+        slice  = Array.prototype.slice,
+        nullLowestDeltaTimeout, lowestDelta;
+
+    if ( $.event.fixHooks ) {
+        for ( var i = toFix.length; i; ) {
+            $.event.fixHooks[ toFix[--i] ] = $.event.mouseHooks;
+        }
+    }
+
+    var special = $.event.special.mousewheel = {
+        version: '3.1.12',
+
+        setup: function() {
+            if ( this.addEventListener ) {
+                for ( var i = toBind.length; i; ) {
+                    this.addEventListener( toBind[--i], handler, false );
+                }
+            } else {
+                this.onmousewheel = handler;
+            }
+            // Store the line height and page height for this particular element
+            $.data(this, 'mousewheel-line-height', special.getLineHeight(this));
+            $.data(this, 'mousewheel-page-height', special.getPageHeight(this));
+        },
+
+        teardown: function() {
+            if ( this.removeEventListener ) {
+                for ( var i = toBind.length; i; ) {
+                    this.removeEventListener( toBind[--i], handler, false );
+                }
+            } else {
+                this.onmousewheel = null;
+            }
+            // Clean up the data we added to the element
+            $.removeData(this, 'mousewheel-line-height');
+            $.removeData(this, 'mousewheel-page-height');
+        },
+
+        getLineHeight: function(elem) {
+            var $elem = $(elem),
+                $parent = $elem['offsetParent' in $.fn ? 'offsetParent' : 'parent']();
+            if (!$parent.length) {
+                $parent = $('body');
+            }
+            return parseInt($parent.css('fontSize'), 10) || parseInt($elem.css('fontSize'), 10) || 16;
+        },
+
+        getPageHeight: function(elem) {
+            return $(elem).height();
+        },
+
+        settings: {
+            adjustOldDeltas: true, // see shouldAdjustOldDeltas() below
+            normalizeOffset: true  // calls getBoundingClientRect for each event
+        }
+    };
+
+    $.fn.extend({
+        mousewheel: function(fn) {
+            return fn ? this.bind('mousewheel', fn) : this.trigger('mousewheel');
+        },
+
+        unmousewheel: function(fn) {
+            return this.unbind('mousewheel', fn);
+        }
+    });
+
+
+    function handler(event) {
+        var orgEvent   = event || window.event,
+            args       = slice.call(arguments, 1),
+            delta      = 0,
+            deltaX     = 0,
+            deltaY     = 0,
+            absDelta   = 0,
+            offsetX    = 0,
+            offsetY    = 0;
+        event = $.event.fix(orgEvent);
+        event.type = 'mousewheel';
+
+        // Old school scrollwheel delta
+        if ( 'detail'      in orgEvent ) { deltaY = orgEvent.detail * -1;      }
+        if ( 'wheelDelta'  in orgEvent ) { deltaY = orgEvent.wheelDelta;       }
+        if ( 'wheelDeltaY' in orgEvent ) { deltaY = orgEvent.wheelDeltaY;      }
+        if ( 'wheelDeltaX' in orgEvent ) { deltaX = orgEvent.wheelDeltaX * -1; }
+
+        // Firefox < 17 horizontal scrolling related to DOMMouseScroll event
+        if ( 'axis' in orgEvent && orgEvent.axis === orgEvent.HORIZONTAL_AXIS ) {
+            deltaX = deltaY * -1;
+            deltaY = 0;
+        }
+
+        // Set delta to be deltaY or deltaX if deltaY is 0 for backwards compatabilitiy
+        delta = deltaY === 0 ? deltaX : deltaY;
+
+        // New school wheel delta (wheel event)
+        if ( 'deltaY' in orgEvent ) {
+            deltaY = orgEvent.deltaY * -1;
+            delta  = deltaY;
+        }
+        if ( 'deltaX' in orgEvent ) {
+            deltaX = orgEvent.deltaX;
+            if ( deltaY === 0 ) { delta  = deltaX * -1; }
+        }
+
+        // No change actually happened, no reason to go any further
+        if ( deltaY === 0 && deltaX === 0 ) { return; }
+
+        // Need to convert lines and pages to pixels if we aren't already in pixels
+        // There are three delta modes:
+        //   * deltaMode 0 is by pixels, nothing to do
+        //   * deltaMode 1 is by lines
+        //   * deltaMode 2 is by pages
+        if ( orgEvent.deltaMode === 1 ) {
+            var lineHeight = $.data(this, 'mousewheel-line-height');
+            delta  *= lineHeight;
+            deltaY *= lineHeight;
+            deltaX *= lineHeight;
+        } else if ( orgEvent.deltaMode === 2 ) {
+            var pageHeight = $.data(this, 'mousewheel-page-height');
+            delta  *= pageHeight;
+            deltaY *= pageHeight;
+            deltaX *= pageHeight;
+        }
+
+        // Store lowest absolute delta to normalize the delta values
+        absDelta = Math.max( Math.abs(deltaY), Math.abs(deltaX) );
+
+        if ( !lowestDelta || absDelta < lowestDelta ) {
+            lowestDelta = absDelta;
+
+            // Adjust older deltas if necessary
+            if ( shouldAdjustOldDeltas(orgEvent, absDelta) ) {
+                lowestDelta /= 40;
+            }
+        }
+
+        // Adjust older deltas if necessary
+        if ( shouldAdjustOldDeltas(orgEvent, absDelta) ) {
+            // Divide all the things by 40!
+            delta  /= 40;
+            deltaX /= 40;
+            deltaY /= 40;
+        }
+
+        // Get a whole, normalized value for the deltas
+        delta  = Math[ delta  >= 1 ? 'floor' : 'ceil' ](delta  / lowestDelta);
+        deltaX = Math[ deltaX >= 1 ? 'floor' : 'ceil' ](deltaX / lowestDelta);
+        deltaY = Math[ deltaY >= 1 ? 'floor' : 'ceil' ](deltaY / lowestDelta);
+
+        // Normalise offsetX and offsetY properties
+        if ( special.settings.normalizeOffset && this.getBoundingClientRect ) {
+            var boundingRect = this.getBoundingClientRect();
+            offsetX = event.clientX - boundingRect.left;
+            offsetY = event.clientY - boundingRect.top;
+        }
+
+        // Add information to the event object
+        event.deltaX = deltaX;
+        event.deltaY = deltaY;
+        event.deltaFactor = lowestDelta;
+        event.offsetX = offsetX;
+        event.offsetY = offsetY;
+        // Go ahead and set deltaMode to 0 since we converted to pixels
+        // Although this is a little odd since we overwrite the deltaX/Y
+        // properties with normalized deltas.
+        event.deltaMode = 0;
+
+        // Add event and delta to the front of the arguments
+        args.unshift(event, delta, deltaX, deltaY);
+
+        // Clearout lowestDelta after sometime to better
+        // handle multiple device types that give different
+        // a different lowestDelta
+        // Ex: trackpad = 3 and mouse wheel = 120
+        if (nullLowestDeltaTimeout) { clearTimeout(nullLowestDeltaTimeout); }
+        nullLowestDeltaTimeout = setTimeout(nullLowestDelta, 200);
+
+        return ($.event.dispatch || $.event.handle).apply(this, args);
+    }
+
+    function nullLowestDelta() {
+        lowestDelta = null;
+    }
+
+    function shouldAdjustOldDeltas(orgEvent, absDelta) {
+        // If this is an older event and the delta is divisable by 120,
+        // then we are assuming that the browser is treating this as an
+        // older mouse wheel event and that we should divide the deltas
+        // by 40 to try and get a more usable deltaFactor.
+        // Side note, this actually impacts the reported scroll distance
+        // in older browsers and can cause scrolling to be slower than native.
+        // Turn this off by setting $.event.special.mousewheel.settings.adjustOldDeltas to false.
+        return special.settings.adjustOldDeltas && orgEvent.type === 'mousewheel' && absDelta % 120 === 0;
+    }
+
+}));
+// requestAnimationFrame() shim by Paul Irish
+// http://paulirish.com/2011/requestanimationframe-for-smart-animating/
+window.requestAnimFrame = (function() {
+	return  window.requestAnimationFrame       || 
+			window.webkitRequestAnimationFrame || 
+			window.mozRequestAnimationFrame    || 
+			window.oRequestAnimationFrame      || 
+			window.msRequestAnimationFrame     || 
+			function(/* function */ callback, /* DOMElement */ element){
+				window.setTimeout(callback, 1000 / 60);
+			};
+})();// stats.js r6 - http://github.com/mrdoob/stats.js
+var Stats=function(){function s(a,g,d){var f,c,e;for(c=0;c<30;c++)for(f=0;f<73;f++)e=(f+c*74)*4,a[e]=a[e+4],a[e+1]=a[e+5],a[e+2]=a[e+6];for(c=0;c<30;c++)e=(73+c*74)*4,c<g?(a[e]=b[d].bg.r,a[e+1]=b[d].bg.g,a[e+2]=b[d].bg.b):(a[e]=b[d].fg.r,a[e+1]=b[d].fg.g,a[e+2]=b[d].fg.b)}var r=0,t=2,g,u=0,j=(new Date).getTime(),F=j,v=j,l=0,w=1E3,x=0,k,d,a,m,y,n=0,z=1E3,A=0,f,c,o,B,p=0,C=1E3,D=0,h,i,q,E,b={fps:{bg:{r:16,g:16,b:48},fg:{r:0,g:255,b:255}},ms:{bg:{r:16,g:48,b:16},fg:{r:0,g:255,b:0}},mb:{bg:{r:48,g:16,
+b:26},fg:{r:255,g:0,b:128}}};g=document.createElement("div");g.style.cursor="pointer";g.style.width="80px";g.style.opacity="0.9";g.style.zIndex="10001";g.addEventListener("click",function(){r++;r==t&&(r=0);k.style.display="none";f.style.display="none";h.style.display="none";switch(r){case 0:k.style.display="block";break;case 1:f.style.display="block";break;case 2:h.style.display="block"}},!1);k=document.createElement("div");k.style.backgroundColor="rgb("+Math.floor(b.fps.bg.r/2)+","+Math.floor(b.fps.bg.g/
+2)+","+Math.floor(b.fps.bg.b/2)+")";k.style.padding="2px 0px 3px 0px";g.appendChild(k);d=document.createElement("div");d.style.fontFamily="Helvetica, Arial, sans-serif";d.style.textAlign="left";d.style.fontSize="9px";d.style.color="rgb("+b.fps.fg.r+","+b.fps.fg.g+","+b.fps.fg.b+")";d.style.margin="0px 0px 1px 3px";d.innerHTML='<span style="font-weight:bold">FPS</span>';k.appendChild(d);a=document.createElement("canvas");a.width=74;a.height=30;a.style.display="block";a.style.marginLeft="3px";k.appendChild(a);
+m=a.getContext("2d");m.fillStyle="rgb("+b.fps.bg.r+","+b.fps.bg.g+","+b.fps.bg.b+")";m.fillRect(0,0,a.width,a.height);y=m.getImageData(0,0,a.width,a.height);f=document.createElement("div");f.style.backgroundColor="rgb("+Math.floor(b.ms.bg.r/2)+","+Math.floor(b.ms.bg.g/2)+","+Math.floor(b.ms.bg.b/2)+")";f.style.padding="2px 0px 3px 0px";f.style.display="none";g.appendChild(f);c=document.createElement("div");c.style.fontFamily="Helvetica, Arial, sans-serif";c.style.textAlign="left";c.style.fontSize=
+"9px";c.style.color="rgb("+b.ms.fg.r+","+b.ms.fg.g+","+b.ms.fg.b+")";c.style.margin="0px 0px 1px 3px";c.innerHTML='<span style="font-weight:bold">MS</span>';f.appendChild(c);a=document.createElement("canvas");a.width=74;a.height=30;a.style.display="block";a.style.marginLeft="3px";f.appendChild(a);o=a.getContext("2d");o.fillStyle="rgb("+b.ms.bg.r+","+b.ms.bg.g+","+b.ms.bg.b+")";o.fillRect(0,0,a.width,a.height);B=o.getImageData(0,0,a.width,a.height);try{performance&&performance.memory&&performance.memory.totalJSHeapSize&&
+(t=3)}catch(G){}h=document.createElement("div");h.style.backgroundColor="rgb("+Math.floor(b.mb.bg.r/2)+","+Math.floor(b.mb.bg.g/2)+","+Math.floor(b.mb.bg.b/2)+")";h.style.padding="2px 0px 3px 0px";h.style.display="none";g.appendChild(h);i=document.createElement("div");i.style.fontFamily="Helvetica, Arial, sans-serif";i.style.textAlign="left";i.style.fontSize="9px";i.style.color="rgb("+b.mb.fg.r+","+b.mb.fg.g+","+b.mb.fg.b+")";i.style.margin="0px 0px 1px 3px";i.innerHTML='<span style="font-weight:bold">MB</span>';
+h.appendChild(i);a=document.createElement("canvas");a.width=74;a.height=30;a.style.display="block";a.style.marginLeft="3px";h.appendChild(a);q=a.getContext("2d");q.fillStyle="#301010";q.fillRect(0,0,a.width,a.height);E=q.getImageData(0,0,a.width,a.height);return{domElement:g,update:function(){u++;j=(new Date).getTime();n=j-F;z=Math.min(z,n);A=Math.max(A,n);s(B.data,Math.min(30,30-n/200*30),"ms");c.innerHTML='<span style="font-weight:bold">'+n+" MS</span> ("+z+"-"+A+")";o.putImageData(B,0,0);F=j;if(j>
+v+1E3){l=Math.round(u*1E3/(j-v));w=Math.min(w,l);x=Math.max(x,l);s(y.data,Math.min(30,30-l/100*30),"fps");d.innerHTML='<span style="font-weight:bold">'+l+" FPS</span> ("+w+"-"+x+")";m.putImageData(y,0,0);if(t==3)p=performance.memory.usedJSHeapSize*9.54E-7,C=Math.min(C,p),D=Math.max(D,p),s(E.data,Math.min(30,30-p/2),"mb"),i.innerHTML='<span style="font-weight:bold">'+Math.round(p)+" MB</span> ("+Math.round(C)+"-"+Math.round(D)+")",q.putImageData(E,0,0);v=j;u=0}}}};
+
+Constants={},Constants.PI=Math.PI,Constants.C_PR=Math.PI/180,Constants.VLEV=2,Constants.EPS=1e-7,Constants.c=.105,Constants.LN10=Math.log(10),Constants.PIOVER2=Math.PI/2,Constants.TWOPI=2*Math.PI,Constants.TWOTHIRD=2/3,Constants.ARCSECOND_RADIAN=484813681109536e-20,SpatialVector=function(){function t(t,s,i){"use strict";this.x=t,this.y=s,this.z=i,this.ra_=0,this.dec_=0,this.okRaDec_=!1}return t.prototype.setXYZ=function(t,s,i){this.x=t,this.y=s,this.z=i,this.okRaDec_=!1},t.prototype.length=function(){"use strict";return Math.sqrt(this.lengthSquared())},t.prototype.lengthSquared=function(){"use strict";return this.x*this.x+this.y*this.y+this.z*this.z},t.prototype.normalized=function(){"use strict";var t=this.length();this.x/=t,this.y/=t,this.z/=t},t.prototype.set=function(t,s){"use strict";this.ra_=t,this.dec_=s,this.okRaDec_=!0,this.updateXYZ()},t.prototype.angle=function(t){"use strict";var s=this.y*t.z-this.z*t.y,i=this.z*t.x-this.x*t.z,n=this.x*t.y-this.y*t.x,a=Math.sqrt(s*s+i*i+n*n);return Math.abs(Math.atan2(a,dot(t)))},t.prototype.get=function(){"use strict";return[x,y,z]},t.prototype.toString=function(){"use strict";return"SpatialVector["+this.x+", "+this.y+", "+this.z+"]"},t.prototype.cross=function(s){"use strict";return new t(this.y*s.z-s.y*this.z,this.z*s.x-s.z*this.x,this.x*s.y-s.x()*this.y)},t.prototype.equal=function(t){"use strict";return this.x==t.x&&this.y==t.y&&this.z==t.z()?!0:!1},t.prototype.mult=function(s){"use strict";return new t(s*this.x,s*this.y,s*this.z)},t.prototype.dot=function(t){"use strict";return this.x*t.x+this.y*t.y+this.z*t.z},t.prototype.add=function(s){"use strict";return new t(this.x+s.x,this.y+s.y,this.z+s.z)},t.prototype.sub=function(s){"use strict";return new t(this.x-s.x,this.y-s.y,this.z-s.z)},t.prototype.dec=function(){"use strict";return this.okRaDec_||(this.normalized(),this.updateRaDec()),this.dec_},t.prototype.ra=function(){"use strict";return this.okRaDec_||(this.normalized(),this.updateRaDec()),this.ra_},t.prototype.updateXYZ=function(){"use strict";var t=Math.cos(this.dec_*Constants.C_PR);this.x=Math.cos(this.ra_*Constants.C_PR)*t,this.y=Math.sin(this.ra_*Constants.C_PR)*t,this.z=Math.sin(this.dec_*Constants.C_PR)},t.prototype.updateRaDec=function(){"use strict";this.dec_=Math.asin(this.z)/Constants.C_PR;var t=Math.cos(this.dec_*Constants.C_PR);this.ra_=t>Constants.EPS||-Constants.EPS>t?this.y>Constants.EPS||this.y<-Constants.EPS?0>this.y?360-Math.acos(this.x/t)/Constants.C_PR:Math.acos(this.x/t)/Constants.C_PR:0>this.x?180:0:0,this.okRaDec_=!0},t.prototype.toRaRadians=function(){"use strict";var t=0;return(0!=this.x||0!=this.y)&&(t=Math.atan2(this.y,this.x)),0>t&&(t+=2*Math.PI),t},t.prototype.toDeRadians=function(){var t=z/this.length(),s=Math.acos(t);return Math.PI/2-s},t}(),AngularPosition=function(){return AngularPosition=function(t,s){"use strict";this.theta=t,this.phi=s},AngularPosition.prototype.toString=function(){"use strict";return"theta: "+this.theta+", phi: "+this.phi},AngularPosition}(),LongRangeSetBuilder=function(){function t(){this.items=[]}return t.prototype.appendRange=function(t,s){for(var i=t;s>=i;i++)i in this.items||this.items.push(i)},t}(),HealpixIndex=function(){function t(t){"use strict";this.nside=t}return t.NS_MAX=8192,t.ORDER_MAX=13,t.NSIDELIST=[1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192],t.JRLL=[2,2,2,2,3,3,3,3,4,4,4,4],t.JPLL=[1,3,5,7,0,2,4,6,1,3,5,7],t.XOFFSET=[-1,-1,0,1,1,1,0,-1],t.YOFFSET=[0,1,1,1,0,-1,-1,-1],t.FACEARRAY=[[8,9,10,11,-1,-1,-1,-1,10,11,8,9],[5,6,7,4,8,9,10,11,9,10,11,8],[-1,-1,-1,-1,5,6,7,4,-1,-1,-1,-1],[4,5,6,7,11,8,9,10,11,8,9,10],[0,1,2,3,4,5,6,7,8,9,10,11],[1,2,3,0,0,1,2,3,5,6,7,4],[-1,-1,-1,-1,7,4,5,6,-1,-1,-1,-1],[3,0,1,2,3,0,1,2,4,5,6,7],[2,3,0,1,-1,-1,-1,-1,0,1,2,3]],t.SWAPARRAY=[[0,0,0,0,0,0,0,0,3,3,3,3],[0,0,0,0,0,0,0,0,6,6,6,6],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,5,5,5,5],[0,0,0,0,0,0,0,0,0,0,0,0],[5,5,5,5,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[6,6,6,6,0,0,0,0,0,0,0,0],[3,3,3,3,0,0,0,0,0,0,0,0]],t.Z0=Constants.TWOTHIRD,t.prototype.init=function(){"use strict";var s=256;this.ctab=Array(s),this.utab=Array(s);for(var i=0;256>i;++i)this.ctab[i]=1&i|(2&i)<<7|(4&i)>>1|(8&i)<<6|(16&i)>>2|(32&i)<<5|(64&i)>>3|(128&i)<<4,this.utab[i]=1&i|(2&i)<<1|(4&i)<<2|(8&i)<<3|(16&i)<<4|(32&i)<<5|(64&i)<<6|(128&i)<<7;this.nl2=2*this.nside,this.nl3=3*this.nside,this.nl4=4*this.nside,this.npface=this.nside*this.nside,this.ncap=2*this.nside*(this.nside-1),this.npix=12*this.npface,this.fact2=4/this.npix,this.fact1=(this.nside<<1)*this.fact2,this.order=t.nside2order(this.nside)},t.calculateNSide=function(s){for(var i=0,n=s*s,a=180/Constants.PI,e=3600*3600*4*Constants.PI*a*a,h=Utils.castToInt(e/n),r=h/12,o=Math.sqrt(r),c=t.NS_MAX,u=0,p=0;t.NSIDELIST.length>p;p++)if(c>=Math.abs(o-t.NSIDELIST[p])&&(c=Math.abs(o-t.NSIDELIST[p]),i=t.NSIDELIST[p],u=p),o>i&&t.NS_MAX>o&&(i=t.NSIDELIST[u+1]),o>t.NS_MAX)return console.log("nside cannot be bigger than "+t.NS_MAX),t.NS_MAX;return i},t.nside2order=function(s){"use strict";return(s&s-1)>0?-1:Utils.castToInt(t.log2(s))},t.log2=function(t){"use strict";return Math.log(t)/Math.log(2)},t.prototype.ang2pix_nest=function(s,i){"use strict";var n,a,e,h,r,o,c,u,p,l,d,f,I;if(i>=Constants.TWOPI&&(i-=Constants.TWOPI),0>i&&(i+=Constants.TWOPI),s>Constants.PI||0>s)throw{name:"Illegal argument",message:"theta must be between 0 and "+Constants.PI};if(i>Constants.TWOPI||0>i)throw{name:"Illegal argument",message:"phi must be between 0 and "+Constants.TWOPI};if(a=Math.cos(s),e=Math.abs(a),h=i/Constants.PIOVER2,t.Z0>=e){var M=this.nside*(.5+h),y=this.nside*.75*a,u=M-y,p=M+y;o=u>>this.order,c=p>>this.order,d=o==c?4==o?4:o+4:c>o?o:c+8,f=Utils.castToInt(p&this.nside-1),I=Utils.castToInt(this.nside-(u&this.nside-1)-1)}else{l=Utils.castToInt(h),l>=4&&(l=3),r=h-l;var g=this.nside*Math.sqrt(3*(1-e));u=Utils.castToInt(r*g),p=Utils.castToInt((1-r)*g),u=Math.min(t.NS_MAX-1,u),p=Math.min(t.NS_MAX-1,p),a>=0?(d=l,f=Utils.castToInt(this.nside-p-1),I=Utils.castToInt(this.nside-u-1)):(d=l+8,f=u,I=p)}return n=this.xyf2nest(f,I,d)},t.prototype.xyf2nest=function(t,s,i){"use strict";return(i<<2*this.order)+(this.utab[255&t]|this.utab[255&t>>8]<<16|this.utab[255&t>>16]<<32|this.utab[255&t>>24]<<48|this.utab[255&s]<<1|this.utab[255&s>>8]<<17|this.utab[255&s>>16]<<33|this.utab[255&s>>24]<<49)},t.prototype.nest2xyf=function(t){"use strict";var s={};s.face_num=t>>2*this.order;var i=t&this.npface-1,n=(93823560581120&i)>>16|(614882086624428e4&i)>>31|21845&i|(1431633920&i)>>15;return s.ix=this.ctab[255&n]|this.ctab[255&n>>8]<<4|this.ctab[255&n>>16]<<16|this.ctab[255&n>>24]<<20,i>>=1,n=(93823560581120&i)>>16|(614882086624428e4&i)>>31|21845&i|(1431633920&i)>>15,s.iy=this.ctab[255&n]|this.ctab[255&n>>8]<<4|this.ctab[255&n>>16]<<16|this.ctab[255&n>>24]<<20,s},t.prototype.pix2ang_nest=function(s){"use strict";if(0>s||s>this.npix-1)throw{name:"Illegal argument",message:"ipix out of range"};var i,n,a,e=this.nest2xyf(s),h=e.ix,r=e.iy,o=e.face_num,c=(t.JRLL[o]<<this.order)-h-r-1;this.nside>c?(i=c,n=1-i*i*this.fact2,a=0):c>this.nl3?(i=this.nl4-c,n=i*i*this.fact2-1,a=0):(i=this.nside,n=(this.nl2-c)*this.fact1,a=1&c-this.nside);var u=Math.acos(n),p=(t.JPLL[o]*i+h-r+1+a)/2;p>this.nl4&&(p-=this.nl4),1>p&&(p+=this.nl4);var l=(p-.5*(a+1))*(Constants.PIOVER2/i);return{theta:u,phi:l}},t.nside2Npix=function(s){"use strict";if(0>s||(s&-s)!=s||s>t.NS_MAX)throw{name:"Illegal argument",message:"nside should be >0, power of 2, <"+t.NS_MAX};var i=12*s*s;return i},t.prototype.xyf2ring=function(s,i,n){"use strict";var a,e,h,r=t.JRLL[n]*this.nside-s-i-1;this.nside>r?(a=r,h=2*a*(a-1),e=0):r>3*this.nside?(a=this.nl4-r,h=this.npix-2*(a+1)*a,e=0):(a=this.nside,h=this.ncap+(r-this.nside)*this.nl4,e=1&r-this.nside);var o=(t.JPLL[n]*a+s-i+1+e)/2;return o>this.nl4?o-=this.nl4:1>o&&(o+=this.nl4),h+o-1},t.prototype.nest2ring=function(t){"use strict";var s=this.nest2xyf(t),i=this.xyf2ring(s.ix,s.iy,s.face_num);return i},t.prototype.corners_nest=function(t,s){"use strict";var i=this.nest2ring(t);return this.corners_ring(i,s)},t.prototype.pix2ang_ring=function(t){"use strict";var s,i,n,a,e,h,r,o,c;if(0>t||t>this.npix-1)throw{name:"Illegal argument",message:"ipix out of range"};return h=t+1,this.ncap>=h?(o=h/2,c=Utils.castToInt(o),n=Utils.castToInt(Math.sqrt(o-Math.sqrt(c)))+1,a=h-2*n*(n-1),s=Math.acos(1-n*n*this.fact2),i=(a-.5)*Constants.PI/(2*n)):this.npix-this.ncap>t?(e=t-this.ncap,n=e/this.nl4+this.nside,a=e%this.nl4+1,r=(1&n+this.nside)>0?1:.5,s=Math.acos((this.nl2-n)*this.fact1),i=(a-r)*Constants.PI/this.nl2):(e=this.npix-t,n=Utils.castToInt(.5*(1+Math.sqrt(2*e-1))),a=4*n+1-(e-2*n*(n-1)),s=Math.acos(-1+Math.pow(n,2)*this.fact2),i=(a-.5)*Constants.PI/(2*n)),[s,i]},t.prototype.ring=function(t){"use strict";var s,i,n=0,a=t+1,e=0;return this.ncap>=a?(i=a/2,e=Utils.castToInt(i),n=Utils.castToInt(Math.sqrt(i-Math.sqrt(e)))+1):this.nl2*(5*this.nside+1)>=a?(s=Utils.castToInt(a-this.ncap-1),n=Utils.castToInt(s/this.nl4+this.nside)):(s=this.npix-a+1,i=s/2,e=Utils.castToInt(i),n=Utils.castToInt(Math.sqrt(i-Math.sqrt(e)))+1,n=this.nl4-n),n},t.prototype.integration_limits_in_costh=function(t){"use strict";var s,i,n,a;return a=1*this.nside,this.nside>=t?(i=1-Math.pow(t,2)/3/this.npface,n=1-Math.pow(t-1,2)/3/this.npface,s=t==this.nside?2*(this.nside-1)/3/a:1-Math.pow(t+1,2)/3/this.npface):this.nl3>t?(i=2*(2*this.nside-t)/3/a,n=2*(2*this.nside-t+1)/3/a,s=2*(2*this.nside-t-1)/3/a):(n=t==this.nl3?2*(-this.nside+1)/3/a:-1+Math.pow(4*this.nside-t+1,2)/3/this.npface,s=-1+Math.pow(this.nl4-t-1,2)/3/this.npface,i=-1+Math.pow(this.nl4-t,2)/3/this.npface),[n,i,s]},t.prototype.pixel_boundaries=function(t,s,i,n){var a,e,h,r,o,c,u,p,l=1*this.nside;if(Math.abs(n)>=1-1/3/this.npface)return u=i*Constants.PIOVER2,p=(i+1)*Constants.PIOVER2,[u,p];if(1.5*n>=1)a=Math.sqrt(3*(1-n)),e=1/l/a,h=s,r=h-1,o=t-s,c=o+1,u=Constants.PIOVER2*(Math.max(r*e,1-c*e)+i),p=Constants.PIOVER2*(Math.min(1-o*e,h*e)+i);else if(1.5*n>-1){var d=.5*(1-1.5*n),f=d+1,I=this.nside+t%2;h=s-(I-t)/2,r=h-1,o=(I+t)/2-s,c=o+1,u=Constants.PIOVER2*(Math.max(f-c/l,-d+r/l)+i),p=Constants.PIOVER2*(Math.min(f-o/l,-d+h/l)+i)}else{a=Math.sqrt(3*(1+n)),e=1/l/a;var M=2*this.nside;h=t-M+s,r=h-1,o=M-s,c=o+1,u=Constants.PIOVER2*(Math.max(1-(M-r)*e,(M-c)*e)+i),p=Constants.PIOVER2*(Math.min(1-(M-h)*e,(M-o)*e)+i)}return[u,p]},t.vector=function(t,s){"use strict";var i=1*Math.sin(t)*Math.cos(s),n=1*Math.sin(t)*Math.sin(s),a=1*Math.cos(t);return new SpatialVector(i,n,a)},t.prototype.corners_ring=function(s,i){"use strict";var n=2*i+2,a=Array(n),e=this.pix2ang_ring(s),h=Math.cos(e[0]),r=e[0],o=e[1],c=Utils.castToInt(o/Constants.PIOVER2),u=this.ring(s),p=Math.min(u,Math.min(this.nside,this.nl4-u)),l=0,d=Constants.PIOVER2/p;l=u>=this.nside&&this.nl3>=u?Utils.castToInt(o/d+u%2/2)+1:Utils.castToInt(o/d)+1,l-=c*p;var f=n/2,I=this.integration_limits_in_costh(u),M=Math.acos(I[0]),y=Math.acos(I[2]),g=this.pixel_boundaries(u,l,c,I[0]);if(a[0]=l>p/2?t.vector(M,g[1]):t.vector(M,g[0]),g=this.pixel_boundaries(u,l,c,I[2]),a[f]=l>p/2?t.vector(y,g[1]):t.vector(y,g[0]),1==i){var P=Math.acos(I[1]);g=this.pixel_boundaries(u,l,c,I[1]),a[1]=t.vector(P,g[0]),a[3]=t.vector(P,g[1])}else for(var x=I[2]-I[0],C=x/(i+1),v=1;i>=v;v++)h=I[0]+C*v,r=Math.acos(h),g=this.pixel_boundaries(u,l,c,h),a[v]=t.vector(r,g[0]),a[n-v]=t.vector(r,g[1]);return a},t.vec2Ang=function(t){"use strict";var s=t.z/t.length(),i=Math.acos(s),n=0;return(0!=t.x||0!=t.y)&&(n=Math.atan2(t.y,t.x)),0>n&&(n+=2*Math.PI),[i,n]},t.prototype.queryDisc=function(s,i,n,a){"use strict";if(0>i||i>Constants.PI)throw{name:"Illegal argument",message:"angular radius is in RADIAN and should be in [0,pi]"};var e,h,r,o,c,u,p,l,d,f,I,M,y,g,P,x,C,v,_,R=new LongRangeSetBuilder,T=null,c=i;if(a&&(c+=Constants.PI/this.nl4),T=t.vec2Ang(s),u=T[0],p=T[1],I=this.fact2,M=this.fact1,o=Math.cos(u),_=1/Math.sqrt((1-o)*(1+o)),g=u-c,P=u+c,l=Math.cos(c),C=Math.cos(g),e=this.ringAbove(C)+1,x=Math.cos(P),h=this.ringAbove(x),e>h&&0==h&&(h=e),0>=g)for(var m=1;e>m;++m)this.inRing(m,0,Math.PI,R);for(r=e;h>=r;++r)v=this.nside>r?1-r*r*I:this.nl3>=r?(this.nl2-r)*M:-1+(this.nl4-r)*(this.nl4-r)*I,d=(l-v*o)*_,f=1-v*v-d*d,y=Math.atan2(Math.sqrt(f),d),isNaN(y)&&(y=c),this.inRing(r,p,y,R);if(P>=Math.PI)for(var m=h+1;this.nl4>m;++m)this.inRing(m,0,Math.PI,R,!1);var b;if(n){for(var S=R.items,U=[],A=0;S.length>A;A++){var O=this.ring2nest(S[A]);U.indexOf(O)>=0||U.push(O)}b=U}else b=R.items;return b},t.prototype.inRing=function(t,s,i,n,a){"use strict";var e,h,r,o,c=!1,u=!1,p=1e-12,l=0,d=0,f=0,I=0,M=(s-i)%Constants.TWOPI-p,y=s+i+p,g=(s+i)%Constants.TWOPI+p;if(p>Math.abs(i-Constants.PI)&&(c=!0),t>=this.nside&&this.nl3>=t?(d=t-this.nside+1,r=this.ncap+this.nl4*(d-1),o=r+this.nl4-1,e=d%2,h=this.nl4):(this.nside>t?(d=t,r=2*d*(d-1),o=r+4*d-1):(d=4*this.nside-t,r=this.npix-2*d*(d+1),o=r+4*d-1),h=4*d,e=1),c)return n.appendRange(r,o),void 0;if(l=e/2,a)f=Math.round(h*M/Constants.TWOPI-l),I=Math.round(h*y/Constants.TWOPI-l),f%=h,I>h&&(I%=h);else{if(f=Math.ceil(h*M/Constants.TWOPI-l),I=Utils.castToInt(h*g/Constants.TWOPI-l),f>I&&1==t&&(I=Utils.castToInt(h*y/Constants.TWOPI-l)),f==I+1&&(f=I),1==f-I&&Constants.PI>i*h)return console.log("the interval is too small and avay from center"),void 0;f=Math.min(f,h-1),I=Math.max(I,0)}if(f>I&&(u=!0),u)f+=r,I+=r,n.appendRange(r,I),n.appendRange(f,o);else{if(0>f)return f=Math.abs(f),n.appendRange(r,r+I),n.appendRange(o-f+1,o),void 0;f+=r,I+=r,n.appendRange(f,I)}},t.prototype.ringAbove=function(t){"use strict";var s=Math.abs(t);if(s>Constants.TWOTHIRD){var i=Utils.castToInt(this.nside*Math.sqrt(3*(1-s)));return t>0?i:4*this.nside-i-1}return Utils.castToInt(this.nside*(2-1.5*t))},t.prototype.ring2nest=function(t){"use strict";var s=this.ring2xyf(t);return this.xyf2nest(s.ix,s.iy,s.face_num)},t.prototype.ring2xyf=function(s){"use strict";var i,n,a,e,h={};if(this.ncap>s){i=Utils.castToInt(.5*(1+Math.sqrt(1+2*s))),n=s+1-2*i*(i-1),a=0,e=i,h.face_num=0;var r=n-1;r>=2*i&&(h.face_num=2,r-=2*i),r>=i&&++h.face_num}else if(this.npix-this.ncap>s){var o=s-this.ncap;this.order>=0?(i=(o>>this.order+2)+this.nside,n=(o&this.nl4-1)+1):(i=o/this.nl4+this.nside,n=o%this.nl4+1),a=1&i+this.nside,e=this.nside;var c,u,p=i-this.nside+1,l=this.nl2+2-p;this.order>=0?(c=n-Utils.castToInt(p/2)+this.nside-1>>this.order,u=n-Utils.castToInt(l/2)+this.nside-1>>this.order):(c=(n-Utils.castToInt(p/2)+this.nside-1)/this.nside,u=(n-Utils.castToInt(l/2)+this.nside-1)/this.nside),h.face_num=u==c?4==u?4:Utils.castToInt(u)+4:c>u?Utils.castToInt(u):Utils.castToInt(c)+8}else{var o=this.npix-s;i=Utils.castToInt(.5*(1+Math.sqrt(2*o-1))),n=4*i+1-(o-2*i*(i-1)),a=0,e=i,i=2*this.nl2-i,h.face_num=8;var r=n-1;r>=2*e&&(h.face_num=10,r-=2*e),r>=e&&++h.face_num}var d=i-t.JRLL[h.face_num]*this.nside+1,f=2*n-t.JPLL[h.face_num]*e-a-1;return f>=this.nl2&&(f-=8*this.nside),h.ix=f-d>>1,h.iy=-(f+d)>>1,h},t}(),Utils=function(){},Utils.radecToPolar=function(t,s){return{theta:Math.PI/2-s/180*Math.PI,phi:t/180*Math.PI}},Utils.polarToRadec=function(t,s){return{ra:180*s/Math.PI,dec:180*(Math.PI/2-t)/Math.PI}},Utils.castToInt=function(t){return t>0?Math.floor(t):Math.ceil(t)};//=================================
+//            AstroMath
+//=================================
+
+// Class AstroMath having 'static' methods
+function AstroMath() {}
+
+// Constant for conversion Degrees => Radians (rad = deg*AstroMath.D2R)
+AstroMath.D2R = Math.PI/180.0;
+// Constant for conversion Radians => Degrees (deg = rad*AstroMath.R2D)
+AstroMath.R2D = 180.0/Math.PI;
+/**
+ * Function sign
+ * @param x value for checking the sign
+ * @return -1, 0, +1 respectively if x < 0, = 0, > 0
+ */
+AstroMath.sign = function(x) { return x > 0 ? 1 : (x < 0 ? -1 : 0 ); };
+
+/**
+ * Function cosd(degrees)
+ * @param x angle in degrees
+ * @returns the cosine of the angle
+ */
+AstroMath.cosd = function(x) {
+	if (x % 90 == 0) {
+		var i = Math.abs(Math.floor(x / 90 + 0.5)) % 4;
+		switch (i) {
+			case 0:	return 1;
+			case 1:	return 0;
+			case 2:	return -1;
+			case 3:	return 0;
+		}
+	}
+	return Math.cos(x*AstroMath.D2R);
+};
+
+/**
+ * Function sind(degrees)
+ * @param x angle in degrees
+ * @returns the sine of the angle
+ */
+AstroMath.sind = function(x) {
+	if (x % 90 === 0) {
+		var i = Math.abs(Math.floor(x / 90 - 0.5)) % 4;
+		switch (i) {
+			case 0:	return 1;
+			case 1:	return 0;
+			case 2:	return -1;
+			case 3:	return 0;
+		}
+	}
+
+	return Math.sin(x*AstroMath.D2R);
+};
+
+/**
+ * Function tand(degrees)
+ * @param x angle in degrees
+ * @returns the tangent of the angle
+ */
+AstroMath.tand = function(x) {
+	var resid;
+
+	resid = x % 360;
+	if (resid == 0 || Math.abs(resid) == 180) {
+		return 0;
+	} else if (resid == 45 || resid == 225) {
+		return 1;
+	} else if (resid == -135 || resid == -315) {
+		return -1
+	}
+
+	return Math.tan(x * AstroMath.D2R);
+};
+
+/**
+ * Function asin(degrees)
+ * @param sine value [0,1]
+ * @return the angle in degrees
+ */
+AstroMath.asind = function(x) { return Math.asin(x)*AstroMath.R2D; };
+
+/**
+ * Function acos(degrees)
+ * @param cosine value [0,1]
+ * @return the angle in degrees
+ */
+AstroMath.acosd = function(x) { return Math.acos(x)*AstroMath.R2D; };
+
+/**
+ * Function atan(degrees)
+ * @param tangent value
+ * @return the angle in degrees
+ */
+AstroMath.atand = function(x) { return Math.atan(x)*AstroMath.R2D; };
+
+/**
+ * Function atan2(y,x)
+ * @param y y component of the vector
+ * @param x x component of the vector
+ * @return the angle in radians
+ */
+AstroMath.atan2 = function(y,x) {
+	if (y != 0.0) {
+		var sgny = AstroMath.sign(y);
+		if (x != 0.0) {
+			var phi = Math.atan(Math.abs(y/x));
+			if (x > 0.0) return phi*sgny;
+			else if (x < 0) return (Math.PI-phi)*sgny;
+		} else return (Math.PI/2)*sgny;
+	} else {
+		return x > 0.0 ? 0.0 : (x < 0 ? Math.PI : 0.0/0.0);
+	}
+}  
+
+/**
+ * Function atan2d(y,x)
+ * @param y y component of the vector
+ * @param x x component of the vector
+ * @return the angle in degrees
+ */
+AstroMath.atan2d = function(y,x) {
+	return AstroMath.atan2(y,x)*AstroMath.R2D;
+}
+
+/*=========================================================================*/
+/**
+ * Computation of hyperbolic cosine
+ * @param x argument
+ */
+AstroMath.cosh = function(x) {
+	return (Math.exp(x)+Math.exp(-x))/2;
+}
+
+/**
+ * Computation of hyperbolic sine
+ * @param x argument
+ */
+AstroMath.sinh = function(x) {
+	return (Math.exp(x)-Math.exp(-x))/2;
+}
+
+/**
+ * Computation of hyperbolic tangent
+ * @param x argument
+ */
+AstroMath.tanh = function(x) {
+	return (Math.exp(x)-Math.exp(-x))/(Math.exp(x)+Math.exp(-x));
+}
+
+/**
+ * Computation of Arg cosh
+ * @param x argument in degrees. Must be in the range [ 1, +infinity ]
+ */
+AstroMath.acosh = function(x) {
+	return(Math.log(x+Math.sqrt(x*x-1.0)));
+}
+
+/**
+ * Computation of Arg sinh
+ * @param x argument in degrees
+ */
+AstroMath.asinh = function(x) {
+	return(Math.log(x+Math.sqrt(x*x+1.0)));
+}
+
+/**
+ * Computation of Arg tanh
+ * @param x argument in degrees. Must be in the range ] -1, +1 [
+ */
+AstroMath.atanh = function(x) {
+	return(0.5*Math.log((1.0+x)/(1.0-x)));
+}
+
+//=============================================================================
+//      Special Functions using trigonometry
+//=============================================================================
+/**
+ * Computation of sin(x)/x
+ *	@param x in degrees.
+ * For small arguments x <= 0.001, use approximation 
+ */
+AstroMath.sinc = function(x) {
+	var ax = Math.abs(x);
+	var y;
+
+	if (ax <= 0.001) {
+		ax *= ax;
+		y = 1 - ax*(1.0-ax/20.0)/6.0;
+	} else {
+		y = Math.sin(ax)/ax;
+	}
+
+	return y;
+}
+
+/**
+ * Computes asin(x)/x
+ * @param x in degrees.
+ * For small arguments x <= 0.001, use an approximation
+ */
+AstroMath.asinc = function(x) {
+	var ax = Math.abs(x);
+	var y;
+
+	if (ax <= 0.001) {
+		ax *= ax; 
+		y = 1 + ax*(6.0 + ax*(9.0/20.0))/6.0;
+	} else {
+		y = Math.asin(ax)/ax;	// ???? radians ???
+	}
+
+	return (y);
+}
+
+
+//=============================================================================
+/**
+ * Computes the hypotenuse of x and y
+ * @param x value
+ * @param y value
+ * @return sqrt(x*x+y*y)
+ */
+AstroMath.hypot = function(x,y) {
+	return Math.sqrt(x*x+y*y);
+}
+
+/** Generate the rotation matrix from the Euler angles
+ * @param z	Euler angle
+ * @param theta	Euler angle
+ * @param zeta	Euler angles
+ * @return R [3][3]		the rotation matrix
+ * The rotation matrix is defined by:<pre>
+ *    R =      R_z(-z)      *        R_y(theta)     *     R_z(-zeta)
+ *   |cos.z -sin.z  0|   |cos.the  0 -sin.the|   |cos.zet -sin.zet 0|
+ * = |sin.z  cos.z  0| x |   0     1     0   | x |sin.zet  cos.zet 0|
+ *   |   0      0   1|   |sin.the  0  cos.the|   |   0        0    1|
+ * </pre>
+ */
+AstroMath.eulerMatrix = function(z, theta, zeta) {
+	var R = new Array(3);
+	R[0] = new Array(3);
+	R[1] = new Array(3);
+	R[2] = new Array(3);
+	var cosdZ = AstroMath.cosd(z);
+	var sindZ = AstroMath.sind(z);
+	var cosdTheta = AstroMath.cosd(theta);
+	var w = AstroMath.sind(theta) ;
+	var cosdZeta = AstroMath.cosd(zeta);
+	var sindZeta = AstroMath.sind(zeta);
+
+	R[0][0] = cosdZeta*cosdTheta*cosdZ - sindZeta*sindZ;
+	R[0][1] = -sindZeta*cosdTheta*cosdZ - cosdZeta*sindZ;
+	R[0][2] = -w*cosdZ;
+
+	R[1][0] = cosdZeta*cosdTheta*sindZ + sindZeta*cosdZ;
+	R[1][1] = -sindZeta*cosdTheta*sindZ + cosdZeta*cosdZ;
+	R[1][2] = -w*sindZ;
+
+	R[2][0] = -w*cosdZeta;
+	R[2][1] = -w*cosdZ;
+	R[2][2] = cosdTheta;
+	return R ;
+};
+
+
+AstroMath.displayMatrix = function(m) {
+	// Number of rows
+	var nbrows = m.length;
+	// Max column count
+	var nbcols = 0
+	for (var i=0; i<nbrows; i++) {
+		if (m[i].length > nbcols) nbcols = m[i].length;
+	}
+	var str = '<table>\n';
+	for (var i=0; i<nbrows; i++) {
+		str += '<tr>';
+		for (var j=0; j<nbrows; j++) {
+			str += '<td>';
+			if (i < m[i].length)
+				str += (m[i][j]).toString();
+			str += '</td>';
+		}
+		str += '</td>\n';
+	}
+	str += '</table>\n';
+
+	return str;
+}
+function Projection(lon0, lat0) {
+	this.PROJECTION = Projection.PROJ_TAN;
+	this.ROT = this.tr_oR(lon0, lat0);
+}
+
+//var ROT;
+//var PROJECTION = Projection.PROJ_TAN;	// Default projection
+
+
+Projection.PROJ_TAN = 1;	/* Gnomonic projection*/
+Projection.PROJ_TAN2 = 2;	/* Stereographic projection*/
+Projection.PROJ_STG = 2;	
+Projection.PROJ_SIN = 3;	/* Orthographic		*/
+Projection.PROJ_SIN2 = 4;	/* Equal-area 		*/
+Projection.PROJ_ZEA = 4;	/* Zenithal Equal-area 	*/
+Projection.PROJ_ARC = 5;	/* For Schmidt plates	*/
+Projection.PROJ_SCHMIDT = 5;	/* For Schmidt plates	*/
+Projection.PROJ_AITOFF = 6;	/* Aitoff Projection	*/
+Projection.PROJ_AIT = 6;	/* Aitoff Projection	*/
+Projection.PROJ_GLS = 7;	/* Global Sin (Sanson)	*/
+Projection.PROJ_MERCATOR = 8;
+Projection.PROJ_MER = 8;	
+Projection.PROJ_LAM = 9;	/* Lambert Projection	*/
+Projection.PROJ_LAMBERT = 9;	
+Projection.PROJ_TSC = 10;	/* Tangent Sph. Cube	*/
+Projection.PROJ_QSC = 11;	/* QuadCube Sph. Cube	*/
+
+Projection.PROJ_LIST = [
+	"Mercator",Projection.PROJ_MERCATOR,
+	"Gnomonic",Projection.PROJ_TAN,
+	"Stereographic",Projection.PROJ_TAN2,
+	"Orthographic",Projection.PROJ_SIN,
+	"Zenithal",Projection.PROJ_ZEA,
+	"Schmidt",Projection.PROJ_SCHMIDT,
+	"Aitoff",Projection.PROJ_AITOFF,
+	"Lambert",Projection.PROJ_LAMBERT,
+//	"Tangential",Projection.PROJ_TSC,
+//	"Quadrilaterized",Projection.PROJ_QSC,
+];
+Projection.PROJ_NAME = [
+	'-', 'Gnomonic', 'Stereographic', 'Orthographic', 'Equal-area', 'Schmidt plates',
+	'Aitoff', 'Global sin', 'Mercator', 'Lambert'
+];
+
+Projection.prototype = { 
+	
+	/** Set the center of the projection
+	 * 
+	 * (ajout T. Boch, 19/02/2013)
+	 * 
+	 * */
+	setCenter: function(lon0, lat0) {
+		this.ROT = this.tr_oR(lon0, lat0);
+	},
+	
+	/**
+	 * Set the projection to use
+	 * p = projection code
+	 */
+	setProjection: function(p) {
+		this.PROJECTION = p;
+	},
+
+
+	/**
+	 * Computes the projection of 1 point : ra,dec => X,Y
+	 * alpha, delta = longitude, lattitude
+	 */
+	project: function(alpha, delta) {
+		var u1 = this.tr_ou(alpha, delta);	// u1[3]
+		var u2 = this.tr_uu(u1, this.ROT);	// u2[3]
+		var P = this.tr_up(this.PROJECTION, u2);	// P[2] = [X,Y]
+		if (P == null) {
+			return null;
+		}
+
+		return { X: -P[0], Y: -P[1] };
+	},
+
+	/**
+	 * Computes the coordinates from a projection point : X,Y => ra,dec
+	 * return o = [ ra, dec ]
+	 */
+	unproject: function(X,Y) {
+		X = -X; Y = -Y;
+		var u1 = this.tr_pu(this.PROJECTION, X, Y);	// u1[3]
+		var u2 = this.tr_uu1(u1, this.ROT);	// u2[3]
+		var o = this.tr_uo(u2);	// o[2]
+
+		return { ra: o[0], dec: o[1] };
+	},
+
+	/**
+	 * Compute projections from unit vector
+	 * The center of the projection correspond to u = [1, 0, 0)
+	 * proj = projection system (integer code like _PROJ_MERCATOR_
+	 * u[3] = unit vector
+	 * return: an array [x,y] or null
+	 */
+	tr_up: function(proj, u) {
+		var x = u[0]; var y = u[1]; var z = u[2];
+		var r, den;
+		var pp;
+		var X,Y;
+
+		r = AstroMath.hypot(x,y);			// r = cos b
+		if (r == 0.0 && z == 0.0) return null;
+
+		switch(proj) {
+			default:
+				pp = null;
+				break;
+
+			case Projection.PROJ_AITOFF:
+				den = Math.sqrt(r*(r+x)/2.0); 		// cos b . cos l/2
+				X = Math.sqrt(2.0*r*(r-x));
+				den = Math.sqrt((1.0 + den)/2.0); 
+				X = X / den;
+				Y = z / den;
+				if (y < 0.0) X = -X;
+				pp = [ X, Y];
+				break;
+
+			case Projection.PROJ_GLS:
+				Y = Math.asin(z);				// sin b
+				X = (r != 0) ? Math.atan2(y,x)*r : 0.0;
+				pp = [ X, Y];
+				break;
+
+			case Projection.PROJ_MERCATOR:
+				if (r != 0) {
+					X = Math.atan2(y,x);
+					Y = AstroMath.atanh(z);
+					pp = [ X, Y];
+				} else {
+					pp = null;
+				}
+				break;
+
+			case Projection.PROJ_TAN:
+				if (x > 0.0) {
+					X = y/x;
+					Y = z/x;
+					pp = [ X, Y ];
+				} else {
+					pp = null;
+				}
+				break;
+
+			case Projection.PROJ_TAN2:
+				den = (1.0 + x)/2.0;
+				if (den > 0.0)	{
+					X = y/den;
+					Y = z/den;
+					pp = [ X, Y ];
+				} else {
+					pp = null;
+				}
+			 	break;
+
+			case Projection.PROJ_ARC:
+				if (x <= -1.0) {
+					// Distance of 180 degrees
+					X = Math.PI
+					Y = 0.0;
+				} else {
+					// Arccos(x) = Arcsin(r)
+					r = AstroMath.hypot(y,z);
+					if (x > 0.0) den = AstroMath.asinc(r);
+					else den = Math.acos(x)/r;
+					X = y * den;
+					Y = z * den;
+				}
+				pp = [ X, Y ];
+				break;
+
+			case Projection.PROJ_SIN:
+				if (x >= 0.0) {
+					X = y;
+					Y = z;
+					pp = [ X, Y ];
+				} else {
+					pp = null;
+				}
+				break;
+
+			case Projection.PROJ_SIN2:	// Always possible
+				den = Math.sqrt((1.0 + x)/2.0);
+				if (den != 0)	{
+					X = y / den;
+					Y = z / den;
+				} else {
+					// For x = -1
+					X = 2.0;
+					Y = 0.0;
+				}
+				pp = [ X, Y ];
+				break;
+
+			case Projection.PROJ_LAMBERT:	// Always possible
+				Y = z;
+				X = 0;
+				if (r != 0)	X = Math.atan2(y,x);
+				pp = [ X, Y ];
+				break;
+	  }
+	  return pp;
+	},
+
+	/**
+	 * Computes Unit vector from a position in projection centered at position (0,0).
+	 * proj = projection code
+	 * X,Y : coordinates of the point in the projection
+	 * returns : the unit vector u[3] or a face number for cube projection. 
+	 *           null if the point is outside the limits, or if the projection is unknown.
+	 */
+	tr_pu: function( proj, X, Y ) {
+		var r,s,x,y,z;
+
+		switch(proj) {
+			default:
+			return null;
+
+			case Projection.PROJ_AITOFF:
+				// Limit is ellipse with axises 
+				// a = 2 * sqrt(2) ,  b = sqrt(2)
+				// Compute dir l/2, b
+				r = X*X/8.e0 + Y*Y/2.e0; 	// 1 - cos b . cos l/2
+				if (r > 1.0) {
+	  				// Test outside domain */
+					return null;
+				}
+				x = 1.0 - r ;	// cos b . cos l/2
+				s = Math.sqrt(1.0 - r/2.0) ;	// sqrt(( 1 + cos b . cos l/2)/2)
+				y = X * s / 2.0;
+				z = Y * s ;
+				// From (l/2,b) to (l,b)
+				r = AstroMath.hypot( x, y ) ;	// cos b
+				if (r != 0.0) {
+					s = x;
+					x = (s*s - y*y) /r;
+					y = 2.0 * s * y/r;
+				}
+				break;
+
+			case Projection.PROJ_GLS:
+				// Limit is |Y| <= pi/2
+				z = Math.sin(Y);
+				r = 1 - z*z;		// cos(b) ** 2
+				if (r < 0.0) {
+					return null;
+				}
+				r = Math.sqrt(r);		// cos b
+				if (r != 0.0) {
+					s = X/r;	// Longitude
+				} else {
+					s = 0.0;	// For poles
+				}
+				x = r * Math.cos(s);
+				y = r * Math.sin(s);
+				break;
+
+			case Projection.PROJ_MERCATOR:
+				z = AstroMath.tanh(Y);
+				r = 1.0/AstroMath.cosh(Y);
+				x = r * Math.cos(X);
+				y = r * Math.sin(X);
+				break;
+
+			case Projection.PROJ_LAMBERT:
+				// Always possible
+				z = Y;
+				r = 1 - z*z;		// cos(b) ** 2
+				if (r < 0.0) {
+					return null;
+				}
+				r = Math.sqrt(r);		// cos b
+				x = r * Math.cos(X);
+				y = r * Math.sin(X);
+				break;
+	
+			case Projection.PROJ_TAN:
+				// No limit
+				x = 1.0 / Math.sqrt(1.0 + X*X + Y*Y);
+				y = X * x;
+				z = Y * x;
+				break;
+
+			case Projection.PROJ_TAN2:
+				// No limit
+				r = (X*X + Y*Y)/4.0;
+				s = 1.0 + r;
+				x = (1.0 - r)/s;
+				y = X / s;
+				z = Y / s;
+				break;
+
+			case Projection.PROJ_ARC:
+				// Limit is circle, radius PI
+				r = AstroMath.hypot(X, Y);
+				if (r > Math.PI) {
+					return null;
+				}
+				s = AstroMath.sinc(r);
+				x = Math.cos(r);
+				y = s * X;
+				z = s * Y;
+				break;
+
+			case Projection.PROJ_SIN:
+				// Limit is circle, radius 1
+				s = 1.0 - X*X - Y*Y;
+				if (s < 0.0) {
+					return null;
+				}
+				x = Math.sqrt(s);
+				y = X;
+				z = Y;
+				break;
+
+			case Projection.PROJ_SIN2:
+				// Limit is circle, radius 2	*/
+				r = (X*X + Y*Y)/4.e0;
+				if (r > 1.0) {
+					return null;
+				}
+				s = Math.sqrt(1.0 - r);
+				x = 1.0 - 2.0 * r;
+				y = s * X;
+				z = s * Y;
+				break;
+	  }
+	  return [ x,y,z ];
+	},
+
+	/**
+	 * Creates the rotation matrix R[3][3] defined as
+	 * R[0] (first row) = unit vector towards Zenith
+	 * R[1] (second row) = unit vector towards East
+	 * R[2] (third row) = unit vector towards North
+	 * o[2] original angles
+	 * @return rotation matrix
+	 */
+	tr_oR: function(lon, lat) {
+		var R = new Array(3);
+		R[0] = new Array(3);
+		R[1] = new Array(3);
+		R[2] = new Array(3);
+		R[2][2] =  AstroMath.cosd(lat);
+		R[0][2] =  AstroMath.sind(lat);
+		R[1][1] =  AstroMath.cosd(lon);
+		R[1][0] =  -AstroMath.sind(lon);
+		R[1][2] =  0.0;
+		R[0][0] =  R[2][2] * R[1][1];  
+		R[0][1] = -R[2][2] * R[1][0];
+		R[2][0] = -R[0][2] * R[1][1];
+		R[2][1] =  R[0][2] * R[1][0];
+		return R;
+	},
+
+	/**
+	 * Transformation from polar coordinates to Unit vector
+	 * @return U[3]
+	 */
+	tr_ou: function(ra, dec) {
+		var u = new Array(3);
+		var cosdec = AstroMath.cosd(dec);
+
+		u[0] = cosdec * AstroMath.cosd(ra);
+		u[1] = cosdec * AstroMath.sind(ra);
+		u[2] = AstroMath.sind(dec);
+
+		return u;
+	},
+
+	/**
+	 * Rotates the unit vector u1 using the rotation matrix
+	 * u1[3] unit vector
+	 * R[3][3] rotation matrix
+	 * return resulting unit vector u2[3]
+	 */
+	tr_uu: function( u1, R ) {
+		var u2 = new Array(3);
+		var x = u1[0];
+		var y = u1[1];
+		var z = u1[2];
+
+		u2[0] = R[0][0]*x + R[0][1]*y + R[0][2]*z ;
+		u2[1] = R[1][0]*x + R[1][1]*y + R[1][2]*z ;
+		u2[2] = R[2][0]*x + R[2][1]*y + R[2][2]*z ;
+
+		return u2;
+	},
+
+	/**
+	 * reverse rotation the unit vector u1 using the rotation matrix
+	 * u1[3] unit vector
+	 * R[3][3] rotation matrix
+	 * return resulting unit vector u2[3]
+	 */
+	tr_uu1: function( u1 , R) {
+		var u2 = new Array(3);
+		var x = u1[0];
+		var y = u1[1];
+		var z = u1[2];
+
+		u2[0] = R[0][0]*x + R[1][0]*y + R[2][0]*z;
+		u2[1] = R[0][1]*x + R[1][1]*y + R[2][1]*z;
+		u2[2] = R[0][2]*x + R[1][2]*y + R[2][2]*z;
+
+		return u2;
+	},
+
+	/**
+	 * Computes angles from direction cosines
+	 * u[3] = direction cosines vector
+	 * return o = [ ra, dec ]
+	 */
+	tr_uo: function(u) {
+		var x = u[0]; var y = u[1]; var z = u[2];  
+		var r2 = x*x + y*y;
+		var ra, dec;
+		if (r2  == 0.0) {
+	 		// in case of poles
+			if (z == 0.0) {
+				return null;
+			}
+			ra = 0.0;
+			dec = z > 0.0 ? 90.0 : -90.0;
+		} else {
+			dec = AstroMath.atand( z / Math.sqrt(r2));
+			ra  = AstroMath.atan2d (y , x );
+			if (ra < 0.0) ra += 360.0;
+		}
+
+		return [ ra, dec ];
+	}
+}//=================================
+// Class Coo
+//=================================
+
+/**
+ * Constructor
+ * @param longitude longitude (decimal degrees)
+ * @param latitude latitude (decimal degrees)
+ * @param prec precision
+ * (8: 1/1000th sec, 7: 1/100th sec, 6: 1/10th sec, 5: sec, 4: 1/10th min, 3: min, 2: 1/10th deg, 1: deg
+ */
+function Coo(longitude, latitude, prec) {
+	this.lon = longitude;
+	this.lat = latitude;
+	this.prec = prec;
+	this.frame = null;
+
+	this.computeDirCos();
+}
+
+Coo.factor = [ 3600.0, 60.0, 1.0 ];
+Coo.prototype = {
+	setFrame: function(astroframe) {
+		this.frame = astroframe;
+	},
+	computeDirCos: function() {
+		var coslat = AstroMath.cosd(this.lat);
+
+		this.x = coslat*AstroMath.cosd(this.lon);
+		this.y = coslat*AstroMath.sind(this.lon);
+		this.z = AstroMath.sind(this.lat);	
+	}, 
+	computeLonLat: function() {
+		var r2 = this.x*this.x+this.y*this.y;
+		this.lon = 0.0;
+		if (r2 == 0.0) {
+			// In case of poles
+			if (this.z == 0.0) {
+				this.lon = 0.0/0.0;
+				this.lat = 0.0/0.0;
+			} else {
+				this.lat = (this.z > 0.0) ? 90.0 : -90.0;
+			}
+		} else {
+			this.lon = AstroMath.atan2d(this.y, this.x);
+			this.lat = AstroMath.atan2d(this.z, Math.sqrt(r2));
+			if (this.lon < 0) this.lon += 360.0;
+		}
+	},
+
+  /**
+    * Squared distance between 2 points (= 4.sin<sup>2</sup>(r/2))
+    * @param  pos      another position on the sphere
+    * @return ||pos-this||<sup>2</sup> = 4.sin<sup>2</sup>(r/2)
+   **/
+   dist2: function(pos) {
+//    	if ((this.x==0)&&(this.y==0)&&(this.z==0)) return(0./0.);
+//    	if ((pos.x==0)&&(pos.y==0)&&(pos.z==0)) return(0./0.);
+	var w = pos.x - this.x;
+	var r2 = w * w;
+	w = pos.y - this.y; r2 += w * w;
+	w = pos.z - this.z; r2 += w * w;
+	return r2;
+   },
+
+   /**
+    * Distance between 2 points on the sphere.
+    * @param  pos another position on the sphere
+    * @return distance in degrees in range [0, 180]
+   **/
+    distance: function(pos) {
+      // Take care of NaN:
+    	if ((pos.x==0)&&(pos.y==0)&&(pos.z==0)) return(0./0.);
+    	if ((this.x==0)&&(this.y==0)&&(this.z==0)) return(0./0.);
+      return (2. * AstroMath.asind(0.5 * Math.sqrt(this.dist2(pos))));
+    },
+
+   /**
+    * Transform the position into another frame.
+    * @param new_frame	The frame of the resulting position.
+   **/
+   convertTo: function(new_frame) {
+		// Verify first if frames identical -- then nothing to do !
+		if (this.frame.equals(new_frame)) {
+	    		return;
+		}
+
+		// Move via ICRS
+		this.frame.toICRS(this.coo);	// Position now in ICRS
+		new_frame.fromICRS(this.coo);	// Position now in new_frame
+		this.frame = new_frame;
+		this.lon = this.lat = 0./0.;	// Actual angles not recomputed
+   },
+
+    /**
+     * Rotate a coordinate (apply a rotation to the position).
+     * @param R [3][3] Rotation Matrix
+     */
+    rotate: function(R) {
+      var X, Y, Z;
+		if (R == Umatrix3) return;
+		X = R[0][0]*this.x + R[0][1]*this.y + R[0][2]*this.z;
+		Y = R[1][0]*this.x + R[1][1]*this.y + R[1][2]*this.z;
+		Z = R[2][0]*this.x + R[2][1]*this.y + R[2][2]*this.z;
+    	// this.set(X, Y, Z); Not necessary to compute positions each time.
+		this.x = X; this.y = Y; this.z = Z;
+		this.lon = this.lat = 0./0.;
+    },
+
+    /**
+     * Rotate a coordinate (apply a rotation to the position) in reverse direction.
+     * The method is the inverse of rotate.
+     * @param R [3][3] Rotation Matrix
+     */
+    rotate_1: function(R) {
+      var X, Y, Z;
+      if (R == Umatrix3) return;
+		X = R[0][0]*this.x + R[1][0]*this.y + R[2][0]*this.z;
+		Y = R[0][1]*this.x + R[1][1]*this.y + R[2][1]*this.z;
+		Z = R[0][2]*this.x + R[1][2]*this.y + R[2][2]*this.z;
+    	// this.set(X, Y, Z); Not necessary to compute positions each time.
+		this.x = X; this.y = Y; this.z = Z;
+		this.lon = this.lat = 0./0.;
+    },
+
+
+    /**
+     * Test equality of Coo.
+     * @param coo Second coordinate to compare with
+     * @return  True if the two coordinates are equal
+     */
+    equals: function(coo) {
+		return this.x == coo.x && this.y == coo.y && this.z == coo.z;
+    },
+
+	/**
+	 * parse a coordinate string. The coordinates can be in decimal or sexagesimal
+	 * @param str string to parse
+	 * @return true if the parsing succeded, false otherwise
+	 */
+	parse: function(str) {
+		var p = str.indexOf('+');
+		if (p < 0) p = str.indexOf('-');
+		if (p < 0) p = str.indexOf(' ');
+		if (p < 0) {
+			this.lon = 0.0/0.0;
+			this.lat = 0.0/0.0;
+			this.prec = 0;
+			return false;
+		}
+		var strlon = str.substring(0,p);
+		var strlat = str.substring(p);
+	
+		this.lon = this.parseLon(strlon);	// sets the precision parameter
+		this.lat = this.parseLat(strlat);	// sets the precision parameter
+		return true;
+	},
+
+	parseLon: function(str) {
+		var str = str.trim();
+        str = str.replace(/:/g, ' ');
+
+		if (str.indexOf(' ') < 0) {
+			// The longitude is a integer or decimal number
+			var p = str.indexOf('.');
+			this.prec = p < 0 ? 0 : str.length - p - 1;
+			return parseFloat(str);
+		} else {
+			var stok = new Tokenizer(str,' ');
+			var i = 0;
+			var l = 0;
+			var pr = 0;
+			while (stok.hasMore()) {
+				var tok = stok.nextToken();
+				var dec = tok.indexOf('.');
+				l += parseFloat(tok)*Coo.factor[i];
+//				pr = dec < 0 ? 1 : 2;
+				switch (i) {
+					case 0: pr = dec < 0 ? 1 : 2; break;
+					case 1: pr = dec < 0 ? 3 : 4; break;
+					case 2: pr = dec < 0 ? 5 : 4+tok.length-dec;
+					default: break;
+				}
+				i++;
+			}
+			this.prec = pr;
+			return l*15/3600.0;	
+		}
+	},
+			
+	parseLat: function(str) {
+		var str = str.trim();
+        str = str.replace(/:/g, ' ');
+
+		var sign;
+		if (str.charAt(0) == '-') {
+			sign = -1;
+			str = str.substring(1);
+		} else if (str.charAt(0) == '-') {
+			sign = 1;
+			str = str.substring(1);
+		} else {
+			// No sign specified
+			sign = 1;
+		}
+		if (str.indexOf(' ') < 0) {
+			// The longitude is a integer or decimal number
+			var p = str.indexOf('.');
+			this.prec = p < 0 ? 0 : str.length - p - 1;
+			return parseFloat(str)*sign;
+		} else {
+			var stok = new Tokenizer(str,' ');
+			var i = 0;
+			var l = 0;
+			var pr = 0;
+			while (stok.hasMore()) {
+				var tok = stok.nextToken();
+				var dec = tok.indexOf('.');
+				l += parseFloat(tok)*Coo.factor[i];
+				switch (i) {
+					case 0: pr = dec < 0 ? 1 : 2; break;
+					case 1: pr = dec < 0 ? 3 : 4; break;
+					case 2: pr = dec < 0 ? 5 : 4+tok.length-dec;
+					default: break;
+				}
+				i++;
+			}
+			this.prec = pr;
+			return l*sign/3600.0;	
+		}
+	},
+
+	/**
+	 * Format coordinates according to the options
+	 * @param options 'd': decimal, 's': sexagésimal, '/': space separated, '2': return [ra,dec] in an array
+	 * @return the formatted coordinates
+	 */
+	format: function(options) {
+		if (isNaN(this.lon)) this.computeLonLat();
+		var strlon = "", strlat = "";
+		if (options.indexOf('d') >= 0) {
+			// decimal display
+			strlon = Numbers.format(this.lon, this.prec);
+			strlat = Numbers.format(this.lat, this.prec);
+		} else {
+			// sexagesimal display
+			var hlon = this.lon/15.0;
+			var strlon = Numbers.toSexagesimal(hlon, this.prec+1, false);
+			var strlat = Numbers.toSexagesimal(this.lat, this.prec, false);
+		}
+		if (this.lat > 0) strlat = '+'+strlat;
+
+		if (options.indexOf('/') >= 0) {
+			return strlon+' '+strlat;
+		} else if (options.indexOf('2') >= 0) {
+			return [strlon, strlat];
+		}
+		return strlon+strlat;
+	}
+		
+}
+
+/**
+ * Distance between 2 points on the sphere.
+ * @param coo1 firs	var coslat = AstroMath.cosd(this.lat);
+
+	this.x = coslat*AstroMath.cosd(this.lon);
+	this.y = coslat*AstroMath.sind(this.lon);
+	this.z = AstroMath.sind(this.lat);
+t coordinates point
+ * @param coo2 second coordinates point
+ * @return distance in degrees in range [0, 180]
+**/
+/*
+Coo.distance = function(Coo coo1, Coo coo2) {
+	return Coo.distance(coo1.lon, coo1.lat, coo2.lon, coo2.lat);
+}
+*/
+/**
+ * Distance between 2 points on the sphere.
+ * @param lon1 longitude of first point in degrees
+ * @param lat1 latitude of first point in degrees
+ * @param lon2 longitude of second point in degrees
+ * @param lat2 latitude of second point in degrees
+ * @return distance in degrees in range [0, 180]
+**/
+/*
+Coo.distance = function(lon1, lat1, lon2, lat2) {
+	var c1 = AstroMath.cosd(lat1);
+	var c2 = AstroMath.cosd(lat2);
+
+	var w, r2;
+	w = c1 * AstroMath.cosd(lon1) - c2 * AstroMath.cosd(lon2);
+	r2 = w*w;
+	w = c1 * AstroMath.sind(lon1) - c2 * AstroMath.sind(lon2);
+	r2 += w*w;
+	w = AstroMath.sind(lat1) - AstroMath.sind(lat2);
+	r2 += w*w;
+
+	return 2. * AstroMath.asind(0.5 * Math.sqrt(r2));
+}
+
+
+//===================================
+// Class Tokenizer (similar to Java)
+//===================================
+
+/**
+ * Constructor
+ * @param str String to tokenize
+ * @param sep token separator char
+ */
+function Tokenizer(str, sep) {
+	this.string = Strings.trim(str, sep);
+	this.sep = sep;
+	this.pos = 0;
+}
+
+Tokenizer.prototype = {
+	/**
+	 * Check if the string has more tokens
+	 * @return true if a token remains (read with nextToken())
+	 */
+	hasMore: function() {
+		return this.pos < this.string.length;
+	},
+
+	/**
+	 * Returns the next token (as long as hasMore() is true)
+	 * @return the token string
+	 */
+	nextToken: function() {
+		// skip all the separator chars
+		var p0 = this.pos;
+		while (p0 < this.string.length && this.string.charAt(p0) == this.sep) p0++;
+		var p1 = p0;
+		// get the token
+		while (p1 < this.string.length && this.string.charAt(p1) != this.sep) p1++;
+		this.pos = p1;
+		return this.string.substring(p0, p1);
+	},
+}
+
+//================================
+// Class Strings (static methods)
+//================================
+function Strings() {}
+
+/**
+ * Removes a given char at the beginning and the end of a string
+ * @param str string to trim
+ * @param c char to remove
+ * @return the trimmed string
+ */
+
+Strings.trim = function(str, c) {
+	var p0=0, p1=str.length-1;
+	while (p0 < str.length && str.charAt(p0) == c) p0++;
+	if (p0 == str.length) return "";
+	while (p1 > p0 && str.charAt(p1) == c) p1--;
+	return str.substring(p0, p1+1);
+}
+
+//================================
+// Class Numbers (static methods)
+//================================
+function Numbers() {}
+//                0  1   2    3     4      5       6        7         8          9
+Numbers.pow10 = [ 1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000,
+//      10           11            12             13              14
+	10000000000, 100000000000, 1000000000000, 10000000000000, 100000000000000 ];
+//                 0    1     2      3       4        5         6          7
+Numbers.rndval = [ 0.5, 0.05, 0.005, 0.0005, 0.00005, 0.000005, 0.0000005, 0.00000005,
+//      8            9             10             11              12
+	0.000000005, 0.0000000005, 0.00000000005, 0.000000000005, 0.0000000000005,
+//      13                14
+	0.00000000000005, 0.00000000000005 ];
+/**
+ * Format a integer or decimal number, adjusting the value with 'prec' decimal digits
+ * @param num number (integer or decimal)
+ * @param prec precision (= number of decimal digit to keep or append)
+ * @return a string with the formatted number
+ */
+Numbers.format = function(num, prec) {
+		if (prec <= 0) {
+			// Return an integer number
+			return (Math.round(num)).toString();
+		}
+		var str = num.toString();
+		var p = str.indexOf('.');
+		var nbdec = p >= 0 ? str.length-p-1 : 0;
+		if (prec >= nbdec) {
+			if (p < 0) str += '.';
+			for (var i=0; i<prec-nbdec; i++)
+				str += '0';
+			return str;
+		}
+		// HERE: prec > 0 and prec < nbdec
+		str = (num+Numbers.rndval[prec]).toString();
+		return str.substr(0, p+prec+1);
+}
+
+
+/**
+ * Convert a decimal coordinate into sexagesimal string, according to the given precision<br>
+ * 8: 1/1000th sec, 7: 1/100th sec, 6: 1/10th sec, 5: sec, 4: 1/10th min, 3: min, 2: 1/10th deg, 1: deg
+ * @param num number (integer or decimal)
+ * @param prec precision (= number of decimal digit to keep or append)
+ * @param plus if true, the '+' sign is displayed
+ * @return a string with the formatted sexagesimal number
+ */
+Numbers.toSexagesimal = function(num, prec, plus) {
+	var resu = "";
+	var sign = num < 0 ? '-' : (plus ? '+' : '');
+	var n = Math.abs(num);
+
+	switch (prec) {
+		case 1:	// deg
+			var n1 = Math.round(n);
+			return sign+n1.toString();
+		case 2:	// deg.d
+			return sign+Numbers.format(n, 1);
+		case 3:	// deg min
+			var n1 = Math.floor(n);
+			var n2 = Math.round((n-n1)*60);
+			return sign+n1+' '+n2;
+		case 4:	// deg min.d
+			var n1 = Math.floor(n);
+			var n2 = (n-n1)*60;
+			return sign+n1+' '+Numbers.format(n2, 1);
+		case 5:	// deg min sec
+			var n1 = Math.floor(n);	// d
+			var n2 = (n-n1)*60;		// M.d
+			var n3 = Math.floor(n2);// M
+			var n4 = Math.round((n2-n3)*60);	// S
+			return sign+n1+' '+n3+' '+n4;
+		case 6:	// deg min sec.d
+		case 7:	// deg min sec.dd
+		case 8:	// deg min sec.ddd
+			var n1 = Math.floor(n);	// d
+			if (n1<10) n1 = '0' + n1;
+			var n2 = (n-n1)*60;		// M.d
+			var n3 = Math.floor(n2);// M
+			if (n3<10) n3 = '0' + n3;
+			var n4 = (n2-n3)*60;		// S.ddd
+			return sign+n1+' '+n3+' '+Numbers.format(n4, prec-5);
+		default:
+			return sign+Numbers.format(n, 1);
+	}
+}
+// Copyright 2013 - UDS/CNRS
+// The Aladin Lite program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+// This file is part of Aladin Lite.
+//
+//    Aladin Lite is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Lite is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Lite.
+//
+
+
+
+CooConversion = (function() {
+
+    var CooConversion = {};
+    
+    CooConversion.GALACTIC_TO_J2000 = [
+       -0.0548755604024359,  0.4941094279435681, -0.8676661489811610,
+       -0.8734370902479237, -0.4448296299195045, -0.1980763734646737,
+       -0.4838350155267381,  0.7469822444763707,  0.4559837762325372 ];
+    
+    CooConversion.J2000_TO_GALACTIC = [
+        -0.0548755604024359, -0.873437090247923, -0.4838350155267381,
+         0.4941094279435681, -0.4448296299195045, 0.7469822444763707,
+        -0.8676661489811610, -0.1980763734646737, 0.4559837762325372 ];
+    
+    // adapted from www.robertmartinayers.org/tools/coordinates.html
+    // radec : array of ra, dec in degrees
+    // return coo in degrees
+    CooConversion.Transform = function( radec, matrix ) {// returns a radec array of two elements
+        radec[0] = radec[0]*Math.PI/180;
+        radec[1] = radec[1]*Math.PI/180;
+      var r0 = new Array ( 
+       Math.cos(radec[0]) * Math.cos(radec[1]),
+       Math.sin(radec[0]) * Math.cos(radec[1]),
+       Math.sin(radec[1]) );
+        
+     var s0 = new Array (
+       r0[0]*matrix[0] + r0[1]*matrix[1] + r0[2]*matrix[2], 
+       r0[0]*matrix[3] + r0[1]*matrix[4] + r0[2]*matrix[5], 
+       r0[0]*matrix[6] + r0[1]*matrix[7] + r0[2]*matrix[8] ); 
+     
+      var r = Math.sqrt ( s0[0]*s0[0] + s0[1]*s0[1] + s0[2]*s0[2] ); 
+    
+      var result = new Array ( 0.0, 0.0 );
+      result[1] = Math.asin ( s0[2]/r ); // New dec in range -90.0 -- +90.0 
+      // or use sin^2 + cos^2 = 1.0  
+      var cosaa = ( (s0[0]/r) / Math.cos(result[1] ) );
+      var sinaa = ( (s0[1]/r) / Math.cos(result[1] ) );
+      result[0] = Math.atan2 (sinaa,cosaa);
+      if ( result[0] < 0.0 ) result[0] = result[0] + 2*Math.PI;
+    
+        result[0] = result[0]*180/Math.PI;
+        result[1] = result[1]*180/Math.PI;
+      return result;
+    };
+    
+    // coo : array of lon, lat in degrees
+    CooConversion.GalacticToJ2000 = function(coo) {
+        return CooConversion.Transform(coo, CooConversion.GALACTIC_TO_J2000);
+    };
+    // coo : array of lon, lat in degrees
+    CooConversion.J2000ToGalactic = function(coo) {
+        return CooConversion.Transform(coo, CooConversion.J2000_TO_GALACTIC);
+    };
+    return CooConversion;
+})();
+// Copyright 2013 - UDS/CNRS
+// The Aladin Lite program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+// This file is part of Aladin Lite.
+//
+//    Aladin Lite is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Lite is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Lite.
+//
+
+
+
+/******************************************************************************
+ * Aladin Lite project
+ * 
+ * File Sesame.js
+ * 
+ * Author: Thomas Boch[CDS]
+ * 
+ *****************************************************************************/
+
+Sesame = (function() {
+    Sesame = {};
+    
+    Sesame.cache = {};
+
+    /** find RA, DEC for any target (object name or position)
+     *  if successful, callback is called with an object {ra: <ra-value>, dec: <dec-value>}
+     *  if not successful, errorCallback is called
+     */
+    Sesame.getTargetRADec = function(target, callback, errorCallback) {
+        if (!callback) {
+            return;
+        }
+        var isObjectName = /[a-zA-Z]/.test(target);
+
+        // try to parse as a position
+        if ( ! isObjectName) {
+            var coo = new Coo();
+
+            coo.parse(target);
+            if (callback) {
+                callback({ra: coo.lon, dec: coo.lat});
+            }
+        }
+        // ask resolution by Sesame
+        else {
+            Sesame.resolve(target,
+
+                           function(data) { // success callback
+                               callback({ra:  data.Target.Resolver.jradeg,
+                                         dec: data.Target.Resolver.jdedeg});
+                           },
+
+                           function(data) { // error callback
+                               if (errorCallback) {
+                                   errorCallback();
+                               }
+                           }
+                           );
+        }
+    };
+    
+    Sesame.resolve = function(objectName, callbackFunctionSuccess, callbackFunctionError) {
+        //var sesameUrl = "http://cdsportal.u-strasbg.fr/services/sesame?format=json";
+        var sesameUrl = "http://cds.u-strasbg.fr/cgi-bin/nph-sesame.jsonp?";
+        $.ajax({
+            url: sesameUrl ,
+            data: {"object": objectName},
+            method: 'GET',
+            dataType: 'jsonp',
+            success: function(data) {
+                if (data.Target && data.Target.Resolver && data.Target.Resolver) {
+                    callbackFunctionSuccess(data);
+                }
+                else {
+                    callbackFunctionError(data);
+                }
+            },
+            error: callbackFunctionError
+            });
+    };
+    
+    return Sesame;
+})();
+
+// Copyright 2013 - UDS/CNRS
+// The Aladin Lite program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+// This file is part of Aladin Lite.
+//
+//    Aladin Lite is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Lite is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Lite.
+//
+
+
+
+/******************************************************************************
+ * Aladin Lite project
+ * 
+ * File HealpixCache
+ * 
+ * Author: Thomas Boch[CDS]
+ * 
+ *****************************************************************************/
+
+// class holding some HEALPix computations for better performances
+//
+// it is made of :
+// - a static cache for HEALPix corners at nside=8 
+// - a dynamic cache for 
+HealpixCache = (function() {
+
+    var HealpixCache = {};
+    
+    HealpixCache.staticCache = {corners: {nside8: []}};
+    // TODO : utilisation du dynamicCache
+    HealpixCache.dynamicCache = {};
+    
+    HealpixCache.lastNside = 8;
+    
+    HealpixCache.hpxIdxCache = null;
+    
+    // TODO : conserver en cache le dernier résultat ?
+    
+    HealpixCache.init = function() {
+    	// pre-compute corners position for nside=8
+    	var hpxIdx = new HealpixIndex(8);
+    	hpxIdx.init();
+    	var npix = HealpixIndex.nside2Npix(8);
+    	for (var ipix=0; ipix<npix; ipix++) {
+    		HealpixCache.staticCache.corners.nside8[ipix] = hpxIdx.corners_nest(ipix, 1);
+    	}
+    	
+    	HealpixCache.hpxIdxCache = hpxIdx;
+    };
+    
+    HealpixCache.corners_nest = function(ipix, nside) {
+    	if (nside==8) {
+    		return HealpixCache.staticCache.corners.nside8[ipix];
+    	}
+    	
+    	if (nside != HealpixCache.lastNside) {
+    		HealpixCache.hpxIdxCache = new HealpixIndex(nside);
+    		HealpixCache.hpxIdxCache.init();
+    		HealpixCache.lastNside = nside;
+    	}
+    	
+    	return HealpixCache.hpxIdxCache.corners_nest(ipix, 1);
+    	
+    };
+    
+    return HealpixCache;
+})();
+	
+// Copyright 2013 - UDS/CNRS
+// The Aladin Lite program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+// This file is part of Aladin Lite.
+//
+//    Aladin Lite is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Lite is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Lite.
+//
+
+
+
+
+/******************************************************************************
+ * Aladin Lite project
+ * 
+ * File Utils
+ * 
+ * Author: Thomas Boch[CDS]
+ * 
+ *****************************************************************************/
+
+Utils = Utils || {};
+
+Utils.cssScale = undefined;
+// adding relMouseCoords to HTMLCanvasElement prototype (see http://stackoverflow.com/questions/55677/how-do-i-get-the-coordinates-of-a-mouse-click-on-a-canvas-element ) 
+function relMouseCoords(event){
+    var totalOffsetX = 0;
+    var totalOffsetY = 0;
+    var canvasX = 0;
+    var canvasY = 0;
+    var currentElement = this;
+   
+
+    if (event.offsetX) {
+        return {x: event.offsetX, y:event.offsetY};
+    } 
+    else {
+        if (!Utils.cssScale) {
+            var st = window.getComputedStyle(document.body, null);
+            var tr = st.getPropertyValue("-webkit-transform") ||
+                    st.getPropertyValue("-moz-transform") ||
+                    st.getPropertyValue("-ms-transform") ||
+                    st.getPropertyValue("-o-transform") ||
+                    st.getPropertyValue("transform");
+            var matrixRegex = /matrix\((-?\d*\.?\d+),\s*0,\s*0,\s*(-?\d*\.?\d+),\s*0,\s*0\)/;
+            var matches = tr.match(matrixRegex);
+            if (matches) {
+                Utils.cssScale = parseFloat(matches[1]);
+            }
+            else {
+                Utils.cssScale = 1;
+            }
+        }
+        var e = event;
+        var canvas = e.target;
+        // http://www.jacklmoore.com/notes/mouse-position/
+        var target = e.target || e.srcElement,
+        style = target.currentStyle || window.getComputedStyle(target, null),
+        borderLeftWidth = parseInt(style['borderLeftWidth'], 10),
+        borderTopWidth = parseInt(style['borderTopWidth'], 10),
+        rect = target.getBoundingClientRect(),
+        offsetX = e.clientX - borderLeftWidth - rect.left,
+        offsetY = e.clientY - borderTopWidth - rect.top;
+        return {x: parseInt(offsetX/Utils.cssScale), y: parseInt(offsetY/Utils.cssScale)};
+    }
+
+    // TODO : should we cache the value of scrollLeft/scrollTop to prevent a reflow ? (cf. http://www.phpied.com/rendering-repaint-reflowrelayout-restyle/ )
+    do {
+        totalOffsetX += currentElement.offsetLeft - currentElement.scrollLeft;
+        totalOffsetY += currentElement.offsetTop - currentElement.scrollTop;
+    }
+    while(currentElement = currentElement.offsetParent)
+        
+
+    // NB: Chrome seems to always use document.body.scrollTop whereas Firefox sometimes use document.documentElement.scrollTop
+    if (event.pageX) {
+        canvasX = event.pageX - totalOffsetX - (document.body.scrollLeft || document.documentElement.scrollLeft);
+        canvasY = event.pageY - totalOffsetY - (document.body.scrollTop || document.documentElement.scrollTop);
+    }
+    // if touch events
+    else {
+        canvasX = event.originalEvent.targetTouches[0].screenX - totalOffsetX - (document.body.scrollLeft || document.documentElement.scrollLeft);
+        canvasY = event.originalEvent.targetTouches[0].screenY - totalOffsetY - (document.body.scrollTop || document.documentElement.scrollTop);
+    }
+
+
+    
+
+    return {x: canvasX, y: canvasY};
+    //return {x: parseInt(canvasX/Utils.cssScale), y: parseInt(canvasY/Utils.cssScale)};
+}
+HTMLCanvasElement.prototype.relMouseCoords = relMouseCoords;
+
+
+
+//Function.prototype.bind polyfill from 
+//https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function/bind
+if (!Function.prototype.bind) {
+    Function.prototype.bind = function (obj) {
+        // closest thing possible to the ECMAScript 5 internal IsCallable function
+        if (typeof this !== 'function') {
+            throw new TypeError('Function.prototype.bind - what is trying to be bound is not callable');
+        }
+
+        var slice = [].slice,
+        args = slice.call(arguments, 1),
+        self = this,
+        nop = function () { },
+        bound = function () {
+            return self.apply(this instanceof nop ? this : (obj || {}),
+                    args.concat(slice.call(arguments)));
+        };
+
+        bound.prototype = this.prototype;
+
+        return bound;
+    };
+}
+
+
+
+
+
+
+
+
+$ = $ || jQuery;
+
+/* source : http://stackoverflow.com/a/8764051 */
+$.urlParam = function(name, queryString){
+    if (queryString===undefined) {
+        queryString = location.search;
+    }
+	return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(queryString)||[,""])[1].replace(/\+/g, '%20'))||null;
+};
+
+Utils.isNumber = function(n) {
+  return !isNaN(parseFloat(n)) && isFinite(n);
+};
+
+/* a debounce function, used to prevent multiple calls to the same function if less than delay seconds have passed */
+Utils.debounce = function(fn, delay) {
+    var timer = null;
+    return function () {
+      var context = this, args = arguments;
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        fn.apply(context, args);
+      }, delay);
+    };
+};
+
+
+/* A LRU cache, inspired by https://gist.github.com/devinus/409353#file-gistfile1-js */
+// TODO : utiliser le LRU cache pour les tuiles images
+Utils.LRUCache = function (maxsize) {
+    this._keys = [];
+    this._items = {};
+    this._expires = {};
+    this._size = 0;
+    this._maxsize = maxsize || 1024;
+};
+   
+Utils.LRUCache.prototype = {
+        set: function (key, value) {
+            var keys = this._keys,
+                items = this._items,
+                expires = this._expires,
+                size = this._size,
+                maxsize = this._maxsize;
+
+            if (size >= maxsize) { // remove oldest element when no more room
+                keys.sort(function (a, b) {
+                    if (expires[a] > expires[b]) return -1;
+                    if (expires[a] < expires[b]) return 1;
+                    return 0;
+                });
+
+                size--;
+                delete expires[keys[size]];
+                delete items[keys[size]];
+            }
+
+            keys[size] = key;
+            items[key] = value;
+            expires[key] = Date.now();
+            size++;
+
+            this._keys = keys;
+            this._items = items;
+            this._expires = expires;
+            this._size = size;
+        },
+
+        get: function (key) {
+            var item = this._items[key];
+            if (item) this._expires[key] = Date.now();
+            return item;
+        },
+        
+        keys: function() {
+            return this._keys;
+        }
+};
+
+////////////////////////////////////////////////////////////////////////////:
+
+// return the jquery ajax object configured with the requested parameters
+// by default, we use the proxy (safer, as we don't know if the remote server supports CORS)
+Utils.getAjaxObject = function(url, method, dataType, useProxy) {
+        if (useProxy!==false) {
+            useProxy = true;
+        }
+
+        if (useProxy===true) {
+            var urlToRequest = Aladin.JSONP_PROXY + '?url=' + encodeURIComponent(url);
+        }
+        else {
+            urlToRequest = url;
+        }
+        method = method || 'GET';
+        dataType = dataType || null;
+
+        return $.ajax({
+            url: urlToRequest,
+            method: method,
+            dataType: dataType
+        }); 
+};
+
+// Copyright 2013 - UDS/CNRS
+// The Aladin Lite program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+// This file is part of Aladin Lite.
+//
+//    Aladin Lite is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Lite is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Lite.
+//
+
+
+
+/******************************************************************************
+ * Aladin Lite project
+ * 
+ * File URLBuilder
+ * 
+ * Author: Thomas Boch[CDS]
+ * 
+ *****************************************************************************/
+
+
+URLBuilder = (function() {    
+
+    URLBuilder = {
+        buildSimbadCSURL: function(target, radiusDegrees) {
+            if (target && (typeof target  === "object")) {
+                if ('ra' in target && 'dec' in target) {
+                    var coo = new Coo(target.ra, target.dec, 7);
+                    target = coo.format('s');
+                }
+            }
+            return 'http://alasky.u-strasbg.fr/cgi/simbad-flat/simbad-cs.py?target=' + encodeURIComponent(target) + '&SR=' + radiusDegrees + '&format=votable&SRUNIT=deg&SORTBY=nbref';
+        },
+
+        buildNEDPositionCSURL: function(ra, dec, radiusDegrees) {
+                return 'http://nedwww.ipac.caltech.edu/cgi-bin/nph-objsearch?search_type=Near+Position+Search&of=xml_main&RA=' + ra + '&DEC=' + dec + '&SR=' + radiusDegrees;
+        },
+
+        buildNEDObjectCSURL: function(object, radiusDegrees) {
+                return 'http://ned.ipac.caltech.edu/cgi-bin/nph-objsearch?search_type=Near+Name+Search&radius=' + (60 * radiusDegrees) + '&of=xml_main&objname=' + object;
+        },
+
+        buildVizieRCSURL: function(vizCatId, target, radiusDegrees) {
+            if (target && (typeof target  === "object")) {
+                if ('ra' in target && 'dec' in target) {
+                    var coo = new Coo(target.ra, target.dec, 7);
+                    target = coo.format('s');
+                }
+            }
+            return 'http://vizier.u-strasbg.fr/viz-bin/votable?-source=' + vizCatId + '&-c=' + encodeURIComponent(target) + '&-out.max=999999&-c.rd=' + radiusDegrees;
+        },
+    
+
+    };
+
+    return URLBuilder;
+    
+})();
+
+// Copyright 2013 - UDS/CNRS
+// The Aladin Lite program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+// This file is part of Aladin Lite.
+//
+//    Aladin Lite is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Lite is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Lite.
+//
+
+
+
+/******************************************************************************
+ * Aladin Lite project
+ * 
+ * File MeasurementTable
+ *
+ * Graphic object showing measurement of a catalog
+ * 
+ * Author: Thomas Boch[CDS]
+ * 
+ *****************************************************************************/
+
+MeasurementTable = (function() {
+
+
+    // constructor
+    MeasurementTable = function(aladinLiteDiv) {
+        this.isShowing = false;
+
+        this.divEl = $('<div class="aladin-measurement-div"></div>');
+        
+        $(aladinLiteDiv).append(this.divEl);
+    }
+
+    // show measurement associated with a given source
+    MeasurementTable.prototype.showMeasurement = function(source) {
+        this.divEl.empty();
+        var header = '<thead><tr>';
+        var content = '<tr>';
+        for (key in source.data) {
+            header += '<th>' + key + '</th>';
+            content += '<td>' + source.data[key] + '</td>';
+        }
+        header += '</tr></thead>';
+        content += '</tr>';
+        this.divEl.append('<table>' + header + content + '</table>');
+        this.show();
+    };
+
+    MeasurementTable.prototype.show = function() {
+        this.divEl.show();
+    };
+    
+    MeasurementTable.prototype.hide = function() {
+        this.divEl.hide();
+    };
+    
+    
+    return MeasurementTable;
+})();
+
+// Copyright 2013 - UDS/CNRS
+// The Aladin Lite program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+// This file is part of Aladin Lite.
+//
+//    Aladin Lite is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Lite is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Lite.
+//
+
+
+
+/******************************************************************************
+ * Aladin Lite project
+ * 
+ * File Color
+ * 
+ * Author: Thomas Boch[CDS]
+ * 
+ *****************************************************************************/
+
+Color = (function() {
+
+
+    Color = {};
+    
+    Color.curIdx = 0;
+    Color.colors = ['#ff0000', '#0000ff', '#99cc00', '#ffff00','#000066', '#00ffff', '#9900cc', '#0099cc', '#cc9900', '#cc0099', '#00cc99', '#663333', '#ffcc9a', '#ff9acc', '#ccff33', '#660000', '#ffcc33', '#ff00ff', '#00ff00', '#ffffff'];
+
+    
+    Color.getNextColor = function() {
+        var c = Color.colors[Color.curIdx % (Color.colors.length)];
+        Color.curIdx++;
+        return c;
+    };
+
+    /** return most suited (ie readable) color for a label, given a background color
+     * bkgdColor: color, given as a 'rgb(<r value>, <g value>, <v value>)' . This is returned by $(<element>).css('background-color')
+     * 
+     * example call: Color.getLabelColorForBackground('rgb(3, 123, 42)')
+     * adapted from http://stackoverflow.com/questions/1855884/determine-font-color-based-on-background-color
+     */
+    Color.getLabelColorForBackground = function(rgbBkgdColor) {
+        var lightLabel = '#eee' 
+        var darkLabel = '#111' 
+        rgb = rgbBkgdColor.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+        if (rgb==null) {
+            // we return the dark label color if we can't parse the color
+            return darkLabel
+        }
+        r = parseInt(rgb[1]);
+        g = parseInt(rgb[2]);
+        b = parseInt(rgb[3]);
+        
+        var d = 0;
+        // Counting the perceptive luminance - human eye favors green color... 
+        var a = 1 - ( 0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+        if (a < 0.5) {
+            return darkLabel; // bright color --> dark font
+        }
+        else {
+            return lightLabel; // dark color --> light font
+        }
+    };
+    
+    return Color;
+})();
+
+// Copyright 2013 - UDS/CNRS
+// The Aladin Lite program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+// This file is part of Aladin Lite.
+//
+//    Aladin Lite is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Lite is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Lite.
+//
+
+
+
+/******************************************************************************
+ * Aladin Lite project
+ * 
+ * File AladinUtils
+ * 
+ * Author: Thomas Boch[CDS]
+ * 
+ *****************************************************************************/
+AladinUtils = (function() {
+    return {
+    	/**
+    	 * passage de xy projection à xy dans la vue écran 
+    	 * @param x
+    	 * @param y
+    	 * @param width
+    	 * @param height
+    	 * @param largestDim largest dimension of the view
+    	 * @returns position in the view
+    	 */
+    	xyToView: function(x, y, width, height, largestDim, zoomFactor, noRound) {
+    	    if (noRound==undefined) {
+    	        noRound = false;
+    	    }
+    	    if (noRound) {
+
+                return {vx: largestDim/2*(1+zoomFactor*x)-(largestDim-width)/2, vy: largestDim/2*(1+zoomFactor*y)-(largestDim-height)/2};
+    	    }
+    	    else {
+    	        // we round the result for performance gains
+    	        return {vx: AladinUtils.myRound(largestDim/2*(1+zoomFactor*x)-(largestDim-width)/2), vy: AladinUtils.myRound(largestDim/2*(1+zoomFactor*y)-(largestDim-height)/2)};
+    	    }
+    	},
+    	
+    	/**
+    	 * passage de xy dans la vue écran à xy projection
+    	 * @param vx
+    	 * @param vy
+    	 * @param width
+    	 * @param height
+    	 * @param largestDim
+    	 * @param zoomFactor
+    	 * @returns position in xy projection
+    	 */
+    	viewToXy: function(vx, vy, width, height, largestDim, zoomFactor) {
+    		return {x: ((2*vx+(largestDim-width))/largestDim-1)/zoomFactor, y: ((2*vy+(largestDim-height))/largestDim-1)/zoomFactor};
+    	},
+
+    	/**
+    	 * convert a 
+    	 * @returns position x,y in the view. Null if projection is impossible
+    	 */
+        radecToViewXy: function(ra, dec, currentProjection, currentFrame, width, height, largestDim, zoomFactor) {
+            var xy;
+            if (currentFrame!=CooFrameEnum.J2000) {
+                var lonlat = CooConversion.J2000ToGalactic([ra, dec]);
+                xy = currentProjection.project(lonlat[0], lonlat[1]);
+            }
+            else {
+                xy = currentProjection.project(ra, dec);
+            }
+            if (!xy) {
+                return null;
+            }
+            
+            return AladinUtils.xyToView(xy.X, xy.Y, width, height, largestDim, zoomFactor, true);
+        },
+
+    	
+    	myRound: function(a) {
+    		if (a<0) {
+    			return -1*( (-a) | 0);
+    		}
+    		else {
+    			return a | 0;
+    		}
+    	},
+    	
+    	
+    	
+    	/**
+    	 * tests whether a healpix pixel is visible or not
+    	 * @param pixCorners array of position (xy view) of the corners of the pixel
+    	 * @param viewW
+    	 */
+    	isHpxPixVisible: function(pixCorners, viewWidth, viewHeight) {
+    		for (var i = 0; i<pixCorners.length; i++) {
+    			if ( pixCorners[i].vx>=-20 && pixCorners[i].vx<(viewWidth+20) &&
+    				 pixCorners[i].vy>=-20 && pixCorners[i].vy<(viewHeight+20) ) {
+    				return true;
+    			}
+    		}
+    		return false;
+    	},
+    	
+    	ipixToIpix: function(npixIn, norderIn, norderOut) {
+    		var npixOut = [];
+    		if (norderIn>=norderOut) {
+    		}
+    	},
+        
+        getZoomFactorForAngle: function(angleInDegrees, projectionMethod) {
+            var p1 = {ra: 0, dec: 0};
+            var p2 = {ra: angleInDegrees, dec: 0};
+            var projection = new Projection(angleInDegrees/2, 0);
+            projection.setProjection(projectionMethod);
+            var p1Projected = projection.project(p1.ra, p1.dec);
+            var p2Projected = projection.project(p2.ra, p2.dec);
+           
+            var zoomFactor = 1/(p1Projected.X - p2Projected.Y);
+            return zoomFactor;
+        }
+    	
+    };
+})();
+
+// Copyright 2013 - UDS/CNRS
+// The Aladin Lite program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+// This file is part of Aladin Lite.
+//
+//    Aladin Lite is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Lite is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Lite.
+//
+
+
+
+/******************************************************************************
+ * Aladin Lite project
+ * 
+ * File CooFrameEnum
+ * 
+ * Author: Thomas Boch[CDS]
+ * 
+ *****************************************************************************/
+ 
+ ProjectionEnum = {
+    SIN: Projection.PROJ_SIN,
+    AITOFF:  Projection.PROJ_AITOFF
+ };
+// Copyright 2013 - UDS/CNRS
+// The Aladin Lite program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+// This file is part of Aladin Lite.
+//
+//    Aladin Lite is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Lite is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Lite.
+//
+
+
+
+/******************************************************************************
+ * Aladin Lite project
+ * 
+ * File CooFrameEnum
+ * 
+ * Author: Thomas Boch[CDS]
+ * 
+ *****************************************************************************/
+ 
+CooFrameEnum = (function() {
+
+    return {
+        J2000: "J2000",
+        GAL:  "Galactic"
+    };
+ 
+})();
+
+// TODO : utiliser cette fonction partout où on reçoit une string frame en entrée
+CooFrameEnum.fromString = function(str, defaultValue) {
+    if (! str) {
+        return defaultValue ? defaultValue : null;
+    }
+    
+    str = str.toLowerCase().replace(/^\s+|\s+$/g, ''); // convert to lowercase and trim
+    
+    if (str.indexOf('j2000')==0 || str.indexOf('icrs')==0) {
+        return CooFrameEnum.J2000;
+    }
+    else if (str.indexOf('gal')==0) {
+        return CooFrameEnum.GAL;
+    }
+    else {
+        return defaultValue ? defaultValue : null;
+    }
+};
+
+/**
+returns a short name for 
+*/
+CooFrameEnum.shortName = function(frameValue) {
+    if (frameValue==CooFrameEnum.J2000) {
+        return 'J2000';
+    }
+    if (frameValue==CooFrameEnum.GAL) {
+        return 'GAL';
+    }
+
+    return null;
+};
+// Copyright 2013 - UDS/CNRS
+// The Aladin Lite program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+// This file is part of Aladin Lite.
+//
+//    Aladin Lite is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Lite is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Lite.
+//
+
+
+
+/******************************************************************************
+ * Aladin Lite project
+ * 
+ * File Downloader
+ * Queue downloading for image elements
+ * 
+ * Author: Thomas Boch[CDS]
+ * 
+ *****************************************************************************/
+
+Downloader = (function() {
+	var NB_MAX_SIMULTANEOUS_DL = 4;
+	// TODO : le fading ne marche pas bien actuellement
+	var FADING_ENABLED = false;
+	var FADING_DURATION = 700; // in milliseconds
+	
+	
+	var Downloader = function(view) {
+		this.view = view; // reference to the view to be able to request redraw
+		this.nbDownloads = 0; // number of current downloads
+		this.dlQueue = []; // queue of items being downloaded
+        this.urlsInQueue = {};
+	};
+	
+	Downloader.prototype.requestDownload = function(img, url, cors) {
+        // first check if url already in queue
+        if (url in this.urlsInQueue)  {
+            return;
+        }
+		// put in queue
+		this.dlQueue.push({img: img, url: url, cors: cors});
+		this.urlsInQueue[url] = 1;
+		
+		this.tryDownload();
+	};
+	
+	// try to download next items in queue if possible
+	Downloader.prototype.tryDownload = function() {
+	    //if (this.dlQueue.length>0 && this.nbDownloads<NB_MAX_SIMULTANEOUS_DL) {
+		while (this.dlQueue.length>0 && this.nbDownloads<NB_MAX_SIMULTANEOUS_DL) {
+			this.startDownloadNext();
+		}
+	};
+	
+	Downloader.prototype.startDownloadNext = function() {
+		// get next in queue
+		var next = this.dlQueue.shift();
+		if ( ! next) {
+			return;
+		}
+
+		this.nbDownloads++;
+		var downloaderRef = this;
+		next.img.onload = function() {
+			downloaderRef.completeDownload(this, true); // in this context, 'this' is the Image
+		};
+			
+		next.img.onerror = function(e) {
+			downloaderRef.completeDownload(this, false); // in this context, 'this' is the Image
+		};
+		if (next.cors) {
+		    next.img.crossOrigin = 'anonymous';
+		}
+		
+		else {
+		    if (next.img.crossOrigin !== undefined) {
+		        delete next.img.crossOrigin;
+		    }
+		}
+		
+		
+		next.img.src = next.url;
+	};
+	
+	Downloader.prototype.completeDownload = function(img, success) {
+        delete this.urlsInQueue[img.src];
+		img.onerror = null;
+		img.onload = null;
+		this.nbDownloads--;
+		if (success) {
+			if (FADING_ENABLED) {
+				var now = new Date().getTime();
+				img.fadingStart = now;
+				img.fadingEnd = now + FADING_DURATION;
+			}
+			this.view.requestRedraw();
+		}
+		else {
+		    img.dlError = true;
+		}
+		
+		this.tryDownload();
+	};
+	
+	
+	
+	return Downloader;
+})();
+// Generated by CoffeeScript 1.6.3
+(function() {
+  var Base, BinaryTable, CompressedImage, DataUnit, Decompress, FITS, HDU, Header, HeaderVerify, Image, ImageUtils, Parser, Table, Tabular, _ref, _ref1,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    __slice = [].slice;
+
+  if (this.astro == null) {
+    this.astro = {};
+  }
+
+  Base = (function() {
+    function Base() {}
+
+    Base.include = function(obj) {
+      var key, value;
+      for (key in obj) {
+        value = obj[key];
+        this.prototype[key] = value;
+      }
+      return this;
+    };
+
+    Base.extend = function(obj) {
+      var key, value;
+      for (key in obj) {
+        value = obj[key];
+        this[key] = value;
+      }
+      return this;
+    };
+
+    Base.prototype.proxy = function(func) {
+      var _this = this;
+      return function() {
+        return func.apply(_this, arguments);
+      };
+    };
+
+    Base.prototype.invoke = function(callback, opts, data) {
+      var context;
+      context = (opts != null ? opts.context : void 0) != null ? opts.context : this;
+      if (callback != null) {
+        return callback.call(context, data, opts);
+      }
+    };
+
+    return Base;
+
+  })();
+
+  Parser = (function(_super) {
+    __extends(Parser, _super);
+
+    Parser.prototype.LINEWIDTH = 80;
+
+    Parser.prototype.BLOCKLENGTH = 2880;
+
+    File.prototype.slice = File.prototype.slice || File.prototype.webkitSlice;
+
+    Blob.prototype.slice = Blob.prototype.slice || Blob.prototype.webkitSlice;
+
+    function Parser(arg, callback, opts) {
+      var xhr,
+        _this = this;
+      this.arg = arg;
+      this.callback = callback;
+      this.opts = opts;
+      this.hdus = [];
+      this.blockCount = 0;
+      this.begin = 0;
+      this.end = this.BLOCKLENGTH;
+      this.offset = 0;
+      this.headerStorage = new Uint8Array();
+      if (typeof this.arg === 'string') {
+        this.readNextBlock = this._readBlockFromBuffer;
+        xhr = new XMLHttpRequest();
+        xhr.open('GET', this.arg);
+        xhr.responseType = 'arraybuffer';
+        xhr.onload = function() {
+          if (xhr.status !== 200) {
+            _this.invoke(_this.callback, _this.opts);
+            return;
+          }
+          _this.arg = xhr.response;
+          _this.length = _this.arg.byteLength;
+          return _this.readFromBuffer();
+        };
+        xhr.send();
+      } else {
+        this.length = this.arg.size;
+        this.readNextBlock = this._readBlockFromFile;
+        this.readFromFile();
+      }
+    }
+
+    Parser.prototype.readFromBuffer = function() {
+      var block;
+      block = this.arg.slice(this.begin + this.offset, this.end + this.offset);
+      return this.readBlock(block);
+    };
+
+    Parser.prototype.readFromFile = function() {
+      var block,
+        _this = this;
+      this.reader = new FileReader();
+      this.reader.onloadend = function(e) {
+        return _this.readBlock(e.target.result);
+      };
+      block = this.arg.slice(this.begin + this.offset, this.end + this.offset);
+      return this.reader.readAsArrayBuffer(block);
+    };
+
+    Parser.prototype.readBlock = function(block) {
+      var arr, dataLength, dataunit, header, rowIndex, rows, s, slice, tmp, value, _i, _len, _ref;
+      arr = new Uint8Array(block);
+      tmp = new Uint8Array(this.headerStorage);
+      this.headerStorage = new Uint8Array(this.end);
+      this.headerStorage.set(tmp, 0);
+      this.headerStorage.set(arr, this.begin);
+      rows = this.BLOCKLENGTH / this.LINEWIDTH;
+      while (rows--) {
+        rowIndex = rows * this.LINEWIDTH;
+        if (arr[rowIndex] === 32) {
+          continue;
+        }
+        if (arr[rowIndex] === 69 && arr[rowIndex + 1] === 78 && arr[rowIndex + 2] === 68 && arr[rowIndex + 3] === 32) {
+          s = '';
+          _ref = this.headerStorage;
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            value = _ref[_i];
+            s += String.fromCharCode(value);
+          }
+          header = new Header(s);
+          this.start = this.end + this.offset;
+          dataLength = header.getDataLength();
+          slice = this.arg.slice(this.start, this.start + dataLength);
+          if (header.hasDataUnit()) {
+            dataunit = this.createDataUnit(header, slice);
+          }
+          this.hdus.push(new HDU(header, dataunit));
+          this.offset += this.end + dataLength + this.excessBytes(dataLength);
+          if (this.offset === this.length) {
+            this.headerStorage = null;
+            this.invoke(this.callback, this.opts, this);
+            return;
+          }
+          this.blockCount = 0;
+          this.begin = this.blockCount * this.BLOCKLENGTH;
+          this.end = this.begin + this.BLOCKLENGTH;
+          this.headerStorage = new Uint8Array();
+          block = this.arg.slice(this.begin + this.offset, this.end + this.offset);
+          this.readNextBlock(block);
+          return;
+        }
+        break;
+      }
+      this.blockCount += 1;
+      this.begin = this.blockCount * this.BLOCKLENGTH;
+      this.end = this.begin + this.BLOCKLENGTH;
+      block = this.arg.slice(this.begin + this.offset, this.end + this.offset);
+      this.readNextBlock(block);
+    };
+
+    Parser.prototype._readBlockFromBuffer = function(block) {
+      return this.readBlock(block);
+    };
+
+    Parser.prototype._readBlockFromFile = function(block) {
+      return this.reader.readAsArrayBuffer(block);
+    };
+
+    Parser.prototype.createDataUnit = function(header, blob) {
+      var type;
+      type = header.getDataType();
+      return new astro.FITS[type](header, blob);
+    };
+
+    Parser.prototype.excessBytes = function(length) {
+      return (this.BLOCKLENGTH - (length % this.BLOCKLENGTH)) % this.BLOCKLENGTH;
+    };
+
+    Parser.prototype.isEOF = function() {
+      if (this.offset === this.length) {
+        return true;
+      } else {
+        return false;
+      }
+    };
+
+    return Parser;
+
+  })(Base);
+
+  FITS = (function(_super) {
+    __extends(FITS, _super);
+
+    function FITS(arg, callback, opts) {
+      var parser,
+        _this = this;
+      this.arg = arg;
+      parser = new Parser(this.arg, function(fits) {
+        _this.hdus = parser.hdus;
+        return _this.invoke(callback, opts, _this);
+      });
+    }
+
+    FITS.prototype.getHDU = function(index) {
+      var hdu, _i, _len, _ref;
+      if ((index != null) && (this.hdus[index] != null)) {
+        return this.hdus[index];
+      }
+      _ref = this.hdus;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        hdu = _ref[_i];
+        if (hdu.hasData()) {
+          return hdu;
+        }
+      }
+    };
+
+    FITS.prototype.getHeader = function(index) {
+      return this.getHDU(index).header;
+    };
+
+    FITS.prototype.getDataUnit = function(index) {
+      return this.getHDU(index).data;
+    };
+
+    return FITS;
+
+  })(Base);
+
+  FITS.version = '0.6.5';
+
+  this.astro.FITS = FITS;
+
+  DataUnit = (function(_super) {
+    __extends(DataUnit, _super);
+
+    DataUnit.swapEndian = {
+      B: function(value) {
+        return value;
+      },
+      I: function(value) {
+        return (value << 8) | (value >> 8);
+      },
+      J: function(value) {
+        return ((value & 0xFF) << 24) | ((value & 0xFF00) << 8) | ((value >> 8) & 0xFF00) | ((value >> 24) & 0xFF);
+      }
+    };
+
+    DataUnit.swapEndian[8] = DataUnit.swapEndian['B'];
+
+    DataUnit.swapEndian[16] = DataUnit.swapEndian['I'];
+
+    DataUnit.swapEndian[32] = DataUnit.swapEndian['J'];
+
+    function DataUnit(header, data) {
+      if (data instanceof ArrayBuffer) {
+        this.buffer = data;
+      } else {
+        this.blob = data;
+      }
+    }
+
+    return DataUnit;
+
+  })(Base);
+
+  this.astro.FITS.DataUnit = DataUnit;
+
+  HeaderVerify = {
+    verifyOrder: function(keyword, order) {
+      if (order !== this.cardIndex) {
+        return console.warn("" + keyword + " should appear at index " + this.cardIndex + " in the FITS header");
+      }
+    },
+    verifyBetween: function(keyword, value, lower, upper) {
+      if (!(value >= lower && value <= upper)) {
+        throw "The " + keyword + " value of " + value + " is not between " + lower + " and " + upper;
+      }
+    },
+    verifyBoolean: function(value) {
+      if (value === "T") {
+        return true;
+      } else {
+        return false;
+      }
+    },
+    VerifyFns: {
+      SIMPLE: function() {
+        var args, value;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        value = arguments[0];
+        this.primary = true;
+        this.verifyOrder("SIMPLE", 0);
+        return this.verifyBoolean(value);
+      },
+      XTENSION: function() {
+        var args;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        this.extension = true;
+        this.extensionType = arguments[0];
+        this.verifyOrder("XTENSION", 0);
+        return this.extensionType;
+      },
+      BITPIX: function() {
+        var args, key, value;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        key = "BITPIX";
+        value = parseInt(arguments[0]);
+        this.verifyOrder(key, 1);
+        if (value !== 8 && value !== 16 && value !== 32 && value !== (-32) && value !== (-64)) {
+          throw "" + key + " value " + value + " is not permitted";
+        }
+        return value;
+      },
+      NAXIS: function() {
+        var args, array, key, required, value, _ref;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        key = "NAXIS";
+        value = parseInt(arguments[0]);
+        array = arguments[1];
+        if (!array) {
+          this.verifyOrder(key, 2);
+          this.verifyBetween(key, value, 0, 999);
+          if (this.isExtension()) {
+            if ((_ref = this.extensionType) === "TABLE" || _ref === "BINTABLE") {
+              required = 2;
+              if (value !== required) {
+                throw "" + key + " must be " + required + " for TABLE and BINTABLE extensions";
+              }
+            }
+          }
+        }
+        return value;
+      },
+      PCOUNT: function() {
+        var args, key, order, required, value, _ref;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        key = "PCOUNT";
+        value = parseInt(arguments[0]);
+        order = 1 + 1 + 1 + this.get("NAXIS");
+        this.verifyOrder(key, order);
+        if (this.isExtension()) {
+          if ((_ref = this.extensionType) === "IMAGE" || _ref === "TABLE") {
+            required = 0;
+            if (value !== required) {
+              throw "" + key + " must be " + required + " for the " + this.extensionType + " extensions";
+            }
+          }
+        }
+        return value;
+      },
+      GCOUNT: function() {
+        var args, key, order, required, value, _ref;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        key = "GCOUNT";
+        value = parseInt(arguments[0]);
+        order = 1 + 1 + 1 + this.get("NAXIS") + 1;
+        this.verifyOrder(key, order);
+        if (this.isExtension()) {
+          if ((_ref = this.extensionType) === "IMAGE" || _ref === "TABLE" || _ref === "BINTABLE") {
+            required = 1;
+            if (value !== required) {
+              throw "" + key + " must be " + required + " for the " + this.extensionType + " extensions";
+            }
+          }
+        }
+        return value;
+      },
+      EXTEND: function() {
+        var args, value;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        value = arguments[0];
+        if (!this.isPrimary()) {
+          throw "EXTEND must only appear in the primary header";
+        }
+        return this.verifyBoolean(value);
+      },
+      BSCALE: function() {
+        var args;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        return parseFloat(arguments[0]);
+      },
+      BZERO: function() {
+        var args;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        return parseFloat(arguments[0]);
+      },
+      BLANK: function() {
+        var args, value;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        value = arguments[0];
+        if (!(this.get("BITPIX") > 0)) {
+          console.warn("BLANK is not to be used for BITPIX = " + (this.get('BITPIX')));
+        }
+        return parseInt(value);
+      },
+      DATAMIN: function() {
+        var args;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        return parseFloat(arguments[0]);
+      },
+      DATAMAX: function() {
+        var args;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        return parseFloat(arguments[0]);
+      },
+      EXTVER: function() {
+        var args;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        return parseInt(arguments[0]);
+      },
+      EXTLEVEL: function() {
+        var args;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        return parseInt(arguments[0]);
+      },
+      TFIELDS: function() {
+        var args, value;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        value = parseInt(arguments[0]);
+        this.verifyBetween("TFIELDS", value, 0, 999);
+        return value;
+      },
+      TBCOL: function() {
+        var args, index, value;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        value = arguments[0];
+        index = arguments[2];
+        this.verifyBetween("TBCOL", index, 0, this.get("TFIELDS"));
+        return value;
+      },
+      ZIMAGE: function() {
+        var args;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        return this.verifyBoolean(arguments[0]);
+      },
+      ZCMPTYPE: function() {
+        var args, value;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        value = arguments[0];
+        if (value !== 'GZIP_1' && value !== 'RICE_1' && value !== 'PLIO_1' && value !== 'HCOMPRESS_1') {
+          throw "ZCMPTYPE value " + value + " is not permitted";
+        }
+        if (value !== 'RICE_1') {
+          throw "Compress type " + value + " is not yet implement";
+        }
+        return value;
+      },
+      ZBITPIX: function() {
+        var args, value;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        value = parseInt(arguments[0]);
+        if (value !== 8 && value !== 16 && value !== 32 && value !== 64 && value !== (-32) && value !== (-64)) {
+          throw "ZBITPIX value " + value + " is not permitted";
+        }
+        return value;
+      },
+      ZNAXIS: function() {
+        var args, array, value;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        value = parseInt(arguments[0]);
+        array = arguments[1];
+        value = value;
+        if (!array) {
+          this.verifyBetween("ZNAXIS", value, 0, 999);
+        }
+        return value;
+      },
+      ZTILE: function() {
+        var args;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        return parseInt(arguments[0]);
+      },
+      ZSIMPLE: function() {
+        var args;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        if (arguments[0] === "T") {
+          return true;
+        } else {
+          return false;
+        }
+      },
+      ZPCOUNT: function() {
+        var args;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        return parseInt(arguments[0]);
+      },
+      ZGCOUNT: function() {
+        var args;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        return parseInt(arguments[0]);
+      },
+      ZDITHER0: function() {
+        var args;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        return parseInt(arguments[0]);
+      }
+    }
+  };
+
+  this.astro.FITS.HeaderVerify = HeaderVerify;
+
+  Header = (function(_super) {
+    __extends(Header, _super);
+
+    Header.include(HeaderVerify);
+
+    Header.prototype.arrayPattern = /(\D+)(\d+)/;
+
+    Header.prototype.maxLines = 600;
+
+    function Header(block) {
+      var method, name, _ref;
+      this.primary = false;
+      this.extension = false;
+      this.verifyCard = {};
+      _ref = this.VerifyFns;
+      for (name in _ref) {
+        method = _ref[name];
+        this.verifyCard[name] = this.proxy(method);
+      }
+      this.cards = {};
+      this.cards["COMMENT"] = [];
+      this.cards["HISTORY"] = [];
+      this.cardIndex = 0;
+      this.block = block;
+      this.readBlock(block);
+    }
+
+    Header.prototype.get = function(key) {
+      if (this.contains(key)) {
+        return this.cards[key].value;
+      } else {
+        return null;
+      }
+    };
+
+    Header.prototype.set = function(key, value, comment) {
+      comment = comment || '';
+      this.cards[key] = {
+        index: this.cardIndex,
+        value: value,
+        comment: comment
+      };
+      return this.cardIndex += 1;
+    };
+
+    Header.prototype.contains = function(key) {
+      return this.cards.hasOwnProperty(key);
+    };
+
+    Header.prototype.readLine = function(l) {
+      var blank, comment, firstByte, indicator, key, value, _ref;
+      key = l.slice(0, 8).trim();
+      blank = key === '';
+      if (blank) {
+        return;
+      }
+      indicator = l.slice(8, 10);
+      value = l.slice(10);
+      if (indicator !== "= ") {
+        if (key === 'COMMENT' || key === 'HISTORY') {
+          this.cards[key].push(value.trim());
+        }
+        return;
+      }
+      _ref = value.split(' /'), value = _ref[0], comment = _ref[1];
+      value = value.trim();
+      firstByte = value[0];
+      if (firstByte === "'") {
+        value = value.slice(1, -1).trim();
+      } else {
+        if (value !== 'T' && value !== 'F') {
+          value = parseFloat(value);
+        }
+      }
+      value = this.validate(key, value);
+      return this.set(key, value, comment);
+    };
+
+    Header.prototype.validate = function(key, value) {
+      var baseKey, index, isArray, match, _ref;
+      index = null;
+      baseKey = key;
+      isArray = this.arrayPattern.test(key);
+      if (isArray) {
+        match = this.arrayPattern.exec(key);
+        _ref = match.slice(1), baseKey = _ref[0], index = _ref[1];
+      }
+      if (baseKey in this.verifyCard) {
+        value = this.verifyCard[baseKey](value, isArray, index);
+      }
+      return value;
+    };
+
+    Header.prototype.readBlock = function(block) {
+      var i, line, lineWidth, nLines, _i, _ref, _results;
+      lineWidth = 80;
+      nLines = block.length / lineWidth;
+      nLines = nLines < this.maxLines ? nLines : this.maxLines;
+      _results = [];
+      for (i = _i = 0, _ref = nLines - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
+        line = block.slice(i * lineWidth, (i + 1) * lineWidth);
+        _results.push(this.readLine(line));
+      }
+      return _results;
+    };
+
+    Header.prototype.hasDataUnit = function() {
+      if (this.get("NAXIS") === 0) {
+        return false;
+      } else {
+        return true;
+      }
+    };
+
+    Header.prototype.getDataLength = function() {
+      var i, length, naxis, _i, _ref;
+      if (!this.hasDataUnit()) {
+        return 0;
+      }
+      naxis = [];
+      for (i = _i = 1, _ref = this.get("NAXIS"); 1 <= _ref ? _i <= _ref : _i >= _ref; i = 1 <= _ref ? ++_i : --_i) {
+        naxis.push(this.get("NAXIS" + i));
+      }
+      length = naxis.reduce(function(a, b) {
+        return a * b;
+      }) * Math.abs(this.get("BITPIX")) / 8;
+      length += this.get("PCOUNT");
+      return length;
+    };
+
+    Header.prototype.getDataType = function() {
+      switch (this.extensionType) {
+        case 'BINTABLE':
+          if (this.contains('ZIMAGE')) {
+            return 'CompressedImage';
+          }
+          return 'BinaryTable';
+        case 'TABLE':
+          return 'Table';
+        default:
+          if (this.hasDataUnit()) {
+            return 'Image';
+          } else {
+            return null;
+          }
+      }
+    };
+
+    Header.prototype.isPrimary = function() {
+      return this.primary;
+    };
+
+    Header.prototype.isExtension = function() {
+      return this.extension;
+    };
+
+    return Header;
+
+  })(Base);
+
+  this.astro.FITS.Header = Header;
+
+  ImageUtils = {
+    getExtent: function(arr) {
+      var index, max, min, value;
+      index = arr.length;
+      while (index--) {
+        value = arr[index];
+        if (isNaN(value)) {
+          continue;
+        }
+        min = max = value;
+        break;
+      }
+      if (index === -1) {
+        return [NaN, NaN];
+      }
+      while (index--) {
+        value = arr[index];
+        if (isNaN(value)) {
+          continue;
+        }
+        if (value < min) {
+          min = value;
+        }
+        if (value > max) {
+          max = value;
+        }
+      }
+      return [min, max];
+    },
+    getPixel: function(arr, x, y) {
+      return arr[y * this.width + x];
+    }
+  };
+
+  this.astro.FITS.ImageUtils = ImageUtils;
+
+  Image = (function(_super) {
+    __extends(Image, _super);
+
+    Image.include(ImageUtils);
+
+    Image.prototype.allocationSize = 16777216;
+
+    function Image(header, data) {
+      var begin, frame, i, naxis, _i, _j, _ref;
+      Image.__super__.constructor.apply(this, arguments);
+      naxis = header.get("NAXIS");
+      this.bitpix = header.get("BITPIX");
+      this.naxis = [];
+      for (i = _i = 1; 1 <= naxis ? _i <= naxis : _i >= naxis; i = 1 <= naxis ? ++_i : --_i) {
+        this.naxis.push(header.get("NAXIS" + i));
+      }
+      this.width = header.get("NAXIS1");
+      this.height = header.get("NAXIS2") || 1;
+      this.depth = header.get("NAXIS3") || 1;
+      this.bzero = header.get("BZERO") || 0;
+      this.bscale = header.get("BSCALE") || 1;
+      this.bytes = Math.abs(this.bitpix) / 8;
+      this.length = this.naxis.reduce(function(a, b) {
+        return a * b;
+      }) * Math.abs(this.bitpix) / 8;
+      this.frame = 0;
+      this.frameOffsets = [];
+      this.frameLength = this.bytes * this.width * this.height;
+      this.nBuffers = this.buffer != null ? 1 : 2;
+      for (i = _j = 0, _ref = this.depth - 1; 0 <= _ref ? _j <= _ref : _j >= _ref; i = 0 <= _ref ? ++_j : --_j) {
+        begin = i * this.frameLength;
+        frame = {
+          begin: begin
+        };
+        if (this.buffer != null) {
+          frame.buffers = [this.buffer.slice(begin, begin + this.frameLength)];
+        }
+        this.frameOffsets.push(frame);
+      }
+    }
+
+    Image.prototype._getFrame = function(buffer, bitpix, bzero, bscale) {
+      var arr, bytes, dataType, i, nPixels, swapEndian, tmp, value;
+      bytes = Math.abs(bitpix) / 8;
+      nPixels = i = buffer.byteLength / bytes;
+      dataType = Math.abs(bitpix);
+      if (bitpix > 0) {
+        switch (bitpix) {
+          case 8:
+            tmp = new Uint8Array(buffer);
+            tmp = new Uint16Array(tmp);
+            swapEndian = function(value) {
+              return value;
+            };
+            break;
+          case 16:
+            tmp = new Int16Array(buffer);
+            swapEndian = function(value) {
+              return ((value & 0xFF) << 8) | ((value >> 8) & 0xFF);
+            };
+            break;
+          case 32:
+            tmp = new Int32Array(buffer);
+            swapEndian = function(value) {
+              return ((value & 0xFF) << 24) | ((value & 0xFF00) << 8) | ((value >> 8) & 0xFF00) | ((value >> 24) & 0xFF);
+            };
+        }
+        if (!(parseInt(bzero) === bzero && parseInt(bscale) === bscale)) {
+          arr = new Float32Array(tmp.length);
+        } else {
+          arr = tmp;
+        }
+        while (nPixels--) {
+          tmp[nPixels] = swapEndian(tmp[nPixels]);
+          arr[nPixels] = bzero + bscale * tmp[nPixels];
+        }
+      } else {
+        arr = new Uint32Array(buffer);
+        swapEndian = function(value) {
+          return ((value & 0xFF) << 24) | ((value & 0xFF00) << 8) | ((value >> 8) & 0xFF00) | ((value >> 24) & 0xFF);
+        };
+        while (i--) {
+          value = arr[i];
+          arr[i] = swapEndian(value);
+        }
+        arr = new Float32Array(buffer);
+        while (nPixels--) {
+          arr[nPixels] = bzero + bscale * arr[nPixels];
+        }
+      }
+      return arr;
+    };
+
+    Image.prototype._getFrameAsync = function(buffers, callback, opts) {
+      var URL, blobGetFrame, blobOnMessage, fn1, fn2, i, mime, msg, onmessage, pixels, start, urlGetFrame, urlOnMessage, worker,
+        _this = this;
+      onmessage = function(e) {
+        var arr, bitpix, bscale, buffer, bzero, data, url;
+        data = e.data;
+        buffer = data.buffer;
+        bitpix = data.bitpix;
+        bzero = data.bzero;
+        bscale = data.bscale;
+        url = data.url;
+        importScripts(url);
+        arr = _getFrame(buffer, bitpix, bzero, bscale);
+        return postMessage(arr);
+      };
+      fn1 = onmessage.toString().replace('return postMessage', 'postMessage');
+      fn1 = "onmessage = " + fn1;
+      fn2 = this._getFrame.toString();
+      fn2 = fn2.replace('function', 'function _getFrame');
+      mime = "application/javascript";
+      blobOnMessage = new Blob([fn1], {
+        type: mime
+      });
+      blobGetFrame = new Blob([fn2], {
+        type: mime
+      });
+      URL = window.URL || window.webkitURL;
+      urlOnMessage = URL.createObjectURL(blobOnMessage);
+      urlGetFrame = URL.createObjectURL(blobGetFrame);
+      worker = new Worker(urlOnMessage);
+      msg = {
+        buffer: buffers[0],
+        bitpix: this.bitpix,
+        bzero: this.bzero,
+        bscale: this.bscale,
+        url: urlGetFrame
+      };
+      i = 0;
+      pixels = null;
+      start = 0;
+      worker.onmessage = function(e) {
+        var arr;
+        arr = e.data;
+        if (pixels == null) {
+          pixels = new arr.constructor(_this.width * _this.height);
+        }
+        pixels.set(arr, start);
+        start += arr.length;
+        i += 1;
+        if (i === _this.nBuffers) {
+          _this.invoke(callback, opts, pixels);
+          URL.revokeObjectURL(urlOnMessage);
+          URL.revokeObjectURL(urlGetFrame);
+          return worker.terminate();
+        } else {
+          msg.buffer = buffers[i];
+          return worker.postMessage(msg, [buffers[i]]);
+        }
+      };
+      worker.postMessage(msg, [buffers[0]]);
+    };
+
+    Image.prototype.getFrame = function(frame, callback, opts) {
+      var begin, blobFrame, blobs, buffers, bytesPerBuffer, frameInfo, i, nRowsPerBuffer, reader, start, _i, _ref,
+        _this = this;
+      this.frame = frame || this.frame;
+      frameInfo = this.frameOffsets[this.frame];
+      buffers = frameInfo.buffers;
+      if ((buffers != null ? buffers.length : void 0) === this.nBuffers) {
+        return this._getFrameAsync(buffers, callback, opts);
+      } else {
+        this.frameOffsets[this.frame].buffers = [];
+        begin = frameInfo.begin;
+        blobFrame = this.blob.slice(begin, begin + this.frameLength);
+        blobs = [];
+        nRowsPerBuffer = Math.floor(this.height / this.nBuffers);
+        bytesPerBuffer = nRowsPerBuffer * this.bytes * this.width;
+        for (i = _i = 0, _ref = this.nBuffers - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
+          start = i * bytesPerBuffer;
+          if (i === this.nBuffers - 1) {
+            blobs.push(blobFrame.slice(start));
+          } else {
+            blobs.push(blobFrame.slice(start, start + bytesPerBuffer));
+          }
+        }
+        buffers = [];
+        reader = new FileReader();
+        reader.frame = this.frame;
+        i = 0;
+        reader.onloadend = function(e) {
+          var buffer;
+          frame = e.target.frame;
+          buffer = e.target.result;
+          _this.frameOffsets[frame].buffers.push(buffer);
+          i += 1;
+          if (i === _this.nBuffers) {
+            return _this.getFrame(frame, callback, opts);
+          } else {
+            return reader.readAsArrayBuffer(blobs[i]);
+          }
+        };
+        return reader.readAsArrayBuffer(blobs[0]);
+      }
+    };
+
+    Image.prototype.getFrames = function(frame, number, callback, opts) {
+      var cb,
+        _this = this;
+      cb = function(arr, opts) {
+        _this.invoke(callback, opts, arr);
+        number -= 1;
+        frame += 1;
+        if (!number) {
+          return;
+        }
+        return _this.getFrame(frame, cb, opts);
+      };
+      return this.getFrame(frame, cb, opts);
+    };
+
+    Image.prototype.isDataCube = function() {
+      if (this.naxis.length > 2) {
+        return true;
+      } else {
+        return false;
+      }
+    };
+
+    return Image;
+
+  })(DataUnit);
+
+  this.astro.FITS.Image = Image;
+
+  Tabular = (function(_super) {
+    __extends(Tabular, _super);
+
+    Tabular.prototype.maxMemory = 1048576;
+
+    function Tabular(header, data) {
+      Tabular.__super__.constructor.apply(this, arguments);
+      this.rowByteSize = header.get("NAXIS1");
+      this.rows = header.get("NAXIS2");
+      this.cols = header.get("TFIELDS");
+      this.length = this.rowByteSize * this.rows;
+      this.heapLength = header.get("PCOUNT");
+      this.columns = this.getColumns(header);
+      if (this.buffer != null) {
+        this.rowsInMemory = this._rowsInMemoryBuffer;
+        this.heap = this.buffer.slice(this.length, this.length + this.heapLength);
+      } else {
+        this.rowsInMemory = this._rowsInMemoryBlob;
+        this.firstRowInBuffer = this.lastRowInBuffer = 0;
+        this.nRowsInBuffer = Math.floor(this.maxMemory / this.rowByteSize);
+      }
+      this.accessors = [];
+      this.descriptors = [];
+      this.elementByteLengths = [];
+      this.setAccessors(header);
+    }
+
+    Tabular.prototype._rowsInMemoryBuffer = function() {
+      return true;
+    };
+
+    Tabular.prototype._rowsInMemoryBlob = function(firstRow, lastRow) {
+      if (firstRow < this.firstRowInBuffer) {
+        return false;
+      }
+      if (lastRow > this.lastRowInBuffer) {
+        return false;
+      }
+      return true;
+    };
+
+    Tabular.prototype.getColumns = function(header) {
+      var columns, i, key, _i, _ref;
+      columns = [];
+      for (i = _i = 1, _ref = this.cols; 1 <= _ref ? _i <= _ref : _i >= _ref; i = 1 <= _ref ? ++_i : --_i) {
+        key = "TTYPE" + i;
+        if (!header.contains(key)) {
+          return null;
+        }
+        columns.push(header.get(key));
+      }
+      return columns;
+    };
+
+    Tabular.prototype.getColumn = function(name, callback, opts) {
+      var accessor, cb, column, descriptor, elementByteLength, elementByteOffset, factor, i, index, iterations, rowsPerIteration,
+        _this = this;
+      if (this.blob != null) {
+        index = this.columns.indexOf(name);
+        descriptor = this.descriptors[index];
+        accessor = this.accessors[index];
+        elementByteLength = this.elementByteLengths[index];
+        elementByteOffset = this.elementByteLengths.slice(0, index);
+        if (elementByteOffset.length === 0) {
+          elementByteOffset = 0;
+        } else {
+          elementByteOffset = elementByteOffset.reduce(function(a, b) {
+            return a + b;
+          });
+        }
+        column = this.typedArray[descriptor] != null ? new this.typedArray[descriptor](this.rows) : [];
+        rowsPerIteration = ~~(this.maxMemory / this.rowByteSize);
+        rowsPerIteration = Math.min(rowsPerIteration, this.rows);
+        factor = this.rows / rowsPerIteration;
+        iterations = Math.floor(factor) === factor ? factor : Math.floor(factor) + 1;
+        i = 0;
+        index = 0;
+        cb = function(buffer, opts) {
+          var nRows, offset, startRow, view;
+          nRows = buffer.byteLength / _this.rowByteSize;
+          view = new DataView(buffer);
+          offset = elementByteOffset;
+          while (nRows--) {
+            column[i] = accessor(view, offset)[0];
+            i += 1;
+            offset += _this.rowByteSize;
+          }
+          iterations -= 1;
+          index += 1;
+          if (iterations) {
+            startRow = index * rowsPerIteration;
+            return _this.getTableBuffer(startRow, rowsPerIteration, cb, opts);
+          } else {
+            _this.invoke(callback, opts, column);
+          }
+        };
+        return this.getTableBuffer(0, rowsPerIteration, cb, opts);
+      } else {
+        cb = function(rows, opts) {
+          column = rows.map(function(d) {
+            return d[name];
+          });
+          return _this.invoke(callback, opts, column);
+        };
+        return this.getRows(0, this.rows, cb, opts);
+      }
+    };
+
+    Tabular.prototype.getTableBuffer = function(row, number, callback, opts) {
+      var begin, blobRows, end, reader,
+        _this = this;
+      number = Math.min(this.rows - row, number);
+      begin = row * this.rowByteSize;
+      end = begin + number * this.rowByteSize;
+      blobRows = this.blob.slice(begin, end);
+      reader = new FileReader();
+      reader.row = row;
+      reader.number = number;
+      reader.onloadend = function(e) {
+        return _this.invoke(callback, opts, e.target.result);
+      };
+      return reader.readAsArrayBuffer(blobRows);
+    };
+
+    Tabular.prototype.getRows = function(row, number, callback, opts) {
+      var begin, blobRows, buffer, end, reader, rows,
+        _this = this;
+      if (this.rowsInMemory(row, row + number)) {
+        if (this.blob != null) {
+          buffer = this.buffer;
+        } else {
+          begin = row * this.rowByteSize;
+          end = begin + number * this.rowByteSize;
+          buffer = this.buffer.slice(begin, end);
+        }
+        rows = this._getRows(buffer, number);
+        this.invoke(callback, opts, rows);
+        return rows;
+      } else {
+        begin = row * this.rowByteSize;
+        end = begin + Math.max(this.nRowsInBuffer * this.rowByteSize, number * this.rowByteSize);
+        blobRows = this.blob.slice(begin, end);
+        reader = new FileReader();
+        reader.row = row;
+        reader.number = number;
+        reader.onloadend = function(e) {
+          var target;
+          target = e.target;
+          _this.buffer = target.result;
+          _this.firstRowInBuffer = _this.lastRowInBuffer = target.row;
+          _this.lastRowInBuffer += target.number;
+          return _this.getRows(row, number, callback, opts);
+        };
+        return reader.readAsArrayBuffer(blobRows);
+      }
+    };
+
+    return Tabular;
+
+  })(DataUnit);
+
+  this.astro.FITS.Tabular = Tabular;
+
+  Table = (function(_super) {
+    __extends(Table, _super);
+
+    function Table() {
+      _ref = Table.__super__.constructor.apply(this, arguments);
+      return _ref;
+    }
+
+    Table.prototype.dataAccessors = {
+      A: function(value) {
+        return value.trim();
+      },
+      I: function(value) {
+        return parseInt(value);
+      },
+      F: function(value) {
+        return parseFloat(value);
+      },
+      E: function(value) {
+        return parseFloat(value);
+      },
+      D: function(value) {
+        return parseFloat(value);
+      }
+    };
+
+    Table.prototype.setAccessors = function(header) {
+      var descriptor, form, i, match, pattern, type, _i, _ref1, _results,
+        _this = this;
+      pattern = /([AIFED])(\d+)\.*(\d+)*/;
+      _results = [];
+      for (i = _i = 1, _ref1 = this.cols; 1 <= _ref1 ? _i <= _ref1 : _i >= _ref1; i = 1 <= _ref1 ? ++_i : --_i) {
+        form = header.get("TFORM" + i);
+        type = header.get("TTYPE" + i);
+        match = pattern.exec(form);
+        descriptor = match[1];
+        _results.push((function(descriptor) {
+          var accessor;
+          accessor = function(value) {
+            return _this.dataAccessors[descriptor](value);
+          };
+          return _this.accessors.push(accessor);
+        })(descriptor));
+      }
+      return _results;
+    };
+
+    Table.prototype._getRows = function(buffer) {
+      var accessor, arr, begin, end, i, index, line, nRows, row, rows, subarray, value, _i, _j, _k, _len, _len1, _ref1, _ref2;
+      nRows = buffer.byteLength / this.rowByteSize;
+      arr = new Uint8Array(buffer);
+      rows = [];
+      for (i = _i = 0, _ref1 = nRows - 1; 0 <= _ref1 ? _i <= _ref1 : _i >= _ref1; i = 0 <= _ref1 ? ++_i : --_i) {
+        begin = i * this.rowByteSize;
+        end = begin + this.rowByteSize;
+        subarray = arr.subarray(begin, end);
+        line = '';
+        for (_j = 0, _len = subarray.length; _j < _len; _j++) {
+          value = subarray[_j];
+          line += String.fromCharCode(value);
+        }
+        line = line.trim().split(/\s+/);
+        row = {};
+        _ref2 = this.accessors;
+        for (index = _k = 0, _len1 = _ref2.length; _k < _len1; index = ++_k) {
+          accessor = _ref2[index];
+          value = line[index];
+          row[this.columns[index]] = accessor(value);
+        }
+        rows.push(row);
+      }
+      return rows;
+    };
+
+    return Table;
+
+  })(Tabular);
+
+  this.astro.FITS.Table = Table;
+
+  BinaryTable = (function(_super) {
+    __extends(BinaryTable, _super);
+
+    function BinaryTable() {
+      _ref1 = BinaryTable.__super__.constructor.apply(this, arguments);
+      return _ref1;
+    }
+
+    BinaryTable.prototype.typedArray = {
+      B: Uint8Array,
+      I: Uint16Array,
+      J: Uint32Array,
+      E: Float32Array,
+      D: Float64Array,
+      1: Uint8Array,
+      2: Uint16Array,
+      4: Uint32Array
+    };
+
+    BinaryTable.offsets = {
+      L: 1,
+      B: 1,
+      I: 2,
+      J: 4,
+      K: 8,
+      A: 1,
+      E: 4,
+      D: 8,
+      C: 8,
+      M: 16
+    };
+
+    BinaryTable.prototype.dataAccessors = {
+      L: function(view, offset) {
+        var val, x;
+        x = view.getInt8(offset);
+        offset += 1;
+        val = x === 84 ? true : false;
+        return [val, offset];
+      },
+      B: function(view, offset) {
+        var val;
+        val = view.getUint8(offset);
+        offset += 1;
+        return [val, offset];
+      },
+      I: function(view, offset) {
+        var val;
+        val = view.getInt16(offset);
+        offset += 2;
+        return [val, offset];
+      },
+      J: function(view, offset) {
+        var val;
+        val = view.getInt32(offset);
+        offset += 4;
+        return [val, offset];
+      },
+      K: function(view, offset) {
+        var factor, highByte, lowByte, mod, val;
+        highByte = Math.abs(view.getInt32(offset));
+        offset += 4;
+        lowByte = Math.abs(view.getInt32(offset));
+        offset += 4;
+        mod = highByte % 10;
+        factor = mod ? -1 : 1;
+        highByte -= mod;
+        val = factor * ((highByte << 32) | lowByte);
+        return [val, offset];
+      },
+      A: function(view, offset) {
+        var val;
+        val = view.getUint8(offset);
+        val = String.fromCharCode(val);
+        offset += 1;
+        return [val, offset];
+      },
+      E: function(view, offset) {
+        var val;
+        val = view.getFloat32(offset);
+        offset += 4;
+        return [val, offset];
+      },
+      D: function(view, offset) {
+        var val;
+        val = view.getFloat64(offset);
+        offset += 8;
+        return [val, offset];
+      },
+      C: function(view, offset) {
+        var val, val1, val2;
+        val1 = view.getFloat32(offset);
+        offset += 4;
+        val2 = view.getFloat32(offset);
+        offset += 4;
+        val = [val1, val2];
+        return [val, offset];
+      },
+      M: function(view, offset) {
+        var val, val1, val2;
+        val1 = view.getFloat64(offset);
+        offset += 8;
+        val2 = view.getFloat64(offset);
+        offset += 8;
+        val = [val1, val2];
+        return [val, offset];
+      }
+    };
+
+    BinaryTable.prototype.toBits = function(byte) {
+      var arr, i;
+      arr = [];
+      i = 128;
+      while (i >= 1) {
+        arr.push((byte & i ? 1 : 0));
+        i /= 2;
+      }
+      return arr;
+    };
+
+    BinaryTable.prototype.getFromHeap = function(view, offset, descriptor) {
+      var arr, heapOffset, heapSlice, i, length;
+      length = view.getInt32(offset);
+      offset += 4;
+      heapOffset = view.getInt32(offset);
+      offset += 4;
+      heapSlice = this.heap.slice(heapOffset, heapOffset + length);
+      arr = new this.typedArray[descriptor](heapSlice);
+      i = arr.length;
+      while (i--) {
+        arr[i] = this.constructor.swapEndian[descriptor](arr[i]);
+      }
+      return [arr, offset];
+    };
+
+    BinaryTable.prototype.setAccessors = function(header) {
+      var count, descriptor, form, i, isArray, match, pattern, type, _i, _ref2, _results,
+        _this = this;
+      pattern = /(\d*)([P|Q]*)([L|X|B|I|J|K|A|E|D|C|M]{1})/;
+      _results = [];
+      for (i = _i = 1, _ref2 = this.cols; 1 <= _ref2 ? _i <= _ref2 : _i >= _ref2; i = 1 <= _ref2 ? ++_i : --_i) {
+        form = header.get("TFORM" + i);
+        type = header.get("TTYPE" + i);
+        match = pattern.exec(form);
+        count = parseInt(match[1]) || 1;
+        isArray = match[2];
+        descriptor = match[3];
+        _results.push((function(descriptor, count) {
+          var accessor, nBytes;
+          _this.descriptors.push(descriptor);
+          _this.elementByteLengths.push(_this.constructor.offsets[descriptor] * count);
+          if (isArray) {
+            switch (type) {
+              case "COMPRESSED_DATA":
+                accessor = function(view, offset) {
+                  var arr, pixels, _ref3;
+                  _ref3 = _this.getFromHeap(view, offset, descriptor), arr = _ref3[0], offset = _ref3[1];
+                  pixels = new _this.typedArray[_this.algorithmParameters["BYTEPIX"]](_this.ztile[0]);
+                  Decompress.Rice(arr, _this.algorithmParameters["BLOCKSIZE"], _this.algorithmParameters["BYTEPIX"], pixels, _this.ztile[0], Decompress.RiceSetup);
+                  return [pixels, offset];
+                };
+                break;
+              case "GZIP_COMPRESSED_DATA":
+                accessor = function(view, offset) {
+                  var arr;
+                  arr = new Float32Array(_this.width);
+                  i = arr.length;
+                  while (i--) {
+                    arr[i] = NaN;
+                  }
+                  return [arr, offset];
+                };
+                break;
+              default:
+                accessor = function(view, offset) {
+                  return _this.getFromHeap(view, offset, descriptor);
+                };
+            }
+          } else {
+            if (count === 1) {
+              accessor = function(view, offset) {
+                var value, _ref3;
+                _ref3 = _this.dataAccessors[descriptor](view, offset), value = _ref3[0], offset = _ref3[1];
+                return [value, offset];
+              };
+            } else {
+              if (descriptor === 'X') {
+                nBytes = Math.log(count) / Math.log(2);
+                accessor = function(view, offset) {
+                  var arr, bits, buffer, byte, bytes, _j, _len;
+                  buffer = view.buffer.slice(offset, offset + nBytes);
+                  bytes = new Uint8Array(buffer);
+                  bits = [];
+                  for (_j = 0, _len = bytes.length; _j < _len; _j++) {
+                    byte = bytes[_j];
+                    arr = _this.toBits(byte);
+                    bits = bits.concat(arr);
+                  }
+                  offset += nBytes;
+                  return [bits.slice(0, +(count - 1) + 1 || 9e9), offset];
+                };
+              } else if (descriptor === 'A') {
+                accessor = function(view, offset) {
+                  var arr, buffer, s, value, _j, _len;
+                  buffer = view.buffer.slice(offset, offset + count);
+                  arr = new Uint8Array(buffer);
+                  s = '';
+                  for (_j = 0, _len = arr.length; _j < _len; _j++) {
+                    value = arr[_j];
+                    s += String.fromCharCode(value);
+                  }
+                  s = s.trim();
+                  offset += count;
+                  return [s, offset];
+                };
+              } else {
+                accessor = function(view, offset) {
+                  var data, value, _ref3;
+                  i = count;
+                  data = [];
+                  while (i--) {
+                    _ref3 = _this.dataAccessors[descriptor](view, offset), value = _ref3[0], offset = _ref3[1];
+                    data.push(value);
+                  }
+                  return [data, offset];
+                };
+              }
+            }
+          }
+          return _this.accessors.push(accessor);
+        })(descriptor, count));
+      }
+      return _results;
+    };
+
+    BinaryTable.prototype._getRows = function(buffer, nRows) {
+      var accessor, index, offset, row, rows, value, view, _i, _len, _ref2, _ref3;
+      view = new DataView(buffer);
+      offset = 0;
+      rows = [];
+      while (nRows--) {
+        row = {};
+        _ref2 = this.accessors;
+        for (index = _i = 0, _len = _ref2.length; _i < _len; index = ++_i) {
+          accessor = _ref2[index];
+          _ref3 = accessor(view, offset), value = _ref3[0], offset = _ref3[1];
+          row[this.columns[index]] = value;
+        }
+        rows.push(row);
+      }
+      return rows;
+    };
+
+    return BinaryTable;
+
+  })(Tabular);
+
+  this.astro.FITS.BinaryTable = BinaryTable;
+
+  Decompress = {
+    RiceSetup: {
+      1: function(array) {
+        var fsbits, fsmax, lastpix, pointer;
+        pointer = 1;
+        fsbits = 3;
+        fsmax = 6;
+        lastpix = array[0];
+        return [fsbits, fsmax, lastpix, pointer];
+      },
+      2: function(array) {
+        var bytevalue, fsbits, fsmax, lastpix, pointer;
+        pointer = 2;
+        fsbits = 4;
+        fsmax = 14;
+        lastpix = 0;
+        bytevalue = array[0];
+        lastpix = lastpix | (bytevalue << 8);
+        bytevalue = array[1];
+        lastpix = lastpix | bytevalue;
+        return [fsbits, fsmax, lastpix, pointer];
+      },
+      4: function(array) {
+        var bytevalue, fsbits, fsmax, lastpix, pointer;
+        pointer = 4;
+        fsbits = 5;
+        fsmax = 25;
+        lastpix = 0;
+        bytevalue = array[0];
+        lastpix = lastpix | (bytevalue << 24);
+        bytevalue = array[1];
+        lastpix = lastpix | (bytevalue << 16);
+        bytevalue = array[2];
+        lastpix = lastpix | (bytevalue << 8);
+        bytevalue = array[3];
+        lastpix = lastpix | bytevalue;
+        return [fsbits, fsmax, lastpix, pointer];
+      }
+    },
+    Rice: function(array, blocksize, bytepix, pixels, nx, setup) {
+      var b, bbits, diff, fs, fsbits, fsmax, i, imax, k, lastpix, nbits, nonzeroCount, nzero, pointer, _ref2, _ref3;
+      bbits = 1 << fsbits;
+      _ref2 = setup[bytepix](array), fsbits = _ref2[0], fsmax = _ref2[1], lastpix = _ref2[2], pointer = _ref2[3];
+      nonzeroCount = new Uint8Array(256);
+      nzero = 8;
+      _ref3 = [128, 255], k = _ref3[0], i = _ref3[1];
+      while (i >= 0) {
+        while (i >= k) {
+          nonzeroCount[i] = nzero;
+          i -= 1;
+        }
+        k = k / 2;
+        nzero -= 1;
+      }
+      nonzeroCount[0] = 0;
+      b = array[pointer++];
+      nbits = 8;
+      i = 0;
+      while (i < nx) {
+        nbits -= fsbits;
+        while (nbits < 0) {
+          b = (b << 8) | array[pointer++];
+          nbits += 8;
+        }
+        fs = (b >> nbits) - 1;
+        b &= (1 << nbits) - 1;
+        imax = i + blocksize;
+        if (imax > nx) {
+          imax = nx;
+        }
+        if (fs < 0) {
+          while (i < imax) {
+            pixels[i] = lastpix;
+            i += 1;
+          }
+        } else if (fs === fsmax) {
+          while (i < imax) {
+            k = bbits - nbits;
+            diff = b << k;
+            k -= 8;
+            while (k >= 0) {
+              b = array[pointer++];
+              diff |= b << k;
+              k -= 8;
+            }
+            if (nbits > 0) {
+              b = array[pointer++];
+              diff |= b >> (-k);
+              b &= (1 << nbits) - 1;
+            } else {
+              b = 0;
+            }
+            if ((diff & 1) === 0) {
+              diff = diff >> 1;
+            } else {
+              diff = ~(diff >> 1);
+            }
+            pixels[i] = diff + lastpix;
+            lastpix = pixels[i];
+            i++;
+          }
+        } else {
+          while (i < imax) {
+            while (b === 0) {
+              nbits += 8;
+              b = array[pointer++];
+            }
+            nzero = nbits - nonzeroCount[b];
+            nbits -= nzero + 1;
+            b ^= 1 << nbits;
+            nbits -= fs;
+            while (nbits < 0) {
+              b = (b << 8) | array[pointer++];
+              nbits += 8;
+            }
+            diff = (nzero << fs) | (b >> nbits);
+            b &= (1 << nbits) - 1;
+            if ((diff & 1) === 0) {
+              diff = diff >> 1;
+            } else {
+              diff = ~(diff >> 1);
+            }
+            pixels[i] = diff + lastpix;
+            lastpix = pixels[i];
+            i++;
+          }
+        }
+      }
+      return pixels;
+    }
+  };
+
+  this.astro.FITS.Decompress = Decompress;
+
+  CompressedImage = (function(_super) {
+    __extends(CompressedImage, _super);
+
+    CompressedImage.include(ImageUtils);
+
+    CompressedImage.extend(Decompress);
+
+    CompressedImage.randomGenerator = function() {
+      var a, i, m, random, seed, temp, _i;
+      a = 16807;
+      m = 2147483647;
+      seed = 1;
+      random = new Float32Array(10000);
+      for (i = _i = 0; _i <= 9999; i = ++_i) {
+        temp = a * seed;
+        seed = temp - m * parseInt(temp / m);
+        random[i] = seed / m;
+      }
+      return random;
+    };
+
+    CompressedImage.randomSequence = CompressedImage.randomGenerator();
+
+    function CompressedImage(header, data) {
+      var i, key, value, ztile, _i, _ref2;
+      CompressedImage.__super__.constructor.apply(this, arguments);
+      this.zcmptype = header.get("ZCMPTYPE");
+      this.zbitpix = header.get("ZBITPIX");
+      this.znaxis = header.get("ZNAXIS");
+      this.zblank = header.get("ZBLANK");
+      this.blank = header.get("BLANK");
+      this.zdither = header.get('ZDITHER0') || 0;
+      this.ztile = [];
+      for (i = _i = 1, _ref2 = this.znaxis; 1 <= _ref2 ? _i <= _ref2 : _i >= _ref2; i = 1 <= _ref2 ? ++_i : --_i) {
+        ztile = header.contains("ZTILE" + i) ? header.get("ZTILE" + i) : i === 1 ? header.get("ZNAXIS1") : 1;
+        this.ztile.push(ztile);
+      }
+      this.width = header.get("ZNAXIS1");
+      this.height = header.get("ZNAXIS2") || 1;
+      this.algorithmParameters = {};
+      if (this.zcmptype === 'RICE_1') {
+        this.algorithmParameters["BLOCKSIZE"] = 32;
+        this.algorithmParameters["BYTEPIX"] = 4;
+      }
+      i = 1;
+      while (true) {
+        key = "ZNAME" + i;
+        if (!header.contains(key)) {
+          break;
+        }
+        value = "ZVAL" + i;
+        this.algorithmParameters[header.get(key)] = header.get(value);
+        i += 1;
+      }
+      this.zmaskcmp = header.get("ZMASKCMP");
+      this.zquantiz = header.get("ZQUANTIZ") || "LINEAR_SCALING";
+      this.bzero = header.get("BZERO") || 0;
+      this.bscale = header.get("BSCALE") || 1;
+    }
+
+    CompressedImage.prototype._getRows = function(buffer, nRows) {
+      var accessor, arr, blank, data, i, index, nTile, offset, r, rIndex, row, scale, seed0, seed1, value, view, zero, _i, _j, _len, _len1, _ref2, _ref3;
+      view = new DataView(buffer);
+      offset = 0;
+      arr = new Float32Array(this.width * this.height);
+      while (nRows--) {
+        row = {};
+        _ref2 = this.accessors;
+        for (index = _i = 0, _len = _ref2.length; _i < _len; index = ++_i) {
+          accessor = _ref2[index];
+          _ref3 = accessor(view, offset), value = _ref3[0], offset = _ref3[1];
+          row[this.columns[index]] = value;
+        }
+        data = row['COMPRESSED_DATA'] || row['UNCOMPRESSED_DATA'] || row['GZIP_COMPRESSED_DATA'];
+        blank = row['ZBLANK'] || this.zblank;
+        scale = row['ZSCALE'] || this.bscale;
+        zero = row['ZZERO'] || this.bzero;
+        nTile = this.height - nRows;
+        seed0 = nTile + this.zdither - 1;
+        seed1 = (seed0 - 1) % 10000;
+        rIndex = parseInt(this.constructor.randomSequence[seed1] * 500);
+        for (index = _j = 0, _len1 = data.length; _j < _len1; index = ++_j) {
+          value = data[index];
+          i = (nTile - 1) * this.width + index;
+          if (value === -2147483647) {
+            arr[i] = NaN;
+          } else if (value === -2147483646) {
+            arr[i] = 0;
+          } else {
+            r = this.constructor.randomSequence[rIndex];
+            arr[i] = (value - r + 0.5) * scale + zero;
+          }
+          rIndex += 1;
+          if (rIndex === 10000) {
+            seed1 = (seed1 + 1) % 10000;
+            rIndex = parseInt(this.randomSequence[seed1] * 500);
+          }
+        }
+      }
+      return arr;
+    };
+
+    CompressedImage.prototype.getFrame = function(nFrame, callback, opts) {
+      var heapBlob, reader,
+        _this = this;
+      if (this.heap) {
+        this.frame = nFrame || this.frame;
+        return this.getRows(0, this.rows, callback, opts);
+      } else {
+        heapBlob = this.blob.slice(this.length, this.length + this.heapLength);
+        reader = new FileReader();
+        reader.onloadend = function(e) {
+          _this.heap = e.target.result;
+          return _this.getFrame(nFrame, callback, opts);
+        };
+        return reader.readAsArrayBuffer(heapBlob);
+      }
+    };
+
+    return CompressedImage;
+
+  })(BinaryTable);
+
+  this.astro.FITS.CompressedImage = CompressedImage;
+
+  HDU = (function() {
+    function HDU(header, data) {
+      this.header = header;
+      this.data = data;
+    }
+
+    HDU.prototype.hasData = function() {
+      if (this.data != null) {
+        return true;
+      } else {
+        return false;
+      }
+    };
+
+    return HDU;
+
+  })();
+
+  this.astro.FITS.HDU = HDU;
+
+}).call(this);
+/******************************************************************************
+ * Aladin Lite project
+ * 
+ * File MOC
+ *
+ * This class represents a MOC (Multi Order Coverage map) layer
+ * 
+ * Author: Thomas Boch[CDS]
+ * 
+ *****************************************************************************/
+
+MOC = (function() {
+    MOC = function(options) {
+        this.norder = undefined;
+        this._highResCells = {};
+        this._lowResCells = {};
+
+        // TODO homogenize options parsing for all kind of overlay (footprints, catalog, MOC)
+        options = options || {};
+        this.name = options.name || "MOC";
+        this.color = options.color || Color.getNextColor();
+        this.lineWidth = options["lineWidth"] || 1;
+
+
+
+        this.isShowing = true;
+    }
+
+    
+    function log2(val) {
+        return Math.log(val) / Math.LN2;
+    }
+
+    // max norder we can currently handle (limitation of healpix.js)
+    MOC.MAX_NORDER = 13; // NSIDE = 8192
+
+    MOC.LOWRES_MAXORDER = 5; // 5 or 6 ??
+    MOC.HIGHRES_MAXORDER = 11; // ??
+
+    // TODO: options to modifiy this ?
+    MOC.PIVOT_FOV = 20; // when do we switch from low res cells to high res cells (fov in degrees)
+
+    /**
+     * set MOC data by parsing a URL pointing to a MOC file
+     */
+    MOC.prototype.dataFromURL = function(mocURL, successCallback) {
+
+        var self = this;
+        var callback = function() {
+            // first, let's find MOC norder
+            var hdr0;
+            try {
+                hdr0 = this.getHeader(0);
+            }
+            catch (e) {
+                console.err('Could not get header of extension #0');
+                return;
+            }
+            var hdr1 = this.getHeader(1);
+
+            if (hdr0.contains('HPXMOC')) {
+                self.order = hdr0.get('HPXMOC')
+            }
+            else if (hdr0.contains('MOCORDER')) {
+                self.order = hdr0.get('MOCORDER')
+            }
+            else if (hdr1.contains('HPXMOC')) {
+                self.order = hdr1.get('HPXMOC')
+            }
+            else if (hdr1.contains('MOCORDER')) {
+                self.order = hdr1.get('MOCORDER')
+            }
+            else {
+                console.err('Can not find MOC order in FITS file');
+                return;
+            }
+
+            var data = this.getDataUnit(1);
+            var colName = data.columns[0];
+            data.getRows(0, data.rows, function(rows) {
+                for (var k=0; k<rows.length; k++) {
+                    var uniq = rows[k][colName];
+                    var order = Math.floor(Math.floor(log2(Math.floor(uniq/4))) / 2);
+                    var ipix = uniq - 4 *(Math.pow(4, order));
+
+                    // fill low and high level cells
+                    // 1. if order <= LOWRES_MAXORDER, just store value in low and high res cells
+                    if (order<=MOC.LOWRES_MAXORDER) {
+                        if (! (order in self._lowResCells)) {
+                            self._lowResCells[order] = [];
+                            self._highResCells[order] = [];
+                        }
+                        self._lowResCells[order].push(ipix);
+                        self._highResCells[order].push(ipix);
+                    }
+                    // 2. if LOWRES_MAXORDER < order <= HIGHRES_MAXORDER , degrade ipix for low res cells
+                    else if (order<=MOC.HIGHRES_MAXORDER) {
+                        if (! (order in self._highResCells)) {
+                            self._highResCells[order] = [];
+                        }
+                        self._highResCells[order].push(ipix);
+                        
+                        var degradedOrder = MOC.LOWRES_MAXORDER; 
+                        var degradedIpix  = Math.floor(ipix / Math.pow(4, (order - degradedOrder)));
+                        if (! (degradedOrder in self._lowResCells)) {
+                            self._lowResCells= [];
+                        }
+                        self._lowResCells[degradedOrder].push(degradedIpix);
+                    }
+                    // 3. if order > HIGHRES_MAXORDER , degrade ipix for low res and high res cells
+                    else {
+                        // low res cells
+                        var degradedOrder = MOC.LOWRES_MAXORDER; 
+                        var degradedIpix  = Math.floor(ipix / Math.pow(4, (order - degradedOrder)));
+                        if (! (degradedOrder in self._lowResCells)) {
+                            self._lowResCells = [];
+                        }
+                        self._lowResCells[degradedOrder].push(degradedIpix);
+                        
+                        // high res cells
+                        degradedOrder = MOC.HIGHRES_MAXORDER; 
+                        degradedIpix  = Math.floor(ipix / Math.pow(4, (order - degradedOrder)));
+                        if (! (degradedOrder in self._highResCells)) {
+                            self._highResCells = [];
+                        }
+                        self._highResCells[degradedOrder].push(degradedIpix);
+                    }
+                }
+
+            });
+            data = null; // this helps releasing memory
+
+            if (successCallback) {
+                successCallback();
+            }
+        }; // end of callback function
+
+        this.dataURL = mocURL;
+        // TODO: general method to retrieve data (through dedicated class ?)
+        var proxiedURL = Aladin.JSONP_PROXY + '?url=' + encodeURIComponent(this.dataURL);
+        new astro.FITS(proxiedURL, callback);
+    }
+
+    MOC.prototype.setView = function(view) {
+        this.view = view;
+    };
+    
+    MOC.prototype.draw = function(ctx, projection, viewFrame, width, height, largestDim, zoomFactor, fov) {
+        if (! this.isShowing) {
+            return;
+        }
+
+        var mocCells = fov > MOC.PIVOT_FOV ? this._lowResCells : this._highResCells;
+
+        this._drawCells(ctx, mocCells, fov, projection, viewFrame, CooFrameEnum.J2000, width, height, largestDim, zoomFactor);
+
+        
+    };
+
+    MOC.prototype._drawCells = function(ctx, mocCells, fov, projection, viewFrame, surveyFrame, width, height, largestDim, zoomFactor) {
+        ctx.lineWidth = this.lineWidth;
+        ctx.strokeStyle = this.color;
+        ctx.beginPath();
+
+        var orderedKeys = [];
+        for (key in mocCells) {
+            orderedKeys.push(key);
+        }
+        orderedKeys.sort();
+        var nside, xyCorners, ipix;
+
+        // go through all MOC cells
+        if (fov>80) {
+            var norder;
+            for (var i=0; i<orderedKeys.length; i++) {
+                norder = parseInt(orderedKeys[i]);
+                nside = 1 << norder;
+
+                for (var j=0; j<mocCells[norder].length; j++) {
+                    ipix = mocCells[norder][j];
+                    if (norder>=3) {
+                        xyCorners = getXYCorners(nside, ipix, viewFrame, surveyFrame, width, height, largestDim, zoomFactor, projection);
+                        if (xyCorners) {
+                            drawCorners(ctx, xyCorners);
+                        }
+                    }
+                    else { // compute all norder 3 ipix indexes
+                        var factor = Math.pow(4, (3-norder));
+                        var startIpix = ipix * factor;
+
+                        for (var k=0; k<factor; k++) {
+                            xyCorners = getXYCorners(8, startIpix + k, viewFrame, surveyFrame, width, height, largestDim, zoomFactor, projection);
+                            if (xyCorners) {
+                                drawCorners(ctx, xyCorners);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        else {
+            var visibleHpxCellsOrder3 = this.view.getVisiblePixList(3, CooFrameEnum.J2000);
+            var cellsOrder3ToIgnore = {}
+            var norderMax = parseInt(orderedKeys[orderedKeys.length-1]);
+            for (var norder=1; norder<=norderMax; norder++) {
+                nside = 1 << norder;
+
+                if (norder<=3) {
+                    for (var j=0; j<mocCells[norder].length; j++) {
+                        ipix = mocCells[norder][j];
+                        var factor = Math.pow(4, (3-norder));
+                        var startIpix = ipix * factor;
+                        for (var k=0; k<factor; k++) {
+                            norder3Ipix = startIpix + k;
+                            xyCorners = getXYCorners(8, norder3Ipix, viewFrame, surveyFrame, width, height, largestDim, zoomFactor, projection);
+                            if (xyCorners) {
+                                drawCorners(ctx, xyCorners);
+                            }
+                            cellsOrder3ToIgnore[norder3Ipix] = 1;
+                        }
+                    }
+                }
+                // TODO: this part could be improved by eliminating ipix already rendered
+                else {
+                    for (var j=0; j<mocCells[norder].length; j++) {
+                        ipix = mocCells[norder][j];
+                        var parentIpixOrder3 = Math.floor(ipix/Math.pow(4, norder-3));
+                        if (parentIpixOrder3 in cellsOrder3ToIgnore) {
+                            continue;
+                        }
+                        xyCorners = getXYCorners(nside, ipix, viewFrame, surveyFrame, width, height, largestDim, zoomFactor, projection);
+                        if (xyCorners) {
+                            drawCorners(ctx, xyCorners);
+                        }
+                    }
+                }
+            }
+        }
+/*
+*/
+        ctx.stroke();
+    };
+
+    var drawCorners = function(ctx, xyCorners) {
+        ctx.moveTo(xyCorners[0].vx, xyCorners[0].vy);
+        ctx.lineTo(xyCorners[1].vx, xyCorners[1].vy);
+        ctx.lineTo(xyCorners[2].vx, xyCorners[2].vy);
+        ctx.lineTo(xyCorners[3].vx, xyCorners[3].vy);
+        ctx.lineTo(xyCorners[0].vx, xyCorners[0].vy);
+    }
+
+    // TODO: merge with what is done in View.getVisibleCells
+    var getXYCorners = function(nside, ipix, viewFrame, surveyFrame, width, height, largestDim, zoomFactor, projection) {
+        var cornersXYView = [];
+        var cornersXY = [];
+
+        var spVec = new SpatialVector();
+
+        var corners = HealpixCache.corners_nest(ipix, nside);
+        for (var k=0; k<4; k++) {
+            spVec.setXYZ(corners[k].x, corners[k].y, corners[k].z);
+
+            // need for frame transformation ?
+            if (surveyFrame && surveyFrame != viewFrame) {
+                if (surveyFrame==CooFrameEnum.J2000) {
+                    var radec = CooConversion.J2000ToGalactic([spVec.ra(), spVec.dec()]);
+                    lon = radec[0];
+                    lat = radec[1];
+                }
+                else if (surveyFrame==CooFrameEnum.GAL) {
+                    var radec = CooConversion.GalacticToJ2000([spVec.ra(), spVec.dec()]);
+                    lon = radec[0];
+                    lat = radec[1];
+                }
+            }
+            else {
+                lon = spVec.ra();
+                lat = spVec.dec();
+            }
+
+            cornersXY[k] = projection.project(lon, lat);
+        }
+
+
+        if (cornersXY[0] == null ||  cornersXY[1] == null  ||  cornersXY[2] == null ||  cornersXY[3] == null ) {
+            return null;
+        }
+
+        for (var k=0; k<4; k++) {
+            cornersXYView[k] = AladinUtils.xyToView(cornersXY[k].X, cornersXY[k].Y, width, height, largestDim, zoomFactor);
+        }
+
+        var indulge = 10;
+        // detect pixels outside view. Could be improved !
+        // we minimize here the number of cells returned
+        if( cornersXYView[0].vx<0 && cornersXYView[1].vx<0 && cornersXYView[2].vx<0 &&cornersXYView[3].vx<0) {
+            return null;
+        }
+        if( cornersXYView[0].vy<0 && cornersXYView[1].vy<0 && cornersXYView[2].vy<0 &&cornersXYView[3].vy<0) {
+            return null;
+        }
+        if( cornersXYView[0].vx>=width && cornersXYView[1].vx>=width && cornersXYView[2].vx>=width &&cornersXYView[3].vx>=width) {
+            return null;
+        }
+        if( cornersXYView[0].vy>=height && cornersXYView[1].vy>=height && cornersXYView[2].vy>=height &&cornersXYView[3].vy>=height) {
+            return null;
+        }
+
+        return cornersXYView;
+    };
+
+    MOC.prototype.reportChange = function() {
+        this.view.requestRedraw();
+    };
+
+    MOC.prototype.show = function() {
+        if (this.isShowing) {
+            return;
+        }
+        this.isShowing = true;
+        this.reportChange();
+    };
+
+    MOC.prototype.hide = function() {
+        if (! this.isShowing) {
+            return;
+        }
+        this.isShowing = false;
+        this.reportChange();
+    };
+
+
+
+    return MOC;
+})();
+
+    
+// Copyright 2015 - UDS/CNRS
+// The Aladin Lite program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+// This file is part of Aladin Lite.
+//
+//    Aladin Lite is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Lite is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Lite.
+//
+
+
+
+/******************************************************************************
+ * Aladin Lite project
+ * 
+ * File CooGrid
+ * 
+ * Author: Thomas Boch[CDS]
+ * 
+ *****************************************************************************/
+
+CooGrid = (function() {
+    var CooGrid = function() {
+    };
+    
+    function viewxy2lonlat(projection, vx, vy, width, height, largestDim, zoomFactor) {
+        var xy = AladinUtils.viewToXy(vx, vy, width, height, largestDim, zoomFactor);
+        var lonlat;
+        try {
+            lonlat = projection.unproject(xy.x, xy.y);
+        }
+        catch(err) {
+            return null;
+        }
+        return {lon: lonlat.ra, lat: lonlat.dec};
+    };
+    
+    var NB_STEPS = 10;
+    var NB_LINES = 10;
+    
+    CooGrid.prototype.redraw = function(ctx, projection, frame, width, height, largestDim, zoomFactor, fov) {
+        if (fov>60) { // currently not supported
+            return; 
+        }
+        
+        var lonMax = 0, lonMin = 359.9999, latMax = -90, latMin = 90;
+        var lonlat1 = viewxy2lonlat(projection, 0, 0, width, height, largestDim, zoomFactor);
+        var lonlat2 = viewxy2lonlat(projection, width-1, height-1, width, height, largestDim, zoomFactor);
+        lonMin = Math.min(lonlat1.lon, lonlat2.lon);
+        lonMax = Math.max(lonlat1.lon, lonlat2.lon);
+        latMin = Math.min(lonlat1.lat, lonlat2.lat);
+        latMax = Math.max(lonlat1.lat, lonlat2.lat);
+        
+        var lonlat3 = viewxy2lonlat(projection, 0, height-1, width, height, largestDim, zoomFactor);
+        lonMin = Math.min(lonMin, lonlat3.lon);
+        lonMax = Math.max(lonMax, lonlat3.lon);
+        latMin = Math.min(latMin, lonlat3.lat);
+        latMax = Math.max(latMax, lonlat3.lat);
+        
+        var lonlat4 = viewxy2lonlat(projection, width-1, 0, width, height, largestDim, zoomFactor);
+        lonMin = Math.min(lonMin, lonlat4.lon);
+        lonMax = Math.max(lonMax, lonlat4.lon);
+        latMin = Math.min(latMin, lonlat4.lat);
+        latMax = Math.max(latMax, lonlat4.lat);
+        
+
+        
+        var lonDiff = lonMax - lonMin;
+        var latDiff = latMax - latMin;
+        
+        var LON_STEP, LAT_STEP;
+        if (fov>10) {
+            LON_STEP = 4;
+            LAT_STEP = 4;
+        }
+        else if (fov>1) {
+            LON_STEP = 1;
+            LAT_STEP = 1;
+        }
+        else if (fov>0.1) {
+            LON_STEP = 0.1;
+            LAT_STEP = 0.1;
+        }
+        else {
+            LON_STEP = 0.01;
+            LAT_STEP = 0.01;
+        }
+        
+        var lonStart = Math.round(lonMin % LON_STEP) * (LON_STEP);
+        var latStart = Math.round(latMin % LAT_STEP) * (LAT_STEP);
+        
+        
+        
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "rgb(120,120,255)";
+        // draw iso-latitudes lines
+        for (var lat=latStart; lat<latMax+LAT_STEP; lat+=LAT_STEP) {
+            ctx.beginPath();
+            
+            var vxy;
+            vxy = AladinUtils.radecToViewXy(lonMin, lat, projection, CooFrameEnum.J2000, width, height, largestDim, zoomFactor);
+            if (!vxy) {
+                continue;
+            }
+            ctx.moveTo(vxy.vx, vxy.vy);
+            var k = 0;
+            for (var lon=lonMin; lon<lonMax+LON_STEP; lon+=lonDiff/10) {
+                k++;
+                vxy = AladinUtils.radecToViewXy(lon, lat, projection, CooFrameEnum.J2000, width, height, largestDim, zoomFactor);
+                ctx.lineTo(vxy.vx, vxy.vy);
+                if (k==3 ) {
+                    ctx.strokeText(lat.toFixed(2), vxy.vx, vxy.vy-2);
+                }
+                
+            }
+            ctx.stroke();
+        }
+        
+        for (var lon=lonStart; lon<lonMax+LON_STEP; lon+=LON_STEP) {
+            ctx.beginPath();
+            
+            var vxy;
+            vxy = AladinUtils.radecToViewXy(lon, latMin, projection, CooFrameEnum.J2000, width, height, largestDim, zoomFactor);
+            if (!vxy) {
+                continue;
+            }
+            ctx.moveTo(vxy.vx, vxy.vy);
+            var k = 0;
+            for (var lat=latMin; lat<latMax+LAT_STEP; lat+=latDiff/10) {
+                k++;
+                vxy = AladinUtils.radecToViewXy(lon, lat, projection, CooFrameEnum.J2000, width, height, largestDim, zoomFactor);
+                ctx.lineTo(vxy.vx, vxy.vy);
+                if (k==3 ) {
+                    ctx.strokeText(lon.toFixed(2), vxy.vx, vxy.vy-2);
+                }
+            }
+            ctx.stroke();
+        }
+        
+        
+        
+    };
+
+    
+    
+    return CooGrid;
+})();
+// Copyright 2013 - UDS/CNRS
+// The Aladin Lite program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+// This file is part of Aladin Lite.
+//
+//    Aladin Lite is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Lite is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Lite.
+//
+
+
+
+/******************************************************************************
+ * Aladin Lite project
+ * 
+ * File Footprint
+ * 
+ * Author: Thomas Boch[CDS]
+ * 
+ *****************************************************************************/
+
+Footprint = (function() {
+    // constructor
+    Footprint = function(polygons) {
+        this.polygons = polygons;
+    	this.overlay = null;
+    	
+    	this.isShowing = true;
+    	this.isSelected = false;
+    };
+    
+    Footprint.prototype.setOverlay = function(overlay) {
+        this.overlay = overlay;
+    };
+    
+    Footprint.prototype.show = function() {
+        if (this.isShowing) {
+            return;
+        }
+        this.isShowing = true;
+        if (this.overlay) {
+            this.overlay.reportChange();
+        }
+    };
+    
+    Footprint.prototype.hide = function() {
+        if (! this.isShowing) {
+            return;
+        }
+        this.isShowing = false;
+        if (this.overlay) {
+            this.overlay.reportChange();
+        }
+    };
+    
+    Footprint.prototype.select = function() {
+        if (this.isSelected) {
+            return;
+        }
+        this.isSelected = true;
+        if (this.overlay) {
+            this.overlay.reportChange();
+        }
+    };
+    
+    Footprint.prototype.deselect = function() {
+        if (! this.isSelected) {
+            return;
+        }
+        this.isSelected = false;
+        if (this.overlay) {
+            this.overlay.reportChange();
+        }
+    };
+    
+    return Footprint;
+})();
+// Copyright 2013 - UDS/CNRS
+// The Aladin Lite program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+// This file is part of Aladin Lite.
+//
+//    Aladin Lite is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Lite is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Lite.
+//
+
+
+
+/******************************************************************************
+ * Aladin Lite project
+ * 
+ * File Popup.js
+ * 
+ * Author: Thomas Boch [CDS]
+ * 
+ *****************************************************************************/
+
+Popup = (function() {
+    
+    
+    // constructor
+    Popup = function(parentDiv) {
+        this.domEl = $('<div class="aladin-popup-container"><div class="aladin-popup"><a class="aladin-closeBtn">&times;</a><div class="aladin-popupTitle"></div><div class="aladin-popupText"></div></div><div class="aladin-popup-arrow"></div></div>');
+        this.domEl.appendTo(parentDiv);
+
+        var self = this;
+        // close popup
+        this.domEl.find('.aladin-closeBtn').click(function() {self.hide()});
+        
+    };
+    
+    Popup.prototype.hide = function() {
+        this.domEl.hide();
+    };
+
+    Popup.prototype.show = function() {
+        this.domEl.show();
+    };
+
+    Popup.prototype.setTitle = function(title) {
+        this.domEl.find('.aladin-popupTitle').html(title || '');
+    };
+
+    Popup.prototype.setText = function(text) {
+        this.domEl.find('.aladin-popupText').html(text || '');
+        this.w = this.domEl.outerWidth();
+        this.h = this.domEl.outerHeight();
+    };
+
+    Popup.prototype.setSource = function(source) {
+        // remove reference to popup for previous source
+        if (this.source) {
+            this.source.popup = null;
+        }
+        source.popup = this;
+        this.source = source;
+        this.setPosition(source.x, source.y);
+    };
+
+    Popup.prototype.setPosition = function(x, y) {
+        var newX = x - this.w/2;
+        var newY = y - this.h + this.source.catalog.sourceSize/2;
+        this.domEl[0].style.left = newX + 'px';
+        this.domEl[0].style.top  = newY + 'px';
+        //this.domEl.css({'left': newX+'px', 'top': newY+'px'});
+    };
+    
+    return Popup;
+})();
+    
+// Copyright 2013 - UDS/CNRS
+// The Aladin Lite program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+// This file is part of Aladin Lite.
+//
+//    Aladin Lite is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Lite is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Lite.
+//
+
+
+
+/******************************************************************************
+ * Aladin Lite project
+ * 
+ * File Circle
+ * 
+ * Author: Thomas Boch[CDS]
+ * 
+ *****************************************************************************/
+
+// TODO : Circle and Footprint should inherit from the same root object
+Circle = (function() {
+    // constructor
+    Circle = function(centerRaDec, radiusDegrees, options) {
+        options = options || {};
+        
+        this.color = options['color'] || undefined;
+
+        this.setCenter(centerRaDec);
+        this.setRadius(radiusDegrees);
+    	this.overlay = null;
+    	
+    	this.isShowing = true;
+    	this.isSelected = false;
+    };
+
+    Circle.prototype.setOverlay = function(overlay) {
+        this.overlay = overlay;
+    };
+    
+    Circle.prototype.show = function() {
+        if (this.isShowing) {
+            return;
+        }
+        this.isShowing = true;
+        if (this.overlay) {
+            this.overlay.reportChange();
+        }
+    };
+    
+    Circle.prototype.hide = function() {
+        if (! this.isShowing) {
+            return;
+        }
+        this.isShowing = false;
+        if (this.overlay) {
+            this.overlay.reportChange();
+        }
+    };
+    
+    Circle.prototype.select = function() {
+        if (this.isSelected) {
+            return;
+        }
+        this.isSelected = true;
+        if (this.overlay) {
+            this.overlay.reportChange();
+        }
+    };
+    
+    Circle.prototype.deselect = function() {
+        if (! this.isSelected) {
+            return;
+        }
+        this.isSelected = false;
+        if (this.overlay) {
+            this.overlay.reportChange();
+        }
+    };
+
+
+    
+    Circle.prototype.setCenter = function(centerRaDec) {
+        this.centerRaDec = centerRaDec;
+        if (this.overlay) {
+            this.overlay.reportChange();
+        }
+    };
+
+    Circle.prototype.setRadius = function(radiusDegrees) {
+        this.radiusDegrees = radiusDegrees;
+        if (this.overlay) {
+            this.overlay.reportChange();
+        }
+    };
+
+    // TODO
+    Circle.prototype.draw = function(ctx, projection, frame, width, height, largestDim, zoomFactor) {
+        if (! this.isShowing) {
+            return;
+        }
+
+        var centerXy;
+        if (frame!=CooFrameEnum.J2000) {
+            var lonlat = CooConversion.J2000ToGalactic([this.centerRaDec[0], this.centerRaDec[1]]);
+            centerXy = projection.project(lonlat[0], lonlat[1]);
+        }
+        else {
+            centerXy = projection.project(this.centerRaDec[0], this.centerRaDec[1]);
+        }
+        if (!centerXy) {
+            return;
+        }
+        var centerXyview = AladinUtils.xyToView(centerXy.X, centerXy.Y, width, height, largestDim, zoomFactor, true);
+
+        // compute value of radius in pixels in current projection
+        var circlePtXy;
+        var ra = this.centerRaDec[0];
+        var dec = this.centerRaDec[1] + (ra>0 ? - this.radiusDegrees : this.radiusDegrees);
+        if (frame!=CooFrameEnum.J2000) {
+            var lonlat = CooConversion.J2000ToGalactic([ra, dec]);
+            circlePtXy = projection.project(lonlat[0], lonlat[1]);
+        }
+        else {
+            circlePtXy = projection.project(ra, dec);
+        }
+        if (!circlePtXy) {
+            return;
+        }
+        var circlePtXyView = AladinUtils.xyToView(circlePtXy.X, circlePtXy.Y, width, height, largestDim, zoomFactor, true);
+        var dx = circlePtXyView.vx - centerXyview.vx;
+        var dy = circlePtXyView.vy - centerXyview.vy;
+        var radiusInPix = Math.sqrt(dx*dx + dy*dy);
+
+        // TODO : check each 4 point until show
+        
+        if (this.color) {
+            ctx.strokeStyle= this.color;
+        }
+        ctx.beginPath();
+        ctx.arc(centerXyview.vx, centerXyview.vy, radiusInPix, 0, 2*Math.PI, false);
+        ctx.stroke();
+/*
+        var show = false;
+        
+        // for
+            for (var k=0, len=radecArray.length; k<len; k++) {
+                var xy;
+                if (frame!=CooFrameEnum.J2000) {
+                    var lonlat = CooConversion.J2000ToGalactic([radecArray[k][0], radecArray[k][1]]);
+                    xy = projection.project(lonlat[0], lonlat[1]);
+                }
+                else {
+                    xy = projection.project(radecArray[k][0], radecArray[k][1]);
+                }
+                if (!xy) {
+                    return null;
+                }
+                var xyview = AladinUtils.xyToView(xy.X, xy.Y, width, height, largestDim, zoomFactor);
+                xyviewArray.push(xyview);
+                if (!show && xyview.vx<width  && xyview.vx>=0 && xyview.vy<=height && xyview.vy>=0) {
+                    show = true;
+                }
+            }
+
+            if (show) {
+                ctx.moveTo(xyviewArray[0].vx, xyviewArray[0].vy);
+                for (var k=1, len=xyviewArray.length; k<len; k++) {
+                    ctx.lineTo(xyviewArray[k].vx, xyviewArray[k].vy);
+                }
+            }
+            else {
+                //return null;
+            }
+        // end for
+        */
+
+
+
+
+    }; 
+    
+    return Circle;
+})();
+// Copyright 2015 - UDS/CNRS
+// The Aladin Lite program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+// This file is part of Aladin Lite.
+//
+//    Aladin Lite is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Lite is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Lite.
+//
+
+
+
+/******************************************************************************
+ * Aladin Lite project
+ * 
+ * Class Polyline
+ * 
+ * A Polyline is a graphical overlay made of several connected points
+ * 
+ * TODO: Polyline and Circle should derive from a common base class
+ * TODO: index polyline, Circle in HEALPix pixels to avoid unneeded calls to draw 
+ * 
+ * Author: Thomas Boch[CDS]
+ * 
+ *****************************************************************************/
+
+Polyline= (function() {
+    // constructor
+    Polyline = function(radecArray, options) {
+        options = options || {};
+        this.color = options['color'] || undefined;
+        
+        this.radecArray = radecArray;
+        this.overlay = null;
+    	
+    	this.isShowing = true;
+    	this.isSelected = false;
+    };
+    
+    Polyline.prototype.setOverlay = function(overlay) {
+        this.overlay = overlay;
+    };
+    
+    Polyline.prototype.show = function() {
+        if (this.isShowing) {
+            return;
+        }
+        this.isShowing = true;
+        if (this.overlay) {
+            this.overlay.reportChange();
+        }
+    };
+    
+    Polyline.prototype.hide = function() {
+        if (! this.isShowing) {
+            return;
+        }
+        this.isShowing = false;
+        if (this.overlay) {
+            this.overlay.reportChange();
+        }
+    };
+    
+    Polyline.prototype.select = function() {
+        if (this.isSelected) {
+            return;
+        }
+        this.isSelected = true;
+        if (this.overlay) {
+            this.overlay.reportChange();
+        }
+    };
+    
+    Polyline.prototype.deselect = function() {
+        if (! this.isSelected) {
+            return;
+        }
+        this.isSelected = false;
+        if (this.overlay) {
+            this.overlay.reportChange();
+        }
+    };
+    
+    Polyline.prototype.draw = function(ctx, projection, frame, width, height, largestDim, zoomFactor) {
+        if (! this.isShowing) {
+            return;
+        }
+
+        if (! this.radecArray || this.radecArray.length<2) {
+            return;
+        }
+        
+        if (this.color) {
+            ctx.strokeStyle= this.color;
+        }
+        var start = AladinUtils.radecToViewXy(this.radecArray[0][0], this.radecArray[0][1], projection, frame, width, height, largestDim, zoomFactor);
+        if (! start) {
+            return;
+        }
+        
+        ctx.moveTo(start.vx, start.vy);
+        var pt;
+        for (var k=1; k<this.radecArray.length; k++) {
+            pt = AladinUtils.radecToViewXy(this.radecArray[k][0], this.radecArray[k][1], projection, frame, width, height, largestDim, zoomFactor);
+            if (!pt) {
+                break;
+            }
+            ctx.lineTo(pt.vx, pt.vy);
+        }
+        
+        
+        ctx.stroke();
+    };
+    
+    return Polyline;
+})();
+// Copyright 2015 - UDS/CNRS
+// The Aladin Lite program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+// This file is part of Aladin Lite.
+//
+//    Aladin Lite is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Lite is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Lite.
+//
+
+
+
+/******************************************************************************
+ * Aladin Lite project
+ * 
+ * File Overlay
+ *
+ * Description: a plane holding overlays (footprints, polylines, circles)
+ * 
+ * Author: Thomas Boch[CDS]
+ * 
+ *****************************************************************************/
+
+Overlay = (function() {
+   Overlay = function(options) {
+        options = options || {};
+    	this.name = options.name || "overlay";
+    	this.color = options.color || Color.getNextColor();
+        
+    	this.lineWidth = options["lineWidth"] || 2;
+    	
+    	//this.indexationNorder = 5; // à quel niveau indexe-t-on les overlays
+    	this.overlays = [];
+    	this.overlay_items = []; // currently Circle or Polyline
+    	//this.hpxIdx = new HealpixIndex(this.indexationNorder);
+    	//this.hpxIdx.init();
+    	
+    	this.isShowing = true;
+    };
+    
+
+    // TODO : show/hide methods should be integrated in a parent class 
+    Overlay.prototype.show = function() {
+        if (this.isShowing) {
+            return;
+        }
+        this.isShowing = true;
+        this.reportChange();
+    };
+    
+    Overlay.prototype.hide = function() {
+        if (! this.isShowing) {
+            return;
+        }
+        this.isShowing = false;
+        this.reportChange();
+    };
+    
+    // return an array of Footprint from a STC-S string
+    Overlay.parseSTCS = function(stcs) {
+        var polygons = [];
+        var parts = stcs.match(/\S+/g);
+        var k = 0, len = parts.length;
+        var curPolygon;
+        while(k<len) {
+            var s = parts[k].toLowerCase();
+            if(s=='polygon') {
+                curPolygon = [];
+                k++;
+                frame = parts[k].toLowerCase();
+                if (frame=='icrs' || frame=='j2000') {
+                    while(k+2<len) {
+                        var ra = parseFloat(parts[k+1]);
+                        if (isNaN(ra)) {
+                            break;
+                        }
+                        var dec = parseFloat(parts[k+2]);
+                        curPolygon.push([ra, dec]);
+                        k += 2;
+                    }
+                    curPolygon.push(curPolygon[0]);
+                    polygons.push(curPolygon);
+                }
+            }
+            k++;
+        }
+
+        return polygons;
+    };
+    
+    // ajout d'un tableau d'overlays (= footprints)
+    Overlay.prototype.addFootprints = function(overlaysToAdd) {
+    	this.overlays = this.overlays.concat(overlaysToAdd);
+    	for (var k=0, len=overlaysToAdd.length; k<len; k++) {
+    	    overlaysToAdd[k].setOverlay(this);
+    	}
+        this.view.requestRedraw();
+    };
+
+    // TODO : item doit pouvoir prendre n'importe quoi en param (footprint, circle, polyline)
+    Overlay.prototype.add = function(item) {
+        this.overlay_items.push(item);
+        item.setOverlay(this);
+        
+        this.view.requestRedraw();
+    };
+
+    
+    // return a footprint by index
+   Overlay.prototype.getFootprint = function(idx) {
+        if (idx<this.footprints.length) {
+            return this.footprints[idx];
+        }
+        else {
+            return null;
+        }
+    };
+    
+    Overlay.prototype.setView = function(view) {
+        this.view = view;
+    };
+    
+    Overlay.prototype.removeAll = function() {
+        // TODO : RAZ de l'index
+        this.overlays = [];
+        this.overlay_items = [];
+    };
+    
+    Overlay.prototype.draw = function(ctx, projection, frame, width, height, largestDim, zoomFactor) {
+        if (!this.isShowing) {
+            return;
+        }
+        
+        // tracé simple
+        ctx.strokeStyle= this.color;
+
+        // 1. Tracé polygons
+        
+        // TODO: les overlay polygons devrait se tracer lui meme (méthode draw)
+        ctx.lineWidth = this.lineWidth;
+    	ctx.beginPath();
+    	xyviews = [];
+    	for (var k=0, len = this.overlays.length; k<len; k++) {
+    		xyviews.push(this.drawFootprint(this.overlays[k], ctx, projection, frame, width, height, largestDim, zoomFactor));
+    	}
+        ctx.stroke();
+
+    	// tracé sélection
+        ctx.strokeStyle= Overlay.increase_brightness(this.color, 80);
+        //ctx.strokeStyle= 'green';
+        ctx.beginPath();
+        for (var k=0, len = this.overlays.length; k<len; k++) {
+            if (! this.overlays[k].isSelected) {
+                continue;
+            }
+            this.drawFootprintSelected(ctx, xyviews[k]);
+            
+        }
+    	ctx.stroke();
+    	
+        // 2. Tracé cercles ou polylines
+    	for (var k=0; k<this.overlay_items.length; k++) {
+    	    this.overlay_items[k].draw(ctx, projection, frame, width, height, largestDim, zoomFactor);
+    	}
+    };
+
+    Overlay.increase_brightness = function(hex, percent){
+        // strip the leading # if it's there
+        hex = hex.replace(/^\s*#|\s*$/g, '');
+
+        // convert 3 char codes --> 6, e.g. `E0F` --> `EE00FF`
+        if(hex.length == 3){
+            hex = hex.replace(/(.)/g, '$1$1');
+        }
+
+        var r = parseInt(hex.substr(0, 2), 16),
+            g = parseInt(hex.substr(2, 2), 16),
+            b = parseInt(hex.substr(4, 2), 16);
+
+        return '#' +
+                ((0|(1<<8) + r + (256 - r) * percent / 100).toString(16)).substr(1) +
+                ((0|(1<<8) + g + (256 - g) * percent / 100).toString(16)).substr(1) +
+                ((0|(1<<8) + b + (256 - b) * percent / 100).toString(16)).substr(1);
+    };
+    
+    
+    
+    Overlay.prototype.drawFootprint = function(f, ctx, projection, frame, width, height, largestDim, zoomFactor) {
+        if (! f.isShowing) {
+            return null;
+        }
+        var xyviewArray = [];
+        var show = false;
+        var radecArray = f.polygons;
+        // for
+            for (var k=0, len=radecArray.length; k<len; k++) {
+                var xy;
+                if (frame!=CooFrameEnum.J2000) {
+                    var lonlat = CooConversion.J2000ToGalactic([radecArray[k][0], radecArray[k][1]]);
+                    xy = projection.project(lonlat[0], lonlat[1]);
+                }
+                else {
+                    xy = projection.project(radecArray[k][0], radecArray[k][1]);
+                }
+                if (!xy) {
+                    return null;
+                }
+                var xyview = AladinUtils.xyToView(xy.X, xy.Y, width, height, largestDim, zoomFactor);
+                xyviewArray.push(xyview);
+                if (!show && xyview.vx<width  && xyview.vx>=0 && xyview.vy<=height && xyview.vy>=0) {
+                    show = true;
+                }
+            }
+
+            if (show) {
+                ctx.moveTo(xyviewArray[0].vx, xyviewArray[0].vy);
+                for (var k=1, len=xyviewArray.length; k<len; k++) {
+                    ctx.lineTo(xyviewArray[k].vx, xyviewArray[k].vy);
+                }
+            }
+            else {
+                //return null;
+            }
+        // end for
+
+        return xyviewArray;
+
+
+
+    };
+
+    Overlay.prototype.drawFootprintSelected = function(ctx, xyview) {
+        if (!xyview) {
+            return;
+        }
+
+        var xyviewArray = xyview;
+        ctx.moveTo(xyviewArray[0].vx, xyviewArray[0].vy);
+        for (var k=1, len=xyviewArray.length; k<len; k++) {
+            ctx.lineTo(xyviewArray[k].vx, xyviewArray[k].vy);
+        }
+    };
+
+
+    
+    // callback function to be called when the status of one of the footprints has changed
+    Overlay.prototype.reportChange = function() {
+        this.view.requestRedraw();
+    };
+
+    return Overlay;
+})();
+// Copyright 2013 - UDS/CNRS
+// The Aladin Lite program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+// This file is part of Aladin Lite.
+//
+//    Aladin Lite is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Lite is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Lite.
+//
+
+
+
+/******************************************************************************
+ * Aladin Lite project
+ * 
+ * File Source
+ * 
+ * Author: Thomas Boch[CDS]
+ * 
+ *****************************************************************************/
+
+cds.Source = (function() {
+    // constructor
+    cds.Source = function(ra, dec, data, options) {
+    	this.ra = ra;
+    	this.dec = dec;
+    	this.data = data;
+    	this.catalog = null;
+    	
+        this.marker = (options && options.marker) || false;
+        if (this.marker) {
+            this.popupTitle = (options && options.popupTitle) ? options.popupTitle : '';
+            this.popupDesc = (options && options.popupDesc) ? options.popupDesc : '';
+        }
+    	this.isShowing = true;
+    	this.isSelected = false;
+    };
+    
+    cds.Source.prototype.setCatalog = function(catalog) {
+        this.catalog = catalog;
+    };
+    
+    cds.Source.prototype.show = function() {
+        if (this.isShowing) {
+            return;
+        }
+        this.isShowing = true;
+        if (this.catalog) {
+            this.catalog.reportChange();
+        }
+    };
+    
+    cds.Source.prototype.hide = function() {
+        if (! this.isShowing) {
+            return;
+        }
+        this.isShowing = false;
+        if (this.catalog) {
+            this.catalog.reportChange();
+        }
+    };
+    
+    cds.Source.prototype.select = function() {
+        if (this.isSelected) {
+            return;
+        }
+        this.isSelected = true;
+        if (this.catalog) {
+            this.catalog.reportChange();
+        }
+    };
+    
+    cds.Source.prototype.deselect = function() {
+        if (! this.isSelected) {
+            return;
+        }
+        this.isSelected = false;
+        if (this.catalog) {
+            this.catalog.reportChange();
+        }
+    };
+
+    // function called when a source is clicked. Called by the View object
+    cds.Source.prototype.actionClicked = function() {
+        if (this.catalog && this.catalog.onClick) {
+            var view = this.catalog.view;
+            if (this.catalog.onClick=='showTable') {
+                view.aladin.measurementTable.showMeasurement(this);
+                this.select();
+            }
+            else if (this.catalog.onClick=='showPopup') {
+                view.popup.setTitle('<br><br>');
+                var m = '<div class="aladin-marker-measurement">';
+                m += '<table>';
+                for (var key in this.data) {
+                    m += '<tr><td>' + key + '</td><td>' + this.data[key] + '</td></tr>';
+                }
+                m += '</table>';
+                m += '</div>';
+                view.popup.setText(m);
+                view.popup.setSource(this);
+                view.popup.show();
+            }
+        }
+    };
+
+    
+    cds.Source.prototype.actionOtherObjectClicked = function() {
+        if (this.catalog && this.catalog.onClick && this.catalog.onClick=='showTable') {
+            this.deselect();
+        }
+    };
+    
+    return cds.Source;
+})();
+// Copyright 2013 - UDS/CNRS
+// The Aladin Lite program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+// This file is part of Aladin Lite.
+//
+//    Aladin Lite is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Lite is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Lite.
+//
+
+
+
+/******************************************************************************
+ * Aladin Lite project
+ * 
+ * File ProgressiveCat.js
+ * 
+ * Author: Thomas Boch[CDS]
+ * 
+ *****************************************************************************/
+
+// TODO: indexer sources par numéro HEALPix
+// TODO : harmoniser parsing avec classe Catalog
+ProgressiveCat = (function() {
+    
+    // TODO : test if CORS support. If no, need to pass through a proxy
+    // currently, we suppose CORS is supported
+    
+    // constructor
+    ProgressiveCat = function(rootUrl, frameStr, maxOrder, options) {
+        options = options || {};
+
+        this.type = 'progressivecat';
+        
+        this.rootUrl = rootUrl;
+        this.frame = CooFrameEnum.fromString(frameStr) || CooFrameEnum.J2000;
+        this.maxOrder = maxOrder;
+        this.isShowing = true; // TODO : inherit from catalogue
+
+        this.name = options.name || "progressive-cat";
+        this.color = options.color || Color.getNextColor();
+        this.sourceSize = options.sourceSize || 10;
+        
+
+        // we cache the list of sources in each healpix tile. Key of the cache is norder+'-'+npix
+        this.sourcesCache = new Utils.LRUCache(100);
+
+        this.cacheCanvas = document.createElement('canvas');
+        this.cacheCanvas.width = this.sourceSize;
+        this.cacheCanvas.height = this.sourceSize;
+        var cacheCtx = this.cacheCanvas.getContext('2d');
+        cacheCtx.beginPath();
+        cacheCtx.strokeStyle = this.color;
+        cacheCtx.lineWidth = 2.0;
+        cacheCtx.moveTo(0, 0);
+        cacheCtx.lineTo(0,  this.sourceSize);
+        cacheCtx.lineTo( this.sourceSize,  this.sourceSize);
+        cacheCtx.lineTo( this.sourceSize, 0);
+        cacheCtx.lineTo(0, 0);
+        cacheCtx.stroke();
+    };
+
+    function getFields(instance, xml) {
+        var attributes = ["name", "ID", "ucd", "utype", "unit", "datatype", "arraysize", "width", "precision"];
+
+        var fields = [];
+        var k = 0;
+        instance.keyRa = instance.keyDec = null;
+        $(xml).find("FIELD").each(function() {
+            var f = {};
+            for (var i=0; i<attributes.length; i++) {
+                var attribute = attributes[i];
+                if ($(this).attr(attribute)) {
+                    f[attribute] = $(this).attr(attribute);
+                }
+                
+            }
+            if ( ! f.ID) {
+                f.ID = "col_" + k;
+            }
+            
+            if (!instance.keyRa && f.ucd && (f.ucd.indexOf('pos.eq.ra')==0 || f.ucd.indexOf('POS_EQ_RA')==0)) {
+                if (f.name) {
+                    instance.keyRa = f.name;
+                }
+                else {
+                    instance.keyRa = f.ID;
+                }
+            }
+            if (!instance.keyDec && f.ucd && (f.ucd.indexOf('pos.eq.dec')==0 || f.ucd.indexOf('POS_EQ_DEC')==0)) {
+                if (f.name) {
+                    instance.keyDec = f.name;
+                }
+                else {
+                    instance.keyDec = f.ID;
+                }
+            }
+            
+            fields.push(f);
+            k++;
+        });
+
+        return fields;
+    }
+
+    function getSources(instance, csv, fields) {
+        // TODO : find ra and dec key names (see in Catalog)
+        if (!instance.keyRa || ! instance.keyDec) {
+            return [];
+        }
+        lines = csv.split('\n');
+        var mesureKeys = [];
+        for (var k=0; k<fields.length; k++) {
+            if (fields[k].name) {
+                mesureKeys.push(fields[k].name);
+            }
+            else {
+                mesureKeys.push(fields[k].ID);
+            }
+        }
+        
+
+        var sources = [];
+        var coo = new Coo();
+        // start at i=1, as first line repeat the fields names
+        for (var i=2; i<lines.length; i++) {
+            var mesures = {};
+            var data = lines[i].split('\t');
+            if (data.length<mesureKeys.length) {
+                continue;
+            }
+            for (var j=0; j<mesureKeys.length; j++) {
+                mesures[mesureKeys[j]] = data[j];
+            }
+            var ra, dec;
+            if (Utils.isNumber(mesures[instance.keyRa]) && Utils.isNumber(mesures[instance.keyDec])) {
+                ra = parseFloat(mesures[instance.keyRa]);
+                dec = parseFloat(mesures[instance.keyDec]);
+            }
+            else {
+                coo.parse(mesures[instance.keyRa] + " " + mesures[instance.keyDec]);
+                ra = coo.lon;
+                dec = coo.lat;
+            }
+            sources.push(new cds.Source(ra, dec, mesures));
+        }
+        return sources;
+    }
+
+    ProgressiveCat.prototype = {
+
+        init: function(view) {
+            this.view = view;
+            if (this.level3Sources) {
+                return; // if already loaded, do nothing
+            }
+            this.loadLevel2Sources();
+        },
+
+        loadLevel2Sources: function() {
+            var self = this;
+            $.ajax({
+                /*
+                url: Aladin.JSONP_PROXY,
+                data: {"url": self.rootUrl + '/' + 'Norder2/Allsky.xml'},
+                datatype: 'jsonp',
+                */
+                url: self.rootUrl + '/' + 'Norder2/Allsky.xml',
+                method: 'GET',
+                success: function(xml) {
+                    self.fields = getFields(self, xml);
+                    self.level2Sources = getSources(self, $(xml).find('CSV').text(), self.fields);
+                    self.loadLevel3Sources();
+                },
+                error: function(err) {
+                    console.log('Something went wrong: ' + err);
+                }
+            });
+        },
+
+        loadLevel3Sources: function() {
+            var self = this;
+            $.ajax({
+                /*
+                url: Aladin.JSONP_PROXY,
+                data: {"url": self.rootUrl + '/' + 'Norder3/Allsky.xml'},
+                datatype: 'jsonp',
+                */
+                url: self.rootUrl + '/' + 'Norder3/Allsky.xml',
+                method: 'GET',
+                success: function(xml) {
+                    self.level3Sources = getSources(self, $(xml).find('CSV').text(), self.fields);
+                    //console.log(self.level3Sources);
+                    self.view.requestRedraw();
+                },
+                error: function(err) {
+                    console.log('Something went wrong: ' + err);
+                }
+            });
+        },
+
+        draw: function(ctx, projection, frame, width, height, largestDim, zoomFactor) {
+            if (! this.isShowing || ! this.level3Sources) {
+                return;
+            }
+            //var sources = this.getSources();
+            this.drawSources(this.level2Sources, ctx, projection, frame, width, height, largestDim, zoomFactor);
+            this.drawSources(this.level3Sources, ctx, projection, frame, width, height, largestDim, zoomFactor);
+            
+            if (!this.tilesInView) {
+                return;
+            }
+            var sources, key, t;
+            for (var k=0; k<this.tilesInView.length; k++) {
+                t = this.tilesInView[k];
+                key = t[0] + '-' + t[1];
+                sources = this.sourcesCache.get(key);
+                if (sources) {
+                    this.drawSources(sources, ctx, projection, frame, width, height, largestDim, zoomFactor);
+                }
+            }
+            
+            
+            
+        },
+        drawSources: function(sources, ctx, projection, frame, width, height, largestDim, zoomFactor) {
+            for (var k=0, len = sources.length; k<len; k++) {
+                this.drawSource(sources[k], ctx, projection, frame, width, height, largestDim, zoomFactor);
+            }
+        },
+        getSources: function() {
+            var ret = [];
+            if (this.level2Sources) {
+                ret = ret.concat(this.level2Sources);
+            }
+            if (this.level3Sources) {
+                ret = ret.concat(this.level3Sources);
+            }
+            if (this.tilesInView) {
+                var sources, key, t;
+                for (var k=0; k<this.tilesInView.length; k++) {
+                    t = this.tilesInView[k];
+                    key = t[0] + '-' + t[1];
+                    sources = this.sourcesCache.get(key);
+                    if (sources) {
+                        ret = ret.concat(sources);
+                    }
+                }
+            }
+            
+            return ret;
+        },
+
+        // TODO : factoriser avec drawSource de Catalog
+        drawSource: function(s, ctx, projection, frame, width, height, largestDim, zoomFactor) {
+            if (! s.isShowing) {
+                return;
+            }
+            var sourceSize = this.sourceSize;
+            var xy;
+            if (frame!=CooFrameEnum.J2000) {
+                var lonlat = CooConversion.J2000ToGalactic([s.ra, s.dec]);
+                xy = projection.project(lonlat[0], lonlat[1]);
+            }
+            else {
+                xy = projection.project(s.ra, s.dec);
+            }
+            if (xy) {
+                var xyview = AladinUtils.xyToView(xy.X, xy.Y, width, height, largestDim, zoomFactor);
+                if (xyview) {
+                    // TODO : index sources
+                    // check if source is visible in view ?
+                    if (xyview.vx>(width+sourceSize)  || xyview.vx<(0-sourceSize) ||
+                        xyview.vy>(height+sourceSize) || xyview.vy<(0-sourceSize)) {
+                        s.x = s.y = undefined;
+                        return;
+                    }
+
+                    s.x = xyview.vx;
+                    s.y = xyview.vy;
+                    ctx.drawImage(this.cacheCanvas, s.x-sourceSize/2, s.y-sourceSize/2);
+                }
+            }
+        },
+        
+        deselectAll: function() {
+            for (var k=0; k<this.level2Sources.length; k++) {
+                this.level2Sources[k].deselect();
+            }
+            for (var k=0; k<this.level3Sources.length; k++) {
+                this.level3Sources[k].deselect();
+            }
+            var keys = this.sourcesCache.keys();
+            for (key in keys) {
+                if ( ! this.sourcesCache[key]) {
+                    continue;
+                }
+                var sources = this.sourcesCache[key];
+                for (var k=0; k<sources.length; k++) {
+                    sources[k].deselect();
+                }
+            }
+        },
+
+        show: function() {
+            if (this.isShowing) {
+                return;
+            }
+            this.isShowing = true;
+            this.reportChange();
+        },
+        hide: function() {
+            if (! this.isShowing) {
+                return;
+            }
+            this.isShowing = false;
+            this.reportChange();
+        },
+        reportChange: function() {
+            this.view.requestRedraw();
+        },
+        
+        getTileURL: function(norder, npix) {
+            var dirIdx = Math.floor(npix/10000)*10000;
+            return this.rootUrl + "/" + "Norder" + norder + "/Dir" + dirIdx + "/Npix" + npix + ".tsv";
+        },
+    
+        loadNeededTiles: function() {
+            this.tilesInView = [];
+            
+            this.otherSources = [];
+            var norder = this.view.realNorder;
+            if (norder>this.maxOrder) {
+                norder = this.maxOrder;
+            }
+            if (norder<=3) {
+                return; // nothing to do, hurrayh !
+            }
+            var cells = this.view.getVisibleCells(norder, this.frame);
+            var ipixList, ipix;
+            for (var curOrder=4; curOrder<=norder; curOrder++) {
+                ipixList = [];
+                for (var k=0; k<cells.length; k++) {
+                    ipix = Math.floor(cells[k].ipix / Math.pow(4, norder - curOrder));
+                    if (ipixList.indexOf(ipix)<0) {
+                        ipixList.push(ipix);
+                    }
+                }
+                
+                // load needed tiles
+                for (var i=0; i<ipixList.length; i++) {
+                    this.tilesInView.push([curOrder, ipixList[i]]);
+                }
+            }
+            
+            var t, key;
+            var self = this;
+            for (var k=0; k<this.tilesInView.length; k++) {
+                t = this.tilesInView[k];
+                key = t[0] + '-' + t[1]; // t[0] is norder, t[1] is ipix
+                if (!this.sourcesCache.get(key)) {
+                    (function(self, norder, ipix) { // wrapping function is needed to be able to retrieve norder and ipix in ajax success function
+                        var key = norder + '-' + ipix;
+                        $.ajax({
+                            /*
+                            url: Aladin.JSONP_PROXY,
+                            data: {"url": self.getTileURL(norder, ipix)},
+                            */
+                            // ATTENTIOn : je passe en JSON direct, car je n'arrive pas à choper les 404 en JSONP
+                            url: self.getTileURL(norder, ipix),
+                            method: 'GET',
+                            //dataType: 'jsonp',
+                            success: function(tsv) {
+                                self.sourcesCache.set(key, getSources(self, tsv, self.fields));
+                                //self.otherSources = self.otherSources.concat(getSources(tsv, self.fields));
+                                self.view.requestRedraw();
+                            },
+                            error: function() {
+                                // on suppose qu'il s'agit d'une erreur 404
+                                self.sourcesCache.set(key, []);
+                            }
+                        });
+                    })(this, t[0], t[1]);
+                }
+            }
+        }
+
+
+
+    }; // END OF .prototype functions
+    
+    
+    return ProgressiveCat;
+})();
+    
+// Copyright 2013 - UDS/CNRS
+// The Aladin Lite program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+// This file is part of Aladin Lite.
+//
+//    Aladin Lite is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Lite is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Lite.
+//
+
+
+
+
+/******************************************************************************
+ * Aladin Lite project
+ * 
+ * File Catalog
+ * 
+ * Author: Thomas Boch[CDS]
+ * 
+ *****************************************************************************/
+
+// TODO : harmoniser parsing avec classe ProgressiveCat
+cds.Catalog = (function() {
+   cds.Catalog = function(options) {
+        options = options || {};
+        this.type = 'catalog';
+    	this.name = options.name || "catalog";
+    	this.color = options.color || Color.getNextColor();
+    	this.sourceSize = options.sourceSize || 6;
+    	this.markerSize = options.sourceSize || 12;
+    	this.shape = options.shape || "square";
+        this.maxNbSources = options.limit || undefined;
+        this.onClick = options.onClick ||  undefined;
+
+        this.displayLabel = options.displayLabel || false;
+        this.labelColor = options.labelColor || this.color;
+        this.labelFont = options.labelFont || '10px sans-serif';
+        if (this.displayLabel) {
+            this.labelColumn = options.labelColumn;
+            if (!this.labelColumn) {
+                this.displayLabel = false;
+            }
+        }
+    	
+        if (this.shape instanceof Image) {
+            this.sourceSize = this.shape.width;
+        }
+        this.selectSize = this.sourceSize + 2;
+        
+        this.isShowing = true;
+
+    	
+    	this.indexationNorder = 5; // à quel niveau indexe-t-on les sources
+    	this.sources = [];
+    	this.hpxIdx = new HealpixIndex(this.indexationNorder);
+    	this.hpxIdx.init();
+    	this.selectionColor = '#00ff00';
+    	
+    	
+    	// cacheCanvas permet de ne créer le path de la source qu'une fois, et de le réutiliser (cf. http://simonsarris.com/blog/427-increasing-performance-by-caching-paths-on-canvas)
+        this.cacheCanvas = cds.Catalog.createShape(this.shape, this.color, this.sourceSize); 
+
+        this.cacheMarkerCanvas = document.createElement('canvas');
+        this.cacheMarkerCanvas.width = this.markerSize;
+        this.cacheMarkerCanvas.height = this.markerSize;
+        var cacheMarkerCtx = this.cacheMarkerCanvas.getContext('2d');
+        cacheMarkerCtx.fillStyle = this.color;
+        cacheMarkerCtx.beginPath();
+        var half = (this.markerSize)/2.;
+        cacheMarkerCtx.arc(half, half, half-2, 0, 2 * Math.PI, false);
+        cacheMarkerCtx.fill();
+        cacheMarkerCtx.lineWidth = 2;
+        cacheMarkerCtx.strokeStyle = '#ccc';
+        cacheMarkerCtx.stroke();
+        
+        this.cacheSelectCanvas = document.createElement('canvas');
+        this.cacheSelectCanvas.width = this.selectSize;
+        this.cacheSelectCanvas.height = this.selectSize;
+        var cacheSelectCtx = this.cacheSelectCanvas.getContext('2d');
+        cacheSelectCtx.beginPath();
+        cacheSelectCtx.strokeStyle = this.selectionColor;
+        cacheSelectCtx.lineWidth = 2.0;
+        cacheSelectCtx.moveTo(0, 0);
+        cacheSelectCtx.lineTo(0,  this.selectSize);
+        cacheSelectCtx.lineTo( this.selectSize,  this.selectSize);
+        cacheSelectCtx.lineTo( this.selectSize, 0);
+        cacheSelectCtx.lineTo(0, 0);
+        cacheSelectCtx.stroke();
+
+    };
+    
+    cds.Catalog.createShape = function(shapeName, color, sourceSize) {
+        if (shapeName instanceof Image) { // 
+            return shapeName;
+        }
+        var c = document.createElement('canvas');
+        c.width = c.height = sourceSize;
+        var ctx= c.getContext('2d');
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2.0;
+        if (shapeName=="plus") {
+            ctx.moveTo(sourceSize/2., 0);
+            ctx.lineTo(sourceSize/2., sourceSize);
+            ctx.stroke();
+            
+            ctx.moveTo(0, sourceSize/2.);
+            ctx.lineTo(sourceSize, sourceSize/2.);
+            ctx.stroke();
+        }
+        else if (shapeName=="cross") {
+            ctx.moveTo(0, 0);
+            ctx.lineTo(sourceSize-1, sourceSize-1);
+            ctx.stroke();
+            
+            ctx.moveTo(sourceSize-1, 0);
+            ctx.lineTo(0, sourceSize-1);
+            ctx.stroke();
+        }
+        else if (shapeName=="rhomb") {
+            ctx.moveTo(sourceSize/2, 0);
+            ctx.lineTo(0, sourceSize/2);
+            ctx.lineTo(sourceSize/2, sourceSize);
+            ctx.lineTo(sourceSize, sourceSize/2);
+            ctx.lineTo(sourceSize/2, 0);
+            ctx.stroke();
+        }
+        else if (shapeName=="triangle") {
+            ctx.moveTo(sourceSize/2, 0);
+            ctx.lineTo(0, sourceSize-1);
+            ctx.lineTo(sourceSize-1, sourceSize-1);
+            ctx.lineTo(sourceSize/2, 0);
+            ctx.stroke();
+        }
+        else { // default shape: square
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0,  sourceSize);
+            ctx.lineTo( sourceSize,  sourceSize);
+            ctx.lineTo( sourceSize, 0);
+            ctx.lineTo(0, 0);
+            ctx.stroke();
+        }
+        
+        return c;
+        
+    };
+    
+
+    
+    
+    // return an array of Source(s) from a VOTable url
+    // callback function is called each time a TABLE element has been parsed
+    cds.Catalog.parseVOTable = function(url, callback, maxNbSources, useProxy) {
+        
+        function doParseVOTable(xml, callback) {
+            //xml = xml.replace(/^\s+/g, ''); // we need to trim whitespaces at start of document
+            var attributes = ["name", "ID", "ucd", "utype", "unit", "datatype", "arraysize", "width", "precision"];
+            
+            var fields = [];
+            var k = 0;
+            $(xml).find("FIELD").each(function() {
+                var f = {};
+                for (var i=0; i<attributes.length; i++) {
+                    var attribute = attributes[i];
+                    if ($(this).attr(attribute)) {
+                        f[attribute] = $(this).attr(attribute);
+                    }
+                }
+                if ( ! f.ID) {
+                    f.ID = "col_" + k;
+                }
+                fields.push(f);
+                k++;
+            });
+                
+            // find RA/DEC fields
+            var raFieldIdx,  decFieldIdx;
+            
+            raFieldIdx = decFieldIdx = null;
+            for (var l=0, len=fields.length; l<len; l++) {
+                var field = fields[l];
+                if ( ! raFieldIdx) {
+                    if (field.ucd) {
+                        var ucd = field.ucd.toLowerCase();
+                        if (ucd == 'pos.eq.ra;meta.main'  ) {
+                            raFieldIdx = l;
+                            continue;
+                        }
+                    } 
+                }
+                if ( ! decFieldIdx) {
+                    if (field.ucd) {
+                        var ucd = field.ucd.toLowerCase();
+                        if (ucd == 'pos.eq.dec;meta.main' ){
+                            decFieldIdx = l;
+                            continue;
+                        } 
+                    } 
+                }
+            }
+            if( raFieldIdx == null || decFieldIdx == null) {
+            	raFieldIdx = decFieldIdx = null;
+            	for (var l=0, len=fields.length; l<len; l++) {
+                	var field = fields[l];
+                	if ( ! raFieldIdx) {
+                    	if (field.ucd) {
+                        	var ucd = field.ucd.toLowerCase();
+                        	if (ucd.match(/^pos[\._]eq[\._]ra$/)>=0   ) {
+                            	raFieldIdx = l;
+                            	continue;
+                        	}
+                    	} else if( field.name == "raj2000"){
+                        	raFieldIdx = l;
+                        	continue;                   	
+                    	}
+                	}
+                	if ( ! decFieldIdx) {
+                    	if (field.ucd) {
+                        	var ucd = field.ucd.toLowerCase();
+                        	if (ucd.match(/^pos[\._]eq[\._]dec$/)>=0   ) {
+                            	decFieldIdx = l;
+                            	continue;
+                        	} 
+                    	} else if( field.name == "dej2000" ){
+                    		decFieldIdx = l;
+                        	continue;                   	
+                    	}
+                	}
+            	}
+            }
+            var sources = [];
+            var coo = new Coo();
+            var ra, dec;
+            if( raFieldIdx != null && decFieldIdx != null){
+            $(xml).find("TR").each(function() {
+               var mesures = {};
+               var k = 0;
+               $(this).find("TD").each(function() {
+                   var key = fields[k].name ? fields[k].name : fields[k].id;
+                   mesures[key] = $(this).text();
+                   k++;
+               });
+               var keyRa = fields[raFieldIdx].name ? fields[raFieldIdx].name : fields[raFieldIdx].id;
+               var keyDec = fields[decFieldIdx].name ? fields[decFieldIdx].name : fields[decFieldIdx].id;
+
+               if (Utils.isNumber(mesures[keyRa]) && Utils.isNumber(mesures[keyDec])) {
+                   ra = parseFloat(mesures[keyRa]);
+                   dec = parseFloat(mesures[keyDec]);
+               }
+               else {
+                   coo.parse(mesures[keyRa] + " " + mesures[keyDec]);
+                   ra = coo.lon;
+                   dec = coo.lat;
+               }
+               sources.push(new cds.Source(ra, dec, mesures));
+               if (maxNbSources && sources.length==maxNbSources) {
+                   return false; // break the .each loop
+               }
+                
+            });
+            }
+            if (callback) {
+                callback(sources);
+            }
+        }
+        
+        var ajax = Utils.getAjaxObject(url, 'GET', 'text xml', useProxy);
+        ajax.done(function(xml) {
+            doParseVOTable(xml, callback);
+        });
+    };
+    
+    cds.Catalog.prototype.addSources = function(sourcesToAdd) {
+    	this.sources = this.sources.concat(sourcesToAdd);
+    	for (var k=0, len=sourcesToAdd.length; k<len; k++) {
+    	    sourcesToAdd[k].setCatalog(this);
+    	}
+        this.view.requestRedraw();
+    };
+    
+    // return the currnet list of Source objects
+    cds.Catalog.prototype.getSources = function() {
+        return this.sources;
+    };
+    
+    // TODO : fonction générique traversant la liste des sources
+    cds.Catalog.prototype.selectAll = function() {
+        if (! this.sources) {
+            return;
+        }
+        
+        for (var k=0; k<this.sources.length; k++) {
+            this.sources[k].select();
+        }
+    };
+    
+    cds.Catalog.prototype.deselectAll = function() {
+        if (! this.sources) {
+            return;
+        }
+        
+        for (var k=0; k<this.sources.length; k++) {
+            this.sources[k].deselect();
+        }
+    };
+    
+    // return a source by index
+    cds.Catalog.prototype.getSource = function(idx) {
+        if (idx<this.sources.length) {
+            return this.sources[idx];
+        }
+        else {
+            return null;
+        }
+    };
+    
+    cds.Catalog.prototype.setView = function(view) {
+        this.view = view;
+    };
+    
+    cds.Catalog.prototype.removeAll = cds.Catalog.prototype.clear = function() {
+        // TODO : RAZ de l'index
+        this.sources = [];
+    };
+    
+    cds.Catalog.prototype.draw = function(ctx, projection, frame, width, height, largestDim, zoomFactor) {
+        if (! this.isShowing) {
+            return;
+        }
+        // tracé simple
+        //ctx.strokeStyle= this.color;
+
+        //ctx.lineWidth = 1;
+    	//ctx.beginPath();
+    	for (var k=0, len = this.sources.length; k<len; k++) {
+    		this.drawSource(this.sources[k], ctx, projection, frame, width, height, largestDim, zoomFactor);
+    	}
+        //ctx.stroke();
+
+    	// tracé sélection
+        ctx.strokeStyle= this.selectionColor;
+        //ctx.beginPath();
+        for (var k=0, len = this.sources.length; k<len; k++) {
+            if (! this.sources[k].isSelected) {
+                continue;
+            }
+            this.drawSourceSelection(this.sources[k], ctx);
+            
+        }
+        // NEEDED ?
+    	//ctx.stroke();
+
+        // tracé label
+        if (this.displayLabel) {
+            ctx.fillStyle = this.labelColor;
+            ctx.font = this.labelFont;
+            for (var k=0, len = this.sources.length; k<len; k++) {
+                this.drawSourceLabel(this.sources[k], ctx);
+            }
+        }
+    };
+    
+    
+    
+    cds.Catalog.prototype.drawSource = function(s, ctx, projection, frame, width, height, largestDim, zoomFactor) {
+        if (! s.isShowing) {
+            return;
+        }
+        var sourceSize = this.sourceSize;
+        // TODO : we could factorize this code with Aladin.world2pix
+        var xy;
+        if (frame!=CooFrameEnum.J2000) {
+            var lonlat = CooConversion.J2000ToGalactic([s.ra, s.dec]);
+            xy = projection.project(lonlat[0], lonlat[1]);
+        }
+        else {
+            xy = projection.project(s.ra, s.dec);
+        }
+        if (xy) {
+            var xyview = AladinUtils.xyToView(xy.X, xy.Y, width, height, largestDim, zoomFactor);
+            var max = s.popup ? 100 : s.sourceSize;
+            if (xyview) {
+                // TODO : index sources
+                // check if source is visible in view ?
+                if (xyview.vx>(width+max)  || xyview.vx<(0-max) ||
+                    xyview.vy>(height+max) || xyview.vy<(0-max)) {
+                    s.x = s.y = undefined;
+                    return;
+                }
+                
+                s.x = xyview.vx;
+                s.y = xyview.vy;
+
+                if (s.marker) {
+                    ctx.drawImage(this.cacheMarkerCanvas, s.x-sourceSize/2, s.y-sourceSize/2);
+                }
+                else {
+                    ctx.drawImage(this.cacheCanvas, s.x-this.cacheCanvas.width/2, s.y-this.cacheCanvas.height/2);
+                }
+
+
+                // has associated popup ?
+                if (s.popup) {
+                    s.popup.setPosition(s.x, s.y);
+                }
+                
+                
+            }
+        }
+    };
+    
+    cds.Catalog.prototype.drawSourceSelection = function(s, ctx) {
+        if (!s || !s.isShowing || !s.x || !s.y) {
+            return;
+        }
+        var sourceSize = this.selectSize;
+        
+        ctx.drawImage(this.cacheSelectCanvas, s.x-sourceSize/2, s.y-sourceSize/2);
+    };
+
+    cds.Catalog.prototype.drawSourceLabel = function(s, ctx) {
+        if (!s || !s.isShowing || !s.x || !s.y) {
+            return;
+        }
+
+        var label = s.data[this.labelColumn];
+        if (!label) {
+            return;
+        }
+
+        ctx.fillText(label, s.x, s.y);
+    };
+
+    
+    // callback function to be called when the status of one of the sources has changed
+    cds.Catalog.prototype.reportChange = function() {
+        this.view.requestRedraw();
+    };
+    
+    cds.Catalog.prototype.show = function() {
+        if (this.isShowing) {
+            return;
+        }
+        this.isShowing = true;
+        this.reportChange();
+    };
+    
+    cds.Catalog.prototype.hide = function() {
+        if (! this.isShowing) {
+            return;
+        }
+        this.isShowing = false;
+        if (this.view && this.view.popup && this.view.popup.source && this.view.popup.source.catalog==this) {
+            this.view.popup.hide();
+        }
+        this.reportChange();
+    };
+
+    return cds.Catalog;
+})();
+// Copyright 2013 - UDS/CNRS
+// The Aladin Lite program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+// This file is part of Aladin Lite.
+//
+//    Aladin Lite is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Lite is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Lite.
+//
+
+
+
+/******************************************************************************
+ * Aladin Lite project
+ * 
+ * File Tile
+ * 
+ * Author: Thomas Boch[CDS]
+ * 
+ *****************************************************************************/
+
+Tile = (function() {
+    // constructor
+	function Tile(img, url) {
+		this.img = img;
+		this.url = url;
+	};
+	
+	// check whether the image corresponding to the tile is loaded and ready to be displayed
+	//
+	// source : http://www.sajithmr.me/javascript-check-an-image-is-loaded-or-not
+	Tile.isImageOk = function(img) {
+		if (img.allSkyTexture) {
+			return true;
+		}
+		
+        if (!img.src) {
+            return false;
+        }
+
+	    // During the onload event, IE correctly identifies any images that
+	    // weren’t downloaded as not complete. Others should too. Gecko-based
+	    // browsers act like NS4 in that they report this incorrectly.
+	    if (!img.complete) {
+	        return false;
+	    }
+
+	    // However, they do have two very useful properties: naturalWidth and
+	    // naturalHeight. These give the true size of the image. If it failed
+	    // to load, either of these should be zero.
+
+	    if (typeof img.naturalWidth != "undefined" && img.naturalWidth == 0) {
+	        return false;
+	    }
+
+	    // No other way of checking: assume it’s ok.
+	    return true;
+	};
+	
+
+	return Tile;
+})();
+// Copyright 2013 - UDS/CNRS
+// The Aladin Lite program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+// This file is part of Aladin Lite.
+//
+//    Aladin Lite is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Lite is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Lite.
+//
+
+
+
+/******************************************************************************
+ * Aladin Lite project
+ * 
+ * File TileBuffer
+ * 
+ * Author: Thomas Boch[CDS]
+ * 
+ *****************************************************************************/
+
+TileBuffer = (function() {
+	var NB_MAX_TILES = 800; // buffer size
+	
+	// constructor
+	function TileBuffer() {
+		this.pointer = 0;
+		this.tilesMap = {};
+		this.tilesArray = new Array(NB_MAX_TILES);
+
+		for (var i=0; i<NB_MAX_TILES; i++) {
+			this.tilesArray[i] = new Tile(new Image(), null);
+		}
+	};
+	
+	TileBuffer.prototype.addTile = function(url) {
+	    // return null if already in buffer
+        if (this.getTile(url)) {
+            return null;
+        }
+
+        // delete existing tile
+        var curTile = this.tilesArray[this.pointer];
+        if (curTile.url != null) {
+            curTile.img.src = null;
+            delete this.tilesMap[curTile.url];
+        }
+
+        this.tilesArray[this.pointer].url = url;
+        this.tilesMap[url] = this.tilesArray[this.pointer];
+
+        this.pointer++;
+        if (this.pointer>=NB_MAX_TILES) {
+            this.pointer = 0;
+        }
+
+        return this.tilesMap[url];
+	};
+	
+	TileBuffer.prototype.getTile = function(url) {
+        return this.tilesMap[url];
+	};
+	
+	return TileBuffer;
+})();
+// Copyright 2013 - UDS/CNRS
+// The Aladin Lite program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+// This file is part of Aladin Lite.
+//
+//    Aladin Lite is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Lite is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Lite.
+//
+
+
+
+/******************************************************************************
+ * Aladin Lite project
+ * 
+ * File ColorMap.js
+ * 
+ * Author: Thomas Boch[CDS]
+ * 
+ *****************************************************************************/
+
+ColorMap = (function() {
+    
+    
+    // constructor
+    ColorMap = function(view) {
+        this.view = view;
+        this.reversed = false;
+        this.map = 'native';
+        this.sig = this.signature();
+    };
+    
+ColorMap.MAPS = {};
+    
+    ColorMap.MAPS['eosb'] = {
+            name: 'Eos B',
+            r: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,0,0,0,0,0,9,18,27,36,45,49,57,72,81,91,100,109,118,127,
+                136,131,139,163,173,182,191,200,209,218,227,213,221,255,255,255,255,255,
+                255,255,255,229,229,255,255,255,255,255,255,255,255,229,229,255,255,255,
+                255,255,255,255,255,229,229,255,255,255,255,255,255,255,255,229,229,255,
+                255,255,255,255,255,255,255,229,229,255,255,255,255,255,255,255,255,229,
+                229,255,255,255,255,255,255,255,255,229,229,255,255,255,255,255,255,255,
+                255,229,229,255,255,255,255,255,255,255,255,229,229,255,253,251,249,247,
+                245,243,241,215,214,235,234,232,230,228,226,224,222,198,196,216,215,213,
+                211,209,207,205,203,181,179,197,196,194,192,190,188,186,184,164,162,178,
+                176,175,173,171,169,167,165,147,145,159,157,156,154,152,150,148,146,130,
+                128,140,138,137,135,133,131,129,127,113,111,121,119,117,117],
+            g: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,15,23,31,39,47,55,57,64,79,87,95,
+                103,111,119,127,135,129,136,159,167,175,183,191,199,207,215,200,207,239,
+                247,255,255,255,255,255,255,229,229,255,255,255,255,255,255,255,255,229,
+                229,255,255,255,255,255,255,255,255,229,229,255,250,246,242,238,233,229,
+                225,198,195,212,208,204,199,195,191,187,182,160,156,169,165,161,157,153,
+                148,144,140,122,118,127,125,123,121,119,116,114,112,99,97,106,104,102,
+                99,97,95,93,91,80,78,84,82,80,78,76,74,72,70,61,59,63,61,59,57,55,53,50,
+                48,42,40,42,40,38,36,33,31,29,27,22,21,21,19,16,14,12,13,8,6,3,1,0,0,0,
+                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+            b: [116,121,127,131,136,140,144,148,153,
+                157,145,149,170,174,178,182,187,191,195,199,183,187,212,216,221,225,229,
+                233,238,242,221,225,255,247,239,231,223,215,207,199,172,164,175,167,159,
+                151,143,135,127,119,100,93,95,87,79,71,63,55,47,39,28,21,15,7,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0]
+    };
+    ColorMap.MAPS['rainbow'] = {
+            name: 'Rainbow',
+            r: [0,4,9,13,18,22,27,31,36,40,45,50,54,
+                58,61,64,68,69,72,74,77,79,80,82,83,85,84,86,87,88,86,87,87,87,85,84,84,
+                84,83,79,78,77,76,71,70,68,66,60,58,55,53,46,43,40,36,33,25,21,16,12,4,0,
+                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,8,12,21,25,29,33,42,
+                46,51,55,63,67,72,76,80,89,93,97,101,110,114,119,123,131,135,140,144,153,
+                157,161,165,169,178,182,187,191,199,203,208,212,221,225,229,233,242,246,
+                250,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,
+                255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,
+                255,255,255,255,255,255,255,255,255,255,255,255,255,255],
+            g: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,4,8,16,21,25,29,38,42,46,51,55,63,67,72,76,84,89,93,97,
+                106,110,114,119,127,131,135,140,144,152,157,161,165,174,178,182,187,195,
+                199,203,208,216,220,225,229,233,242,246,250,255,255,255,255,255,255,255,
+                255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,
+                255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,
+                255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,
+                255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,
+                255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,
+                255,250,242,238,233,229,221,216,212,208,199,195,191,187,178,174,170,165,
+                161,153,148,144,140,131,127,123,119,110,106,102,97,89,85,80,76,72,63,59,
+                55,51,42,38,34,29,21,17,12,8,0],
+            b: [0,3,7,10,14,19,23,28,32,38,43,48,53,
+                59,63,68,72,77,81,86,91,95,100,104,109,113,118,122,127,132,136,141,145,
+                150,154,159,163,168,173,177,182,186,191,195,200,204,209,214,218,223,227,
+                232,236,241,245,250,255,255,255,255,255,255,255,255,255,255,255,255,255,
+                255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,
+                255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,
+                255,255,255,255,255,255,246,242,238,233,225,220,216,212,203,199,195,191,
+                187,178,174,170,165,157,152,148,144,135,131,127,123,114,110,106,102,97,
+                89,84,80,76,67,63,59,55,46,42,38,34,25,21,16,12,8,0,0,0,0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    };
+    ColorMap.MAPS['cubehelix'] = {
+            name: 'Cubehelix',
+            r: [0,1,3,4,6,8,9,10,12,13,14,15,17,18,
+                19,20,20,21,22,23,23,24,24,25,25,25,26,26,26,26,26,26,26,26,26,26,26,25,
+                25,25,25,24,24,24,23,23,23,23,22,22,22,21,21,21,21,21,21,20,20,20,21,21,
+                21,21,21,22,22,22,23,23,24,25,26,27,27,28,30,31,32,33,35,36,38,39,41,43,
+                45,47,49,51,53,55,57,60,62,65,67,70,72,75,78,81,83,86,89,92,95,98,101,104,
+                107,110,113,116,120,123,126,129,132,135,138,141,144,147,150,153,155,158,
+                161,164,166,169,171,174,176,178,181,183,185,187,189,191,193,194,196,198,
+                199,201,202,203,204,205,206,207,208,209,209,210,211,211,211,212,212,212,
+                212,212,212,212,212,211,211,211,210,210,210,209,208,208,207,207,206,205,
+                205,204,203,203,202,201,201,200,199,199,198,197,197,196,196,195,195,194,
+                194,194,193,193,193,193,193,193,193,193,193,193,194,194,195,195,196,196,
+                197,198,199,200,200,202,203,204,205,206,208,209,210,212,213,215,217,218,
+                220,222,223,225,227,229,231,232,234,236,238,240,242,244,245,247,249,251,
+                253,255],
+            g: [0,0,1,1,2,2,3,4,4,5,6,6,7,8,9,10,
+                11,11,12,13,14,15,17,18,19,20,21,22,24,25,26,28,29,31,32,34,35,37,38,40,
+                41,43,45,46,48,50,52,53,55,57,58,60,62,64,66,67,69,71,73,74,76,78,79,81,
+                83,84,86,88,89,91,92,94,95,97,98,99,101,102,103,104,106,107,108,109,110,
+                111,112,113,114,114,115,116,116,117,118,118,119,119,120,120,120,121,121,
+                121,121,122,122,122,122,122,122,122,122,122,122,122,122,122,122,122,121,
+                121,121,121,121,121,121,121,121,120,120,120,120,120,120,120,120,120,120,
+                121,121,121,121,121,122,122,122,123,123,124,124,125,125,126,127,127,128,
+                129,130,131,131,132,133,135,136,137,138,139,140,142,143,144,146,147,149,
+                150,152,154,155,157,158,160,162,164,165,167,169,171,172,174,176,178,180,
+                182,183,185,187,189,191,193,194,196,198,200,202,203,205,207,208,210,212,
+                213,215,216,218,219,221,222,224,225,226,228,229,230,231,232,233,235,236,
+                237,238,239,240,240,241,242,243,244,244,245,246,247,247,248,248,249,250,
+                250,251,251,252,252,253,253,254,255],
+            b: [0,1,3,4,6,8,9,11,13,15,17,19,21,23,
+                25,27,29,31,33,35,37,39,41,43,45,47,48,50,52,54,56,57,59,60,62,63,65,66,
+                67,69,70,71,72,73,74,74,75,76,76,77,77,77,78,78,78,78,78,78,78,77,77,77,
+                76,76,75,75,74,73,73,72,71,70,69,68,67,66,66,65,64,63,61,60,59,58,58,57,
+                56,55,54,53,52,51,51,50,49,49,48,48,47,47,47,46,46,46,46,46,47,47,47,48,
+                48,49,50,50,51,52,53,55,56,57,59,60,62,64,65,67,69,71,74,76,78,81,83,86,
+                88,91,94,96,99,102,105,108,111,114,117,120,124,127,130,133,136,140,143,
+                146,149,153,156,159,162,165,169,172,175,178,181,184,186,189,192,195,197,
+                200,203,205,207,210,212,214,216,218,220,222,224,226,227,229,230,231,233,
+                234,235,236,237,238,239,239,240,241,241,242,242,242,243,243,243,243,243,
+                243,243,243,243,243,242,242,242,242,241,241,241,241,240,240,240,239,239,
+                239,239,239,238,238,238,238,238,238,238,238,239,239,239,240,240,240,241,
+                242,242,243,244,245,246,247,248,249,250,252,253,255]
+    };
+
+
+    
+    ColorMap.MAPS_CUSTOM = ['cubehelix', 'eosb', 'rainbow'];
+    ColorMap.MAPS_NAMES = ['native', 'grayscale'].concat(ColorMap.MAPS_CUSTOM);
+    
+    ColorMap.prototype.reverse = function(val) {
+        if (val) {
+            this.reversed = val;
+        }
+        else {
+            this.reversed = ! this.reversed;
+        }
+        this.sig = this.signature();
+        this.view.requestRedraw();
+    };
+    
+    
+    ColorMap.prototype.signature = function() {
+        var s = this.map;
+        
+        if (this.reversed) {
+            s += ' reversed';
+        }
+        
+        return s;
+    };
+    
+    ColorMap.prototype.update = function(map) {
+        this.map = map;
+        this.sig = this.signature();
+        this.view.requestRedraw();
+    };
+    
+    ColorMap.prototype.apply = function(img) {
+        if ( this.sig=='native' ) {
+            return img;
+        }
+        
+        if (img.cmSig==this.sig) {
+            return img.cmImg; // return cached pixels
+        }
+        
+        var canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        var ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        
+        var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        var pixelData = imageData.data;
+        var length = pixelData.length;
+        var a, b, c;
+        var switchCase = 3;
+        if (this.map=='grayscale') {
+            switchCase = 1;
+        }
+        else if (ColorMap.MAPS_CUSTOM.indexOf(this.map)>=0) {
+            switchCase = 2;
+        }
+        for (var i = 0; i < length; i+= 4) {
+            switch(switchCase) {
+                case 1:
+                    a = b = c = AladinUtils.myRound((pixelData[i]+pixelData[i+1]+pixelData[i+2])/3);
+                    break;
+                case 2:
+                    if (this.reversed) {
+                        a = ColorMap.MAPS[this.map].r[255-pixelData[i]];
+                        b = ColorMap.MAPS[this.map].g[255-pixelData[i+1]];
+                        c = ColorMap.MAPS[this.map].b[255-pixelData[i+2]];
+                    }
+                    else {
+                        a = ColorMap.MAPS[this.map].r[pixelData[i]];
+                        b = ColorMap.MAPS[this.map].g[pixelData[i+1]];
+                        c = ColorMap.MAPS[this.map].b[pixelData[i+2]];
+                    }
+                    break;
+                default:
+                    a = pixelData[i];
+                    b = pixelData[i + 1];
+                    c = pixelData[i + 2];
+                    
+            }
+            if (switchCase!=2 && this.reversed) {
+                a = 255-a;
+                b = 255-b;
+                c = 255-c;
+              
+            }
+            pixelData[i]     = a;
+            pixelData[i + 1] = b;
+            pixelData[i + 2] = c;
+            
+        }
+        imageData.data = pixelData;
+        ctx.putImageData(imageData, 0, 0);
+        
+        // cache image with color map applied
+        img.cmSig = this.sig;
+        img.cmImg = canvas;
+
+        return img.cmImg;
+    };
+    
+    return ColorMap;
+})();
+    
+// Copyright 2013 - UDS/CNRS
+// The Aladin Lite program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+// This file is part of Aladin Lite.
+//
+//    Aladin Lite is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Lite is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Lite.
+//
+
+
+
+/******************************************************************************
+ * Aladin Lite project
+ * 
+ * File HpxImageSurvey
+ * 
+ * Author: Thomas Boch[CDS]
+ * 
+ *****************************************************************************/
+
+HpxImageSurvey = (function() {
+
+
+    /** Constructor
+     * cooFrame and maxOrder can be set to null
+     * They will be determined by reading the properties file
+     *  
+     */
+    var HpxImageSurvey = function(id, name, rootUrl, cooFrame, maxOrder, options) {
+        this.id = id;
+    	this.name = name;
+    	if (rootUrl.slice(-1 )=== '/') {
+    	    this.rootUrl = rootUrl.substr(0, rootUrl.length-1);
+    	}
+    	else {
+    	    this.rootUrl = rootUrl;
+    	}
+    	
+    	options = options || {};
+    	// TODO : support PNG
+    	this.imgFormat = options.imgFormat || 'jpg';
+
+        // permet de forcer l'affichage d'un certain niveau
+        this.minOrder = options.minOrder || null;
+
+        // TODO : lire depuis fichier properties
+        this.cooFrame = CooFrameEnum.fromString(cooFrame, CooFrameEnum.J2000);
+        
+        // force coo frame for Glimpse 360
+        if (this.rootUrl.indexOf('/glimpse360/aladin/data')>=0) {
+            this.cooFrame = CooFrameEnum.J2000;
+        }
+        
+        // TODO : lire depuis fichier properties
+        this.maxOrder = maxOrder;
+    	
+    	this.allskyTexture = null;
+    	
+    	this.alpha = 0.0; // opacity value between 0 and 1 (if this layer is an opacity layer)
+    
+    	this.allskyTextureSize = 0;
+    
+        this.lastUpdateDateNeededTiles = 0;
+
+        var found = false;
+        for (var k=0; k<HpxImageSurvey.SURVEYS.length; k++) {
+            if (HpxImageSurvey.SURVEYS[k].id==this.id) {
+                found = true;
+            }
+        }
+        if (! found) {
+            HpxImageSurvey.SURVEYS.push({
+                 "id": this.id,
+                 "url": this.rootUrl,
+                 "name": this.name,
+                 "maxOrder": this.maxOrder,
+                 "frame": this.cooFrame
+            });
+        }
+        HpxImageSurvey.SURVEYS_OBJECTS[this.id] = this;
+    };
+    
+    HpxImageSurvey.UPDATE_NEEDED_TILES_DELAY = 1000; // in milliseconds
+    
+    HpxImageSurvey.prototype.init = function(view, callback) {
+    	this.view = view;
+    	
+        if (!this.cm) {
+            this.cm = new ColorMap(this.view);
+        }
+    	
+    	//this.tileBuffer = new TileBuffer();
+    	// tileBuffer is now shared across different image surveys
+    	this.tileBuffer = this.view.tileBuffer;
+    	
+    	this.useCors = false;
+    	var self = this;
+        if ($.support.cors) {
+            // testing if server supports CORS ( http://www.html5rocks.com/en/tutorials/cors/ )
+            $.ajax({
+                type: 'GET',
+                url: this.rootUrl + '/properties',
+                contentType: 'text/plain',
+                xhrFields: {
+                },
+                headers: {
+                },
+                success: function() {
+                    // CORS is supported
+                    self.useCors = true;
+                    
+                    self.retrieveAllskyTextures();
+                    if (callback) {
+                        callback();
+                    }
+                },
+                error: function() {
+                    // CORS is not supported
+                    self.retrieveAllskyTextures();
+                    if (callback) {
+                        callback();
+                    }
+                }
+              });
+        }
+        else {
+            this.retrieveAllskyTextures();
+            callback();
+        }
+    	
+    };
+    
+    HpxImageSurvey.DEFAULT_SURVEY_ID = "P/DSS2/color";
+    
+    HpxImageSurvey.SURVEYS_OBJECTS = {};
+    HpxImageSurvey.SURVEYS = [
+     {
+        "id": "P/2MASS/color",
+        "url": "http://alasky.u-strasbg.fr/2MASS/Color",
+        "name": "2MASS colored",
+        "maxOrder": 9,
+        "frame": "equatorial",
+        "format": "jpeg"
+     },
+     {
+        "id": "P/DSS2/color",
+        "url": "http://alasky.u-strasbg.fr/DSS/DSSColor",
+        "name": "DSS colored",
+        "maxOrder": 9,
+        "frame": "equatorial",
+        "format": "jpeg"
+     },
+     {
+        "id": "P/DSS2/red",
+        "url": "http://alasky.u-strasbg.fr/DSS/DSS2Merged",
+        "name": "DSS2 Red (F+R)",
+        "maxOrder": 9,
+        "frame": "equatorial",
+        "format": "jpeg fits"
+     },
+     {
+        "id": "P/Fermi/color",
+        "url": "http://alasky.u-strasbg.fr/Fermi/Color",
+        "name": "Fermi color",
+        "maxOrder": 3,
+        "frame": "equatorial",
+        "format": "jpeg"
+     },
+     {
+        "id": "P/Finkbeiner",
+        "url": "http://alasky.u-strasbg.fr/FinkbeinerHalpha",
+        "maxOrder": 3,
+        "frame": "galactic",
+        "format": "jpeg fits",
+        "name": "Halpha"
+     },
+     {
+        "id": "P/GALEXGR6/AIS/color",
+        "url": "http://alasky.u-strasbg.fr/GALEX/GR6-02-Color",
+        "name": "GALEX Allsky Imaging Survey colored",
+        "maxOrder": 8,
+        "frame": "equatorial",
+        "format": "jpeg"
+     },
+     {
+        "id": "P/IRIS/color",
+        "url": "http://alasky.u-strasbg.fr/IRISColor",
+        "name": "IRIS colored",
+        "maxOrder": 3,
+        "frame": "galactic",
+        "format": "jpeg"
+     },
+     {
+        "id": "P/Mellinger/color",
+        "url": "http://alasky.u-strasbg.fr/MellingerRGB",
+        "name": "Mellinger colored",
+        "maxOrder": 4,
+        "frame": "galactic",
+        "format": "jpeg"
+     },
+     {
+        "id": "P/SDSS9/color",
+        "url": "http://alasky.u-strasbg.fr/SDSS/DR9/color",
+        "name": "SDSS9 colored",
+        "maxOrder": 10,
+        "frame": "equatorial",
+        "format": "jpeg"
+     },
+     {
+        "id": "P/SPITZER/color",
+        "url": "http://alasky.u-strasbg.fr/SpitzerI1I2I4color",
+        "name": "IRAC color I1,I2,I4 - (GLIMPSE, SAGE, SAGE-SMC, SINGS)",
+        "maxOrder": 9,
+        "frame": "galactic",
+        "format": "jpeg"
+     },
+     {
+        "id": "P/VTSS/Ha",
+        "url": "http://alasky.u-strasbg.fr/VTSS/Ha",
+        "maxOrder": 3,
+        "frame": "galactic",
+        "format": "png jpeg fits",
+        "name": "VTSS-Ha"
+     },
+     {
+        "id": "P/XMM/EPIC",
+        "url": "http://saada.u-strasbg.fr/xmmallsky",
+        "name": "XMM-Newton stacked EPIC images (no phot. normalization)",
+        "maxOrder": 7,
+        "frame": "equatorial",
+        "format": "png jpeg fits"
+     },
+     {
+         "id": "P/XMM/PN/color",
+          "url": "http://saada.unistra.fr/xmmpnsky",
+          "name": "XMM PN colored",
+          "maxOrder": 7,
+          "frame": "equatorial",
+          "format": "png jpeg"
+     },
+     {
+         "id": "P/allWISE/color",
+         "url": "http://alasky.u-strasbg.fr/AllWISE/RGB-W4-W2-W1/",
+         "name": "AllWISE color",
+         "maxOrder": 8,
+         "frame": "equatorial",
+         "format": "jpeg"
+     },
+     {
+         "id": "P/GLIMPSE360",
+         "url": "http://www.spitzer.caltech.edu/glimpse360/aladin/data",
+         "name": "GLIMPSE360",
+         "maxOrder": 9,
+         "frame": "equatorial",
+         "format": "jpeg"
+     }
+  ];
+
+
+    
+    HpxImageSurvey.getAvailableSurveys = function() {
+    	return HpxImageSurvey.SURVEYS;
+    };
+    
+    HpxImageSurvey.getSurveyInfoFromId = function(id) {
+        var surveys = HpxImageSurvey.getAvailableSurveys();
+        for (var i=0; i<surveys.length; i++) {
+            if (surveys[i].id==id) {
+                return surveys[i];
+            }
+        }
+        return null;
+    };
+
+    HpxImageSurvey.getSurveyFromId = function(id) {
+        if (HpxImageSurvey.SURVEYS_OBJECTS[id]) {
+            return HpxImageSurvey.SURVEYS_OBJECTS[id];
+        }
+        var surveyInfo = HpxImageSurvey.getSurveyInfoFromId(id);
+        if (surveyInfo) {
+            return new HpxImageSurvey(surveyInfo.id, surveyInfo.name, surveyInfo.url, surveyInfo.frame, surveyInfo.maxOrder);
+        }
+
+        return null;
+    }
+   
+/* 
+    HpxImageSurvey.getSurveyFromId = function(id) {
+    	var info = HpxImageSurvey.getSurveyInfoFromId(id);
+    	if (info) {
+    		return new HpxImageSurvey(info.id, info.name, info.url, info.frame, info.maxOrder);
+    	}
+    	
+    	return null;
+    };
+*/
+    
+    HpxImageSurvey.prototype.getTileURL = function(norder, npix) {
+    	var dirIdx = Math.floor(npix/10000)*10000;
+    	return this.rootUrl + "/" + "Norder" + norder + "/Dir" + dirIdx + "/Npix" + npix + "." + this.imgFormat;
+    };
+    
+    HpxImageSurvey.prototype.retrieveAllskyTextures = function() {
+    	// start loading of allsky
+    	var img = new Image();
+    	if (this.useCors) {
+            img.crossOrigin = 'anonymous';
+        }
+    	var self = this;
+    	img.onload = function() {
+    		// sur ipad, le fichier qu'on récupère est 2 fois plus petit. Il faut donc déterminer la taille de la texture dynamiquement
+    	    self.allskyTextureSize = img.width/27;
+            self.allskyTexture = img;
+   
+            /* 
+    		// récupération des 768 textures (NSIDE=4)
+    		for (var j=0; j<29; j++) {
+    			for (var i=0; i<27; i++) {
+    				var c = document.createElement('canvas');
+    				c.width = c.height = self.allskyTextureSize;
+    				c.allSkyTexture = true;
+    				var context = c.getContext('2d');
+    				context.drawImage(img, i*self.allskyTextureSize, j*self.allskyTextureSize, self.allskyTextureSize, self.allskyTextureSize, 0, 0, c.width, c.height);
+    				self.allskyTextures.push(c);
+    			}
+    		}
+            */
+    		self.view.requestRedraw();
+    	};
+    	img.src = this.rootUrl + '/Norder3/Allsky.' + this.imgFormat;
+    
+    };
+    
+    HpxImageSurvey.prototype.redrawAllsky = function(ctx, cornersXYViewMap, fov, norder) {
+    	// for norder deeper than 6, we think it brings nothing to draw the all-sky
+    	if (this.view.curNorder>6) {
+    		return;
+    	}
+    	
+    	if ( ! this.allskyTexture ) {
+    		return;
+    	}
+    	
+
+    	var cornersXYView;
+        var coeff = 0;
+        var center;
+        var ipix;
+    	for (var k=0, len=cornersXYViewMap.length; k<len; k++) {
+    		cornersXYView = cornersXYViewMap[k];
+    		ipix = cornersXYView.ipix;
+
+
+    		
+            if ( ! this.allskyTexture || !Tile.isImageOk(this.allskyTexture) ) {
+                continue;
+            }
+
+            var dy = this.allskyTextureSize * Math.floor(ipix/27);
+            var dx = this.allskyTextureSize * (ipix - 27*Math.floor(ipix/27));
+
+    		
+    
+    		// TODO : plutot agrandir le clip ?
+    	    // grow cornersXYView
+    	    if (fov>40) {
+    			coeff = 0.02;
+                coeff = 0.0;
+    	        center = {x: (cornersXYView[0].vx+cornersXYView[2].vx)/2, y: (cornersXYView[0].vy+cornersXYView[2].vy)/2};
+    	        for (var i=0; i<4; i++) {
+    	            var diff = {x: cornersXYView[i].vx-center.x, y: cornersXYView[i].vy-center.y};
+    	            cornersXYView[i].vx += coeff*diff.x;
+    	            cornersXYView[i].vy += coeff*diff.y;
+    	        }
+    	    }
+    			
+    	    this.drawOneTile(ctx, this.allskyTexture, cornersXYView, this.allskyTextureSize, null, dx, dy, true);
+    	}
+    };
+    
+    HpxImageSurvey.prototype.getColorMap = function() {
+        return this.cm;
+    };
+    
+    var drawEven = true;
+    // TODO: avoir un mode où on ne cherche pas à dessiner d'abord les tuiles parentes (pour génération vignettes côté serveur)
+    HpxImageSurvey.prototype.redrawHighres = function(ctx, cornersXYViewMap, norder) {
+        
+        // DOES THAT FIX THE PROBLEM ???
+        if (cornersXYViewMap.length==0) {
+            return;
+        }
+        
+        drawEven = ! drawEven;
+        var now = new Date().getTime();
+        var updateNeededTiles = (now-this.lastUpdateDateNeededTiles) > HpxImageSurvey.UPDATE_NEEDED_TILES_DELAY;
+        var tile, url, parentTile, parentUrl;
+        var parentNorder = norder - 1;
+        var cornersXYView, parentCornersXYView;
+        var tilesToDraw = [];
+        var parentTilesToDraw = [];
+        var parentTilesToDrawIpix = {};
+        var missingTiles = false;
+        
+        var tilesToDownload = [];
+        var parentTilesToDownload = [];
+        
+        var parentIpix;
+        var ipix;
+        
+        // tri des tuiles selon la distance
+        if (updateNeededTiles) {
+            var center = [(cornersXYViewMap[0][0].vx+cornersXYViewMap[0][1].vx)/2, (cornersXYViewMap[0][0].vy+cornersXYViewMap[0][1].vy)/2];
+            var newCornersXYViewMap = cornersXYViewMap.sort(function(a, b) {
+                var cA = [(a[0].vx+a[2].vx)/2, (a[0].vy+a[2].vy)/2];
+                var cB = [(b[0].vx+b[2].vx)/2, (b[0].vy+b[2].vy)/2]; 
+
+                var distA = (cA[0]-center[0])*(cA[0]-center[0]) + (cA[1]-center[1])*(cA[1]-center[1]);
+                var distB = (cB[0]-center[0])*(cB[0]-center[0]) + (cB[1]-center[1])*(cB[1]-center[1]);
+                
+                return distA-distB;
+                    
+            });
+            cornersXYViewMap = newCornersXYViewMap;
+        }
+
+        
+    	for (var k=0, len=cornersXYViewMap.length; k<len; k++) {
+    		cornersXYView = cornersXYViewMap[k];
+    		ipix = cornersXYView.ipix;
+    		/*
+    		if (ipix%2==0 && ! drawEven) {
+    		    continue;
+    		}
+    		else if (ipix%2==1 && drawEven) {
+    		    continue;
+    		}
+    		*/
+            
+            // on demande à charger le parent (cas d'un zoomOut)
+            // TODO : mettre priorité plus basse
+            parentIpix = ~~(ipix/4);
+        	parentUrl = this.getTileURL(parentNorder, parentIpix);
+            if (updateNeededTiles && parentNorder>=3) {
+            	parentTile = this.tileBuffer.addTile(parentUrl);
+                if (parentTile) {
+                    parentTilesToDownload.push({img: parentTile.img, url: parentUrl});
+                }
+            }
+            
+            url = this.getTileURL(norder, ipix);
+            tile = this.tileBuffer.getTile(url);
+            
+            if ( ! tile ) {
+                missingTiles = true;
+                
+                if (updateNeededTiles) {
+                    var tile = this.tileBuffer.addTile(url);
+                    if (tile) {
+                        tilesToDownload.push({img: tile.img, url: url});
+                    }
+                }
+                
+                // is the parent tile available ?
+                if (parentNorder>=3 && ! parentTilesToDrawIpix[parentIpix]) {
+                	parentTile = this.tileBuffer.getTile(parentUrl);
+                	if (parentTile && Tile.isImageOk(parentTile.img)) {
+                		parentCornersXYView = this.view.getPositionsInView(parentIpix, parentNorder);
+                		if (parentCornersXYView) {
+                			parentTilesToDraw.push({img: parentTile.img, corners: parentCornersXYView, ipix: parentIpix});
+                		}
+                	}
+                	parentTilesToDrawIpix[parentIpix] = 1;
+                }
+    
+                continue;
+            }
+            else if ( ! Tile.isImageOk(tile.img)) {
+                missingTiles = true;
+                if (updateNeededTiles && ! tile.img.dlError) {
+                    tilesToDownload.push({img: tile.img, url: url});
+                }
+                
+                // is the parent tile available ?
+                if (parentNorder>=3 && ! parentTilesToDrawIpix[parentIpix]) {
+                	parentTile = this.tileBuffer.getTile(parentUrl);
+                	if (parentTile && Tile.isImageOk(parentTile.img)) {
+                		parentCornersXYView = this.view.getPositionsInView(parentIpix, parentNorder);
+                		if (parentCornersXYView) {
+                			parentTilesToDraw.push({img: parentTile.img, corners: parentCornersXYView, ipix: parentIpix});
+                		}
+                	}
+                	parentTilesToDrawIpix[parentIpix] = 1;
+                }
+                
+                continue;
+            }
+            tilesToDraw.push({img: tile.img, corners: cornersXYView});
+        }
+    	
+    
+    
+        // draw parent tiles
+        for (var k=0, len = parentTilesToDraw.length; k<len; k++) {
+        	this.drawOneTile(ctx, parentTilesToDraw[k].img, parentTilesToDraw[k].corners, parentTilesToDraw[k].img.width);
+        }
+        
+        // draw tiles
+        /*
+        // using loop unrolling
+        var iterations = Math.ceil(tilesToDraw.length / 8);
+        var startAt = tilesToDraw.length % 8;
+        var i = 0;
+        var theTileToDraw;
+        do {
+            switch(startAt){
+                case 0: theTileToDraw = tilesToDraw[i++]; this.drawOneTile(ctx, theTileToDraw.img, theTileToDraw.corners, theTileToDraw.img.width, alpha);
+                case 7: theTileToDraw = tilesToDraw[i++]; this.drawOneTile(ctx, theTileToDraw.img, theTileToDraw.corners, theTileToDraw.img.width, alpha);
+                case 6: theTileToDraw = tilesToDraw[i++]; this.drawOneTile(ctx, theTileToDraw.img, theTileToDraw.corners, theTileToDraw.img.width, alpha);
+                case 5: theTileToDraw = tilesToDraw[i++]; this.drawOneTile(ctx, theTileToDraw.img, theTileToDraw.corners, theTileToDraw.img.width, alpha);
+                case 4: theTileToDraw = tilesToDraw[i++]; this.drawOneTile(ctx, theTileToDraw.img, theTileToDraw.corners, theTileToDraw.img.width, alpha);
+                case 3: theTileToDraw = tilesToDraw[i++]; this.drawOneTile(ctx, theTileToDraw.img, theTileToDraw.corners, theTileToDraw.img.width, alpha);
+                case 2: theTileToDraw = tilesToDraw[i++]; this.drawOneTile(ctx, theTileToDraw.img, theTileToDraw.corners, theTileToDraw.img.width, alpha);
+                case 1: theTileToDraw = tilesToDraw[i++]; this.drawOneTile(ctx, theTileToDraw.img, theTileToDraw.corners, theTileToDraw.img.width, alpha);
+            }
+            startAt = 0;
+        } while (--iterations > 0);
+        */
+        
+        // draw tiles
+        ///*
+        for (var k=0, len = tilesToDraw.length; k<len; k++) {
+        	var alpha = null;
+        	var img = tilesToDraw[k].img;
+        	if (img.fadingStart) {
+        		if (img.fadingEnd && now<img.fadingEnd) {
+        			alpha = 0.2 + (now - img.fadingStart)/(img.fadingEnd - img.fadingStart)*0.8;
+        		}
+        	}
+        	this.drawOneTile(ctx, img, tilesToDraw[k].corners, img.width, alpha);
+        }
+        //*/
+    
+
+        // demande de chargement des tuiles manquantes et mise à jour lastUpdateDateNeededTiles
+        if (updateNeededTiles) {
+            // demande de chargement des tuiles
+            for (var k=0, len = tilesToDownload.length; k<len; k++) {
+                this.view.downloader.requestDownload(tilesToDownload[k].img, tilesToDownload[k].url, this.useCors);
+            }
+            //demande de chargement des tuiles parentes
+            for (var k=0, len = parentTilesToDownload.length; k<len; k++) {
+                this.view.downloader.requestDownload(parentTilesToDownload[k].img, parentTilesToDownload[k].url, this.useCors);
+            }
+            this.lastUpdateDateNeededTiles = now;
+        }
+        if (missingTiles) {
+            // callback pour redemander un display dans 1000ms
+            this.view.requestRedrawAtDate(now+HpxImageSurvey.UPDATE_NEEDED_TILES_DELAY+10);
+        }
+    };
+    
+    function dist2(x1,y1,x2,y2) {
+    	return Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2);
+    }
+    
+    HpxImageSurvey.prototype.drawOneTile = function(ctx, img, cornersXYView, textureSize, alpha, dx, dy, applyCorrection) {
+        
+        // apply CM
+        var newImg = this.useCors ? this.cm.apply(img) : img;
+        
+        
+    	// is the tile a diamond ?
+    //	var round = AladinUtils.myRound;
+    //	var b = cornersXYView;
+    //	var flagDiamond =  round(b[0].vx - b[2].vx) == round(b[1].vx - b[3].vx)
+    //    				&& round(b[0].vy - b[2].vy) == round(b[1].vy - b[3].vy); 
+    	
+    	drawTexturedTriangle(ctx, newImg,
+                cornersXYView[0].vx, cornersXYView[0].vy,
+                cornersXYView[1].vx, cornersXYView[1].vy,
+    	        cornersXYView[3].vx, cornersXYView[3].vy,
+    	        textureSize-1, textureSize-1,
+    	        textureSize-1, 0,
+    	        0, textureSize-1,
+    	        alpha,
+                dx, dy, applyCorrection);
+        drawTexturedTriangle(ctx, newImg,
+        		cornersXYView[1].vx, cornersXYView[1].vy,
+        		cornersXYView[3].vx, cornersXYView[3].vy,
+        		cornersXYView[2].vx, cornersXYView[2].vy,
+        		textureSize-1, 0,
+        		0, textureSize-1,
+        		0, 0,
+        		alpha,
+                dx, dy, applyCorrection);
+    };
+    
+    
+    	        
+    
+    // uses affine texture mapping to draw a textured triangle
+    // at screen coordinates [x0, y0], [x1, y1], [x2, y2] from
+    // img *pixel* coordinates [u0, v0], [u1, v1], [u2, v2]
+    // code from http://www.dhteumeuleu.com/lab/image3D.html
+    function drawTexturedTriangle(ctx, img, x0, y0, x1, y1, x2, y2,
+                                        u0, v0, u1, v1, u2, v2, alpha,
+                                        dx, dy, applyCorrection) {
+
+        dx = dx || 0;
+        dy = dy || 0;
+
+        if (!applyCorrection) {
+            applyCorrection = false;
+        }
+
+        u0 += dx;
+        u1 += dx;
+        u2 += dx;
+        v0 += dy;
+        v1 += dy;
+        v2 += dy;
+        var xc = (x0 + x1 + x2) / 3;
+        var yc = (y0 + y1 + y2) / 3;
+
+
+        // ---- centroid ----
+        var xc = (x0 + x1 + x2) / 3;
+        var yc = (y0 + y1 + y2) / 3;
+        ctx.save();
+        if (alpha) {
+        	ctx.globalAlpha = alpha;
+        }
+    
+        var coeff = 0.01; // default value
+        if (applyCorrection) {
+            coeff = 0.01;
+        }
+        // ---- scale triangle by (1 + coeff) to remove anti-aliasing and draw ----
+        ctx.beginPath();
+        ctx.moveTo(((1+coeff) * x0 - xc * coeff), ((1+coeff) * y0 - yc * coeff));
+        ctx.lineTo(((1+coeff) * x1 - xc * coeff), ((1+coeff) * y1 - yc * coeff));
+        ctx.lineTo(((1+coeff) * x2 - xc * coeff), ((1+coeff) * y2 - yc * coeff));
+        ctx.closePath();
+        ctx.clip();
+
+
+        // this is needed to prevent to see some lines between triangles
+        if (applyCorrection) {
+            coeff = 0.03;
+            x0 = ((1+coeff) * x0 - xc * coeff), y0 = ((1+coeff) * y0 - yc * coeff);
+            x1 = ((1+coeff) * x1 - xc * coeff), y1 = ((1+coeff) * y1 - yc * coeff);
+            x2 = ((1+coeff) * x2 - xc * coeff), y2 = ((1+coeff) * y2 - yc * coeff);
+        }
+
+        // ---- transform texture ----
+        var d_inv = 1/ (u0 * (v2 - v1) - u1 * v2 + u2 * v1 + (u1 - u2) * v0);
+        ctx.transform(
+            -(v0 * (x2 - x1) -  v1 * x2  + v2 *  x1 + (v1 - v2) * x0) * d_inv, // m11
+             (v1 *  y2 + v0  * (y1 - y2) - v2 *  y1 + (v2 - v1) * y0) * d_inv, // m12
+             (u0 * (x2 - x1) -  u1 * x2  + u2 *  x1 + (u1 - u2) * x0) * d_inv, // m21
+            -(u1 *  y2 + u0  * (y1 - y2) - u2 *  y1 + (u2 - u1) * y0) * d_inv, // m22
+             (u0 * (v2 * x1  -  v1 * x2) + v0 * (u1 *  x2 - u2  * x1) + (u2 * v1 - u1 * v2) * x0) * d_inv, // dx
+             (u0 * (v2 * y1  -  v1 * y2) + v0 * (u1 *  y2 - u2  * y1) + (u2 * v1 - u1 * v2) * y0) * d_inv  // dy
+        );
+        ctx.drawImage(img, 0, 0);
+        //ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, img.width, img.height); 
+        
+    //    ctx.globalAlpha = 1.0;
+    
+        ctx.restore();
+    }
+    
+    /*
+    function drawTexturedTriangle4Points(ctx, img, x0, y0, x1, y1, x2, y2,
+            u0, v0, u1, v1, u2, v2) {
+    
+    	var x3 = x1+x2-x0;
+    	var y3 = y1+y2-y0;
+    // ---- centroid ----
+    var xc = (x0 + x1 + x2 + x3) / 4;
+    var yc = (y0 + y1 + y2 + y3) / 4;
+    ctx.save();
+    ctx.beginPath();
+    // ---- scale triagle by 1.05 to remove anti-aliasing and draw ----
+    ctx.moveTo((1.05 * x0 - xc * 0.05), (1.05 * y0 - yc * 0.05));
+    ctx.lineTo((1.05 * x1 - xc * 0.05), (1.05 * y1 - yc * 0.05));
+    ctx.lineTo((1.05 * x3 - xc * 0.05), (1.05 * y3 - yc * 0.05));
+    ctx.lineTo((1.05 * x2 - xc * 0.05), (1.05 * y2 - yc * 0.05));
+    ctx.closePath();
+    ctx.clip();
+    // ---- transform texture ----
+    var d_inv = 1/ (u0 * (v2 - v1) - u1 * v2 + u2 * v1 + (u1 - u2) * v0);
+    ctx.transform(
+    -(v0 * (x2 - x1) -  v1 * x2  + v2 *  x1 + (v1 - v2) * x0) * d_inv, // m11
+    (v1 *  y2 + v0  * (y1 - y2) - v2 *  y1 + (v2 - v1) * y0) * d_inv, // m12
+    (u0 * (x2 - x1) -  u1 * x2  + u2 *  x1 + (u1 - u2) * x0) * d_inv, // m21
+    -(u1 *  y2 + u0  * (y1 - y2) - u2 *  y1 + (u2 - u1) * y0) * d_inv, // m22
+    (u0 * (v2 * x1  -  v1 * x2) + v0 * (u1 *  x2 - u2  * x1) + (u2 * v1 - u1 * v2) * x0) * d_inv, // dx
+    (u0 * (v2 * y1  -  v1 * y2) + v0 * (u1 *  y2 - u2  * y1) + (u2 * v1 - u1 * v2) * y0) * d_inv  // dy
+    );
+    //ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, img.width, img.height); // faster ??
+    ctx.drawImage(img, 0, 0); // slower ??
+    
+    ctx.restore();
+    }
+    */
+    
+    function grow(b, val)  {
+    
+    	  var b1 = new Array(b.length);
+    	  for( var i=0; i<4; i++ ) {
+    		  b1[i] = {vx: b[i].vx, vy: b[i].vy};
+    	  }
+    
+    	  for( var i=0; i<2; i++ ) {
+    	     var a= i==1 ? 1 : 0;
+    	     var c= i==1 ? 2 : 3;
+    
+    	     var angle = Math.atan2(b1[c].vy-b1[a].vy, b1[c].vx-b1[a].vx);
+    	     var chouilla = val*Math.cos(angle);
+    	     b1[a].vx -= chouilla;
+    	     b1[c].vx += chouilla;
+    	     chouilla = val*Math.sin(angle);
+    	     b1[a].vy -= chouilla;
+    	     b1[c].vy += chouilla;
+    	  }
+      return b1;
+    }
+    
+    // @api
+    HpxImageSurvey.prototype.setAlpha = function(alpha) {
+        alpha = +alpha; // coerce to number
+        this.alpha = Math.max(0, Math.min(alpha, 1));
+        this.view.requestRedraw();
+    };
+    
+    // @api
+    HpxImageSurvey.prototype.getAlpha = function() {
+        return this.alpha;
+    }
+
+    return HpxImageSurvey;
+})();
+// Copyright 2015 - UDS/CNRS
+// The Aladin Lite program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+// This file is part of Aladin Lite.
+//
+//    Aladin Lite is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Lite is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Lite.
+//
+
+
+
+/******************************************************************************
+ * Aladin Lite project
+ * 
+ * File HealpixGrid
+ * 
+ * Author: Thomas Boch[CDS]
+ * 
+ *****************************************************************************/
+
+HealpixGrid = (function() {
+	var HealpixGrid = function() {
+	};
+	
+	HealpixGrid.prototype.redraw = function(ctx, cornersXYViewMap, fov, norder) {
+		// on dessine les lignes
+		ctx.lineWidth = 1;
+		ctx.strokeStyle = "rgb(150,150,220)";
+		ctx.beginPath();
+		var cornersXYView;
+		for (var k=0, len=cornersXYViewMap.length; k<len; k++) {
+			cornersXYView = cornersXYViewMap[k];
+			ipix = cornersXYView.ipix;
+			
+			// draw pixel
+			ctx.moveTo(cornersXYView[0].vx, cornersXYView[0].vy);
+			ctx.lineTo(cornersXYView[1].vx, cornersXYView[1].vy);
+			ctx.lineTo(cornersXYView[2].vx, cornersXYView[2].vy);
+			//ctx.lineTo(cornersXYView[3].vx, cornersXYView[3].vy);
+			
+
+            //ctx.strokeText(ipix, (cornersXYView[0].vx + cornersXYView[2].vx)/2, (cornersXYView[0].vy + cornersXYView[2].vy)/2);
+		}
+		ctx.stroke();
+		
+		// on dessine les numéros de pixel HEALpix
+        ctx.strokeStyle="#FFDDDD";
+		ctx.beginPath();
+		for (var k=0, len=cornersXYViewMap.length; k<len; k++) {
+			cornersXYView = cornersXYViewMap[k];
+			ipix = cornersXYView.ipix;
+
+            ctx.strokeText(norder + '/' + ipix, (cornersXYView[0].vx + cornersXYView[2].vx)/2, (cornersXYView[0].vy + cornersXYView[2].vy)/2);
+		}
+		ctx.stroke();
+	};
+
+	
+	
+	return HealpixGrid;
+})();
+// Copyright 2013 - UDS/CNRS
+// The Aladin Lite program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+// This file is part of Aladin Lite.
+//
+//    Aladin Lite is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Lite is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Lite.
+//
+
+
+
+/******************************************************************************
+ * Aladin Lite project
+ * 
+ * File Location.js
+ * 
+ * Author: Thomas Boch[CDS]
+ * 
+ *****************************************************************************/
+
+Location = (function() {
+    // constructor
+    Location = function(locationDiv) {
+    		this.div = $(locationDiv);
+    	};
+	
+	Location.prototype.update = function(lon, lat, cooFrame) {
+		var coo = new Coo(lon, lat, 7);
+		if (cooFrame==CooFrameEnum.J2000) {
+            this.div.html(coo.format('s/'));
+        }
+        else {
+            this.div.html(coo.format('d/'));
+        }
+	};
+	
+	return Location;
+})();
+	
+// Copyright 2013 - UDS/CNRS
+// The Aladin Lite program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+// This file is part of Aladin Lite.
+//
+//    Aladin Lite is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Lite is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Lite.
+//
+
+
+
+
+/******************************************************************************
+ * Aladin Lite project
+ * 
+ * File View.js
+ * 
+ * Author: Thomas Boch[CDS]
+ * 
+ *****************************************************************************/
+
+View = (function() {
+
+    /** Constructor */
+    function View (aladin, location, fovDiv, cooFrame, zoom) {
+            this.aladin = aladin;
+            this.options = aladin.options;
+    		this.aladinDiv = this.aladin.aladinDiv;
+            this.popup = new Popup(this.aladinDiv);
+
+    		this.createCanvases();
+    		this.location = location;
+    		this.fovDiv = fovDiv;
+    		this.mustClearCatalog = true;
+    		this.mustRedrawReticle = true;
+    		
+    		this.mode = View.PAN;
+    		
+    		this.minFOV = this.maxFOV = null; // by default, no restriction
+    		
+    		this.healpixGrid = new HealpixGrid(this.imageCanvas);
+    		if (cooFrame) {
+                this.cooFrame = cooFrame;
+            }
+            else {
+                this.cooFrame = CooFrameEnum.GAL;
+            }
+    		
+    		var lon, lat;
+    		lon = lat = 0;
+    		
+    		this.projectionMethod = ProjectionEnum.SIN;
+    		this.projection = new Projection(lon, lat);
+    		this.projection.setProjection(this.projectionMethod);
+            this.zoomLevel = 0;
+            this.zoomFactor = this.computeZoomFactor(this.zoomLevel);
+    
+    		this.viewCenter = {lon: lon, lat: lat}; // position of center of view
+    		
+    		if (zoom) {
+                this.setZoom(zoom);
+            }
+    		
+    		// current image survey displayed
+    		this.imageSurvey = null;
+    		// current catalog displayed
+    		this.catalogs = [];
+            // overlays (footprints for instance)
+    		this.overlays = [];
+            // MOCs
+    		this.mocs = [];
+    		
+    
+    		
+    		this.tileBuffer = new TileBuffer(); // tile buffer is shared across different image surveys
+    		this.fixLayoutDimensions();
+            
+    
+    		this.curNorder = 1;
+    		this.realNorder = 1;
+            this.curOverlayNorder = 1;
+    		
+    		// some variables for mouse handling
+    		this.dragging = false;
+    		this.dragx = null;
+    		this.dragy = null;
+    		this.needRedraw = true;
+    
+            this.downloader = new Downloader(this); // the downloader object is shared across all HpxImageSurveys
+            this.flagForceRedraw = false;
+    
+            this.fadingLatestUpdate = null;
+    		
+            this.dateRequestRedraw = null;
+            
+            this.showGrid = false; // coordinates grid
+            
+    		init(this);
+    		
+
+    		// listen to window resize and reshape canvases
+    		this.resizeTimer = null;
+    		var self = this;
+    		$(window).resize(function() {
+    		    clearTimeout(self.resizeTimer);
+    		    self.resizeTimer = setTimeout(function() {self.fixLayoutDimensions(self)}, 100);
+    		});
+    	};
+	
+    // différents modes
+    View.PAN = 0;
+    View.SELECT = 1;
+    	
+    
+    // TODO: should be put as an option at layer level	
+	View.DRAW_SOURCES_WHILE_DRAGGING = true;
+	View.DRAW_MOCS_WHILE_DRAGGING = true;
+	
+	
+	// (re)create needed canvases
+	View.prototype.createCanvases = function() {
+	    var a = $(this.aladinDiv);
+	    a.find('.aladin-imageCanvas').remove();
+	    a.find('.aladin-catalogCanvas').remove();
+	    a.find('.aladin-reticleCanvas').remove();
+        
+        // canvas to draw the images
+        this.imageCanvas = $("<canvas class='aladin-imageCanvas'></canvas>").appendTo(this.aladinDiv)[0];
+        // canvas to draw the catalogs
+        this.catalogCanvas = $("<canvas class='aladin-catalogCanvas'></canvas>").appendTo(this.aladinDiv)[0];
+        // canvas to draw the reticle
+        this.reticleCanvas = $("<canvas class='aladin-reticleCanvas'></canvas>").appendTo(this.aladinDiv)[0];
+	};
+	
+	
+	// called at startup and when window is resized
+	View.prototype.fixLayoutDimensions = function() {
+        Utils.cssScale = undefined;
+		
+        this.width = $(this.aladinDiv).width();
+		this.height = $(this.aladinDiv).height();
+		
+		this.width = Math.max(this.width, 1);
+		this.height = Math.max(this.height, 1); // this prevents many problems when div size is 0s
+        
+		
+		this.cx = this.width/2;
+		this.cy = this.height/2;
+		
+		this.largestDim = Math.max(this.width, this.height);
+		this.smallestDim = Math.min(this.width, this.height);
+		this.ratio = this.largestDim/this.smallestDim;
+
+		
+		this.mouseMoveIncrement = 160/this.largestDim;
+
+		
+		// reinitialize 2D context
+		this.imageCtx = this.imageCanvas.getContext("2d");
+		this.catalogCtx = this.catalogCanvas.getContext("2d");
+		this.reticleCtx = this.reticleCanvas.getContext("2d");
+		
+		this.imageCtx.canvas.width = this.width;
+		this.catalogCtx.canvas.width = this.width;
+        this.reticleCtx.canvas.width = this.width;
+
+		
+		this.imageCtx.canvas.height = this.height;
+		this.catalogCtx.canvas.height = this.height;
+        this.reticleCtx.canvas.height = this.height;
+        
+        this.computeNorder();
+        this.requestRedraw();
+	};
+    
+
+	View.prototype.setMode = function(mode) {
+	    this.mode = mode;
+	    if (this.mode==View.SELECT) {
+	        this.setCursor('crosshair');
+	    }
+	    else {
+	        this.setCursor('default');
+	    }
+	};
+	
+	View.prototype.setCursor = function(cursor) {
+        if (this.reticleCanvas.style.cursor==cursor) {
+            return;
+        }
+	    this.reticleCanvas.style.cursor = cursor;
+	};
+
+	
+	
+	/**
+	 * return dataURL string corresponding to the current view
+	 */
+	View.prototype.getCanvasDataURL = function(imgType) {
+        imgType = imgType || "image/png"; 
+	    var c = document.createElement('canvas');
+        c.width = this.width;
+        c.height = this.height;
+        var ctx = c.getContext('2d');
+        ctx.drawImage(this.imageCanvas, 0, 0);
+        ctx.drawImage(this.catalogCanvas, 0, 0);
+        ctx.drawImage(this.reticleCanvas, 0, 0);
+        
+	    return c.toDataURL(imgType);
+	    //return c.toDataURL("image/jpeg", 0.01); // setting quality only works for JPEG (?)
+	};
+
+
+	/**
+	 * Compute the FoV in degrees of the view and update mouseMoveIncrement
+	 * 
+	 * @param view
+	 * @returns FoV (array of 2 elements : width and height) in degrees
+	 */
+	computeFov = function(view) {
+		var fov = doComputeFov(view, view.zoomFactor);
+		
+		
+		view.mouseMoveIncrement = fov/view.imageCanvas.width;
+			
+		return fov;
+	};
+	
+	doComputeFov = function(view, zoomFactor) {
+	 // if zoom factor < 1, we view 180°
+        if (view.zoomFactor<1) {
+            fov = 180;
+        }
+        else {
+            // TODO : fov sur les 2 dimensions !!
+            // to compute FoV, we first retrieve 2 points at coordinates (0, view.cy) and (width-1, view.cy)
+            var xy1 = AladinUtils.viewToXy(0, view.cy, view.width, view.height, view.largestDim, zoomFactor);
+            var lonlat1 = view.projection.unproject(xy1.x, xy1.y);
+            
+            var xy2 = AladinUtils.viewToXy(view.imageCanvas.width-1, view.cy, view.width, view.height, view.largestDim, zoomFactor);
+            var lonlat2 = view.projection.unproject(xy2.x, xy2.y);
+            
+            
+            fov = new Coo(lonlat1.ra, lonlat1.dec).distance(new Coo(lonlat2.ra, lonlat2.dec));
+        }
+        
+        return fov;
+	};
+	
+	updateFovDiv = function(view) {
+	    if (isNaN(view.fov)) {
+	        view.fovDiv.html("FoV:");
+	        return;
+	    }
+        // màj valeur FoV
+        var fovStr;
+        if (view.fov>1) {
+            fovStr = Math.round(view.fov*100)/100 + "°";
+        }
+        else if (view.fov*60>1) {
+            fovStr = Math.round(view.fov*60*100)/100 + "'";
+        }
+        else {
+            fovStr = Math.round(view.fov*3600*100)/100 + '"';
+        }
+        view.fovDiv.html("FoV: " + fovStr);
+	};
+	
+	
+	createListeners = function(view) {
+        var hasTouchEvents = false;
+        if ('ontouchstart' in window) {
+            hasTouchEvents = true;
+        }
+        
+        // various listeners
+        onDblClick = function(e) {
+            var xymouse = view.imageCanvas.relMouseCoords(e);
+            var xy = AladinUtils.viewToXy(xymouse.x, xymouse.y, view.width, view.height, view.largestDim, view.zoomFactor);
+            try {
+                var lonlat = view.projection.unproject(xy.x, xy.y);
+            }
+            catch(err) {
+                return;
+            }
+            radec = [];
+            // convert to J2000 if needed
+            if (view.cooFrame==CooFrameEnum.GAL) {
+                radec = CooConversion.GalacticToJ2000([lonlat.ra, lonlat.dec]);
+            }
+            else {
+                radec = [lonlat.ra, lonlat.dec];
+            }
+
+            view.pointTo(radec[0], radec[1]);
+        };
+        if (! hasTouchEvents) {
+            $(view.reticleCanvas).dblclick(onDblClick);
+        }
+        
+        
+        $(view.reticleCanvas).bind("mousedown touchstart", function(e) {
+            var xymouse = view.imageCanvas.relMouseCoords(e);
+            if (e.originalEvent && e.originalEvent.targetTouches) {
+                view.dragx = e.originalEvent.targetTouches[0].clientX;
+                view.dragy = e.originalEvent.targetTouches[0].clientY;
+            }
+            else {
+                /*
+                view.dragx = e.clientX;
+                view.dragy = e.clientY;
+                */
+                view.dragx = xymouse.x;
+                view.dragy = xymouse.y;
+            }
+            view.dragging = true;
+            if (view.mode==View.PAN) {
+                view.setCursor('move');
+            }
+            else if (view.mode==View.SELECT) {
+                view.selectStartCoo = {x: view.dragx, y: view.dragy};
+            }
+            return false; // to disable text selection
+        });
+        var lastClickedObject; // save last object clicked by mouse
+        $(view.reticleCanvas).bind("mouseup mouseout touchend", function(e) {
+            if (view.mode==View.SELECT && view.dragging) {
+                view.aladin.fire('selectend', 
+                                 view.getObjectsInBBox(view.selectStartCoo.x, view.selectStartCoo.y,
+                                                       view.dragx-view.selectStartCoo.x, view.dragy-view.selectStartCoo.y));    
+            }
+            if (view.dragging) {
+                view.setCursor('default');
+                view.dragging = false;
+                
+            }
+            view.mustClearCatalog = true;
+            view.mustRedrawReticle = true; // pour effacer selection bounding box
+            view.dragx = view.dragy = null;
+
+
+            if (e.type==="mouseout") {
+                view.requestRedraw();
+                return;
+            }
+
+            var xymouse = view.imageCanvas.relMouseCoords(e);
+            // popup to show ?
+            var objs = view.closestObjects(xymouse.x, xymouse.y, 5);
+            if (objs) {
+                var o = objs[0];
+                // display marker
+                if (o.marker) {
+                    // could be factorized in Source.actionClicked
+                    view.popup.setTitle(o.popupTitle);
+                    view.popup.setText(o.popupDesc);
+                    view.popup.setSource(o);
+                    view.popup.show();
+                }
+                // show measurements
+                else {
+                    // TODO: show measurements
+                    if (view.aladin.objClickedFunction) {
+                        var ret = view.aladin.objClickedFunction(o);
+                    }
+                    else {
+                        if (lastClickedObject) {
+                            lastClickedObject.actionOtherObjectClicked();
+                        }
+                        o.actionClicked();
+                    }
+                    lastClickedObject = o;
+                }
+            }
+            else {
+                if (lastClickedObject) {
+                    view.aladin.measurementTable.hide();
+                    lastClickedObject.actionOtherObjectClicked();
+
+                    lastClickedObject = null;
+                    if (view.aladin.objClickedFunction) {
+                        var ret = view.aladin.objClickedFunction(null);
+                    }
+                }
+                
+            }
+
+
+            // TODO : remplacer par mécanisme de listeners
+            // on avertit les catalogues progressifs
+            view.refreshProgressiveCats();
+
+            view.requestRedraw();
+        });
+        var lastHoveredObject; // save last object hovered by mouse
+        $(view.reticleCanvas).bind("mousemove touchmove", function(e) {
+            e.preventDefault();
+            var xymouse = view.imageCanvas.relMouseCoords(e);
+            if (!view.dragging || hasTouchEvents) {
+                    updateLocation(view, xymouse.x, xymouse.y, true);
+                    /*
+                    var xy = AladinUtils.viewToXy(xymouse.x, xymouse.y, view.width, view.height, view.largestDim, view.zoomFactor);
+                    var lonlat;
+                    try {
+                        lonlat = view.projection.unproject(xy.x, xy.y);
+                    }
+                    catch(err) {
+                    }
+                    if (lonlat) {
+                        view.location.update(lonlat.ra, lonlat.dec, view.cooFrame, true);
+                    }
+                    */
+                if (!view.dragging && ! view.mode==View.SELECT) {
+                    // objects under the mouse ?
+                    var closest = view.closestObjects(xymouse.x, xymouse.y, 5);
+                    if (closest) {
+                        view.setCursor('pointer');
+                        if (view.aladin.objHoveredFunction && closest[0]!=lastHoveredObject) {
+                            var ret = view.aladin.objHoveredFunction(closest[0]);
+                        }
+                        lastHoveredObject = closest[0];
+                    }
+                    else {
+                        view.setCursor('default');
+                        if (view.aladin.objHoveredFunction && lastHoveredObject) {
+                            lastHoveredObject = null;
+                            // call callback function to notify we left the hovered object
+                            var ret = view.aladin.objHoveredFunction(null);
+                        }
+                    }
+                }
+                if (!hasTouchEvents) return;
+            }
+
+            var xoffset, yoffset;
+            var pos1, pos2;
+            
+            if (e.originalEvent && e.originalEvent.targetTouches) {
+                // ???
+                xoffset = e.originalEvent.targetTouches[0].clientX-view.dragx;
+                yoffset = e.originalEvent.targetTouches[0].clientY-view.dragy;
+                var xy1 = AladinUtils.viewToXy(e.originalEvent.targetTouches[0].clientX, e.originalEvent.targetTouches[0].clientY, view.width, view.height, view.largestDim, view.zoomFactor);
+                var xy2 = AladinUtils.viewToXy(view.dragx, view.dragy, view.width, view.height, view.largestDim, view.zoomFactor);
+
+                pos1 = view.projection.unproject(xy1.x, xy1.y);
+                pos2 = view.projection.unproject(xy2.x, xy2.y);
+            }
+            else {
+                /*
+                xoffset = e.clientX-view.dragx;
+                yoffset = e.clientY-view.dragy;
+                */
+                xoffset = xymouse.x-view.dragx;
+                yoffset = xymouse.y-view.dragy;
+                
+                var xy1 = AladinUtils.viewToXy(xymouse.x, xymouse.y, view.width, view.height, view.largestDim, view.zoomFactor);
+                var xy2 = AladinUtils.viewToXy(view.dragx, view.dragy, view.width, view.height, view.largestDim, view.zoomFactor);
+
+                
+                pos1 = view.projection.unproject(xy1.x, xy1.y);
+                pos2 = view.projection.unproject(xy2.x, xy2.y);
+                
+            }
+            
+            // TODO : faut il faire ce test ??
+//            var distSquared = xoffset*xoffset+yoffset*yoffset;
+//            if (distSquared<3) {
+//                return;
+//            }
+            if (e.originalEvent && e.originalEvent.targetTouches) {
+                view.dragx = e.originalEvent.targetTouches[0].clientX;
+                view.dragy = e.originalEvent.targetTouches[0].clientY;
+            }
+            else {
+                view.dragx = xymouse.x;
+                view.dragy = xymouse.y;
+                /*
+                view.dragx = e.clientX;
+                view.dragy = e.clientY;
+                */
+            }
+            
+            if (view.mode==View.SELECT) {
+                  view.requestRedraw();
+                  return;
+            }
+
+            //view.viewCenter.lon += xoffset*view.mouseMoveIncrement/Math.cos(view.viewCenter.lat*Math.PI/180.0);
+            /*
+            view.viewCenter.lon += xoffset*view.mouseMoveIncrement;
+            view.viewCenter.lat += yoffset*view.mouseMoveIncrement;
+            */
+            view.viewCenter.lon += pos2.ra -  pos1.ra;
+            view.viewCenter.lat += pos2.dec - pos1.dec;
+            
+
+            
+            // can not go beyond poles
+            if (view.viewCenter.lat>90) {
+                view.viewCenter.lat = 90;
+            }
+            else if (view.viewCenter.lat < -90) {
+                view.viewCenter.lat = -90;
+            }
+            
+            // limit lon to [0, 360]
+            if (view.viewCenter.lon < 0) {
+                view.viewCenter.lon = 360 + view.viewCenter.lon;
+            }
+            else if (view.viewCenter.lon > 360) {
+                view.viewCenter.lon = view.viewCenter.lon % 360;
+            }
+            view.requestRedraw();
+        }); //// endof mousemove ////
+        
+        // disable text selection on IE
+        $(view.aladinDiv).onselectstart = function () { return false; }
+
+        $(view.reticleCanvas).on('mousewheel', function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            var level = view.zoomLevel;
+            var delta = event.deltaY;
+            if (delta>0) {
+                level += 1;
+            }
+            else {
+                level -= 1;
+            }
+            view.setZoomLevel(level);
+            
+            return false;
+        });
+
+	};
+	
+	var init = function(view) {
+        var stats = new Stats();
+        stats.domElement.style.top = '50px';
+        if ($('#aladin-statsDiv').length>0) {
+        	$('#aladin-statsDiv')[0].appendChild( stats.domElement );
+        }
+        
+        view.stats = stats;
+
+        createListeners(view);
+
+        view.displayHpxGrid = false;
+        view.displaySurvey = true;
+        view.displayCatalog = false;
+        view.displayReticle = true;
+        
+		// initial draw
+		view.fov = computeFov(view);
+		updateFovDiv(view);
+		
+		view.redraw();
+	};
+
+	function updateLocation(view, x, y, italic) {
+	    if (!view.projection) {
+	        return;
+	    }
+	    var xy = AladinUtils.viewToXy(x, y, view.width, view.height, view.largestDim, view.zoomFactor);
+        var lonlat;
+        try {
+            lonlat = view.projection.unproject(xy.x, xy.y);
+        }
+        catch(err) {
+        }
+        if (lonlat) {
+            view.location.update(lonlat.ra, lonlat.dec, view.cooFrame, italic);
+        }
+	}
+	
+	View.prototype.requestRedrawAtDate = function(date) {
+	    this.dateRequestDraw = date;
+	};
+	
+	
+
+	/**
+	 * redraw the whole view
+	 */
+	View.prototype.redraw = function() {
+		var saveNeedRedraw = this.needRedraw;
+		requestAnimFrame(this.redraw.bind(this));
+
+		var now = new Date().getTime();
+		
+		if (this.dateRequestDraw && now>this.dateRequestDraw) {
+		    this.dateRequestDraw = null;
+		} 
+		else if (! this.needRedraw) {
+            if ( ! this.flagForceRedraw) {
+			    return;
+            }
+            else {
+                this.flagForceRedraw = false;
+            }
+		}
+		this.stats.update();
+
+		var imageCtx = this.imageCtx;
+		//////// 1. Draw images ////////
+		
+		//// clear canvas ////
+		// TODO : do not need to clear if fov small enough ?
+		imageCtx.clearRect(0, 0, this.imageCanvas.width, this.imageCanvas.height);
+		////////////////////////
+		
+		// black background
+        if (this.projectionMethod==ProjectionEnum.SIN) {
+            if (this.fov>80) {
+                imageCtx.fillStyle = "rgb(0,0,0)";
+                imageCtx.beginPath();
+                imageCtx.arc(this.cx, this.cy, this.cx*this.zoomFactor, 0, 2*Math.PI, true);
+                imageCtx.fill();
+            }
+            // pour éviter les losanges blancs qui apparaissent quand les tuiles sont en attente de chargement
+            else if (this.fov<60) {
+                imageCtx.fillStyle = "rgb(0,0,0)";
+                imageCtx.fillRect(0, 0, this.imageCanvas.width, this.imageCanvas.height);
+            }
+        }
+
+        
+        // TODO : voir si on doit vraiment faire ces vérifs à chaque coup
+		if (!this.projection) {
+			this.projection = new Projection(this.viewCenter.lon, this.viewCenter.lat);
+		}
+		else {
+			this.projection.setCenter(this.viewCenter.lon, this.viewCenter.lat);
+		}
+		this.projection.setProjection(this.projectionMethod);
+	
+
+		// ************* Tracé au niveau allsky (faible résolution) *****************
+		var cornersXYViewMapAllsky = this.getVisibleCells(3);
+		var cornersXYViewMapHighres = null;
+		if (this.curNorder>=3) {
+			if (this.curNorder==3) {
+				cornersXYViewMapHighres = cornersXYViewMapAllsky;
+			}
+			else {
+				cornersXYViewMapHighres = this.getVisibleCells(this.curNorder);
+			}
+		}
+
+		// redraw image survey
+		if (this.imageSurvey && this.imageSurvey.isReady && this.displaySurvey) {
+		    // TODO : a t on besoin de dessiner le allsky si norder>=3 ?
+		    // TODO refactoring : devrait être une méthode de HpxImageSurvey
+			this.imageSurvey.redrawAllsky(imageCtx, cornersXYViewMapAllsky, this.fov, this.curNorder);
+            if (this.curNorder>=3) {
+                this.imageSurvey.redrawHighres(imageCtx, cornersXYViewMapHighres, this.curNorder);
+            }
+		}
+		
+
+        // redraw overlay image survey
+		// TODO : does not work if different frames 
+		if (this.overlayImageSurvey && this.overlayImageSurvey.isReady) {
+		    imageCtx.globalAlpha = this.overlayImageSurvey.getAlpha();
+	        if (this.fov>50) {
+		        this.overlayImageSurvey.redrawAllsky(imageCtx, cornersXYViewMapAllsky, this.fov, this.curOverlayNorder);
+	        }
+	        if (this.curOverlayNorder>=3) {
+                var norderOverlay = Math.min(this.curOverlayNorder, this.overlayImageSurvey.maxOrder);
+                if ( norderOverlay != this.curNorder ) {
+				    cornersXYViewMapHighres = this.getVisibleCells(norderOverlay);
+                }
+	            this.overlayImageSurvey.redrawHighres(imageCtx, cornersXYViewMapHighres, norderOverlay);
+	        }
+           imageCtx.globalAlpha = 1.0;
+
+		}
+		
+		
+		// redraw HEALPix grid
+        if( this.displayHpxGrid) {
+        	if (cornersXYViewMapHighres && this.curNorder>3) {
+        		this.healpixGrid.redraw(imageCtx, cornersXYViewMapHighres, this.fov, this.curNorder);
+        	}
+            else {
+        	    this.healpixGrid.redraw(imageCtx, cornersXYViewMapAllsky, this.fov, 3);
+            }
+        }
+        
+        // redraw coordinates grid
+        if (this.showGrid) {
+            if (this.cooGrid==null) {
+                this.cooGrid = new CooGrid();
+            }
+            
+            this.cooGrid.redraw(imageCtx, this.projection, this.cooFrame, this.width, this.height, this.largestDim, this.zoomFactor, this.fov);
+        }
+ 		
+
+
+        
+		////// 2. Draw catalogues////////
+		var catalogCtx = this.catalogCtx;
+
+		var catalogCanvasCleared = false;
+        if (this.mustClearCatalog) {
+            catalogCtx.clearRect(0, 0, this.width, this.height);
+            catalogCanvasCleared = true;
+            this.mustClearCatalog = false;
+        }
+		if (this.catalogs && this.catalogs.length>0 && this.displayCatalog && (! this.dragging  || View.DRAW_SOURCES_WHILE_DRAGGING)) {
+		      // TODO : ne pas effacer systématiquement
+	        //// clear canvas ////
+		    if (! catalogCanvasCleared) {
+		        catalogCtx.clearRect(0, 0, this.width, this.height);
+                catalogCanvasCleared = true;
+		    }
+		    for (var i=0; i<this.catalogs.length; i++) {
+		        this.catalogs[i].draw(catalogCtx, this.projection, this.cooFrame, this.width, this.height, this.largestDim, this.zoomFactor);
+		    }
+        }
+
+		////// 3. Draw overlays////////
+        var overlayCtx = this.catalogCtx;
+		if (this.overlays && this.overlays.length>0 && (! this.dragging  || View.DRAW_SOURCES_WHILE_DRAGGING)) {
+		    if (! catalogCanvasCleared) {
+		        catalogCtx.clearRect(0, 0, this.width, this.height);
+                catalogCanvasCleared = true;
+		    }
+		    for (var i=0; i<this.overlays.length; i++) {
+		        this.overlays[i].draw(overlayCtx, this.projection, this.cooFrame, this.width, this.height, this.largestDim, this.zoomFactor);
+		    }
+        }
+        
+
+        // draw MOCs
+        var mocCtx = this.catalogCtx;
+		if (this.mocs && this.mocs.length>0 && (! this.dragging  || View.DRAW_MOCS_WHILE_DRAGGING)) {
+		    if (! catalogCanvasCleared) {
+		        catalogCtx.clearRect(0, 0, this.width, this.height);
+                catalogCanvasCleared = true;
+		    }
+            for (var i=0; i<this.mocs.length; i++) {
+                this.mocs[i].draw(mocCtx, this.projection, this.cooFrame, this.width, this.height, this.largestDim, this.zoomFactor, this.fov);
+            }
+        }
+
+
+		if (this.mode==View.SELECT) {
+		    mustRedrawReticle = true;
+		}
+		////// 4. Draw reticle ///////
+		// TODO: reticle should be placed in a static DIV, no need to waste a canvas
+		var reticleCtx = this.reticleCtx;
+		if (this.mustRedrawReticle || this.mode==View.SELECT) {
+            reticleCtx.clearRect(0, 0, this.width, this.height);
+		}
+		if (this.displayReticle) {
+		    
+		    if (! this.reticleCache) {
+    		    // build reticle image
+    	        var c = document.createElement('canvas');
+    	        var s = this.options.reticleSize;
+    	        c.width = s;
+    	        c.height = s;
+    	        var ctx = c.getContext('2d');
+    	        ctx.lineWidth = 2;
+    	        ctx.strokeStyle = this.options.reticleColor;
+    	        ctx.beginPath();
+    	        ctx.moveTo(s/2, s/2+(s/2-1));
+    	        ctx.lineTo(s/2, s/2+2);
+    	        ctx.moveTo(s/2, s/2-(s/2-1));
+    	        ctx.lineTo(s/2, s/2-2);
+    	        
+    	        ctx.moveTo(s/2+(s/2-1), s/2);
+    	        ctx.lineTo(s/2+2,  s/2);
+    	        ctx.moveTo(s/2-(s/2-1), s/2);
+    	        ctx.lineTo(s/2-2,  s/2);
+    	        
+    	        ctx.stroke();
+    	        
+    	        this.reticleCache = c;
+		    }
+    	        
+	        reticleCtx.drawImage(this.reticleCache, this.width/2 - this.reticleCache.width/2, this.height/2 - this.reticleCache.height/2);
+		    
+    		
+    		this.mustRedrawReticle = false;
+		}
+		
+		// draw selection box
+		if (this.mode==View.SELECT && this.dragging) {
+		    reticleCtx.fillStyle = "rgba(100, 240, 110, 0.25)";
+		    var w = this.dragx - this.selectStartCoo.x;
+		    var h =  this.dragy - this.selectStartCoo.y;
+		    
+		    reticleCtx.fillRect(this.selectStartCoo.x, this.selectStartCoo.y, w, h);
+		}
+        
+        
+ 		// TODO : est ce la bonne façon de faire ?
+ 		if (saveNeedRedraw==this.needRedraw) {
+ 			this.needRedraw = false;
+ 		}
+
+
+        // objects lookup
+        if (!this.dragging) {
+            this.updateObjectsLookup();
+        }
+	};
+
+    View.prototype.forceRedraw = function() {
+        this.flagForceRedraw = true;
+    };
+    
+    View.prototype.refreshProgressiveCats = function() {
+        if (! this.catalogs) {
+            return;
+        }
+        for (var i=0; i<this.catalogs.length; i++) {
+            if (this.catalogs[i].type=='progressivecat') {
+                this.catalogs[i].loadNeededTiles();
+            }
+        }
+    };
+
+    View.prototype.getVisiblePixList = function(norder, frameSurvey) {
+        var nside = Math.pow(2, norder);
+
+        var pixList;
+		var npix = HealpixIndex.nside2Npix(nside);
+        if (this.fov>80) {
+            pixList = [];
+            for (var ipix=0; ipix<npix; ipix++) {
+                pixList.push(ipix);
+            }
+        }
+        else {
+            var hpxIdx = new HealpixIndex(nside);
+            hpxIdx.init();
+            var spatialVector = new SpatialVector();
+            // si frame != frame survey image, il faut faire la conversion dans le système du survey
+            var xy = AladinUtils.viewToXy(this.cx, this.cy, this.width, this.height, this.largestDim, this.zoomFactor);
+            var radec = this.projection.unproject(xy.x, xy.y);
+            var lonlat = [];
+            if (frameSurvey && frameSurvey != this.cooFrame) {
+                if (frameSurvey==CooFrameEnum.J2000) {
+                    lonlat = CooConversion.GalacticToJ2000([radec.ra, radec.dec]);
+                }
+                else if (frameSurvey==CooFrameEnum.GAL) {
+                    lonlat = CooConversion.J2000ToGalactic([radec.ra, radec.dec]);
+                }
+            }
+            else {
+                lonlat = [radec.ra, radec.dec];
+            }
+            spatialVector.set(lonlat[0], lonlat[1]);
+            var radius = this.fov*0.5*this.ratio;
+            // we need to extend the radius
+            if (this.fov>60) {
+                radius *= 1.6;
+            }
+            else if (this.fov>12) {
+                radius *=1.45;
+            }
+            else {
+                radius *= 1.1;
+            }
+
+
+
+            pixList = hpxIdx.queryDisc(spatialVector, radius*Math.PI/180.0, true, true);
+            // add central pixel at index 0
+            var polar = Utils.radecToPolar(lonlat[0], lonlat[1]);
+            ipixCenter = hpxIdx.ang2pix_nest(polar.theta, polar.phi);
+            pixList.unshift(ipixCenter);
+
+        }
+
+        return pixList;
+    };
+	
+    // TODO: optimize this method !!
+	View.prototype.getVisibleCells = function(norder, frameSurvey) {
+	    if (! frameSurvey && this.imageSurvey) {
+	        frameSurvey = this.imageSurvey.cooFrame;
+	    }
+		var cells = []; // will be returned
+		var cornersXY = [];
+		var spVec = new SpatialVector();
+		var nside = Math.pow(2, norder); // TODO : à changer
+		var npix = HealpixIndex.nside2Npix(nside);
+		var ipixCenter = null;
+		
+		// build list of pixels
+        // TODO: pixList can be obtained from getVisiblePixList
+		var pixList;
+		if (this.fov>80) {
+			pixList = [];
+			for (var ipix=0; ipix<npix; ipix++) {
+				pixList.push(ipix);
+			}
+		}
+		else {
+			var hpxIdx = new HealpixIndex(nside);
+			hpxIdx.init();
+			var spatialVector = new SpatialVector();
+			// si frame != frame survey image, il faut faire la conversion dans le système du survey
+			var xy = AladinUtils.viewToXy(this.cx, this.cy, this.width, this.height, this.largestDim, this.zoomFactor);
+			var radec = this.projection.unproject(xy.x, xy.y);
+			var lonlat = [];
+			if (frameSurvey && frameSurvey != this.cooFrame) {
+				if (frameSurvey==CooFrameEnum.J2000) {
+                    lonlat = CooConversion.GalacticToJ2000([radec.ra, radec.dec]); 
+                }
+                else if (frameSurvey==CooFrameEnum.GAL) {
+                    lonlat = CooConversion.J2000ToGalactic([radec.ra, radec.dec]);
+                }
+			}
+			else {
+				lonlat = [radec.ra, radec.dec];
+			}
+			spatialVector.set(lonlat[0], lonlat[1]);
+			var radius = this.fov*0.5*this.ratio;
+			// we need to extend the radius
+			if (this.fov>60) {
+				radius *= 1.6;
+			}
+			else if (this.fov>12) {
+				radius *=1.45;
+			}
+            else {
+                radius *= 1.1;
+            }
+			
+			
+				
+			pixList = hpxIdx.queryDisc(spatialVector, radius*Math.PI/180.0, true, true);
+			// add central pixel at index 0
+			var polar = Utils.radecToPolar(lonlat[0], lonlat[1]);
+			ipixCenter = hpxIdx.ang2pix_nest(polar.theta, polar.phi);
+			pixList.unshift(ipixCenter);
+		}
+		
+		
+		var ipix;
+		var lon, lat;
+		for (var ipixIdx=0, len=pixList.length; ipixIdx<len; ipixIdx++) {
+			ipix = pixList[ipixIdx];
+			if (ipix==ipixCenter && ipixIdx>0) { 
+				continue;
+			}
+			var cornersXYView = [];
+			corners = HealpixCache.corners_nest(ipix, nside);
+
+			for (var k=0; k<4; k++) {
+				spVec.setXYZ(corners[k].x, corners[k].y, corners[k].z);
+				
+	            // need for frame transformation ?
+	            if (frameSurvey && frameSurvey != this.cooFrame) {
+	                if (frameSurvey==CooFrameEnum.J2000) {
+	                    var radec = CooConversion.J2000ToGalactic([spVec.ra(), spVec.dec()]); 
+	                    lon = radec[0];
+	                    lat = radec[1];
+	                }
+	                else if (frameSurvey==CooFrameEnum.GAL) {
+	                    var radec = CooConversion.GalacticToJ2000([spVec.ra(), spVec.dec()]); 
+	                    lon = radec[0];
+	                    lat = radec[1];
+	                }
+	            }
+	            else {
+	                lon = spVec.ra();
+	                lat = spVec.dec();
+	            }
+	            
+				cornersXY[k] = this.projection.project(lon, lat);
+			}
+
+
+			if (cornersXY[0] == null ||  cornersXY[1] == null  ||  cornersXY[2] == null ||  cornersXY[3] == null ) {
+	            continue;
+	        }
+
+
+
+			for (var k=0; k<4; k++) {
+				cornersXYView[k] = AladinUtils.xyToView(cornersXY[k].X, cornersXY[k].Y, this.width, this.height, this.largestDim, this.zoomFactor);
+			}
+
+            var indulge = 10;
+            // detect pixels outside view. Could be improved !
+            // we minimize here the number of cells returned
+            if( cornersXYView[0].vx<0 && cornersXYView[1].vx<0 && cornersXYView[2].vx<0 &&cornersXYView[3].vx<0) {
+                continue;
+            }
+            if( cornersXYView[0].vy<0 && cornersXYView[1].vy<0 && cornersXYView[2].vy<0 &&cornersXYView[3].vy<0) {
+                continue;
+            }
+            if( cornersXYView[0].vx>=this.width && cornersXYView[1].vx>=this.width && cornersXYView[2].vx>=this.width &&cornersXYView[3].vx>=this.width) {
+                continue;
+            }
+            if( cornersXYView[0].vy>=this.height && cornersXYView[1].vy>=this.height && cornersXYView[2].vy>=this.height &&cornersXYView[3].vy>=this.height) {
+                continue;
+            }
+
+
+			// check if pixel is visible
+//			if (this.fov<160) { // don't bother checking if fov is large enough
+//				if ( ! AladinUtils.isHpxPixVisible(cornersXYView, this.width, this.height) ) {
+//					continue;
+//				}
+//			}
+			// check if we have a pixel at the edge of the view in AITOFF --> TO BE MODIFIED
+			if (this.projection.PROJECTION==ProjectionEnum.AITOFF) {
+				var xdiff = cornersXYView[0].vx-cornersXYView[2].vx;
+				var ydiff = cornersXYView[0].vy-cornersXYView[2].vy;
+				var distDiag = Math.sqrt(xdiff*xdiff + ydiff*ydiff);
+				if (distDiag>this.largestDim/5) {
+					continue;
+				}
+				xdiff = cornersXYView[1].vx-cornersXYView[3].vx;
+				ydiff = cornersXYView[1].vy-cornersXYView[3].vy;
+				distDiag = Math.sqrt(xdiff*xdiff + ydiff*ydiff);
+				if (distDiag>this.largestDim/5) {
+					continue;
+				}
+			}
+			
+			cornersXYView.ipix = ipix;
+			cells.push(cornersXYView);
+		}
+		
+		return cells;
+	};
+	
+	
+	
+	// get position in view for a given HEALPix cell
+	View.prototype.getPositionsInView = function(ipix, norder) {
+		var cornersXY = [];
+		var lon, lat;
+		var spVec = new SpatialVector();
+		var nside = Math.pow(2, norder); // TODO : à changer
+		
+		
+		var cornersXYView = [];  // will be returned
+		var corners = HealpixCache.corners_nest(ipix, nside);
+
+		for (var k=0; k<4; k++) {
+			spVec.setXYZ(corners[k].x, corners[k].y, corners[k].z);
+				
+	        // need for frame transformation ?
+			if (this.imageSurvey && this.imageSurvey.cooFrame != this.cooFrame) {
+	            if (this.imageSurvey.cooFrame==CooFrameEnum.J2000) {
+	                var radec = CooConversion.J2000ToGalactic([spVec.ra(), spVec.dec()]); 
+	                lon = radec[0];
+	                lat = radec[1];
+	            }
+	            else if (this.imageSurvey.cooFrame==CooFrameEnum.GAL) {
+	                var radec = CooConversion.GalacticToJ2000([spVec.ra(), spVec.dec()]); 
+	                lon = radec[0];
+	                lat = radec[1];
+	            }
+	        }
+	        else {
+	            lon = spVec.ra();
+	            lat = spVec.dec();
+	        }
+	            
+			cornersXY[k] = this.projection.project(lon, lat);
+		}
+		
+		if (cornersXY[0] == null ||  cornersXY[1] == null  ||  cornersXY[2] == null ||  cornersXY[3] == null ) {
+            return null;
+        }
+
+
+		for (var k=0; k<4; k++) {
+			cornersXYView[k] = AladinUtils.xyToView(cornersXY[k].X, cornersXY[k].Y, this.width, this.height, this.largestDim, this.zoomFactor);
+		}
+
+		return cornersXYView;
+	};
+	
+	
+	View.prototype.computeZoomFactor = function(level) {
+    	if (level>0) {
+    	    return AladinUtils.getZoomFactorForAngle(180/Math.pow(1.15, level), this.projectionMethod);
+		}
+		else {
+		    return 1 + 0.1*level;
+		}
+	};
+	
+	View.prototype.setZoom = function(fovDegrees) {
+	    if (fovDegrees<0 || fovDegrees>180) {
+	        return;
+	    }
+	    var zoomLevel = Math.log(180/fovDegrees)/Math.log(1.15);
+	    this.setZoomLevel(zoomLevel);
+	};
+	
+	View.prototype.setShowGrid = function(showGrid) {
+	    this.showGrid = showGrid;
+	    this.requestRedraw();
+	};
+
+	
+    View.prototype.setZoomLevel = function(level) {
+        if (this.minFOV || this.maxFOV) {
+            var newFov = doComputeFov(this, this.computeZoomFactor(Math.max(-2, level)));
+            if (this.maxFOV && newFov>this.maxFOV  ||  this.minFOV && newFov<this.minFOV)  {
+                return;
+            }
+        }
+        
+        if (this.projectionMethod==ProjectionEnum.SIN) {
+            if (this.aladin.options.allowFullZoomout === true) {
+                // special case for Andreas Wicenec until I fix the problem
+                if (this.width/this.height>2) {
+                    this.zoomLevel = Math.max(-7, level); // TODO : canvas freezes in firefox when max level is small
+                }
+                else if (this.width/this.height<0.5) {
+                    this.zoomLevel = Math.max(-2, level); // TODO : canvas freezes in firefox when max level is small
+                }
+                else {
+                    this.zoomLevel = Math.max(-6, level); // TODO : canvas freezes in firefox when max level is small
+                }
+            }
+            else {
+                this.zoomLevel = Math.max(-2, level); // TODO : canvas freezes in firefox when max level is small
+            }
+        }
+        else {
+            this.zoomLevel = Math.max(-7, level); // TODO : canvas freezes in firefox when max level is small
+        }
+        
+        
+        this.zoomFactor = this.computeZoomFactor(this.zoomLevel);
+        
+        this.fov = computeFov(this);
+        updateFovDiv(this);
+        
+        this.computeNorder();
+        
+        this.forceRedraw();
+		this.requestRedraw();
+		
+        // on avertit les catalogues progressifs
+        if (! this.debounceProgCatOnZoom) {
+            var self = this;
+            this.debounceProgCatOnZoom = Utils.debounce(function() {self.refreshProgressiveCats();}, 300);
+        }
+        this.debounceProgCatOnZoom();
+		
+    };
+    
+    /**
+     * compute and set the norder corresponding to the current view resolution
+     */
+    View.prototype.computeNorder = function() {
+        var resolution = this.fov / this.largestDim; // in degree/pixel
+        var tileSize = 512;
+        var nside = HealpixIndex.calculateNSide(3600*tileSize*resolution); // 512 = taille d'une image "tuile"
+        var norder = Math.log(nside)/Math.log(2);
+        norder = Math.max(norder, 1);
+        this.realNorder = norder;
+
+            
+        // forcer le passage à norder 3 (sinon, on reste flou trop longtemps)
+        if (this.fov<=50 && norder<=2) {
+            norder = 3;
+        }
+           
+
+        // si l'on ne souhaite pas afficher le allsky
+        if (this.imageSurvey && norder<=2 && this.imageSurvey.minOrder>2) {
+            norder = this.imageSurvey.minOrder;
+        }
+
+        var overlayNorder  = norder;
+        if (this.imageSurvey && norder>this.imageSurvey.maxOrder) {
+            norder = this.imageSurvey.maxOrder;
+        }
+        if (this.overlayImageSurvey && overlayNorder>this.overlayImageSurvey.maxOrder) {
+            overlayNorder = this.overlayImageSurvey.maxOrder;
+        }
+        // should never happen, as calculateNSide will return something <=HealpixIndex.ORDER_MAX
+        if (norder>HealpixIndex.ORDER_MAX) {
+            norder = HealpixIndex.ORDER_MAX;
+        }
+        if (overlayNorder>HealpixIndex.ORDER_MAX) {
+            overlayNorder = HealpixIndex.ORDER_MAX;
+        }
+            
+        this.curNorder = norder;
+        this.curOverlayNorder = overlayNorder;
+
+        
+    };
+	
+    View.prototype.untaintCanvases = function() {
+        this.createCanvases();
+        createListeners(this);
+        this.fixLayoutDimensions();
+    };
+    
+    View.prototype.setOverlayImageSurvey = function(overlayImageSurvey, callback) {
+        if (! overlayImageSurvey) {
+            this.overlayImageSurvey = null;
+            this.requestRedraw();
+            return;
+        }
+        
+        // reset canvas to "untaint" canvas if needed
+        // we test if the previous base image layer was using CORS or not
+        if ($.support.cors && this.overlayImageSurvey && ! this.overlayImageSurvey.useCors) {
+            this.untaintCanvases();
+        }
+        
+        var newOverlayImageSurvey;
+        if (typeof overlayImageSurvey == "string") {
+            newOverlayImageSurvey = HpxImageSurvey.getSurveyFromId(overlayImageSurvey);
+            if ( ! newOverlayImageSurvey) {
+                newOverlayImageSurvey = HpxImageSurvey.getSurveyFromId(HpxImageSurvey.DEFAULT_SURVEY_ID);
+            }
+        }
+        else {
+            newOverlayImageSurvey = overlayImageSurvey;
+        }
+        newOverlayImageSurvey.isReady = false;
+        this.overlayImageSurvey = newOverlayImageSurvey;
+        
+        var self = this;
+        newOverlayImageSurvey.init(this, function() {
+            //self.imageSurvey = newImageSurvey;
+            self.computeNorder();
+            newOverlayImageSurvey.isReady = true;
+            self.requestRedraw();
+            self.updateObjectsLookup();
+            
+            if (callback) {
+                callback();
+            }
+        });
+    };
+
+    View.prototype.setUnknownSurveyIfNeeded = function() {
+        if (unknownSurveyId) {
+            this.setImageSurvey(unknownSurveyId);
+            unknownSurveyId = undefined;
+        }
+    }
+    
+    var unknownSurveyId = undefined;
+    // @param imageSurvey : HpxImageSurvey object or image survey identifier
+	View.prototype.setImageSurvey = function(imageSurvey, callback) {
+	    if (! imageSurvey) {
+	        return;
+	    }
+	    
+	    // reset canvas to "untaint" canvas if needed
+	    // we test if the previous base image layer was using CORS or not
+	    if ($.support.cors && this.imageSurvey && ! this.imageSurvey.useCors) {
+	        this.untaintCanvases();
+	    }
+	    
+		var newImageSurvey;
+		if (typeof imageSurvey == "string") {
+		    newImageSurvey = HpxImageSurvey.getSurveyFromId(imageSurvey);
+		    if ( ! newImageSurvey) {
+		        newImageSurvey = HpxImageSurvey.getSurveyFromId(HpxImageSurvey.DEFAULT_SURVEY_ID);
+                unknownSurveyId = imageSurvey;
+		    }
+		}
+		else {
+		    newImageSurvey = imageSurvey;
+		}
+		
+		// ràz buffer
+		this.tileBuffer = new TileBuffer();
+        
+		newImageSurvey.isReady = false;
+		this.imageSurvey = newImageSurvey;
+		
+        var self = this;
+        newImageSurvey.init(this, function() {
+            //self.imageSurvey = newImageSurvey;
+            self.computeNorder();
+            newImageSurvey.isReady = true;
+            self.requestRedraw();
+            self.updateObjectsLookup();
+            
+            if (callback) {
+                callback();
+            }
+        });
+	};
+	
+	View.prototype.requestRedraw = function() {
+		this.needRedraw = true;
+		//redraw(this);
+	};
+	
+	View.prototype.changeProjection = function(projectionMethod) {
+		this.projectionMethod = projectionMethod;
+		this.requestRedraw();
+	};
+
+	View.prototype.changeFrame = function(cooFrame) {
+		this.cooFrame = cooFrame;
+        // recompute viewCenter
+        if (this.cooFrame==CooFrameEnum.GAL) {
+            var lb = CooConversion.J2000ToGalactic([this.viewCenter.lon, this.viewCenter.lat]);
+            this.viewCenter.lon = lb[0];
+            this.viewCenter.lat = lb[1]; 
+        }
+        else if (this.cooFrame==CooFrameEnum.J2000) {
+            var radec = CooConversion.GalacticToJ2000([this.viewCenter.lon, this.viewCenter.lat]);
+            this.viewCenter.lon = radec[0];
+            this.viewCenter.lat = radec[1]; 
+        }
+		this.requestRedraw();
+	};
+
+    View.prototype.showHealpixGrid = function(show) {
+        this.displayHpxGrid = show;
+        this.requestRedraw();
+    };
+    
+    View.prototype.showSurvey = function(show) {
+        this.displaySurvey = show;
+
+        this.requestRedraw();
+    };
+    
+    View.prototype.showCatalog = function(show) {
+        this.displayCatalog = show;
+
+        if (!this.displayCatalog) {
+            this.mustClearCatalog = true;
+        }
+        this.requestRedraw();
+    };
+    
+    View.prototype.showReticle = function(show) {
+        this.displayReticle = show;
+
+        this.mustRedrawReticle = true;
+        this.requestRedraw();
+    };
+
+    View.prototype.pointTo = function(ra, dec) {
+        ra = parseFloat(ra);
+        dec = parseFloat(dec);
+        if (isNaN(ra) || isNaN(dec)) {
+            return;
+        }
+        if (this.cooFrame==CooFrameEnum.J2000) {
+		    this.viewCenter.lon = ra;
+		    this.viewCenter.lat = dec;
+        }
+        else if (this.cooFrame==CooFrameEnum.GAL) {
+            var lb = CooConversion.J2000ToGalactic([ra, dec]);
+		    this.viewCenter.lon = lb[0];
+		    this.viewCenter.lat = lb[1];
+        }
+
+        this.forceRedraw();
+        this.requestRedraw();
+        var self = this;
+        setTimeout(function() {self.refreshProgressiveCats();}, 1000);
+
+    };
+    View.prototype.makeUniqLayerName = function(name) {
+        if (! this.layerNameExists(name)) {
+            return name;
+        }
+        for (var k=1;;++k) {
+            var newName = name + '_' + k;
+            if ( ! this.layerNameExists(newName)) {
+                return newName;
+            }
+        }
+    };
+    View.prototype.layerNameExists = function(name) {
+        var c = this.catalogs;
+        for (var k=0; k<c.length; k++) {
+            if (name==c[k].name) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    View.prototype.removeLayers = function() {
+        this.catalogs = [];
+        this.overlays = [];
+        this.requestRedraw();
+    };
+
+    View.prototype.addCatalog = function(catalog) {
+        catalog.name = this.makeUniqLayerName(catalog.name);
+        this.catalogs.push(catalog);
+        if (catalog.type=='catalog') {
+            catalog.setView(this);
+        }
+        else if (catalog.type=='progressivecat') {
+            catalog.init(this);
+        }
+    };
+    View.prototype.addOverlay = function(overlay) {
+        this.overlays.push(overlay);
+        overlay.setView(this);
+    };
+    
+    View.prototype.addMOC = function(moc) {
+        this.mocs.push(moc);
+        moc.setView(this);
+    };
+    
+    View.prototype.getObjectsInBBox = function(x, y, w, h) {
+        if (w<0) {
+            x = x+w;
+            w = -w;
+        }
+        if (h<0) {
+            y = y+h;
+            h = -h;
+        }
+        var objList = [];
+        var cat, sources, s;
+        if (this.catalogs) {
+            for (var k=0; k<this.catalogs.length; k++) {
+                cat = this.catalogs[k];
+                if (!cat.isShowing) {
+                    continue;
+                }
+                sources = cat.getSources();
+                for (var l=0; l<sources.length; l++) {
+                    s = sources[l];
+                    if (!s.isShowing || !s.x || !s.y) {
+                        continue;
+                    }
+                    if (s.x>=x && s.x<=x+w && s.y>=y && s.y<=y+h) {
+                        objList.push(s);
+                    }
+                }
+            }
+        }
+        return objList;
+        
+    };
+
+    // update objLookup, lookup table 
+    View.prototype.updateObjectsLookup = function() {
+        this.objLookup = [];
+
+        var cat, sources, s, x, y;
+        if (this.catalogs) {
+            for (var k=0; k<this.catalogs.length; k++) {
+                cat = this.catalogs[k];
+                if (!cat.isShowing) {
+                    continue;
+                }
+                sources = cat.getSources();
+                for (var l=0; l<sources.length; l++) {
+                    s = sources[l];
+                    if (!s.isShowing || !s.x || !s.y) {
+                        continue;
+                    }
+                    x = s.x;
+                    y = s.y;
+                    if (!this.objLookup[x]) {
+                        this.objLookup[x] = [];
+                    }
+                    if (!this.objLookup[x][y]) {
+                        this.objLookup[x][y] = [];
+                    }
+                    this.objLookup[x][y].push(s);
+                }       
+            }           
+        }     
+    }
+
+    // return closest object within a radius of maxRadius pixels. maxRadius is an integer
+    View.prototype.closestObjects = function(x, y, maxRadius) {
+        if (!this.objLookup) {
+            return null;
+        }
+        var closest, dist;
+        for (var r=0; r<=maxRadius; r++) {
+            closest = dist = null;
+            for (var dx=-maxRadius; dx<=maxRadius; dx++) {
+                if (! this.objLookup[x+dx]) {
+                    continue;
+                }
+                for (var dy=-maxRadius; dy<=maxRadius; dy++) {
+                    if (this.objLookup[x+dx][y+dy]) {
+                        if (!closest) {
+                            closest = this.objLookup[x+dx][y+dy];
+                        }
+                        else {
+                            var d = dx*dx + dy*dy;
+                            if (d<dist) {
+                                dist = d;
+                                closest = this.objLookup[x+dx][y+dy];
+                            }
+                        }
+                    }
+                }
+            }
+            if (closest) {
+                return closest;
+            }
+        }
+        return null;
+    };
+    
+    return View;
+})();
+// Copyright 2013 - UDS/CNRS
+// The Aladin Lite program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+// This file is part of Aladin Lite.
+//
+//    Aladin Lite is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin Lite is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin Lite.
+//
+
+
+/******************************************************************************
+ * Aladin Lite project
+ * 
+ * File Aladin.js (main class)
+ * Facade to expose Aladin Lite methods
+ * 
+ * Author: Thomas Boch[CDS]
+ * 
+ *****************************************************************************/
+
+Aladin = (function() {
+    
+    // Constructor
+    var Aladin = function(aladinDiv, requestedOptions) {
+        // check that aladinDiv exists, stop immediately otherwise
+        if ($(aladinDiv).length==0) {
+            console.log('Could not find div ' + aladinDiv + '. Aborting creation of Aladin Lite instance');
+            return;
+        }
+
+
+	    HealpixCache.init();
+        
+	    var self = this;
+	    
+	    // if not options was set, try to retrieve them from the query string
+	    if (requestedOptions===undefined) {
+	        requestedOptions = this.getOptionsFromQueryString();
+	    }
+	    requestedOptions = requestedOptions || {};
+	    
+	    
+	    // 'fov' option was previsouly called 'zoom'
+	    if ('zoom' in requestedOptions) {
+	        var fovValue = requestedOptions.zoom;
+	        delete requestedOptions.zoom;
+	        requestedOptions.fov = fovValue;
+	    }
+	    // merge with default options
+	    var options = {};
+	    for (var key in Aladin.DEFAULT_OPTIONS) {
+	        if (requestedOptions[key] !== undefined) {
+	            options[key] = requestedOptions[key];
+	        }
+	        else {
+	            options[key] = Aladin.DEFAULT_OPTIONS[key];
+	        }
+	    }
+	    for (var key in requestedOptions) {
+	        if (Aladin.DEFAULT_OPTIONS[key]===undefined) {
+	            options[key] = requestedOptions[key];
+	        }
+	    }
+	    
+        this.options = options;
+
+	    
+
+		this.aladinDiv = aladinDiv;
+
+		// parent div
+		$(aladinDiv).addClass("aladin-container");
+		
+	      
+		var cooFrame = CooFrameEnum.fromString(options.cooFrame, CooFrameEnum.J2000);
+		// div where we write the position
+		var frameInJ2000 = cooFrame==CooFrameEnum.J2000;
+        
+		var locationDiv = $('<div class="aladin-location">'
+		                    + (options.showFrame ? '<select class="aladin-frameChoice"><option value="' + CooFrameEnum.J2000 + '" '
+		                    + (frameInJ2000 ? 'selected="selected"' : '') + '>J2000</option><option value="' + CooFrameEnum.GAL + '" '
+		                    + (! frameInJ2000 ? 'selected="selected"' : '') + '>GAL</option></select>' : '')
+		                    + '<span class="aladin-location-text"></span></div>')
+		                    .appendTo(aladinDiv);
+		// div where FoV value is written
+		var fovDiv = $('<div class="aladin-fov"></div>').appendTo(aladinDiv);
+		
+		
+		// zoom control
+        if (options.showZoomControl) {
+	          $('<div class="aladin-zoomControl"><a href="#" class="zoomPlus" title="Zoom in">+</a><a href="#" class="zoomMinus" title="Zoom out">&ndash;</a></div>').appendTo(aladinDiv);
+	    }
+        
+        // maximize control
+        if (options.showFullscreenControl) {
+            $('<div class="aladin-fullscreenControl aladin-maximize" title="Full screen"></div>')
+                .appendTo(aladinDiv);
+        }
+        this.fullScreenBtn = $(aladinDiv).find('.aladin-fullscreenControl')
+        this.fullScreenBtn.click(function() {
+            self.toggleFullscreen();
+        });
+
+        
+
+
+
+		// Aladin logo
+		$("<div class='aladin-logo-container'><a href='http://aladin.u-strasbg.fr/' title='Powered by Aladin Lite' target='_blank'><div class='aladin-logo'></div></a></div>").appendTo(aladinDiv);
+		
+		
+		// we store the boxes
+		this.boxes = [];
+
+        // measurement table
+        this.measurementTable = new MeasurementTable(aladinDiv);
+
+		
+		
+		var location = new Location(locationDiv.find('.aladin-location-text'));
+        
+		// set different options
+		this.view = new View(this, location, fovDiv, cooFrame, options.fov);
+		this.view.setShowGrid(options.showCooGrid);
+
+	    // retrieve available surveys
+	    $.ajax({
+	        url: "http://aladin.u-strasbg.fr/java/nph-aladin.pl",
+	        data: {"frame": "aladinLiteDic"},
+	        method: 'GET',
+	        dataType: 'jsonp',
+	        success: function(data) {
+                var map = {};
+                for (var k=0; k<data.length; k++) {
+                    map[data[k].id] = true;
+                }
+                // retrieve existing surveys
+                for (var k=0; k<HpxImageSurvey.SURVEYS.length; k++) {
+                    if (! map[HpxImageSurvey.SURVEYS[k].id]) {
+                        data.push(HpxImageSurvey.SURVEYS[k]);
+                    }
+                }
+	            HpxImageSurvey.SURVEYS = data;
+                self.view.setUnknownSurveyIfNeeded();
+	        },
+	        error: function() {
+	        }
+	    });
+		
+	      // layers control panel
+        // TODO : valeur des checkbox en fonction des options
+		// TODO : classe LayerBox
+        if (options.showLayersControl) {
+            var d = $('<div class="aladin-layersControl-container" title="Manage layers"><div class="aladin-layersControl"></div></div>');
+            d.appendTo(aladinDiv);
+            
+            var layerBox = $('<div class="aladin-box aladin-layerBox aladin-cb-list"></div>');
+            layerBox.appendTo(aladinDiv);
+            
+            this.boxes.push(layerBox);
+            
+            // we return false so that the default event is not submitted, and to prevent event bubbling
+            d.click(function() {self.hideBoxes();self.showLayerBox();return false;});
+
+        }
+
+        
+        // goto control panel
+        if (options.showGotoControl) {
+            var d = $('<div class="aladin-gotoControl-container" title="Go to position"><div class="aladin-gotoControl"></div></div>');
+            d.appendTo(aladinDiv);
+            
+            var gotoBox = 
+                $('<div class="aladin-box aladin-gotoBox">' +
+                  '<a class="aladin-closeBtn">&times;</a>' +
+                  '<div style="clear: both;"></div>' +
+                  '<form class="aladin-target-form">Go to: <input type="text" placeholder="Object name/position" /></form></div>');
+            gotoBox.appendTo(aladinDiv);
+            this.boxes.push(gotoBox);
+            
+            var input = gotoBox.find('.aladin-target-form input');
+            input.on("paste keydown", function() {
+                $(this).removeClass('aladin-unknownObject'); // remove red border
+            });
+            
+            // TODO : classe GotoBox
+            d.click(function() {
+                self.hideBoxes();
+                input.val('');
+                input.removeClass('aladin-unknownObject');
+                gotoBox.show();
+                input.focus();
+                
+                
+                return false;
+            });
+            gotoBox.find('.aladin-closeBtn').click(function() {self.hideBoxes();return false;});
+        }
+        
+        // share control panel
+        if (options.showShareControl) {
+            var d = $('<div class="aladin-shareControl-container" title="Share current view"><div class="aladin-shareControl"></div></div>');
+            d.appendTo(aladinDiv);
+            
+            var shareBox = 
+                $('<div class="aladin-box aladin-shareBox">' +
+                  '<a class="aladin-closeBtn">&times;</a>' +
+                  '<div style="clear: both;"></div>' +
+                  '<b>Share</b>' +
+                  '<input type="text" class="aladin-shareInput" />' +
+                  '</div>');
+            shareBox.appendTo(aladinDiv);
+            this.boxes.push(shareBox);
+            
+            
+            // TODO : classe GotoBox
+            d.click(function() {
+                self.hideBoxes();
+                shareBox.show();
+                
+                
+                return false;
+            });
+            shareBox.find('.aladin-closeBtn').click(function() {self.hideBoxes();return false;});
+        }
+		
+		
+        this.gotoObject(options.target);
+
+        if (options.log) {
+            var params = requestedOptions;
+            params['version'] = Aladin.VERSION;
+            Logger.log("startup", params);
+        }
+        
+		this.showReticle(options.showReticle);
+		
+		if (options.catalogUrls) {
+		    for (var k=0, len=options.catalogUrls.length; k<len; k++) {
+		        this.createCatalogFromVOTable(options.catalogUrls[k]);
+		    }
+		}
+		
+		this.setImageSurvey(options.survey);
+		this.view.showCatalog(options.showCatalog);
+		
+	    
+    	var aladin = this;
+    	$(aladinDiv).find('.aladin-frameChoice').change(function() {
+    		aladin.setFrame($(this).val());
+    	});
+    	$('#projectionChoice').change(function() {
+    		aladin.setProjection($(this).val());
+    	});
+        
+
+        $(aladinDiv).find('.aladin-target-form').submit(function() {
+            aladin.gotoObject($(this).find('input').val(), function() {
+                $(aladinDiv).find('.aladin-target-form input').addClass('aladin-unknownObject');
+            });
+            return false;
+        });
+        
+        var zoomPlus = $(aladinDiv).find('.zoomPlus');
+        zoomPlus.click(function() {
+        	aladin.increaseZoom();
+        	return false;
+        });
+        zoomPlus.bind('mousedown', function(e) {
+            e.preventDefault(); // to prevent text selection
+        });
+        
+        var zoomMinus = $(aladinDiv).find('.zoomMinus');
+        zoomMinus.click(function() {
+            aladin.decreaseZoom();
+            return false;
+        });
+        zoomMinus.bind('mousedown', function(e) {
+            e.preventDefault(); // to prevent text selection
+        });
+        
+        // go to full screen ?
+        if (options.fullScreen) {
+            window.setTimeout(function() {self.toggleFullscreen();}, 1000);
+        }
+	};
+	
+    /**** CONSTANTS ****/
+    Aladin.VERSION = "2015-12-16"; // will be filled by the build.sh script
+    
+    Aladin.JSONP_PROXY = "http://alasky.u-strasbg.fr/cgi/JSONProxy";
+    
+    Aladin.DEFAULT_OPTIONS = {
+        target:                 "0 +0",
+        cooFrame:               "J2000",
+        survey:                 "P/DSS2/color",
+        fov:                    60,
+        showReticle:            true,
+        showZoomControl:        true,
+        showFullscreenControl:  true,
+        showLayersControl:      true,
+        showGotoControl:        true,
+        showShareControl:       false,
+        showCatalog:            true, // TODO: still used ??
+        showFrame:              true,
+        showCooGrid:            false,
+        fullScreen:             false,
+        reticleColor:           "rgb(178, 50, 178)",
+        reticleSize:            22,
+        log:                    true,
+        allowFullZoomout:       false
+    };
+
+    
+    Aladin.prototype.toggleFullscreen = function() {
+        this.fullScreenBtn.toggleClass('aladin-maximize aladin-restore');
+        var isInFullscreen = this.fullScreenBtn.hasClass('aladin-restore');
+        this.fullScreenBtn.attr('title', isInFullscreen ? 'Restore original size' : 'Full screen');
+        $(this.aladinDiv).toggleClass('aladin-fullscreen');
+        
+        this.view.fixLayoutDimensions();
+    };
+    
+    Aladin.prototype.updateSurveysDropdownList = function(surveys) {
+        surveys = surveys.sort(function(a, b) {
+            if (! a.order) {
+                return a.id > b.id;
+            }
+            return a.order && a.order > b.order ? 1 : -1;
+        });
+        var select = $(this.aladinDiv).find('.aladin-surveySelection');
+        select.empty();
+        for (var i=0; i<surveys.length; i++) {
+            var isCurSurvey = this.view.imageSurvey.id==surveys[i].id;
+            select.append($("<option />").attr("selected", isCurSurvey).val(surveys[i].id).text(surveys[i].name));
+        };
+    };
+    
+    Aladin.prototype.getOptionsFromQueryString = function() {
+        var options = {};
+        var requestedTarget = $.urlParam('target');
+        if (requestedTarget) {
+            options.target = requestedTarget;
+        }
+        var requestedFrame = $.urlParam('frame');
+        if (requestedFrame && CooFrameEnum[requestedFrame] ) {
+            options.frame = requestedFrame;
+        }
+        var requestedSurveyId = $.urlParam('survey');
+        if (requestedSurveyId && HpxImageSurvey.getSurveyInfoFromId(requestedSurveyId)) {
+            options.survey = requestedSurveyId;
+        }
+        var requestedZoom = $.urlParam('zoom');
+        if (requestedZoom && requestedZoom>0 && requestedZoom<180) {
+            options.zoom = requestedZoom;
+        }
+        
+        var requestedShowreticle = $.urlParam('showReticle');
+        if (requestedShowreticle) {
+            options.showReticle = requestedShowreticle.toLowerCase()=='true';
+        }
+        
+        var requestedCooFrame =  $.urlParam('cooFrame');
+        if (requestedCooFrame) {
+            options.cooFrame = requestedCooFrame;
+        }
+        
+        var requestedFullscreen =  $.urlParam('fullScreen');
+        if (requestedFullscreen !== undefined) {
+            options.fullScreen = requestedFullscreen;
+        }
+        
+        return options;
+    };
+	
+    // TODO: rename to setFoV
+    //@oldAPI
+	Aladin.prototype.setZoom = function(fovDegrees) {
+		this.view.setZoom(fovDegrees);
+	};
+
+	// @API
+	Aladin.prototype.setFoV = Aladin.prototype.setFov = function(fovDegrees) {
+		this.view.setZoom(fovDegrees);
+	};
+	
+    Aladin.prototype.setFrame = function(frameName) {
+        if (! frameName) {
+            return;
+        }
+        var newFrame = CooFrameEnum.fromString(frameName, CooFrameEnum.J2000);
+        if (newFrame==this.view.cooFrame)  {
+            return;
+        }
+
+        this.view.changeFrame(newFrame);
+        // màj select box
+        $(this.aladinDiv).find('.aladin-frameChoice').val(newFrame);
+    };
+
+	Aladin.prototype.setProjection = function(projectionName) {
+		if (! projectionName) {
+			return;
+		}
+		projectionName = projectionName.toLowerCase();
+		switch(projectionName) {
+			case "aitoff":
+				this.view.changeProjection(ProjectionEnum.AITOFF);
+				break;
+			case "sinus":
+			default:
+				this.view.changeProjection(ProjectionEnum.SIN);
+		}
+	};
+    
+    // point view to a given object (resolved by Sesame) or position
+    // TODO: should we use function 
+    Aladin.prototype.gotoObject = function(targetName, errorCallback) {
+    	var isObjectName = /[a-zA-Z]/.test(targetName);
+    	
+    	// try to parse as a position
+    	if ( ! isObjectName) {
+    		var coo = new Coo();
+
+			coo.parse(targetName);
+			var lonlat = [coo.lon, coo.lat];
+			if (this.view.cooFrame == CooFrameEnum.GAL) {
+				lonlat = CooConversion.GalacticToJ2000(lonlat);
+			}
+    		this.view.pointTo(lonlat[0], lonlat[1]);
+    	}
+    	// ask resolution by Sesame
+    	else {
+	        var self = this;
+	        Sesame.resolve(targetName,
+	                       function(data) {
+	        					   var ra = data.Target.Resolver.jradeg;
+	        					   var dec = data.Target.Resolver.jdedeg;
+	        					   self.view.pointTo(ra, dec);
+	        				   /*
+	                           if (data.sesame.error) {
+	                                if (console) console.log(data.sesame.error);
+	                           }
+	                           else {
+	                               var radec = data.sesame.decimalPosition.split(" ");
+	                               self.view.pointTo(parseFloat(radec[0]), parseFloat(radec[1]));
+	                           }
+	                           */
+	                       },
+	                       function(data) {
+	                            if (console) {
+	                                console.log("Could not resolve object name " + targetName);
+	                                console.log(data);
+	                            }
+	                            if (errorCallback) {
+	                                errorCallback();
+	                            }
+	                       });
+    	}
+    };
+    
+    
+    
+    /**
+     * go to a given position, expressed in the current coordinate frame
+     * 
+     * @API
+     */
+    Aladin.prototype.gotoPosition = function(lon, lat) {
+        var radec;
+        // first, convert to J2000 if needed
+        if (this.view.cooFrame==CooFrameEnum.GAL) {
+            radec = CooConversion.GalacticToJ2000([lon, lat]);
+        }
+        else {
+            radec = [lon, lat];
+        }
+    	this.view.pointTo(radec[0], radec[1]);
+    };
+    
+    
+    var doAnimation = function(aladin) {
+        var params = aladin.animationParams;
+        if (params==null) {
+            return;
+        }
+        var now = new Date().getTime();
+        // this is the animation end: set the view to the end position, and call complete callback 
+        if (now>params['end']) {
+            aladin.gotoRaDec(params['raEnd'], params['decEnd']);
+            
+            if (params['complete']) {
+                params['complete']();
+            }
+            
+            return;
+        }
+        
+        // compute current position
+        var curRa =  params['raStart'] + (params['raEnd'] - params['raStart']) * (now-params['start']) / (params['end'] - params['start']);
+        var curDec = params['decStart'] + (params['decEnd'] - params['decStart']) * (now-params['start']) / (params['end'] - params['start']);
+        
+        aladin.gotoRaDec(curRa, curDec);
+        
+        setTimeout(function() {doAnimation(aladin);}, 50);
+        
+    };
+    /*
+     * animate smoothly from the current position to the given ra, dec
+     * 
+     * the total duration (in seconds) of the animation can be given (otherwise set to 5 seconds by default)
+     * 
+     * complete: a function to call once the animation has completed
+     * 
+     * @API
+     * 
+     */
+    Aladin.prototype.animateToRaDec = function(ra, dec, duration, complete) {
+        duration = duration || 5;
+        
+        this.animationParams = null;
+        doAnimation(this);
+        
+        var animationParams = {};
+        animationParams['start'] = new Date().getTime();
+        animationParams['end'] = new Date().getTime() + 1000*duration;
+        var raDec = this.getRaDec();
+        animationParams['raStart'] = raDec[0];
+        animationParams['decStart'] = raDec[1];
+        animationParams['raEnd'] = ra;
+        animationParams['decEnd'] = dec;
+        animationParams['complete'] = complete;
+        
+        this.animationParams = animationParams;
+        
+        doAnimation(this);
+    };
+    
+    /**
+     * get current [ra, dec] position of the center of the view
+     * 
+     * @API
+     */
+    Aladin.prototype.getRaDec = function() {
+        if (this.view.cooFrame==CooFrameEnum.J2000) {
+            return [this.view.viewCenter.lon, this.view.viewCenter.lat];
+        }
+        else {
+            var radec = CooConversion.GalacticToJ2000([this.view.viewCenter.lon, this.view.viewCenter.lat]);
+            return radec;
+            
+        }
+    };
+    
+    
+    /**
+     * point to a given position, expressed as a ra,dec coordinate
+     * 
+     * @API
+     */
+    Aladin.prototype.gotoRaDec = function(ra, dec) {
+        this.view.pointTo(ra, dec);
+    };
+
+    Aladin.prototype.showHealpixGrid = function(show) {
+        this.view.showHealpixGrid(show);
+    };
+    
+    Aladin.prototype.showSurvey = function(show) {
+        this.view.showSurvey(show);
+    };
+    Aladin.prototype.showCatalog = function(show) {
+        this.view.showCatalog(show);
+    };
+    Aladin.prototype.showReticle = function(show) {
+        this.view.showReticle(show);
+        $('#displayReticle').attr('checked', show);
+    };
+    Aladin.prototype.removeLayers = function() {
+        this.view.removeLayers();
+    };
+
+    // should be merged into a unique "add" method
+    Aladin.prototype.addCatalog = function(catalog) {
+        this.view.addCatalog(catalog);
+    };
+    Aladin.prototype.addOverlay = function(overlay) {
+        this.view.addOverlay(overlay);
+    };
+    Aladin.prototype.addMOC = function(moc) {
+        this.view.addMOC(moc);
+    };
+    
+
+  
+    // @oldAPI
+    Aladin.prototype.createImageSurvey = function(id, name, rootUrl, cooFrame, maxOrder, options) {
+        return new HpxImageSurvey(id, name, rootUrl, cooFrame, maxOrder, options);        
+    };
+
+
+ 
+    // @api
+    Aladin.prototype.getBaseImageLayer = function() {
+        return this.view.imageSurvey;
+    };
+    // @param imageSurvey : HpxImageSurvey object or image survey identifier
+    // @api
+    // @old
+    Aladin.prototype.setImageSurvey = function(imageSurvey, callback) {
+        this.view.setImageSurvey(imageSurvey, callback);
+        this.updateSurveysDropdownList(HpxImageSurvey.getAvailableSurveys());
+        if (this.options.log) {
+            var id = imageSurvey;
+            if (typeof imageSurvey !== "string") {
+                id = imageSurvey.rootUrl;
+            }
+
+            Logger.log("changeImageSurvey", id);
+        }
+    };
+    // @api
+    Aladin.prototype.setBaseImageLayer = Aladin.prototype.setImageSurvey;
+    
+    // @api
+    Aladin.prototype.getOverlayImageLayer = function() {
+        return this.view.overlayImageSurvey;
+    };
+    // @api
+    Aladin.prototype.setOverlayImageLayer = function(imageSurvey, callback) {
+        this.view.setOverlayImageSurvey(imageSurvey, callback);
+    };
+    
+
+    Aladin.prototype.increaseZoom = function(step) {
+        if (!step) {
+            step = 5;
+        }
+    	this.view.setZoomLevel(this.view.zoomLevel+step);
+    };
+    
+    Aladin.prototype.decreaseZoom = function(step) {
+        if (!step) {
+            step = 5;
+        }
+    	this.view.setZoomLevel(this.view.zoomLevel-step);
+    };
+    
+    // @oldAPI
+    Aladin.prototype.createCatalog = function(options) {
+        return A.catalog(options);
+    };
+
+
+    Aladin.prototype.createProgressiveCatalog = function(url, frame, maxOrder, options) {
+        return new ProgressiveCat(url, frame, maxOrder, options);
+    };
+    
+    // @oldAPI
+    Aladin.prototype.createSource = function(ra, dec, data) {
+        return new cds.Source(ra, dec, data);
+    };
+    // @oldAPI
+    Aladin.prototype.createMarker = function(ra, dec, options, data) {
+        options = options || {};
+        options['marker'] = true;
+        return new cds.Source(ra, dec, data, options);
+    };
+
+    Aladin.prototype.createOverlay = function(options) {
+        return new Overlay(options);
+    };
+
+    // API
+    Aladin.prototype.createFootprintsFromSTCS = function(stcs) {
+        var polygons = Overlay.parseSTCS(stcs);
+        var fps = [];
+        for (var k=0, len=polygons.length; k<len; k++) {
+            fps.push(new Footprint(polygons[k]));
+        }
+        return fps;
+    };
+
+    // API
+    A.MOCFromURL = function(url, options, successCallback) {
+        var moc = new MOC(options);
+        moc.dataFromURL(url, successCallback);
+
+        return moc;
+    };
+    
+    // @oldAPI
+    Aladin.prototype.createCatalogFromVOTable = function(url, options) {
+        return A.catalogFromURL(url, options);
+    };
+
+    // API
+    A.catalogFromURL = function(url, options, successCallback, useProxy) {
+        var catalog = A.catalog(options);
+        cds.Catalog.parseVOTable(url, function(sources) {
+            catalog.addSources(sources);
+            if (successCallback) {
+                successCallback(sources);
+            }
+        }, catalog.maxNbSources, useProxy);
+        return catalog;
+    };
+
+    // API
+    // @param target: can be either a string representing a position or an object name, or can be an object with keys 'ra' and 'dec' (values being in decimal degrees)
+    A.catalogFromSimbad = function(target, radius, options, successCallback) {
+        options = options || {};
+        if (! ('name' in options)) {
+            options['name'] = 'Simbad';
+        }
+        var url = URLBuilder.buildSimbadCSURL(target, radius);
+        return A.catalogFromURL(url, options, successCallback, false);
+    };
+     
+    // API
+    A.catalogFromNED = function(target, radius, options, successCallback) {
+        options = options || {};
+        if (! ('name' in options)) {
+            options['name'] = 'NED';
+        }
+        var url;
+        if (target && (typeof target  === "object")) {
+            if ('ra' in target && 'dec' in target) {
+                url = URLBuilder.buildNEDPositionCSURL(target.ra, target.dec, radius);
+            }
+        }
+        else {
+    	    var isObjectName = /[a-zA-Z]/.test(target);
+            if (isObjectName)  {
+                url = URLBuilder.buildNEDObjectCSURL(target, radius);
+            }
+            else {
+                var coo = new Coo();
+                coo.parse(target);
+                url = URLBuilder.buildNEDPositionCSURL(coo.lon, coo.lat, radius);
+            }
+        }
+
+        return A.catalogFromURL(url, options, successCallback);
+    };
+
+    A.catalogFromVizieR = function(vizCatId, target, radius, options, successCallback) {
+        options = options || {};
+        if (! ('name' in options)) {
+            options['name'] = 'VizieR:' + vizCatId;
+        }
+        var url = URLBuilder.buildVizieRCSURL(vizCatId, target, radius);
+        return A.catalogFromURL(url, options, successCallback, false);
+    };
+
+     
+     // API
+     Aladin.prototype.on = function(what, myFunction) {
+         if (what==='select') {
+             this.selectFunction = myFunction;
+         }
+         else if (what=='objectClicked') {
+            this.objClickedFunction = myFunction;
+         }
+         else if (what=='objectHovered') {
+            this.objHoveredFunction = myFunction;
+         }
+     };
+     
+     Aladin.prototype.select = function() {
+         this.fire('selectstart');
+     };
+     
+     Aladin.prototype.fire = function(what, params) {
+         if (what==='selectstart') {
+             this.view.setMode(View.SELECT);
+         }
+         else if (what==='selectend') {
+             this.view.setMode(View.PAN);
+             if (this.selectFunction) {
+                 this.selectFunction(params);
+             }
+         }
+     };
+     
+     Aladin.prototype.hideBoxes = function() {
+         if (this.boxes) {
+             for (var k=0; k<this.boxes.length; k++) {
+                 this.boxes[k].hide();
+             }
+         }
+     };
+     
+     // ?
+     Aladin.prototype.updateCM = function() {
+         
+     };
+     
+     // TODO : LayerBox should be a separate object
+     Aladin.prototype.showLayerBox = function() {
+         var self = this;
+         
+         // first, update
+         var layerBox = $(this.aladinDiv).find('.aladin-layerBox');
+         layerBox.empty();
+         layerBox.append('<a class="aladin-closeBtn">&times;</a>' +
+                 '<div style="clear: both;"></div>' +
+                 '<div class="aladin-label">Base image layer</div>' +
+                 '<select class="aladin-surveySelection"></select>' +
+                 '<div class="aladin-cmap">Color map:' +
+                 '<div><select class="aladin-cmSelection"></select><button class="aladin-btn aladin-btn-small aladin-reverseCm" type="button">Reverse</button></div></div>' +
+                 '<div class="aladin-box-separator"></div>' +
+                 '<div class="aladin-label">Overlay layers</div>');
+         
+         var cmDiv = layerBox.find('.aladin-cmap');
+         
+         // fill color maps options
+         var cmSelect = layerBox.find('.aladin-cmSelection');
+         for (var k=0; k<ColorMap.MAPS_NAMES.length; k++) {
+             cmSelect.append($("<option />").text(ColorMap.MAPS_NAMES[k]));
+         }
+         cmSelect.val(self.getBaseImageLayer().getColorMap().map);
+
+         
+         // loop over catalogs
+         var cats = this.view.catalogs;
+         var str = '<ul>';
+         for (var k=cats.length-1; k>=0; k--) {
+             var name = cats[k].name;
+             var checked = '';
+             if (cats[k].isShowing) {
+                 checked = 'checked="checked"';
+             }
+             var nbSources = cats[k].getSources().length;
+             var title = nbSources + ' source' + ( nbSources>1 ? 's' : '');
+             var color = cats[k].color;
+             var rgbColor = $('<div></div>').css('color', color).css('color'); // trick to retrieve the color as 'rgb(,,)'
+             var labelColor = Color.getLabelColorForBackground(rgbColor);
+             str += '<li><div class="aladin-layerIcon" style="background: ' + color + ';"></div><input type="checkbox" ' + checked + ' id="aladin_lite_' + name + '"></input><label for="aladin_lite_' + name + '" class="aladin-layer-label" style="background: ' + color + '; color:' + labelColor + ';" title="' + title + '">' + name + '</label></li>';
+         }
+         str += '</ul>';
+         layerBox.append(str);
+         
+         layerBox.append('<div class="aladin-blank-separator"></div>');
+         
+         // gestion du réticule
+         var checked = '';
+         if (this.view.displayReticle) {
+             checked = 'checked="checked"';
+         }
+         var reticleCb = $('<input type="checkbox" ' + checked + ' id="displayReticle" />');
+         layerBox.append(reticleCb).append('<label for="displayReticle">Reticle</label><br/>');
+         reticleCb.change(function() {
+             self.showReticle($(this).is(':checked'));
+         });
+         
+         // Gestion grille Healpix
+         checked = '';
+         if (this.view.displayHpxGrid) {
+             checked = 'checked="checked"';
+         }
+         var hpxGridCb = $('<input type="checkbox" ' + checked + ' id="displayHpxGrid"/>');
+         layerBox.append(hpxGridCb).append('<label for="displayHpxGrid">HEALPix grid</label><br/>');
+         hpxGridCb.change(function() {
+             self.showHealpixGrid($(this).is(':checked'));
+         });
+         
+         
+         layerBox.append('<div class="aladin-box-separator"></div>' +
+              '<div class="aladin-label">Tools</div>');
+         var exportBtn = $('<button class="aladin-btn" type="button">Export view as PNG</button>');
+         layerBox.append(exportBtn);
+         exportBtn.click(function() {
+             self.exportAsPNG();
+         });
+                 
+                 /*
+                 '<div class="aladin-box-separator"></div>' +
+                 '<div class="aladin-label">Projection</div>' +
+                 '<select id="projectionChoice"><option>SINUS</option><option>AITOFF</option></select><br/>'
+                 */
+
+         layerBox.find('.aladin-closeBtn').click(function() {self.hideBoxes();return false;});
+         
+         // update list of surveys
+         this.updateSurveysDropdownList(HpxImageSurvey.getAvailableSurveys());
+         var surveySelection = $(this.aladinDiv).find('.aladin-surveySelection');
+         surveySelection.change(function() {
+             var survey = HpxImageSurvey.getAvailableSurveys()[$(this)[0].selectedIndex];
+             self.setImageSurvey(survey.id, function() {
+                 var baseImgLayer = self.getBaseImageLayer();
+                 
+                 if (baseImgLayer.useCors) {
+                     // update color map list with current value color map
+                     cmSelect.val(baseImgLayer.getColorMap().map);
+                     cmDiv.show();
+                     
+                     exportBtn.show();
+                 }
+                 else {
+                     cmDiv.hide();
+                     
+                     exportBtn.hide();
+                 }
+             });
+
+             
+             
+         });
+         
+         //// COLOR MAP management ////////////////////////////////////////////
+         // update color map
+         cmDiv.find('.aladin-cmSelection').change(function() {
+             var cmName = $(this).find(':selected').val();
+             self.getBaseImageLayer().getColorMap().update(cmName);
+         });
+         
+         // reverse color map
+         cmDiv.find('.aladin-reverseCm').click(function() {
+             self.getBaseImageLayer().getColorMap().reverse(); 
+         });
+         if (this.getBaseImageLayer().useCors) {
+             cmDiv.show();
+             exportBtn.show();
+         }
+         else {
+             cmDiv.hide();
+             exportBtn.hide();
+         }
+         layerBox.find('.aladin-reverseCm').parent().attr('disabled', true);
+         //////////////////////////////////////////////////////////////////////
+         
+         
+         // handler to hide/show overlays
+         $(this.aladinDiv).find('.aladin-layerBox ul input').change(function() {
+             var catName = ($(this).attr('id').substr(12));
+             var cat = self.layerByName(catName);
+             if ($(this).is(':checked')) {
+                 cat.show();
+             }
+             else {
+                 cat.hide();
+             }
+         });
+         
+         // finally show
+         layerBox.show();
+         
+     };
+     
+     Aladin.prototype.layerByName = function(name) {
+         var c = this.view.catalogs;
+         for (var k=0; k<this.view.catalogs.length; k++) {
+             if (name==c[k].name) {
+                 return c[k];
+             }
+         }
+         return null;
+     };
+     
+     // TODO : integrate somehow into API ?
+     Aladin.prototype.exportAsPNG = function(imgFormat) {
+         window.open(this.getViewDataURL(), "Aladin Lite snapshot");
+     };
+
+    /**
+     * Return the current view as a data URL (base64-formatted string)
+     * Parameters:
+     * - imgFormat (optional): 'image/png' or 'image/jpeg'
+     *
+     * @API
+    */
+    Aladin.prototype.getViewDataURL = function(imgFormat) {
+        return this.view.getCanvasDataURL(imgFormat);
+    }
+     
+     /** limit FOV range
+      * @API
+      * @param minFOV in degrees when zoom in at max
+      * @param maxFOV in degreen when zoom out at max
+     */
+     Aladin.prototype.setFOVRange = function(minFOV, maxFOV) {
+         if (minFOV>maxFOV) {
+             var tmp = minFOV;
+             minFOV = maxFOV;
+             maxFOV = tmp;
+         }
+         
+         this.view.minFOV = minFOV;
+         this.view.maxFOV = maxFOV;
+         
+     };
+     
+     /**
+      * Transform pixel coordinates to world coordinates
+      * 
+      * Origin (0,0) of pixel coordinates is at top left corner of Aladin Lite view
+      * 
+      * @API
+      * 
+      * @param x
+      * @param y
+      * 
+      * @return a [ra, dec] array with world coordinates in degrees
+      * 
+      */
+     Aladin.prototype.pix2world = function(x, y) {
+         var xy = AladinUtils.viewToXy(x, y, this.view.width, this.view.height, this.view.largestDim, this.view.zoomFactor);
+         
+         var radec = this.view.projection.unproject(xy.x, xy.y);
+         
+         var res;
+         if (this.view.cooFrame==CooFrameEnum.GAL) {
+             res = CooConversion.GalacticToJ2000([radec.ra, radec.dec]);
+         }
+         else {
+             res =  [radec.ra, radec.dec];
+         }
+             
+         return res;
+     };
+     
+     /**
+      * Transform world coordinates to pixel coordinates in the view
+      * 
+      * @API
+      * 
+      * @param ra  
+      * @param dec
+      * 
+      * @return a [x, y] array with pixel coordinates in the view. Returns null if the projection failed somehow
+      *   
+      */
+     Aladin.prototype.world2pix = function(ra, dec) {
+         var xy;
+         if (this.view.cooFrame==CooFrameEnum.GAL) {
+             var lonlat = CooConversion.J2000ToGalactic([ra, dec]);
+             xy = this.view.projection.project(lonlat[0], lonlat[1]);
+         }
+         else {
+             xy = this.view.projection.project(ra, dec);
+         }
+         if (xy) {
+             var xyview = AladinUtils.xyToView(xy.X, xy.Y, this.view.width, this.view.height, this.view.largestDim, this.view.zoomFactor);
+             return [xyview.vx, xyview.vy];
+         }
+         else {
+             return null;
+         }
+     };
+     
+     /**
+      * 
+      * @API
+      * 
+      * @param ra  
+      * @param nbSteps the number of points to return along each side (the total number of points returned is 4*nbSteps)
+      * 
+      * @return set of points along the current FoV with the following format: [[ra1, dec1], [ra2, dec2], ..., [ra_n, dec_n]]
+      *   
+      */
+     Aladin.prototype.getFovCorners = function(nbSteps) {
+         // default value: 1
+         if (!nbSteps || nbSteps<1) {
+             nbSteps = 1;
+         }
+         
+         var points = [];
+         var x1, y1, x2, y2;
+         for (var k=0; k<4; k++) {
+             x1 = (k==0 || k==3) ? 0 : this.view.width-1;
+             y1 = (k<2) ? 0 : this.view.height-1;
+             x2 = (k<2) ? this.view.width-1 : 0;
+             y2 = (k==1 || k==2) ? this.view.height-1 :0;
+             
+             for (var step=0; step<nbSteps; step++) {
+                 points.push(this.pix2world(x1 + step/nbSteps * (x2-x1), y1 + step/nbSteps * (y2-y1)));
+             }
+         }
+         
+         return points;
+         
+     };
+     
+     /**
+      * @API
+      * 
+      * @return the current FoV size in degrees as a 2-elements array
+      */
+     Aladin.prototype.getFov = function() {
+         var fovX = this.view.fov;
+         var s = this.getSize();
+         var fovY = s[1] / s[0] * fovX;
+         // TODO : take into account AITOFF projection where fov can be larger than 180
+         fovX = Math.min(fovX, 180);
+         fovY = Math.min(fovY, 180);
+         
+         return [fovX, fovY];
+     };
+     
+     /**
+      * @API
+      * 
+      * @return the size in pixels of the Aladin Lite view
+      */
+     Aladin.prototype.getSize = function() {
+         return [this.view.width, this.view.height];
+     };
+     
+     /**
+      * @API
+      * 
+      * @return the jQuery object representing the DIV element where the Aladin Lite instance lies
+      */
+     Aladin.prototype.getParentDiv = function() {
+         return $(this.aladinDiv);
+     };
+    
+	return Aladin;
+})();
+
+//// New API ////
+// For developers using Aladin lite: all objects should be created through the API, 
+// rather than creating directly the corresponding JS objects
+// This facade allows for more flexibility as objects can be updated/renamed harmlessly
+
+//@API
+A.aladin = function(divSelector, options) {
+  return new Aladin($(divSelector)[0], options);
+};
+
+//@API
+// TODO : lecture de properties
+A.imageLayer = function(id, name, rootUrl, options) {
+    return new HpxImageSurvey(id, name, rootUrl, null, null, options);
+};
+
+// @API
+A.source = function(ra, dec, data, options) {
+    return new cds.Source(ra, dec, data, options);
+};
+
+// @API
+A.marker = function(ra, dec, options, data) {
+    options = options || {};
+    options['marker'] = true;
+    return A.source(ra, dec, data, options);
+};
+
+// @API
+A.polygon = function(raDecArray) {
+    var l = raDecArray.length;
+    if (l>0) {
+        // close the polygon if needed
+        if (raDecArray[0][0]!=raDecArray[l-1][0] || raDecArray[0][1]!=raDecArray[l-1][1]) {
+            raDecArray.push([raDecArray[0][0], raDecArray[0][1]]);
+        }
+    }
+    return new Footprint(raDecArray);
+};
+
+//@API
+A.polyline = function(raDecArray, options) {
+    return new Polyline(raDecArray, options);
+};
+
+
+// @API
+A.circle = function(ra, dec, radiusDeg, options) {
+    return new Circle([ra, dec], radiusDeg, options);
+};
+
+// @API
+A.graphicOverlay = function(options) {
+    return new Overlay(options);
+};
+
+// @API
+A.catalog = function(options) {
+    return new cds.Catalog(options);
+};
+
+// @API
+/*
+ * return a URL allowing to share the current view
+ */
+Aladin.prototype.getShareURL = function() {
+    var radec = this.getRaDec();
+    var coo = new Coo();
+    coo.prec = 7;
+    coo.lon = radec[0];
+    coo.lat = radec[1];
+    return 'http://aladin.u-strasbg.fr/AladinLite/?target=' + encodeURIComponent(coo.format('s')) +
+           '&fov=' + this.getFov()[0].toFixed(2) + '&survey=' + encodeURIComponent(this.getBaseImageLayer().id);
+};
+
+// @API
+/*
+ * return, as a string, the HTML embed code
+ */
+Aladin.prototype.getEmbedCode = function() {
+    var radec = this.getRaDec();
+    var coo = new Coo();
+    coo.prec = 7;
+    coo.lon = radec[0];
+    coo.lat = radec[1];
+
+    var survey = this.getBaseImageLayer().id;
+    var fov = this.getFov()[0];
+    var s = '';
+    s += '<link rel="stylesheet" href="http://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css" />\n';
+    s += '<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js" charset="utf-8"></script>\n';
+    s += '<div id="aladin-lite-div" style="width:400px;height:400px;"></div>\n';
+    s += '<script type="text/javascript" src="http://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js" charset="utf-8"></script>\n';
+    s += '<script type="text/javascript">\n';
+    s += 'var aladin = A.aladin("#aladin-lite-div", {survey: "' + survey + 'P/DSS2/color", fov: ' + fov.toFixed(2) + ', target: "' + coo.format('s') + '"});\n';
+    s += '</script>';
+    return s;
+};
+
+// @API
+/*
+ * Creates remotely a HiPS from a FITS image URL and displays it
+ */
+Aladin.prototype.displayFITS = function(url, options) {
+    options = options || {};
+    var data = {url: url};
+    if (options.color) {
+        data.color = true;
+    }
+    if (options.outputFormat) {
+        data.format = options.outputFormat;
+    }
+    if (options.order) {
+        data.order = options.order;
+    }
+    if (options.nocache) {
+        data.nocache = options.nocache;
+    }
+    $.ajax({
+        url: 'http://alasky.u-strasbg.fr/cgi/fits2HiPS',
+        data: data,
+        method: 'GET',
+        dataType: 'json',
+        success: function(response) {
+            if (response.status!='success') {
+                alert('An error occured: ' + response.message);
+                return;
+            }
+            var label = options.label || "FITS image"; 
+            aladin.setOverlayImageLayer(aladin.createImageSurvey(label, label, response.data.url, "equatorial", response.data.meta.max_norder, {imgFormat: 'png'}));
+            aladin.setFoV(response.data.meta.fov);
+            aladin.gotoRaDec(response.data.meta.ra, response.data.meta.dec);
+            var transparency = (options && options.transparency) || 1.0;
+            aladin.getOverlayImageLayer().setAlpha(transparency);
+
+        }
+    });
+
+};
+
+// @API
+/*
+ * Creates remotely a HiPS from a JPEG or PNG image with astrometry info
+ * and display it
+ */
+Aladin.prototype.displayJPG = Aladin.prototype.displayPNG = function(url, options) {
+    options = options || {};
+    options.color = true;
+    options.label = "JPG/PNG image";
+    options.outputFormat = 'png';
+    this.displayFITS(url, options);
+};
+
+
+
+// conservé pour compatibilité avec existant
+// @oldAPI
+if ($) {
+    $.aladin = A.aladin;
+}
+
+// TODO: callback function onAladinLiteReady
+
+console.log('=============== >  aladin.js ');
 
 /*
  * jsTree 1.0-rc1
@@ -54221,42 +66015,6 @@ if (!JSON) {
 
 console.log('=============== >  json2.js ');
 
-/*
- * Some utilities moved to basic.js
- */
-//if(!String.prototype.startsWith){
-//	String.prototype.startsWith = function (str) {
-//		return !this.indexOf(str);
-//	};
-//};
-//if(!String.prototype.endsWith){
-//	String.prototype.endsWith = function(suffix) {
-//		return this.indexOf(suffix, this.length - suffix.length) !== -1;
-//	};
-//};
-//
-//if(!String.prototype.hashCode){
-//	String.prototype.hashCode = function(){
-//		var hash = 0;
-//		if (this.length == 0) return code;
-//		for (var i = 0; i < this.length; i++) {
-//			var char = this.charCodeAt(i);
-//			hash = 31*hash+char;
-//			hash = hash & hash; 
-//		}
-//		return hash;
-//	};
-//};
-//if(!String.prototype.trim){
-//	String.prototype.trim = function(chaine){
-//		return chaine.replace(/^\s+|\s+$/g,"");
-//	} ;
-//};
-//
-//function trim(chaine) {
-//	return chaine.replace(/^\s+|\s+$/g,"");
-//}
-//
 
 /**
  * Singleton encapsulating the formating function 
@@ -54266,7 +66024,7 @@ console.log('=============== >  json2.js ');
 ValueFormator = function() {
 	var raValue = undefined;
 	var decValue = undefined;
-	
+	var targetName = undefined;
 	var reset = function(){
 		raValue = undefined;
 		decValue = undefined;		
@@ -54283,21 +66041,18 @@ ValueFormator = function() {
 		var value = values[columnMap.currentColumn];
 		
 		if ( columnMap.s_ra == columnMap.currentColumn){
-			console.log("RA " + columnMap.currentColumn);
 			raValue = value;
-		}
-		if ( columnMap.s_dec == columnMap.currentColumn){
-			console.log("DEC " + columnMap.currentColumn)
+		} else	if ( columnMap.s_dec == columnMap.currentColumn){
 			decValue = value;
+		} else	if ( columnMap.target_name== columnMap.currentColumn){
+			targetName = value;
 		}
-
 		/*
 		 * To be send to the the datalink processor to setup possible cutout services
 		 */
 		var fovObject = {s_ra: (columnMap.s_ra != -1)?  parseFloat(values[columnMap.s_ra]) : 9999 ,
 				        s_dec: (columnMap.s_dec != -1)? parseFloat(values[columnMap.s_dec]): 9999 ,
 						s_fov: (columnMap.s_fov != -1)?parseFloat( values[columnMap.s_fov]): 9999 };
-
 		/*
 		 * First case the value is an URL
 		 */
@@ -54312,10 +66067,8 @@ ValueFormator = function() {
 					addInfoControl(columnName, tdNode, value);
 					addDatalinkControl(value,  tdNode, fovObject);
 				} else if( access_format.startsWith("image/") || access_format.startsWith("text/") ){
-					tDdNode.html("");
-					addInfoControl(columnName, tdNode, value);
-					addPreviewControl(columnName, tdNode, value, fileName);	
-					addCartControl(columnName, tdNode, value, secureMode);
+					processURLInfo( columnName, value, tdNode, fovObject);
+
 				} else  {
 					/*
 					 * In case of a simple download we he to request the HTTP header anyway to get extra information (zipper, encrypted..)
@@ -54344,7 +66097,6 @@ ValueFormator = function() {
 	 * No reference to the context
 	 */
 	var formatSimpleValue = function(columnName, value, tdNode, columnMap) {
-console.log(raValue + " "+ decValue);		
 		/*
 		 * TODO :add SAMP message to Aladin : script.aladin.send
 		 */
@@ -54354,8 +66106,13 @@ console.log(raValue + " "+ decValue);
 				(columnMap.s_ra == columnMap.currentColumn || columnMap.s_dec == columnMap.currentColumn) ) {
 			var alLink = "<a onclick='ModalAladin.aladinExplorer({ target: &quot;" + raValue + " " + decValue + "&quot;, fov: 0.016, title:&quot;...&quot;}, []);'class='dl_aladin' href='javascript:void(0);' title='Send source coord. to Aladin Lite'></a>";
 			tdNode.html(alLink + " " + (new Number(value)).toPrecision(8));
-		} else if( value.startsWith("Array") ) {
-			tdNode.html("<a title='Data array(click to expand)' class='dl_dataarray' href='#'  onclick='Modalinfo.info(\"" + value + "\", \"Data Array\");'></a>");
+			/*
+			 * Array annotation removed from server because of CSIRO for which all data are typed as arra
+			 */
+		} else if(/* value.startsWith("Array")*/ value.length > 24 ) {
+			//console.log(value);
+			//tdNode.html("<a title='Data array(click to expand)' class='dl_dataarray' href='#'  onclick='Modalinfo.info(\"" + value + "\", \"Data Array\");'></a>");
+			tdNode.html("<span title='" + value + "' style =' cursor: pointer;' onclick='Modalinfo.info(\"" + value + "\", \"Full Value\");'>" + value.substring(0, 23) + " ... </span>");
 		} else if( decimaleRegexp.test(value)){
 			tdNode.html((new Number(value)).toPrecision(8));
 		} else if( bibcodeRegexp.test(value)){
@@ -54385,7 +66142,7 @@ console.log(raValue + " "+ decValue);
 				+ url + "\",\"" + sampMType + "\", " + fileName + "); return false;'/></a>");
 	};	
 	var addPreviewControl = function(columnName, tdNode, url, fileName){
-		var title = fileName + " preview";
+		var title = ((fileName != undefined)?fileName: "") + " preview";
 		var x = "<a class='dl_download' title='Data preview' href='javascript:void(0);' onclick='Modalinfo.openIframePanel(\"" + url + "\", \"" + title + "\");'></a>";
 		tdNode.append(x);
 		
@@ -54398,11 +66155,13 @@ console.log(raValue + " "+ decValue);
 	};
 	var addSTCRegionControl = function(tdNode, stcRegion) {
 		var region = new STCRegion(stcRegion);
-		tdNode.html("<a title='STC Region (click to expand)' class='dl_stc' href='#'></a>");
-		tdNode.first("a").click(function() {
-			Modalinfo.showSTCRegion(region);
+		tdNode.html("");
+		tdNode.append("<a title='" + stcRegion + " (click to plot)' class='dl_stc' href='#'></a>");
+		tdNode.append("<a class='dl_samp' title='Broadcast to SAMP'   href='#' onclick='WebSamp_mVc.fireSendAladinScript(&quot;" + region.getAladinScript() + "&quot;); return false;'/></a>");
+		tdNode.first().click(function() {
+			ModalAladin.aladinExplorer({ region: region, fov: 0.016, title:"STC Region", surveyKeyword: targetName}, []);
+			return false;
 		})
-		tdNode.append("<a class='dl_samp' title='Broadcast to SAMP'   href='#' onclick='WebSamp_mVc.fireSendAladinScript(\"" + region.getAladinScript() + "\"); return false;'/></a>");				
 	}
 	/**
 	 * Get the URL infos asynchronously: formating must be achieved inside the callback
@@ -54956,7 +66715,7 @@ jQuery.extend({
 		};
 
 		this.showTapResult = function(dataTreePath, jid, jsdata, attributeHandlers) {
-			var table = "<table cellpadding=\"0\" cellspacing=\"0\" border=\"1\"  id=\"datatable\" class=\"display\"></table>";
+			var table = "<table cellpadding=\"0\" cellspacing=\"0\" border=\"1\" width= 100% id=\"datatable\" class=\"display\"></table>";
 			
 			var job = ( !dataTreePath.jobid || dataTreePath.jobid == "")? "": '&gt;'+ dataTreePath.jobid;
 			
@@ -55014,11 +66773,14 @@ jQuery.extend({
 							columnMap.s_dec = i;
 						} else if( ah.nameorg == "s_fov" || ah.nameorg.match(/.*instr\.fov/) ) {
 							columnMap.s_fov = i;
+						} else if( ah.nameorg == "target_name"  ) {
+							columnMap.target_name = i;
 						}
 					}
 				}
 				aoColumns[i] = {sTitle: '<span title="' + title + '">' + jsdata.aoColumns[i].sTitle + '</span>'};
 			}
+			var schema = dataTreePath.schema;
 			var options = {
 				"aLengthMenu": [5, 10, 25, 50, 100],
 				"aoColumns" : aoColumns,
@@ -55039,8 +66801,11 @@ jQuery.extend({
 							copiedcolumnMap.access_format = -1;
 						}
 						copiedcolumnMap.currentColumn = c;
-						//formatValue(this.fnSettings().aoColumns[c].sTitle, aData[c], $('td:eq(' + c + ')', nRow));
-						ValueFormator.formatValue(colName, aData, $('td:eq(' + c + ')', nRow), copiedcolumnMap);
+						/*
+						 * Not formatting for the relational registry
+						 */
+						if( schema != "rr")
+							ValueFormator.formatValue(colName, aData, $('td:eq(' + c + ')', nRow), copiedcolumnMap);
 					}
 					return nRow;
 				}
@@ -55133,7 +66898,7 @@ jQuery.extend({
 				/*
 				 * Build empty table
 				 */
-				table += "</tr>"
+				table += "</tr >"
 					+ "</thead>"
 					+ "<tbody>"
 					+ "<tr><td colspan="
@@ -55312,6 +67077,53 @@ jQuery.extend({
 			Modalinfo.closeDataPanel();
 		};
 		
+		
+		this.fireDeleteFilteredNodes =function(node){
+			
+			goodies = "[";
+			
+			nodelist = $("#myList li input");
+			for(i = 0; i < nodelist.length ; i++ ){
+				if(!nodelist[i].checked){
+					span = $("#myList li span")[i].innerText;
+					if(goodies.length > 3){
+						goodies += ",";
+					}
+					goodies += '"' + span + '"';
+					dataTreeView.delGoodies({"nodekey" : "myList", "table" : span});
+					ViewState.fireGoodyRemoved(span);
+				}
+			}
+			goodies += "]";
+			
+			jobs = "[";
+			node = $("#nodeFilterList ul");
+			for(j = 0; j < node.length; j++){
+				if(node[j].id != "myList"){
+					
+					nodelist = $("#" + node[j].id + " li input");
+					for(i = 0; i < nodelist.length ; i++ ){
+						if(!nodelist[i].checked){
+							span = $("#" + node[j].id + " li span")[i].innerText;
+							if(jobs.length > 3){
+								jobs += ",";
+							}
+							jobs += '{"node":"'+ node[j].id+ '", "jobs":"' + span + '"}';
+							dataTreeView.delGoodies({"nodekey" : node[j].id, "table" : span.substring(0,span.length -4)});
+						}
+					}					
+				}
+			}
+			jobs += "]";
+			list = '{"myList":' + goodies + ',"myJobs":' + jobs + '}';
+
+
+			$.getJSON("deletegoodies", {"jsessionid": sessionID, "list": list});
+			Modalinfo.closeDataPanel();
+			
+		};
+		
+		
 		this.getFilter = function(node) {
 			var f = null;
 			filter.forEach(function(element) {
@@ -55337,7 +67149,24 @@ jQuery.extend({
 		this.fireOpenSelectorWindow = function(node) {
 			// For goodies node
 			if (node === "goodies") {
-				Modalinfo.error("Goodies are not implemented yet.")
+				var table = "<div class='detaildata'>"
+/*					+ "     <div class='detaildata' style='height: 45px;display: inline;float:right; padding-top:15px; margin-right: 15px;'>"
+//					+ "        <input id=nodeFilter type=texte width=24 class='form-control input-sm'>"
+					+ "    </div>"
+*/					+ "    <div id=nodeFilterList class='detaildata' style='border: 1px black solid; background-color: whitesmoke; width: 100%; height: 380px; overflow: auto; position:relative'></div>"
+					+ "    <p class=help>Unselect the tables you not want to remove"
+					+ "    (<a href='#' onclick=\"$('#nodeFilterList input').attr('checked', 'true');$('#nodeFilterList li').attr('class', 'tableSelected');\">select</a> /"
+					+ "     <a href='#' onclick=\"$('#nodeFilterList input').removeAttr('checked');$('#nodeFilterList li').attr('class', 'tableNotSelected');\">unselect</a> all)<br>"
+					+ "    Caution: You cannot refine your selection once it is accepted (Version 1.1)<p><hr>"
+					+ "    <input type=button value='delete' onclick='nodeFilterView.fireDeleteFilteredNodes(\"" + node + "\");' style='font-weight: bold;'>"
+					+ "    <span class=help>(Type [ESC] to close the window)</span>"
+					+ "    </div>"
+					+ "</div>";
+				
+				Modalinfo.center();
+				
+				Modalinfo.dataPanel('Table Selector for node  <i>' + node + '</i>', table, null, "white");
+				that.applyFilter(node);
 			} else {
 				var table = "<div class='detaildata'>"
 				+ "    <div class='detaildata' style='width: 60%; display: inline; overflow: hidden;'>"
@@ -55388,15 +67217,63 @@ jQuery.extend({
 		};	
 		
 		this.applyFilter = function(node) {
-			//Processing.show('Get filtered table list');			
-			$.getJSON("getnode", {jsessionid: sessionID, node: node, filter: $("#nodeFilter").val(), selected: ''}, function(jsdata) {
-				//Processing.hide();
-				if( Processing.jsonError(jsdata, "Cannot get the node selection") ) {
-					return;
-				} else {
-					that.fireShowNodeSelection($("#nodeFilterList"), jsdata);
-				}
-			});
+			//Processing.show('Get filtered table list');
+			if(node ==="goodies"){
+				$.getJSON("GetGoodiesList", {jsessionid: sessionID}, function(jsdata){
+					if( Processing.jsonError(jsdata, "Cannot get the node selection") ) {
+						return;
+					}else {
+						var listDiv = $("#nodeFilterList");
+						//that.fireShowNodeSelection($("#nodeFilterList"), jsdata);
+						listDiv.append("<p class='chapter' style='border: 1px solid #c6c4c4 !important;'><b> " + "myLists" + "</b></p>");		
+						var list = "<ul class='attlist' id='myList'>";
+						
+						for(var i = 0;  i < jsdata.myLists.length ; i++){
+							
+							list += "<li class=tableSelected >" 
+								+ "<input  type='checkbox' checked onclick='nodeFilterView.fireSelectFilteredNode($(this));'>"
+								+ "<span style='font-color: black;'>" + jsdata.myLists[i].filename + "</span>"
+							    + " <i>" + jsdata.myLists[i].decription + "</i>"
+							    + "</li>";
+							
+						}
+						
+						list += "</ul>";
+						listDiv.append(list);
+						listDiv.append("<p class='chapter' style='border: 1px solid #c6c4c4 !important;'><b> " + "myJobs" + "</b></p>");						
+						var jobKey ="";
+							for( key in jsdata.myJobs){
+								listDiv.append("<p class='chapter'><b> " + key + "</b></p>");		
+								var list = "<ul class='attlist' id='"+ key +"' >";
+								
+								for(var i = 0;  i < jsdata.myJobs[key].length ; i++){
+									
+									list += "<li class=tableSelected >" 
+										+ "<input  type='checkbox' checked onclick='nodeFilterView.fireSelectFilteredNode($(this));'>"
+										+ "<span style='font-color: black;'>" + jsdata.myJobs[key][i].jobnumber + "</span>"
+									    + " <i>" + jsdata.myJobs[key][i].description + "</i>"
+									    + "</li>";
+								}
+								
+								list += "</ul>";
+								listDiv.append(list);
+						}			
+						
+					}
+				});
+				
+				jsData = [];
+				that.fireShowGoodiesSelection($("#nodeFilterList"), jsData);	
+			}else{
+				$.getJSON("getnode", {jsessionid: sessionID, node: node, filter: $("#nodeFilter").val(), selected: ''}, function(jsdata) {
+					//Processing.hide();
+					if( Processing.jsonError(jsdata, "Cannot get the node selection") ) {
+						return;
+					}else {
+						that.fireShowNodeSelection($("#nodeFilterList"), jsdata);
+					}
+				});
+			}
 		};
 		/**
 		 * Display in the div the list of selected tables returned by the server 
@@ -55423,7 +67300,30 @@ jQuery.extend({
 				listDiv.append(list);		
 			}
 		};
-				
+		
+		
+		this.fireShowGoodiesSelection = function(listDiv,jsSelection){
+			/*for( var i=0 ; i<jsSelection.schemas.length ; i++ ) {
+				var schema = jsSelection.schemas[i];
+				var sn = schema.name;
+				if( sn == "TAP_SCHEMA" || sn == 'tap_schema' ) {
+					continue;
+				}
+				listDiv.append("<p class='chapter' style='border: 1px solid #c6c4c4 !important;'><b>Schema</b> " + sn + "</p>");		
+				var list = "<ul class=attlist>";
+				for( var j=0 ; j<schema.tables.length ; j++ ) {
+					var table = schema.tables[j];
+					list += "<li class=tableSelected >" 
+						+ "<input  type='checkbox' checked onclick='nodeFilterView.fireSelectFilteredNode($(this));'>"
+						+ "<span style='font-color: black;'>" + table.name + "</span>"
+					    + " <i>" + table.description + "</i>"
+					    + "</li>";
+				}
+				list += "</ul>";
+				listDiv.append(list);
+			}*/
+		};
+		
 		/**
 		 * Select unselect one filter table
 		 * 
@@ -55501,23 +67401,25 @@ jQuery.extend({
 				return;
 			}
 			Processing.show("Run job");
-			Out.info(' start ' + $('#saadaworkingContent').css('display'));
 			var limit = getQLimit();
+			var upload = tapPosSelector.getUploadedFile();
+			var post_data = {jsessionid: sessionID
+					, NODE: dataTreeView.dataTreePath.nodekey
+					, TREEPATH: dataTreeView.dataTreePath.nodekey + ";" + dataTreeView.dataTreePath.schema + ";" + dataTreeView.dataTreePath.table
+					, REQUEST: "doQuery"
+					, LANG: 'ADQL'
+					, FORMAT: 'json'
+					, PHASE: 'RUN'
+					, MAXREC: limit
+					, QUERY: adqlQueryView.getQuery() };
+			if( upload ){
+				 post_data.UPLOAD = upload;
+			} 
 			$.ajax({type: 'POST'
 				, url:"runasyncjob"
-					, dataType: 'json'
-						, data: {jsessionid: sessionID
-							, NODE: dataTreeView.dataTreePath.nodekey
-							, TREEPATH: dataTreeView.dataTreePath.nodekey + ";" + dataTreeView.dataTreePath.schema + ";" + dataTreeView.dataTreePath.table
-							, REQUEST: "doQuery"
-								, LANG: 'ADQL'
-									, FORMAT: 'json'
-										, PHASE: 'RUN'
-											, MAXREC: limit
-											, UPLOAD:tapConstraintEditor.getUploadedFile()
-											, QUERY: adqlQueryView.getQuery() }
+				, dataType: 'json'
+				, data: post_data
 			, beforeSend: function(  jqXHR, settins) {
-				Out.info('before ' + $('#saadaworkingContent').css('display'));
 			}
 			, error: function(  jqXHR,  textStatus,  errorThrown) {
 				Processing.hide();
@@ -55637,11 +67539,12 @@ jQuery.extend({
 		/*
 		 * Fire external events
 		 */
-		this.fireTreeNodeEvent = function(dataTreePath, andsubmit){
+		this.fireTreeNodeEvent = function(dataTreePath, andsubmit, supportUpload){
 			adqlQueryView.fireSetTreePath(dataTreePath);
 			adqlQueryView.fireAddConstraint("tap", "limit", [getQLimit()]);
 			tapConstraintEditor.fireSetTreepath(dataTreePath);
 			tapPosSelector.fireSetTreepath(dataTreePath);
+			tapPosSelector.fireSupportUpload(supportUpload);
 			tapColumnSelector.fireSetTreepath(dataTreePath, ((andsubmit)? this.fireSubmitQueryEvent: null));
 
 		};
@@ -55650,6 +67553,10 @@ jQuery.extend({
 				listeners[i].controlSubmitQueryEvent();
 			});
 		};
+		this.fireGoodyRemoved = function(goodyName){
+			tapPosSelector.fireGoodyRemoved(goodyName);
+		};
+
 		/**
 		 * Just called at init time to display the job still stored in the session (not implemented yet)
 		 */
@@ -56043,16 +67950,17 @@ jQuery.extend({
 			} else if( action == 'Download Result') {			
 				this.downloadVotable();
 			} else if( action == 'Display Result in Aladin') {		
-				var url = rootUrl + '/jobresult?NODE=' + dataTreePath.nodekey.trim() + '&JOBID=' + id.trim() + '&jsessionid='+ sessionID;
+				var url = rootUrl + '/jobresult?NODE=' + dataTreePath.nodekey.trim() + '&JOBID=' + id.toString().trim() + '&jsessionid='+ sessionID;
 				ModalAladin.aladinExplorer({swarm: url
 					                      , title: dataTreePath.nodekey.trim() + ' '+ dataTreePath.schema + '.' 
-					                        + dataTreePath.table  + " Job " + id.trim()}
+					                        + dataTreePath.table  + " Job " + id.toString().trim()}
 										, []);		
 			} else if( action == 'Add to Cart') {			
 				cartView.fireAddJobResult(jobDescription.dataTreePath, id);
 			} else if( action == 'Send to SAMP') {	
 				this.sampBroadcast();			
-			} else if( action == ' "Add to Goodies' ){
+			} else if( action == 'Add to Goodies' ){
+				dataTreeView.pushJobToGoodies(id.toString().trim(), jobDescription.dataTreePath.nodekey, id.toString().trim());
 			} else {
 				this.displayResult();
 			}
@@ -56081,11 +67989,11 @@ jQuery.extend({
 			Modalinfo.info(report, 'Query of job ' + dataTreePath.nodekey + '.' + dataTreePath.jobid);
 		};
 		this.downloadVotable= function() {
-			var url = 'jobresult?NODE=' + dataTreePath.nodekey.trim() + '&JOBID=' + id.trim() + '&jsessionid='+ sessionID;
+			var url = 'jobresult?NODE=' + dataTreePath.nodekey.trim() + '&JOBID=' + id.toString().trim() + '&jsessionid='+ sessionID;
 			PageLocation.changeLocation(url);
 		};
 		this.sampBroadcast= function() {
-			var url =  rootUrl + 'jobresult?NODE=' + dataTreePath.nodekey.trim() + '&JOBID=' + id.trim() + '&jsessionid='+ sessionID;
+			var url =  rootUrl + 'jobresult?NODE=' + dataTreePath.nodekey.trim() + '&JOBID=' + id.toString().trim() + '&jsessionid='+ sessionID;
 			WebSamp_mVc.fireSendVoreport(url, "table.load.votable", url);
 		};
 		this.removeJob= function(){
@@ -56279,7 +68187,6 @@ jQuery.extend({
 			var id       = jobDescription.status.job.jobId;
 			var phase    = jobDescription.status.job.phase;
 			var status = $('#' + id + '_phase');
-			Out.info("update form for jobh " + id);
 			status.attr("class", phase.toLowerCase());
 			status.text(phase);
 			var actionMenu = $('#' + id + '_actions');
@@ -56942,7 +68849,6 @@ jQuery.extend({
 			}
 			else {
 				zipJob.kill();
-				Out.info(zipJob.phase);
 				return zipJob.phase;
 			}
 		};
@@ -57066,6 +68972,7 @@ function DataTreeView() {
 	 * The nodes given here must be initialized in Nodebase.java
 	 */
 	this.nodeList = new Array();
+	this.reports = {};
 	/**
 	 * Metadata of the data files referenced in the Goodies node
 	 */
@@ -57155,10 +69062,12 @@ DataTreeView.prototype = {
 
 			Processing.show("Waiting for the constrution of the tree");
 			this.capabilities = {supportSyncQueries: true
-					, supportAsyncQueries: (jsdata.asyncsupport == "true")?true: false
+					        , supportAsyncQueries: (jsdata.asyncsupport == "true")?true: false
 							, supportJoin: true
 							, supportUpload:(jsdata.uploadsupport == "true")?true: false};
 			this.info = {url: jsdata.nodeurl , ivoid: null, description: "Not available"};
+			this.reports[jsdata.nodekey] = {"info": this.info, "capabilities": this.capabilities};
+
 			$("div#treedisp").jstree("remove","#" + jsdata.nodekey);
 			/*
 			 * Create the root of the subtree of this node
@@ -57197,11 +69106,9 @@ DataTreeView.prototype = {
 				var description = jsdata.schemas[i].description;
 
 				var schemaName = jsdata.schemas[i].name;		
-				if( i > MAX_SCHEMA ) {
+				if( i > MAX_SCHEMA && jsdata.schemas[i].name != "ivoa"   && jsdata.schemas[i].name != "tap_schema") {
 					trunc[trunc.length] = schemaName;
 				} else {
-					console.log("SCHEMA" + i);
-
 					if(schemaName.match(/TAP_SCHEMA/i) ) {
 						icon = "images/Redcube2.png";
 						description = "Schema containing the description of the published tables";
@@ -57235,13 +69142,15 @@ DataTreeView.prototype = {
 
 				var schema = jsdata.schemas[i];
 				var id_schema = jsdata.nodekey + "X" + schema.name;
-				if( i > MAX_SCHEMA ) {
+				if( i > MAX_SCHEMA && schema.name != "ivoa"   && schema.name != "tap_schema") {
 					//trunc[trunc.length] = schema.name;
 				} else {
 					var root = $("#" + id_schema);
 					nb_tables = 0;
-
-					for( var j=0 ; j<schema.tables.length ; j++ ) {
+					/*
+					 * We scan from the end to preserve the natural ordering because JSTREE stacks new nodes
+					 */
+					for( var j=(schema.tables.length-1) ; j>=0 ; j-- ) {
 						var table = schema.tables[j];
 						var id_table = jsdata.nodekey + ";" + schema.name + ";" + table.name;
 						var description = table.description;
@@ -57279,7 +69188,9 @@ DataTreeView.prototype = {
 			if( msg != "" ) {
 				Modalinfo.info(msg + "\n\nDouble click on the '" + jsdata.nodekey + "' node to make you own selection");
 			}
-
+			/*
+			 * Activate leaves
+			 */
 			$("div#treedisp").find("li").each(function() {
 				if ($(this).attr("id") != undefined && $(this).find(".metadata").length == 0) {
 					var splited = $(this).attr("id").split(';');
@@ -57289,7 +69200,7 @@ DataTreeView.prototype = {
 						$(this).find("ins:first").after("<img class='metadata' src='images/metadata.png' title='Show metadata (Does not work with Vizier)'/>");
 						$(this).find("ins:first").next("img").click(function() {
 							/*
-							 * Add the node key to the datadataTreePath provided by the server and atached to the node
+							 * Add the node key to the datadataTreePath provided by the server and attached to the node
 							 */
 							dataTreePath.nodekey = splited[0];
 							resultPaneView.fireShowMetaNode(dataTreePath);
@@ -57303,7 +69214,7 @@ DataTreeView.prototype = {
 			});
 			$("div#treedisp").jstree("open_node", $('li.jstree-closed').first() );
 
-			$("#"+jsdata.nodekey).before("<img class='metadata' src='images/metadata.png' title='Click to get more info' onclick='dataTreeView.showNodeInfos();'/>");
+			$("#"+jsdata.nodekey).before("<img class='metadata' src='images/metadata.png' title='Click to get more info' onclick='dataTreeView.showNodeInfos(&quot;" + jsdata.nodekey + "&quot;);'/>");
 			this.setTitlePath({nodekey: jsdata.nodekey});
 			Processing.hide();
 		},
@@ -57313,16 +69224,18 @@ DataTreeView.prototype = {
 			tapView.fireTreeNodeEvent(datadataTreePath, andsubmit);	
 		},
 		/**
-		 * jsdata: {nodekey: ... , table: ...}
+		 * jsdata: {nodekey: ... , table: ..., date : ..., posNb: ... }
 		 */
 		addGoodies: function(jsdata){
 			var id_schema = "GoodiesX" + jsdata.nodekey;
-
+			
+			var desc ="Creation : " + jsdata.date + "\nPositions: " + jsdata.posNb;
+			
 			if( $("#" + id_schema).length == 0 ){
 				$("div#treedisp").jstree("create"
 						, $("#goodies")
 						, false
-						, {"data" : {"attr":{"id": id_schema, "title": "description"}, "title" : jsdata.nodekey},
+						, {"data" : {"attr":{"id": id_schema, "title": "Uploaded source lists"}, "title" : jsdata.nodekey},
 							"state": "closed",
 							"attr" :{"id": id_schema},
 
@@ -57334,17 +69247,28 @@ DataTreeView.prototype = {
 				return;
 			}
 			if( $("#" + id_schema + " #" + jsdata.table).length == 0 ){
+				var noneName = jsdata.table.replace(new RegExp('_xml$'), '');
 				$("div#treedisp").jstree("create"
 						, $("#" + id_schema)
 						, false // position
-						, {"data"  : {"icon": "images/SQLTable2.png", "attr":{"id": jsdata.table, "title": "description"}, "title" : jsdata.table},
+						, {"data"  : {"icon": "images/SQLTable2.png", "attr":{"id": noneName, "title": desc}, "title" : noneName},
 							"state": "closed"
 						}
 						,false// callback
 						,true //skip rename
 				);   
 			}
+			dataTreeView.getLists();
 			return;
+		},
+		
+		/**
+		 *  return the list of uploaded source lists. Data are taken out from the tree, not from the server
+		 */
+		getLists: function() {
+			var retour = [];
+			$("li#GoodiesXmyList").find('li').find('a').each(function(){retour.push($(this).attr('id'));});
+			return retour;
 		},
 		/**
 		 * jsdata: {nodekey: ... , table: ...}
@@ -57353,18 +69277,18 @@ DataTreeView.prototype = {
 			var id_schema = "GoodiesX" + jsdata.nodekey;
 
 			if( $("#" + id_schema).length != 0 ){
-				$("div#treedisp").jstree("remove", $("#" + id_schema + " #" + jsdata.table));
+				$("div#treedisp").jstree("remove", $("#" + id_schema + " #" + jsdata.table.replace("_xml", "")));
 				if($("#" + id_schema).find("> ul > li:eq(0)").length == 0) {
 					$("div#treedisp").jstree("remove", $("#" + id_schema));
 				}
 			}
 			return;
 		},
-		pushJobToGoodies: function(jid){
+		pushJobToGoodies: function(jid, node, gn){
 			var that = this;
 			Processing.show("Pushing job to goodies");
 			$.getJSON("pushjobtogoodies"
-					, {jsessionid: sessionID, node: "table", jobid:"jobid" , goodiesname: "goodiesname" }, function(jsondata) {
+					, {jsessionid: sessionID, node: node, jobid: jid , goodiesname: gn }, function(jsondata) {
 						Processing.hide();
 						if( Processing.jsonError(jsondata, "Cannot get meta data") ) {
 							return;
@@ -57406,7 +69330,6 @@ DataTreeView.prototype = {
 			});
 		},
 		setTitlePath: function (dataTreePath) {
-			Out.info("title " + dataTreePath);
 			this.dataTreePath = dataTreePath;
 			var tp = $('#titlepath');
 			var span = '<span style="font-style: normal; font-size: x-small ; background-color:';
@@ -57439,13 +69362,22 @@ DataTreeView.prototype = {
 
 			}
 		},
-		showNodeInfos: function () {
-			var report = {"info": this.info, "capabilities": this.capabilities};
-			Modalinfo.infoObject(report, "Node " + this.dataTreePath.nodekey);
+		showNodeInfos: function (nodekey) {
+//			var report = {"info": this.info, "capabilities": this.capabilities};
+//			Modalinfo.infoObject(report, "Node " + this.dataTreePath.nodekey);
+//			
+			Modalinfo.infoObject(this.reports[nodekey], "Node " + nodekey);
 		},
 		getBookmark: function() {
-			var np = window.location.href.split('?')[0].replace(/\/$/, "");
-			return (this.info != null)?np + "?url=" + escape(this.info.url): np;
+			var info = this.reports[this.dataTreePath.nodekey].info;
+			if( info != undefined ){
+				var np = window.location.href.split('?')[0].replace(/\/$/, "");
+				return (info != null)?np + "?url=" + escape(info.url): np;
+			} else {
+				"No active data node"
+			}
+//			var np = window.location.href.split('?')[0].replace(/\/$/, "");
+//			return (this.info != null)?np + "?url=" + escape(this.info.url): np;
 		}
 };
 
@@ -57487,16 +69419,17 @@ function initFunctions () {
 	this.initLayout = function() {
 		Out.info("Activate popular sites access");
 		var np = window.location.href.split('?')[0].replace(/\/#?$/, "");
-		Out.info("Base URL = " + np);
-		$(".3xmm-link").attr("href", np+"?url=http%3A//xcatdb.u-strasbg.fr/3xmmdr5/tap/")
-		$(".cadc-link").attr("href", np+"?url=http%3A//www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap/")
-		$(".gavo-link").attr("href", np+"?url=http%3A//dc.zah.uni-heidelberg.de/__system__/tap/run/tap/")
-		$(".vizier-link").attr("href", np+"?url=http%3A//tapvizier.u-strasbg.fr/TAPVizieR/tap/")
-		$(".simbad-link").attr("href", np+"?url=http%3A//simbad.u-strasbg.fr/simbad/sim-tap/")
-		$(".planet-link").attr("href", np+"?url=http%3A//voparis-tap.obspm.fr/__system__/tap/run/tap/")
-		$(".heasarch-link").attr("href", np+"?url=http%3A//heasarc.gsfc.nasa.gov/xamin/vo/tap/")
-		$(".chandra-link").attr("href", np+"?url=http%3A//cda.harvard.edu/cxctap/")
-		$(".sdss-link").attr("href", np+"?url=http://wfaudata.roe.ac.uk/sdssdr9-dsa/TAP/")
+		$(".3xmm-link").attr("href", np+"?url=http%3A//xcatdb.unistra.fr/3xmmdr7/tap/");
+		$(".cadc-link").attr("href", np+"?url=http%3A//www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap/");
+		$(".gavo-link").attr("href", np+"?url=http%3A//dc.zah.uni-heidelberg.de/__system__/tap/run/tap/");
+		$(".vizier-link").attr("href", np+"?url=http%3A//tapvizier.u-strasbg.fr/TAPVizieR/tap/");
+		$(".simbad-link").attr("href", np+"?url=http%3A//simbad.u-strasbg.fr/simbad/sim-tap/");
+		$(".planet-link").attr("href", np+"?url=http%3A//voparis-tap.obspm.fr/__system__/tap/run/tap/");
+		$(".heasarch-link").attr("href", np+"?url=https%3A//heasarc.gsfc.nasa.gov/xamin/vo/tap/")
+		$(".chandra-link").attr("href", np+"?url=http%3A//cda.harvard.edu/cxctap/");
+		$(".sdss-link").attr("href", np+"?url=http://wfaudata.roe.ac.uk/sdssdr9-dsa/TAP/");
+		$(".ned-link").attr("href", np+"?url=https%3A//ned.ipac.caltech.edu/tap/");
+		$(".stsci-link").attr("href", np+"?url=http%3A//vao.stsci.edu/CAOMTAP/TapService.aspx/");
 		
 
 		// Define the height of the div knowing the banner take 70px and the query editor 330px
@@ -57571,13 +69504,13 @@ function initFunctions () {
 		tapConstraintEditor = QueryConstraintEditor.tapConstraintEditor({parentDivId: 'tapwhere'
 			, formName: 'tapFormName'
 			, sesameUrl:"sesame"
-			, upload: {url: "uploadposlist", postHandler: function(retour){alert("postHandler " + retour);}}
+			, upload: {url: "uploaduserposlist", postHandler: UploadManager.postHandler}
 			, queryView: adqlQueryView});
 		
 		tapPosSelector = QueryConstraintEditor.tapPosSelector({ parentDivId: 'tapwhereposition'
 			, formName:'tapPosName'
 			, sesameUrl:"sesame"
-			, upload: {url: "uploadposlist", postHandler: function(retour){alert("postHandler " + retour);}}
+			, upload: {url: "uploaduserposlist", postHandler: UploadManager.postHandler, preloadedGetter: UploadManager.preloadedGetter}
 			, queryView: adqlQueryView});
 
 		var ins = $("input#node_selector");
@@ -57640,7 +69573,7 @@ function initFunctions () {
 				}
 		}); // end of jstree
 
-		$("a#goodies").attr("class", "help").css("color", "grey");
+		//$("a#goodies").attr("class", "help").css("color", "grey");
 		dataTree.bind("dblclick.jstree", function (e, data) {
 			var node = $(e.target).closest("li");
 			var id = node[0].id; //id of the selected node
@@ -57658,10 +69591,13 @@ function initFunctions () {
 	        /*
 	         * On a root node: open the resource filter tool
 	         */
-			} else if( streePath.length == 1) {
-				var nm = $(e.target).closest("a")[0].id;
-				if( nm != "" ) {
-					nodeFilterView.fireOpenSelectorWindow(nm);
+			} else if( streePath.length == 1 ) {
+				var target = $(e.target);
+				if( target.attr("id") != "GoodiesXmyList") {
+					var nm = target.closest("a")[0].id;
+					if( nm != "" ) {
+						nodeFilterView.fireOpenSelectorWindow(nm);
+					}
 				}	
 			/*
 			 * On schema: do nothing
@@ -57834,69 +69770,6 @@ function quoteTableName(tableName){
 console.log('=============== >  utils.js ');
 
 /**
- * Jquery stuff initialisation
- * + Global variables declaration
- */
-var downloadIFrameID = 'downloadIFrameID';
-
-/*
- * The JEE session ID is used to keep session track through http params 
- */
-var sessionID;
-var rootUrl;
-/*
- * View associated with specific functionality
- */
-var resultPaneView;
-var tapView ;
-var dataTreeView ;
-var cartView ;
-var adqlQueryView ;
-var tapColumnSelector;
-var tapConstraintEditor;
-var tapPosSelector;
-/*
- * Using a Jquery bind() here has a strange behaviour...
- * http://stackoverflow.com/questions/4458630/unable-to-unbind-the-window-beforeunload-event-in-jquery
- */
-//var authOK = false;
-//window.onbeforeunload = function() {
-//	if( !authOK) {
-//		return  'WARNING: Reloading or leaving this page will lost the current session';
-//	} else {
-//		authOK = false;
-//	}
-//};
-/*
- * Use true/false or 0/1 in ADQL?
- */
-var booleansupported = false;
-/*
- * JQuery object managing splitters
- */
-var layoutPane;
-/*
- * invoked once the page is loaded
- */
-$().ready(function() {
-
-	whenReady.initMVC();
-	whenReady.initLayout();
-	whenReady.initNodeAccess();
-	whenReady.initDataTree();
-	whenReady.initQueryForm();
-	whenReady.initSamp();
-	//PageLocation.confirmBeforeUnlaod();
-	$("#toggle-query").trigger( "click" );
-	$("#queryformpane").show();	
-	$("#toggle-query").show();
-
-});
-
-
-console.log('=============== >  ready.js ');
-
-/**
  * This singleton make sure that all components of the interface are always
  * in a state which is compliant with the result of the last user action
  * Public method can be invoked from anywhere in the code
@@ -57977,7 +69850,7 @@ ViewState = function() {
 		 * Connect the interface to the selected node
 		 */
 		setPath(dataTreePath);			
-		tapView.fireTreeNodeEvent(dataTreePath, true);	
+		tapView.fireTreeNodeEvent(dataTreePath, true, dataTreeView.reports[dataTreePath.nodekey].capabilities.supportUpload);	
 	};
 	/**
 	 * A double click on a node has generated an error
@@ -58003,6 +69876,13 @@ ViewState = function() {
 		//resultPaneView.fireExpandForm();
 
 	};
+	/**
+	 * Goodies are removed from the datatree must be 
+	 * removed from the current query form as well
+	 */
+	var fireGoodyRemoved = function(goodyName) {
+		tapView.fireGoodyRemoved(goodyName);
+	}
 	/**
 	 * A new jobs has ben submitted
 	 */
@@ -58073,6 +69953,7 @@ ViewState = function() {
 	pblc.fireDoubleClickKO   = fireDoubleClickKO;
 	pblc.fireDragOnQueryForm = fireDragOnQueryForm;
 	pblc.fireSubmit          = fireSubmit;
+	pblc.fireGoodyRemoved    = fireGoodyRemoved;
 	pblc.fireSubmitted       = fireSubmitted;
 	pblc.fireSubmitOK        = fireSubmitOK;
 	pblc.fireSubmitDelayed   = fireSubmitDelayed;
@@ -58083,6 +69964,39 @@ ViewState = function() {
 }();
 
 console.log('=============== >  viewState.js ');
+
+
+
+var UploadManager = {
+	
+	/**
+	 * 
+	 */
+	dataTreeUpdate: function(retour){		
+		dataTreeView.addGoodies({"nodekey" : "myList", "table" : retour["nameVot"], "date" : retour["date"], "posNb" : retour["positions"] });
+	},
+	/**
+	 * Invoked after the source list has been uploaded
+	 */
+	postHandler: function (retour){
+		var ul = UploadManager.preloadedGetter();
+		for( var i=0 ; i<ul.length ; i++ ){
+			if( (ul[i] + "_xml") == retour.nameVot ) 
+				return;
+		}
+
+		UploadManager.dataTreeUpdate(retour);
+		Modalinfo.close();
+	},
+	
+	/**
+	 * invoked to propose to reuse a list already loaded instaead of loading a new one
+	 */
+	preloadedGetter: function (){
+		return dataTreeView.getLists();
+	}
+};
+console.log('=============== >  upload.js ');
 
 function adjustWidths() {
 	$('#superwrapper', '#header', '#datapane', '#formframe', '#footer', '#accesspane', '#formpane', '#resultpane').css("width", "auto");
@@ -58124,4 +70038,67 @@ $().ready(function() {
 		
 });
 console.log('=============== >  resize.js ');
+
+/**
+ * Jquery stuff initialisation
+ * + Global variables declaration
+ */
+var downloadIFrameID = 'downloadIFrameID';
+
+/*
+ * The JEE session ID is used to keep session track through http params 
+ */
+var sessionID;
+var rootUrl;
+/*
+ * View associated with specific functionality
+ */
+var resultPaneView;
+var tapView ;
+var dataTreeView ;
+var cartView ;
+var adqlQueryView ;
+var tapColumnSelector;
+var tapConstraintEditor;
+var tapPosSelector;
+/*
+ * Using a Jquery bind() here has a strange behaviour...
+ * http://stackoverflow.com/questions/4458630/unable-to-unbind-the-window-beforeunload-event-in-jquery
+ */
+//var authOK = false;
+//window.onbeforeunload = function() {
+//	if( !authOK) {
+//		return  'WARNING: Reloading or leaving this page will lost the current session';
+//	} else {
+//		authOK = false;
+//	}
+//};
+/*
+ * Use true/false or 0/1 in ADQL?
+ */
+var booleansupported = false;
+/*
+ * JQuery object managing splitters
+ */
+var layoutPane;
+/*
+ * invoked once the page is loaded
+ */
+$().ready(function() {
+
+	whenReady.initMVC();
+	whenReady.initLayout();
+	whenReady.initNodeAccess();
+	whenReady.initDataTree();
+	whenReady.initQueryForm();
+	whenReady.initSamp();
+	//PageLocation.confirmBeforeUnlaod();
+	$("#toggle-query").trigger( "click" );
+	$("#queryformpane").show();	
+	$("#toggle-query").show();
+
+});
+
+
+console.log('=============== >  ready.js ');
 
