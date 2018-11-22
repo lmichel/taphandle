@@ -547,7 +547,7 @@ public class TapNode  extends RootClass {
 		if( new File(productName + ".json").exists()) {
 			return;
 		}
-		logger.debug("JSON file " + dataTreePath.getTable() + ".json not found: build it");
+		logger.debug("buildJsonTableDescription JSON file " + dataTreePath.getTable() + ".json not found: build it");
 		XmlToJson.translateTableMetaData(this.baseDirectory, "tables", dataTreePath, tablesNS);            
 		/*
 		 * If there is no attribute in the JSON table description, the service delivers it likley table by table
@@ -614,7 +614,7 @@ public class TapNode  extends RootClass {
 		if( new File(productName + ".json").exists()) {
 			return;
 		}
-		logger.debug("JSON file " + tableFileName + ".json not found: build it");
+		logger.debug("buildJsonTableAttributes JSON file " + tableFileName + ".json not found: build it");
 		XmlToJson.translateTableAttributes(this.baseDirectory, "tables", dataTreePath, tablesNS);		
 		/*
 		 * If there is no attribute in the JSON table description, the service delivers likely it  table by table

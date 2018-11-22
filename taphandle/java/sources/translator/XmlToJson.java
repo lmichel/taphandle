@@ -163,7 +163,7 @@ public class XmlToJson  extends RootClass {
 		PrintWriter fw = new PrintWriter(new File( baseDir + tableFileName + ".xsl"));
 		while( s.hasNextLine() ) {
 			String b = s.nextLine();
-			String s2  = b.replaceAll("TABLENAME", dataTreePath.getTable());
+			String s2  = b.replaceAll("TABLENAME", dataTreePath.getTable()).replaceAll("SCHEMA", dataTreePath.getSchema());
 			fw.println(s2);
 		}
 		s.close();
@@ -180,7 +180,7 @@ public class XmlToJson  extends RootClass {
 			s = new Scanner(new File(styleName));
 			fw = new PrintWriter(new File( baseDir + tableFileName + ".xsl"));
 			while( s.hasNextLine() ) {
-				String s2 = s.nextLine().replaceAll("TABLENAME", dataTreePath.getTable());
+				String s2 = s.nextLine().replaceAll("TABLENAME", dataTreePath.getTable()).replaceAll("SCHEMA", dataTreePath.getSchema());
 				fw.println(s2);
 			}
 			s.close();
@@ -207,7 +207,7 @@ public class XmlToJson  extends RootClass {
 		Scanner s = new Scanner(new File(filename));
 		PrintWriter fw = new PrintWriter(new File( baseDir + tableFileName + ".xsl"));
 		while( s.hasNextLine() ) {
-			fw.println(s.nextLine().replaceAll("TABLENAME", dataTreePath.getTable()));
+			fw.println(s.nextLine().replaceAll("TABLENAME", dataTreePath.getTable()).replaceAll("SCHEMA", dataTreePath.getSchema()));
 		}
 		s.close();
 		fw.close();
@@ -278,7 +278,7 @@ public class XmlToJson  extends RootClass {
 		PrintWriter fw = new PrintWriter(new File( baseDir + tableFileName + "_att.xsl"));
 		String qs = dataTreePath.getTable();
 		while( s.hasNextLine() ) {
-			fw.println(s.nextLine().replaceAll("TABLENAME", qs));
+			fw.println(s.nextLine().replaceAll("TABLENAME", qs).replaceAll("SCHEMA", dataTreePath.getSchema()));
 		}
 		s.close();
 		fw.close();

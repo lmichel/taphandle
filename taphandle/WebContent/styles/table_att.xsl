@@ -42,7 +42,11 @@ but the variable TABLENAME is always given as schema.tableName
 At the ends, we want  name = schema.tableName 
 -->
 <xsl:template match="table | vosi:table">
-<xsl:for-each select=".[name = 'TABLENAME' or ends-with(name, '.TABLENAME') or ends-with(name, '&quot;TABLENAME&quot;') or ends-with('&quot;TABLENAME&quot;', name)]"><!-- xsl:if test="name = 'TABLENAME' or ends-with('TABLENAME', name) or ends-with('&quot;TABLENAME&quot;', name)" -->
+<xsl:for-each select=".[name = 'TABLENAME' or name = '&quot;TABLENAME&quot;' 
+		or name = 'SCHEMA.TABLENAME' or name = 'SCHEMA.&quot;TABLENAME&quot;' 
+		or name = '&quot;SCHEMA&quot;.&quot;TABLENAME&quot;' or name = '&quot;SCHEMA&quot;.TABLENAME']">
+<!-- xsl:if test="name = 'TABLENAME' or ends-with('TABLENAME', name) or ends-with('&quot;TABLENAME&quot;', name)" -->
+
 {&quot;nodekey&quot;: &quot;NODEKEY&quot;,
 <!--  &quot;table&quot;: &quot;<xsl:value-of select="name" />&quot;, -->
 &quot;table&quot;: &quot;<xsl:value-of select="json:encode-string(name)"/>&quot;,
