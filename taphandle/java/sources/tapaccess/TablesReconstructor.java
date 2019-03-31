@@ -24,7 +24,7 @@ public class TablesReconstructor extends RootClass {
 		this.nodeUrl = nodeUrl;
 		this.outputDir = outputDir;
 		if( !this.outputDir.endsWith("/")) this.outputDir  += "/"; 
-		builtTablesResponseFile();
+		this.builtTablesResponseFile();
 	}
 
 	private void builtTablesResponseFile() throws Exception {
@@ -78,6 +78,15 @@ public class TablesReconstructor extends RootClass {
 		writer.write("     xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" \n");
 		writer.write("     xmlns:vod=\"http://www.ivoa.net/xml/VODataService/v1.1\">\n");
 		writer.write("<schema>\n");
+		/*
+		 * Removing unsupported chars
+		 */
+		String xml10pattern = "[^"
+                + "\u0009\r\n"
+                + "\u0020-\uD7FF"
+                + "\uE000-\uFFFD"
+                + "\ud800\udc00-\udbff\udfff"
+                + "]";
 		for( Entry<String, Map<String, Set<Column>>> e: metaMap.entrySet() ) {
 			writer.write("  <name>" + e.getKey() + "</name>\n");
 			writer.write("  <description>Constructed by Taphandle from TAP_SCHEMA</description>\n");
@@ -88,7 +97,7 @@ public class TablesReconstructor extends RootClass {
 				for( Column rc: t.getValue()) {
 					writer.write("    <column>\n");		
 					writer.write("      <name>" +rc.COLUMN_NAME  + "</name>\n");	
-					writer.write("      <description><![CDATA[" + rc.DESCRIPTION + "]]></description>\n");	
+					writer.write("      <description><![CDATA[" + rc.DESCRIPTION.replaceAll(xml10pattern, "") + "]]></description>\n");	
 					writer.write("      <unit>" +rc.UNIT  + "</unit>\n");	
 					writer.write("      <ucd>" +rc.UCD  + "</ucd>\n");	
 					writer.write("      <utype></utype>\n");	
@@ -119,8 +128,8 @@ public class TablesReconstructor extends RootClass {
 		String INDEXED;
 		String STD;
 
-		public void readJsonArray(JSONArray row){
-			this.DB_NAME = (String) row.get(0);;
+		public void readJsonArrayOfrl(JSONArray row){
+			this.DB_NAME = (String) row.get(0);
 			this. SCHEMA_NAME = (String) row.get(1);
 			this. TABLE_NAME = (String) row.get(2);
 			this. COLUMN_NAME = (String) row.get(3) ;
@@ -132,6 +141,19 @@ public class TablesReconstructor extends RootClass {
 			this. PRINCIPAL = (String) row.get(9);
 			this. INDEXED = (String) row.get(10);
 			this. STD = (String) row.get(11);
+
+		}
+		public void readJsonArray(JSONArray row){
+			this. TABLE_NAME = (String) row.get(0);
+			this. COLUMN_NAME = (String) row.get(1) ;
+			this. DESCRIPTION= (String) row.get(2);
+			this. UNIT =(String)  row.get(3);
+			this. UCD = (String) row.get(4);
+			this. DATATYPE = (String) row.get(5);
+			this. SIZE = (String) row.get(6);
+			this. PRINCIPAL = (String) row.get(7);
+			this. INDEXED = (String) row.get(8);
+			this. STD = (String) row.get(9);
 
 		}
 	}

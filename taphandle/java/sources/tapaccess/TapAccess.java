@@ -1,20 +1,27 @@
 package tapaccess;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.RandomAccessFile;
+import java.io.Writer;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.ByteBuffer;
 import java.util.regex.Matcher;
+
+import org.apache.commons.io.IOUtils;
 
 import resources.RootClass;
 import session.NodeCookie;
@@ -69,18 +76,53 @@ public class TapAccess  extends RootClass {
 		}
 
 		// Get the response
-		BufferedWriter bw ;
-		bw = new BufferedWriter(new FileWriter(statusFileName));
-		InputStream is = null;
 		try {
-			is = conn.getInputStream();
-			BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-			String line;
-			while ((line = reader.readLine()) != null) {
-				bw.write(line + "\n");
+			String ce;
+			/*
+			 * Encoded content
+			 */
+			if( (ce = conn.getContentEncoding() ) != null && ce.length() > 0 ) {
+				FileOutputStream fileOutputStream = null;
+				BufferedInputStream in = null;
+				try {
+					fileOutputStream = new FileOutputStream(statusFileName);
+					in = new BufferedInputStream(conn.getInputStream());
+					byte dataBuffer[] = new byte[1024];
+					int bytesRead;
+					int lg = 0;
+					while ((bytesRead = in.read(dataBuffer, 0, 1024)) != -1) {
+						fileOutputStream.write(dataBuffer, 0, bytesRead);
+						lg += bytesRead;
+					}
+					logger.debug("got " + lg + "b of encoded data ");
+			
+				} finally {
+					in.close();
+				    fileOutputStream.close();
+				}
+			/*
+			 * ASCII content
+			 */
+			} else {
+				BufferedWriter bw = null;
+				BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+				try {
+					bw = new BufferedWriter(new FileWriter(statusFileName));
+					String line;
+					int lg = 0;
+					while ((line = reader.readLine()) != null) {
+						bw.write(line + "\n");
+						lg += line.length();
+					}
+					logger.debug("got " + lg + "b of ASCII data ");
+
+				} finally {
+					if( bw != null ) bw.close();
+					reader.close();
+				}
+
 			}
-			bw.close();
-			reader.close();
+
 			cookie.storeCookie();	   
 			if( translate){
 				XmlToJson.applyStyle(statusFileName, statusFileName.replaceAll("xml", "json")
@@ -106,8 +148,6 @@ public class TapAccess  extends RootClass {
 			return ;
 		} */
 	}
-
-
 
 	/**
 	 * @param endpoint
@@ -235,12 +275,12 @@ logger.info("@@@ " + f.exists() + " " + f.length() );
 	 * @param query
 	 * @param outputfile
 	 * @param cookie
-	 * @param remoteAddress
+	 * @param treePath
 	 * @return result file path
 	 * @throws Exception
 	 */
-	public static String runSyncJob(String endpoint, String query, String outputfile, NodeCookie cookie, String remoteAddress) throws Exception {
-		String runId = (remoteAddress == null )? RUNID: "TapHandle-" + remoteAddress;
+	public static String runSyncJob(String endpoint, String query, String outputfile, NodeCookie cookie, String treePath) throws Exception {
+		String runId = (treePath == null )? RUNID: "TapHandle-" + treePath;
 		/*
 		 * Services based on DACHs 	are forced to return VOTable with data in a table (not BINARY)
 		 * In order to be consumable by Aladin Lite

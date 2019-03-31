@@ -159,7 +159,6 @@ public class XmlToJson  extends RootClass {
 		String tableFileName = dataTreePath.getEncodedFileName();
 		String filename = baseDir + "table1.0.xsl";
 		Scanner s = new Scanner(new File(filename));
-		System.out.println("@@@@@@@@@@@ " + tableFileName + ".xsl " + dataTreePath);
 		PrintWriter fw = new PrintWriter(new File( baseDir + tableFileName + ".xsl"));
 		while( s.hasNextLine() ) {
 			String b = s.nextLine();
