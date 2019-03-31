@@ -1,0 +1,7 @@
+http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap/(cadc)    SYNC     ASYNC  CADC Table Query (TAP) Service
+http://simbad.u-strasbg.fr:80/simbad/sim-tap(simbad)    SYNC     NOASYNCSIMBAD TAP query engine
+http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap(gavo)    SYNC     ASYNC  GAVO data center TAP service
+http://voparis-tap.obspm.fr/__system__/tap/run/tap(voparis-epn_august)    SYNC     ASYNC  august onboard Phobos2, atmospheric composition of mars
+http://voparis-tap.obspm.fr/__system__/tap/run/tap(voparis-epn_apis)    SYNC     ASYNC  auroral planetary imaging and spectroscopy
+http://voparis-tap.obspm.fr/__system__/tap/run/tap(voparis-epn_bdip)    SYNC     ASYNC  auroral planetary imaging and spectroscopy
+http://voparis-tap.obspm.fr/__system__/tap/run/tap(voparis-epn_titan)    SYNC     ASYNC  Temperature vertical profiles in the Titan middle atmosphere

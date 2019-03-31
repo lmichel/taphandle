@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<uws:job xmlns:uws="http://www.ivoa.net/xml/UWS/v1.0" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<uws:jobId>ZipArchive_0</uws:jobId>
+	<uws:runId xsi:nil="true" />
+	<uws:ownerId>DA7640CF05093B0C4E4ED1F201B28386</uws:ownerId>
+	<uws:phase>COMPLETED</uws:phase>
+	<uws:quote xsi:nil="true" />
+	<uws:startTime>2012-10-03T17:48:55.771+0200</uws:startTime>
+	<uws:endTime>2012-10-03T17:48:55.781+0200</uws:endTime>
+	<uws:executionDuration>0</uws:executionDuration>
+	<uws:destruction xsi:nil="true" />
+	<uws:parameters>
+		<uws:parameter id="cart"><![CDATA[{"vizier":{"jobs":[{"name":"1349279354296A","uri":"1349279354296A"}],"urls":[]}}]]></uws:parameter>
+		<uws:parameter id="format"><![CDATA[json]]></uws:parameter>
+	</uws:parameters>
+	<uws:results>
+		<uws:result id="Result" xlink:href="datapack/download" />
+	</uws:results>
+	<uws:errorSummary xsi:nil="true" />
+</uws:job>
