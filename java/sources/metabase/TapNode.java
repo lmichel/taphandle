@@ -553,6 +553,7 @@ public class TapNode  extends RootClass {
 		/*
 		 * If there is no attribute in the JSON table description, the service delivers it likley table by table
 		 */
+		System.out.println(dataTreePath);
 		if( !isThereJsonTableDesc(dataTreePath) ) {
 			logger.debug("No column found in " + tableFileName + ": make a per table query");
 			File fn = new File(productName + ".xml");
