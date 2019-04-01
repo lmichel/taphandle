@@ -10,7 +10,7 @@
 	<xsl:output method="text" media-type="text/html" encoding="UTF-8" version="4.0" />
 	<xsl:strip-space elements="name" />
 	<xsl:template match="/">
-	<xsl:apply-templates select="vosi:tableset | vod:tableset | tableset" />
+	  <xsl:apply-templates select="vosi:tableset | vod:tableset | tableset" />
 	</xsl:template>
 	
 <xsl:template match="vosi:tableset | vod:tableset | tableset">
