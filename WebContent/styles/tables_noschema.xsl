@@ -4,16 +4,17 @@
 	xmlns:xs="http://www.w3.org/2001/XMLSchema"
 	xmlns:json="http://json.org/" 
 	xmlns:vosi="http://www.ivoa.net/xml/VOSITables/v1.0"
+	xmlns:vod="http://www.ivoa.net/xml/VODataService/v1.1"	
     xmlns:tab='urn:astrogrid:schema:TableMetadata'
 	xmlns:uws="http://www.ivoa.net/xml/UWS/v1.0">
 	<xsl:import href="http://saada.unistra.fr/resources/xml-to-json.xsl" />
 	<xsl:output method="text" media-type="text/html" encoding="UTF-8" version="4.0" />
 	<xsl:strip-space elements="name" />
 	<xsl:template match="/">
-	<xsl:apply-templates select="tab:tables | tables" />
+	    <xsl:apply-templates select="vosi:tableset | vod:tableset | tableset" />
 	</xsl:template>
-	
-<xsl:template match="tab:tables | tables">
+
+<xsl:template match="vosi:tableset | vod:tableset | tableset">
 {&quot;nodekey&quot;: &quot;NODEKEY&quot;,
 &quot;nodeurl&quot;: &quot;NODEURL&quot;,
 &quot;schemas&quot;: [
