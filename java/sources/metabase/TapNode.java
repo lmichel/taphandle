@@ -302,8 +302,11 @@ public class TapNode  extends RootClass {
 		 */
 		this.translateServiceReponse(tables, tablesNS);
 		try {
+			
 			this.getFirstTableName();
 		} catch(Exception e){
+			//e.printStackTrace();
+			//System.exit(1);
 			logger.warn("No tables in tables.xml, try to ignore the schema");		
 			/*
 			 * Try first to translate with the standard format tab:tables.table (services from *.roe.ac.uk)
@@ -314,6 +317,7 @@ public class TapNode  extends RootClass {
 			} catch (Exception e3) {
 				try {
 					logger.warn("No tables in tables.xml, Try to scan the TAP_SCHEMA");	
+					System.exit(1);
 					new TablesReconstructor(this.regMark.getAbsoluteURL(null), this.baseDirectory);
 					this.translateServiceReponse(tables, tablesNS);
 					if( this.getFirstTableName() == null ) {
@@ -380,8 +384,8 @@ public class TapNode  extends RootClass {
 			//				throw new TapException("No table published in node " + this.regMark.getNodeKey());
 			//			}
 			if( tbls.size() != 0 ){
-				for( int t=0 ; t<jsa.size() ; t++) {			
-					return  (String) ((JSONObject)(tbls.get(i))).get("name");
+				for( int t=0 ; t<tbls.size() ; t++) {			
+					return  (String) ((JSONObject)(tbls.get(t))).get("name");
 				}
 			}
 		}
