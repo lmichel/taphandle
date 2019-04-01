@@ -54,7 +54,9 @@ public class GetTable extends RootServlet implements Servlet {
 				reportJsonError(request, response, "Node " + node + " does not exist");
 				return;
 			}
+			System.out.println(schema + " "+ table);
 			DataTreePath dataTreePath = new DataTreePath(schema, table, "");
+			System.out.println(dataTreePath);
 			tn.buildJsonTableDescription(dataTreePath);
 			dumpJsonFile("/" + RootClass.WEB_NODEBASE_DIR + "/" + node + "/" + dataTreePath.getEncodedFileName() + ".json", response);
 		} catch (Exception e) {
