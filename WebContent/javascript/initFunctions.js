@@ -45,6 +45,7 @@ function initFunctions () {
 		$(".ned-link").attr("href", np+"?url=https%3A//ned.ipac.caltech.edu/tap/");
 		$(".stsci-link").attr("href", np+"?url=http%3A//vao.stsci.edu/CAOMTAP/TapService.aspx/");
 		$(".gaiaesa-link").attr("href", np+"?http%3A//gea.esac.esa.int/tap-server/tap/");
+		$(".epnesa-link").attr("href", np+"?https%3A//archives.esac.esa.int/psa/epn-tap/tap/");
 		
 
 		// Define the height of the div knowing the banner take 70px and the query editor 330px
