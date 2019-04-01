@@ -314,7 +314,6 @@ public class TapNode  extends RootClass {
 			} catch (Exception e3) {
 				try {
 					logger.warn("No tables in tables.xml, Try to scan the TAP_SCHEMA");	
-					System.exit(1);
 					new TablesReconstructor(this.regMark.getAbsoluteURL(null), this.baseDirectory);
 					this.translateServiceReponse(tables, tablesNS);
 					if( this.getFirstTableName() == null ) {
