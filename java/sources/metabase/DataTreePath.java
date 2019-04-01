@@ -143,7 +143,7 @@ public class DataTreePath {
 		 */
 		String sqnameOrg = nameOrg.replaceAll("\"",  "").toUpperCase();
 		String sqschema = schema.replaceAll("\"",  "").toUpperCase();
-		if( !sqnameOrg.startsWith(sqschema) ) {
+		if( !sqnameOrg.startsWith(sqschema + ".") && !sqnameOrg.startsWith(schema + ".") ) {
 			this.schema = schema.replaceAll("\"",  "");
 			/*
 			 * Quoted schemas are not supported by XSL sheet
@@ -243,7 +243,7 @@ public class DataTreePath {
 	 * @see java.lang.Object#toString()
 	 */
 	public String toString(){
-		return "nameOrg: <" + this.tableOrg + "> schema: <" + this.schema + "> dataPath: <" + this.schema + "> tableName: <" + this.table + ">";
+		return "tableOrg: <" + this.tableOrg + "> schema: <" + this.schema + "> dataPath: <" + this.schema + "> tableName: <" + this.table + ">";
 	}
 
 }
