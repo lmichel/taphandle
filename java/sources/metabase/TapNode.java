@@ -340,8 +340,8 @@ public class TapNode  extends RootClass {
 	 * @throws TapException If no query succeed
 	 */
 	private void testCapabilities() throws Exception {
-		String query = "SELECT TOP 1 * FROM " + quoteTableName(getFirstTableName());
-		String uploadQuery = "SELECT TOP 1 * FROM " + quoteTableName(getFirstTableName()) + " NATURAL JOIN TAP_UPLOAD.taphandlesample ";
+		String query = "SELECT TOP 1 * FROM " + quoteTableName(getFirstTableName()).replace("public.", "\"public\".");
+		String uploadQuery = "SELECT TOP 1 * FROM " + quoteTableName(getFirstTableName()).replace("public.", "\"public\".") + " NATURAL JOIN TAP_UPLOAD.taphandlesample ";
 		logger.debug("Test query " + query);
 		QueryModeChecker qmc = new QueryModeChecker(this.regMark.getFullUrl(), query, uploadQuery, this.baseDirectory);
 		this.supportSyncMode = qmc.supportSyncMode();
