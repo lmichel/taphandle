@@ -10,12 +10,11 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import tapaccess.TapException;
-
 import cds.astro.Astrocoo;
 import cds.astro.Astroframe;
 import cds.astro.FK5;
 import cds.astro.ICRS;
+import tapaccess.TapException;
 
 public class PositionParser extends RootClass {
 	private String position;

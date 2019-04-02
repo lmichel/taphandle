@@ -10,10 +10,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.regex.Matcher;
@@ -23,25 +20,24 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import metabase.DataTreePath;
-import metabase.TapNode;
-import net.sf.saxon.lib.FeatureKeys;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import resources.RootClass;
-import tapaccess.TapException;
-import uk.ac.starlink.table.ColumnInfo;
-import uk.ac.starlink.table.StarTable;
-import uk.ac.starlink.table.StarTableFactory;
-import uk.ac.starlink.table.Tables;
 import cds.savot.model.InfoSet;
 import cds.savot.model.SavotInfo;
 import cds.savot.model.SavotResource;
 import cds.savot.model.SavotVOTable;
 import cds.savot.pull.SavotPullEngine;
 import cds.savot.pull.SavotPullParser;
+import metabase.DataTreePath;
+import metabase.TapNode;
+import net.sf.saxon.lib.FeatureKeys;
+import resources.RootClass;
+import tapaccess.TapException;
+import uk.ac.starlink.table.ColumnInfo;
+import uk.ac.starlink.table.StarTable;
+import uk.ac.starlink.table.StarTableFactory;
+import uk.ac.starlink.table.Tables;
 
 
 /**

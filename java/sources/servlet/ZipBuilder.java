@@ -1,9 +1,6 @@
 package servlet;
 
 import java.io.IOException;
-import java.util.Date;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
@@ -12,7 +9,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import cart.ZipperJob;
-
 import session.UserTrap;
 import uws.UWSException;
 import uws.job.JobList;

@@ -3,8 +3,6 @@ package test;
 
 import java.io.File;
 
-import metabase.NodeBase;
-
 import resources.RootClass;
 import session.NodeCookie;
 import tapaccess.JobUtils;

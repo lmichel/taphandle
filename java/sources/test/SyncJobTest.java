@@ -1,18 +1,14 @@
 package test;
 
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.net.SocketTimeoutException;
 import java.util.Date;
 
 import resources.RootClass;
-import session.JobTreePath;
 import session.NodeCookie;
 import tapaccess.JobUtils;
 import tapaccess.TapAccess;
-import translator.XmlToJson;
 
 /**
  * @author laurent

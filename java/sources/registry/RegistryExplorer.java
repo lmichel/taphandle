@@ -3,7 +3,6 @@ package registry;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.net.MalformedURLException;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;

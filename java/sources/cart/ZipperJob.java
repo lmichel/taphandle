@@ -5,14 +5,9 @@ package cart;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
 import resources.RootClass;
-
-
 import uws.UWSException;
 import uws.UWSToolBox;
 import uws.job.AbstractJob;

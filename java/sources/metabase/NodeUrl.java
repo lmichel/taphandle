@@ -1,9 +1,9 @@
 package metabase;
 
-import resources.RootClass;
-
 import java.net.MalformedURLException;
 import java.net.URL;
+
+import resources.RootClass;
 
 /**
  * Simple class managing both server part and application part of a node URL

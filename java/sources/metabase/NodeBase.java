@@ -2,8 +2,6 @@ package metabase;
 
 import java.io.File;
 import java.net.MalformedURLException;
-import java.util.LinkedHashMap;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import registry.RegistryExplorer;

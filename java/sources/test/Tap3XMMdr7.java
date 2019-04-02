@@ -1,29 +1,16 @@
 package test;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.RandomAccessFile;
-import java.io.Writer;
 import java.net.URL;
 import java.net.URLConnection;
 
-import metabase.DataTreePath;
-import metabase.TapNode;
-
-import org.apache.commons.io.IOUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import metabase.DataTreePath;
+import metabase.TapNode;
 import registry.RegistryMark;
 import resources.RootClass;
 

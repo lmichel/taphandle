@@ -1,6 +1,5 @@
 package servlet;
 
-import java.io.File;
 import java.io.IOException;
 
 import javax.servlet.Servlet;
@@ -9,12 +8,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-
-import metabase.NodeBase;
-
+import resources.RootClass;
 import session.UserSession;
 import session.UserTrap;
-import resources.RootClass;
 
 /**
  * Servlet implementation class GetUploadedFile

@@ -2,16 +2,14 @@ package test;
 
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
-
-import metabase.TapNode;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import metabase.TapNode;
 import registry.RegistryMark;
 import registry.ShortNameBuilder;
 import resources.RootClass;

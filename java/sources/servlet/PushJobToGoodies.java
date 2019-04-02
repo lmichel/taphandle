@@ -12,7 +12,6 @@ import org.json.simple.JSONObject;
 import session.UserSession;
 import session.UserTrap;
 import translator.JsonUtils;
-import static java.nio.file.StandardCopyOption.*;
 
 /**
  * Servlet implementation class PushJobToGoodies

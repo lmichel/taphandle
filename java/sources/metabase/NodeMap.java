@@ -1,7 +1,5 @@
 package metabase;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -10,7 +8,6 @@ import registry.RegistryExplorer;
 import registry.RegistryMark;
 import registry.ShortNameBuilder;
 import resources.RootClass;
-import tapaccess.TapException;
 
 /**
  * This class wraps a {@link LinkedHashMap} of TAP nodes.

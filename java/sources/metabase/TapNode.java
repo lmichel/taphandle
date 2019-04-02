@@ -14,7 +14,6 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.regex.Matcher;

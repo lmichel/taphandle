@@ -1,10 +1,6 @@
 package servlet;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
@@ -16,9 +12,6 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
-import metabase.NodeBase;
-import metabase.TapNode;
-import resources.RootClass;
 import session.Goodies;
 import session.UserSession;
 import session.UserTrap;

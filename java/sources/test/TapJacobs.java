@@ -2,13 +2,12 @@ package test;
 
 import java.io.FileReader;
 
-import metabase.DataTreePath;
-import metabase.TapNode;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import metabase.DataTreePath;
+import metabase.TapNode;
 import registry.RegistryMark;
 import resources.RootClass;
 

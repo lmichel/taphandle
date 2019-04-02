@@ -2,20 +2,15 @@ package test;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
 
 import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 
-import metabase.TapNode;
 import registry.RegistryMark;
 import resources.RootClass;
 import session.Goodies;
 import session.NodeCookie;
 import tapaccess.JobUtils;
 import tapaccess.TapAccess;
-import translator.GoodiesIngestor;
 
 
 public class GoodiesTester extends RootClass {

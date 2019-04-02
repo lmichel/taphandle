@@ -1,7 +1,6 @@
 package tapaccess;
 
 import resources.RootClass;
-import servlet.RootServlet;
 import session.NodeCookie;
 
 

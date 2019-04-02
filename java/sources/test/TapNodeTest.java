@@ -1,10 +1,8 @@
 package test;
 
-import java.net.URLDecoder;
-
+import metabase.TapNode;
 import registry.RegistryMark;
 import resources.RootClass;
-import metabase.TapNode;
 
 /**
  * @author laurent

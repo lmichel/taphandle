@@ -1,7 +1,6 @@
 package resources;
 
 
-import tapaccess.TapException;
 import cds.astro.Astrocoo;
 import cds.astro.Astroframe;
 import cds.astro.Coo;
@@ -10,6 +9,7 @@ import cds.astro.FK4;
 import cds.astro.FK5;
 import cds.astro.Galactic;
 import cds.astro.ICRS;
+import tapaccess.TapException;
 
 public class Coord extends RootClass {
 	/** Ascension droite (J2000 en degres) */

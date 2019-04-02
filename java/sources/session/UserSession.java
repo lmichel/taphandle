@@ -9,13 +9,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 
-import metabase.NodeBase;
-import metabase.TapNode;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
+import metabase.NodeBase;
+import metabase.TapNode;
 import resources.RootClass;
 import tapaccess.JobUtils;
 import tapaccess.TapAccess;
