@@ -33,7 +33,7 @@ function initFunctions () {
 	this.initLayout = function() {
 		Out.info("Activate popular sites access");
 		var np = window.location.href.split('?')[0].replace(/\/#?$/, "");
-		$(".3xmm-link").attr("href", np+"?url=http%3A//xcatdb.unistra.fr/3xmmdr7/tap/");
+		$(".3xmm-link").attr("href", np+"?url=http%3A//xcatdb.unistra.fr/3xmmdr8/tap/");
 		$(".cadc-link").attr("href", np+"?url=http%3A//www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap/");
 		$(".gavo-link").attr("href", np+"?url=http%3A//dc.zah.uni-heidelberg.de/__system__/tap/run/tap/");
 		$(".vizier-link").attr("href", np+"?url=http%3A//tapvizier.u-strasbg.fr/TAPVizieR/tap/");
@@ -44,8 +44,8 @@ function initFunctions () {
 		$(".sdss-link").attr("href", np+"?url=http://wfaudata.roe.ac.uk/sdssdr9-dsa/TAP/");
 		$(".ned-link").attr("href", np+"?url=https%3A//ned.ipac.caltech.edu/tap/");
 		$(".stsci-link").attr("href", np+"?url=http%3A//vao.stsci.edu/CAOMTAP/TapService.aspx/");
-		$(".gaiaesa-link").attr("href", np+"?http%3A//gea.esac.esa.int/tap-server/tap/");
-		$(".epnesa-link").attr("href", np+"?https%3A//archives.esac.esa.int/psa/epn-tap/tap/");
+		$(".gaiaesa-link").attr("href", np+"?url=http%3A//gea.esac.esa.int/tap-server/tap/");
+		$(".epnesa-link").attr("href", np+"?url=https%3A//archives.esac.esa.int/psa/epn-tap/tap/");
 		
 
 		// Define the height of the div knowing the banner take 70px and the query editor 330px
