@@ -340,8 +340,12 @@ public class TapNode  extends RootClass {
 	 * @throws TapException If no query succeed
 	 */
 	private void testCapabilities() throws Exception {
-		String query = "SELECT TOP 1 * FROM " + quoteTableName(getFirstTableName()).replace("public.", "\"public\".");
-		String uploadQuery = "SELECT TOP 1 * FROM " + quoteTableName(getFirstTableName()).replace("public.", "\"public\".") + " NATURAL JOIN TAP_UPLOAD.taphandlesample ";
+		DataTreePath dtp = getFirstDataTreePath();
+		String qualifiedTableName = quoteTableName(dtp.geTableOrg()).replace("public.", "\"public\".");
+		String query = "SELECT TOP 1 * FROM " + qualifiedTableName;
+		String uploadQuery = "SELECT TOP 1 * FROM " + qualifiedTableName + " NATURAL JOIN TAP_UPLOAD.taphandlesample ";
+				//String query = "SELECT TOP 1 * FROM " + quoteTableName(getFirstTableName()).replace("public.", "\"public\".");
+				//String uploadQuery = "SELECT TOP 1 * FROM " + quoteTableName(getFirstTableName()).replace("public.", "\"public\".") + " NATURAL JOIN TAP_UPLOAD.taphandlesample ";
 		logger.debug("Test query " + query);
 		QueryModeChecker qmc = new QueryModeChecker(this.regMark.getFullUrl(), query, uploadQuery, this.baseDirectory);
 		this.supportSyncMode = qmc.supportSyncMode();
@@ -385,6 +389,29 @@ public class TapNode  extends RootClass {
 			if( tbls.size() != 0 ){
 				for( int t=0 ; t<tbls.size() ; t++) {			
 					return  (String) ((JSONObject)(tbls.get(t))).get("name");
+				}
+			}
+		}
+		throw new TapException("No table published in node " + this.regMark.getNodeKey());
+		//return null;
+	}
+	
+	private DataTreePath getFirstDataTreePath()throws Exception {
+		JSONParser parser = new JSONParser();
+		JSONObject jso = (JSONObject) parser.parse(new FileReader(this.baseDirectory + "tables.json"));
+		JSONArray jsa = (JSONArray)(jso.get("schemas"));
+		if( jsa.size() == 0 ) {
+			throw new Exception("No schema in tables.json");
+		}
+		for( int i=0 ; i<jsa.size() ; i++) {
+			JSONObject jsonSchema = (JSONObject)(jsa.get(i));
+			JSONArray tbls = (JSONArray) (jsonSchema).get("tables");
+			//			if( tbls.size() == 0 ){
+			//				throw new TapException("No table published in node " + this.regMark.getNodeKey());
+			//			}
+			if( tbls.size() != 0 ){
+				for( int t=0 ; t<tbls.size() ; t++) {	
+					return new DataTreePath((String)(jsonSchema.get("name")), (String) ((JSONObject)(tbls.get(t))).get("name"), "");
 				}
 			}
 		}
