@@ -13,7 +13,8 @@
 ##########################
 # Script Resources
 #########################      
-workspaceDir="/home/michel/workspace"
+#workspaceDir="/home/michel/workspace"
+workspaceDir="/home/michel/gitRepositories"
 
 outputDir="../WebContent/min/packed" # directory where both packed JS and CSS are stored 
 packedCSS=$outputDir/packedCSS.css    # name of the file containing the packed CSS

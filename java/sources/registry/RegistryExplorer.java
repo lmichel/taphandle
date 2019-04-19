@@ -56,10 +56,10 @@ public class RegistryExplorer extends RootClass {
 			 * For te datalink demo
 			 */
 			offRegistryMarks.put("betacadc"       , new RegistryMark("betacadc", ""
-					, "http://beta.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap"
+					, "http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap"
 					, "Datalink Service Demonstrator", true, true));
-			offRegistryMarks.put("3xmm"       , new RegistryMark("3xmm", ""
-					, "http://xcatdb.u-strasbg.fr/3xmmdr5/tap"
+			offRegistryMarks.put("3xmmdr8"       , new RegistryMark("3xmm", ""
+					, "http://xcatdb.u-strasbg.fr/3xmmdr8/tap"
 					, "3rd XMM catalogue", true, true));
 		} catch (MalformedURLException e) {
 			logger.equals(e);
