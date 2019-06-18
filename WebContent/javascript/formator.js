@@ -122,7 +122,7 @@ ValueFormator = function() {
 	};	
 	var addSampControl = function(columnName, tdNode, url, sampMType, fileName){
 		tdNode.append("<a class='dl_samp'     title='Broadcast to SAMP'   href='#' onclick='WebSamp_mVc.fireSendVoreport(\"" 
-				+ url + "\",\"" + sampMType + "\", " + fileName + "); return false;'/></a>");
+				+ url + "\",\"" + sampMType + "\", \"" + fileName + "\"); return false;'/></a>");
 	};	
 	var addPreviewControl = function(columnName, tdNode, url, fileName){
 		var title = ((fileName != undefined)?fileName: "") + " preview";
