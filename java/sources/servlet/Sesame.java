@@ -41,6 +41,7 @@ public class Sesame extends RootServlet {
 	private void process(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		String object = request.getParameter("object");
 		ServletOutputStream out = response.getOutputStream();
+		try {
 		response.setContentType("application/json; charset=UTF-8");
 		if( object == null || object.trim().length() == 0 ) {
 			JsonUtils.teePrint(out , "{");
@@ -49,7 +50,6 @@ public class Sesame extends RootServlet {
 			JsonUtils.teePrint(out , "}");
 		}
 		else {
-			try {
 				PositionParser pp = new PositionParser(object);
 				String alpha = getDecimalCoordString(pp.getRa());
 				String delta;
@@ -64,9 +64,9 @@ public class Sesame extends RootServlet {
 				JsonUtils.teePrint(out, JsonUtils.getParam("delta", delta));
 				JsonUtils.teePrint(out , "}");
 
-			} catch (Exception e) {
-				reportJsonError( request,response, e);
-			}
+		}
+		} catch (Exception e) {
+			reportJsonError( request,response, e);
 		}
 	}
 
