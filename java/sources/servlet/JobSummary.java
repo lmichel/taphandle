@@ -1,5 +1,6 @@
 package servlet;
 
+import java.io.CharConversionException;
 import java.io.IOException;
 
 import javax.servlet.Servlet;
@@ -41,8 +42,9 @@ public class JobSummary extends RootServlet implements Servlet {
 			session.getJobStatus(nodeKey, jobId);
 			//response.getWriter().print(session.getJobSummary(nodeKey, jobId));
 			JsonUtils.teePrint(response, session.getJobSummary(nodeKey, jobId));
+			//System.out.println(session.getJobSummary(nodeKey, jobId));
 			//dumpJsonFile(session.getJobSummaryUrlPath(nodeKey, jobId), response);
-		} catch (Exception e) {
+		} catch (Exception e) { 
 			this.reportJsonError(request, response, e);
 		}
 	}
