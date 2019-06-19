@@ -36,6 +36,7 @@ rm $outputDir/packedJS.css
 #    There are actually 3 files *_m/v/c.js 
 #
 js_array_org=("basics.js"
+           "ModalAladin.js"
            "WebSamp"
            "KWConstraint"
            "AttachedData_v.js"
