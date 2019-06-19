@@ -75,9 +75,10 @@ public abstract class JsonUtils {
 	 * @param msg          message to process
 	 * @throws IOException 
 	 */
-	public static void teePrint(ServletOutputStream out, String msg) throws IOException {
+	public static void teePrint(ServletOutputStream out, String msg) throws Exception {
 		if( STDOUT ) System.out.println(msg);
-		out.println(msg);
+		// Message can contain french  accents
+		out.write(msg.getBytes("UTF-8")); 
 	}
 	/**
 	 * Force the MIME type to JSON: avoid FF "badly formed" errors
@@ -85,8 +86,9 @@ public abstract class JsonUtils {
 	 * @param msg
 	 * @throws IOException
 	 */
-	public static void teePrint(HttpServletResponse response, String msg) throws IOException {
-		response.setContentType("application/json");
+	public static void teePrint(HttpServletResponse response, String msg) throws Exception {
+		response.setContentType("application/json; charset=UTF-8");
+		response.setCharacterEncoding("UTF-8");
 		teePrint(response.getOutputStream(),msg);
 	}
 
