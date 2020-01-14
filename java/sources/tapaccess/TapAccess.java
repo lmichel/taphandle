@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
@@ -16,6 +17,7 @@ import java.net.URLConnection;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import resources.RootClass;
 import session.NodeCookie;
@@ -32,15 +34,91 @@ import translator.XmlToJson;
  */
 public class TapAccess  extends RootClass {
 
-	/**
-	 * Set global timeout for URLConnection conn
-	 * @param conn
-	 * @throws IOException 
-	 */
-	public static final URLConnection getUrlConnection(URL url) throws IOException{
-		URLConnection conn = url.openConnection();
+	public static final HttpURLConnection getSimpleUrlConnection(URL url) throws IOException{
+		logger.info("Get connection on " + url);
+		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 		conn.setConnectTimeout(SOCKET_CONNECT_TIMEOUT);		
 		conn.setReadTimeout(SOCKET_READ_TIMEOUT);
+		return conn;
+	}
+
+	/**
+	 * Returns the HTTP URL GET connection with the proper timeouts
+	 * If the connection is a redirection, a new connection the that URL is open
+	 * with the same timeouts.
+	 * The HTTP method is not processed by this method 
+	 * TODO handling the HTTP errors
+	 * Set global timeout for URLConnection
+	 * @param conn : URL connection ready to be used
+	 * @throws IOException 
+	 */
+	public static final HttpURLConnection getGetUrlConnection(URL url) throws IOException{
+		logger.info("Get connection on " + url);
+		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+		conn.setConnectTimeout(SOCKET_CONNECT_TIMEOUT);		
+		conn.setReadTimeout(SOCKET_READ_TIMEOUT);
+		conn.setRequestMethod("GET");
+
+		int status = conn.getResponseCode();
+
+		if (status != HttpURLConnection.HTTP_OK) {
+		    if (status == HttpURLConnection.HTTP_MOVED_TEMP
+		        || status == HttpURLConnection.HTTP_MOVED_PERM
+		            || status == HttpURLConnection.HTTP_SEE_OTHER) {
+		    HttpURLConnection conn2 ;
+		    String newUrl = conn.getHeaderField("Location");
+		    logger.debug("Redirect to " + newUrl);
+		    conn2 = (HttpURLConnection) (new URL(newUrl)).openConnection();
+		    conn2.setConnectTimeout(SOCKET_CONNECT_TIMEOUT);		
+		    conn2.setReadTimeout(SOCKET_READ_TIMEOUT);
+			return conn2;
+		    }
+
+		}
+		return conn;
+	}
+	
+	/**
+	 * Returns the HTTP URL POSTconnection with the proper timeouts
+	 * Data are sent to this connection
+	 * If the connection is a redirection, a new GET connection to that URL is open
+	 * with the same timeouts but without data.
+	 * The HTTP method is not processed by this method 
+	 * TODO handling the HTTP errors
+	 * Set global timeout for URLConnection
+	 * @param conn : URL connection ready to be used
+	 * @param data : request parameters
+	 * @throws IOException 
+	 */
+	public static final HttpURLConnection getPostUrlConnection(URL url, String data) throws IOException{
+		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+		conn.setConnectTimeout(SOCKET_CONNECT_TIMEOUT);		
+		conn.setReadTimeout(SOCKET_READ_TIMEOUT);
+		conn.setRequestMethod("POST");
+		conn.setDoOutput(true);
+		if( data != null ) {
+			OutputStreamWriter writer = new OutputStreamWriter(conn.getOutputStream());
+			//write parameters
+			writer.write(data);
+			writer.flush();
+			writer.close();
+		}
+		
+		// process redirection by hand
+		int status = conn.getResponseCode();
+
+		if (status != HttpURLConnection.HTTP_OK && (status == HttpURLConnection.HTTP_MOVED_TEMP
+		        || status == HttpURLConnection.HTTP_MOVED_PERM
+		            || status == HttpURLConnection.HTTP_SEE_OTHER) ) {
+		    HttpURLConnection conn2 ;
+		    String newUrl = conn.getHeaderField("Location");		    
+		    logger.debug("Redirect to " + newUrl + " as a GET");
+		    conn2 = (HttpURLConnection) (new URL(newUrl)).openConnection();
+		    conn2.setConnectTimeout(SOCKET_CONNECT_TIMEOUT);		
+		    conn2.setReadTimeout(SOCKET_READ_TIMEOUT);
+			conn2.setRequestMethod("GET");
+			return conn2;
+		}
 		return conn;
 	}
 
@@ -58,17 +136,35 @@ public class TapAccess  extends RootClass {
 		// Send the request
 		URL url = new URL(endpoint);  
 		cookie.addCookieToUrl(url);   
-		URLConnection conn = getUrlConnection(url);
-		((HttpURLConnection)conn).setRequestMethod("POST");		
-		conn.setDoOutput(true);
-		if( data != null ) {
-			OutputStreamWriter writer = new OutputStreamWriter(conn.getOutputStream());
-			//write parameters
-			writer.write(data);
-			writer.flush();
-			writer.close();
-		}
+		HttpURLConnection conn = getPostUrlConnection(url, data);
+		/*
+		 * In case of error, we asume te the server returns an error VOTABLE
+		 * looking like this <...><...>...<...>MESSAGE</>...</></>
+		 * The MESSAGE is extracted and sent to the client as an Exception  message
+		 */
+		if( conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
+			logger.error(endpoint + " returns error " +  ((HttpURLConnection)conn).getResponseCode());
+			
+			InputStream is = conn.getErrorStream();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+			StringBuilder stringBuffer = new StringBuilder();
+			String line;
+			while ((line = reader.readLine()) != null) {
+				stringBuffer.append(line);
+			}
+			reader.close();
+			Pattern p = Pattern.compile(".*>([^<>]+)<.*", Pattern.DOTALL);
+			Matcher m = p.matcher(stringBuffer.toString());
+			if (m.find( )) {
+				 logger.error("Error " + m.group(1));
+		         throw new TapException(m.group(1));
 
+		    } else {
+				 logger.error("Error Uncaught error");
+		         throw new TapException("Uncaught error");
+		    }
+		
+        }
 		// Get the response
 		try {
 			String ce;
@@ -91,15 +187,16 @@ public class TapAccess  extends RootClass {
 					logger.debug("got " + lg + "b of encoded data ");
 			
 				} finally {
-					in.close();
-				    fileOutputStream.close();
+				    if(fileOutputStream != null ) fileOutputStream.close();
+				    if(in != null ) in.close();
 				}
 			/*
 			 * ASCII content
 			 */
 			} else {
 				BufferedWriter bw = null;
-				BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+				InputStream inputStream = conn.getInputStream();
+				BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 				try {
 					bw = new BufferedWriter(new FileWriter(statusFileName));
 					String line;
@@ -112,7 +209,7 @@ public class TapAccess  extends RootClass {
 
 				} finally {
 					if( bw != null ) bw.close();
-					reader.close();
+					if(reader != null ) reader.close();
 				}
 
 			}
@@ -125,22 +222,9 @@ public class TapAccess  extends RootClass {
 
 		} catch(SocketTimeoutException e){
 			logger.warn("Socket on " + endpoint + " closed on client timeout (" + (RootClass.SOCKET_READ_TIMEOUT/1000) + "\")");
-			((HttpURLConnection)conn).disconnect();
+			conn.disconnect();
 			throw new SocketTimeoutException("Socket Closed on client timeout (" + (RootClass.SOCKET_READ_TIMEOUT/1000) + "\")");
 		}
-		/*
-		 * Put the error page in the result file
-		 *
-		if( ((HttpURLConnection)conn).getResponseCode() >= 500 ) {
-			logger.error(endpoint + "return error " +  ((HttpURLConnection)conn).getResponseCode());
-			is =((HttpURLConnection)conn).getErrorStream();
-			BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-			String line;
-			while ((line = reader.readLine()) != null) {
-				bw.write(line + "\n");
-			}
-			return ;
-		} */
 	}
 
 	/**
@@ -157,8 +241,7 @@ public class TapAccess  extends RootClass {
 		URL url = new URL(endpoint);  
 		cookie.addCookieToUrl(url);   
 
-		URLConnection conn = getUrlConnection(url);
-		((HttpURLConnection)conn).setRequestMethod("GET");		
+		HttpURLConnection conn = getGetUrlConnection(url);
 
 		// Get the response
 		BufferedWriter bw ;
@@ -196,8 +279,7 @@ logger.info("@@@ " + f.exists() + " " + f.length() );
 		//		s'il y a des & dans l'URL....et dans ce cas, ça ne plaît pas du tout au navigateur Web (quelqu'il soit) ! 
 		URL url = new URL(URLDecoder.decode(endpoint, "ISO-8859-1"));
 		cookie.addCookieToUrl(url);   
-		URLConnection conn = getUrlConnection(url);
-		//((HttpURLConnection)conn).setRequestMethod("POST");		
+		URLConnection conn = getSimpleUrlConnection(url);
 		conn.setDoOutput(true);
 
 		// Get the response
@@ -222,7 +304,6 @@ logger.info("@@@ " + f.exists() + " " + f.length() );
 		reader.close();
 		cookie.storeCookie();
 		XmlToJson.translateResultTable(outputdir + File.separator + outputfile, outputdir + File.separator + JSON_JOB_RESULT);
-		//XmlToJson.translateVOTable(outputdir, "result", "result", ns);
 	}
 
 	/**
@@ -233,7 +314,7 @@ logger.info("@@@ " + f.exists() + " " + f.length() );
 	private static void sendDeleteRequest(String endpoint, NodeCookie cookie) throws Exception {
 		URL url = new URL(endpoint);
 		cookie.addCookieToUrl(url);   
-		HttpURLConnection httpCon = (HttpURLConnection) getUrlConnection(url);
+		HttpURLConnection httpCon = (HttpURLConnection) getSimpleUrlConnection(url);
 		httpCon.setDoOutput(true);
 		httpCon.setRequestProperty(
 				"Content-Type", "application/x-www-form-urlencoded" );

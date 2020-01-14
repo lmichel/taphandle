@@ -54,7 +54,6 @@ public class TapNode  extends RootClass {
 	private NameSpaceDefinition availabilityNS = new NameSpaceDefinition();
 	private NameSpaceDefinition capabilityNS   = new NameSpaceDefinition();
 	private NameSpaceDefinition tablesNS       = new NameSpaceDefinition();
-	private long last_availability_check = -1;
 
 	public final boolean largeResource;	
 	/*
@@ -316,7 +315,6 @@ public class TapNode  extends RootClass {
 			} catch (Exception e3) {
 				try {
 					logger.warn("No tables in tables.xml, Try to scan the TAP_SCHEMA");	
-					System.exit(1);
 					new TablesReconstructor(this.regMark.getAbsoluteURL(null), this.baseDirectory);
 					this.translateServiceReponse(tables, tablesNS);
 					if( this.getFirstTableName() == null ) {
@@ -344,20 +342,26 @@ public class TapNode  extends RootClass {
 		String qualifiedTableName = quoteTableName(dtp.geTableOrg()).replace("public.", "\"public\".");
 		String query = "SELECT TOP 1 * FROM " + qualifiedTableName;
 		String uploadQuery = "SELECT TOP 1 * FROM " + qualifiedTableName + " NATURAL JOIN TAP_UPLOAD.taphandlesample ";
-				//String query = "SELECT TOP 1 * FROM " + quoteTableName(getFirstTableName()).replace("public.", "\"public\".");
-				//String uploadQuery = "SELECT TOP 1 * FROM " + quoteTableName(getFirstTableName()).replace("public.", "\"public\".") + " NATURAL JOIN TAP_UPLOAD.taphandlesample ";
-		logger.debug("Test query " + query);
-		QueryModeChecker qmc = new QueryModeChecker(this.regMark.getFullUrl(), query, uploadQuery, this.baseDirectory);
-		this.supportSyncMode = qmc.supportSyncMode();
-		this.supportAsyncMode = qmc.supportAsyncMode();
+
+		logger.info("Test capabilities with query " + query);
+		QueryModeChecker qmc=null;
+		/*
+         *  ACDC async mode return e redirection. This means that the base query of service cannot be used to control the job.
+         *  This make this capability not usable in the context of the proxy as it is designed now
+         */
 		if( this.regMark.getUrl().contains("cadc") ) {
 			logger.info("Force CADC to work in sync mode to avoid https issues");
+			qmc = new QueryModeChecker(this.regMark.getFullUrl(), query, uploadQuery, this.baseDirectory, true);
 			this.supportAsyncMode = false;
-		}
-		if( this.regMark.getUrl().contains("vao.stsci.edu/CAOMTAP") ) {
+		} else	if( this.regMark.getUrl().contains("vao.stsci.edu/CAOMTAP") ) {
 			logger.info("Force STSCI to work in sync mode to avoid https issues");
+			qmc = new QueryModeChecker(this.regMark.getFullUrl(), query, uploadQuery, this.baseDirectory, true);
 			this.supportAsyncMode = false;
+		} else {
+			qmc = new QueryModeChecker(this.regMark.getFullUrl(), query, uploadQuery, this.baseDirectory, false);
+			this.supportAsyncMode = qmc.supportAsyncMode();
 		}
+		this.supportSyncMode = qmc.supportSyncMode();
 
 		if( CHECKUPLOAD ) {
 			this.supportUpload = qmc.supportUpload();
@@ -416,7 +420,6 @@ public class TapNode  extends RootClass {
 			}
 		}
 		throw new TapException("No table published in node " + this.regMark.getNodeKey());
-		//return null;
 	}
 	/**
 	 * Invokes a service of the node, extract its name space which will be used by XLST 
@@ -425,10 +428,9 @@ public class TapNode  extends RootClass {
 	 * @throws Exception If something goes wrong
 	 */
 	private String getServiceReponse(String service, NameSpaceDefinition nsDefinition) throws Exception {
-		//Pattern pattern  = Pattern.compile("(?i)(?:.*(xmlns(?:\\:\\w+)?=\\\"http\\:\\/\\/www\\.ivoa\\.net\\/.*" + service + "[^\\\"]*\\\").*)");
-		Pattern NS_PATTERN  = Pattern.compile(".*xmlns(?::\\w+)?=(\"[^\"]*(?i)(?:" + service + ")[^\"]*\").*");
+		Pattern nsPattern  = Pattern.compile(".*xmlns(?::\\w+)?=(\"[^\"]*(?i)(?:" + service + ")[^\"]*\").*");
 		logger.debug("Connect " + this.regMark.getAbsoluteURL(null) + service);
-		URLConnection conn = TapAccess.getUrlConnection(new URL(this.regMark.getAbsoluteURL(null) + service));
+		URLConnection conn = TapAccess.getSimpleUrlConnection(new URL(this.regMark.getAbsoluteURL(null) + service));
 		InputStream is = conn.getInputStream();
 		BufferedReader in = new BufferedReader(new InputStreamReader(is));
 
@@ -438,7 +440,7 @@ public class TapNode  extends RootClass {
 		boolean found = false;
 		while ((inputLine = in.readLine()) != null) {
 			if( !found ) {
-				Matcher m = NS_PATTERN.matcher(inputLine);
+				Matcher m = nsPattern.matcher(inputLine);
 				if (m.matches()) {				
 					nsDefinition.init("xmlns:vosi=" + m.group(1)) ;
 					found = true;
