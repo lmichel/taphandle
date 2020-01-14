@@ -1,6 +1,5 @@
 package servlet;
 
-import java.io.CharConversionException;
 import java.io.IOException;
 
 import javax.servlet.Servlet;
