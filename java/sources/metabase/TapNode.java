@@ -114,6 +114,20 @@ public class TapNode  extends RootClass {
 		this.largeResource = false;
 	}
 
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	public String toString() {
+		String result = this.regMark.toString() + " ";
+		result +=  (this.supportCapability())?    "CAPABILITY,": "NOCAPABILITY,";
+		result +=  (this.supportTables())?          "TABLES,"    : "NOTABLES,";
+		result +=  (this.supportTapSchemaJoin())? "JOIN,"      : "NOJOIN,";
+		result +=  (this.supportSyncMode())?      "SYNC,"     : "NOSYNC,";
+		result +=  (this.supportAsyncMode())?     "ASYNC,"     : "NOASYNC,";
+		result +=  (this.supportUpload())?        "UPLOAD ,"   : "NOUPLOAD,";
+		return result;
+	}
+
 	/**
 	 * Do some checking "by hand"
 	 * It is just devoted to scan all nodes (see {@link ExploreTapRegistry} without failure
@@ -349,12 +363,9 @@ public class TapNode  extends RootClass {
          *  ACDC async mode return e redirection. This means that the base query of service cannot be used to control the job.
          *  This make this capability not usable in the context of the proxy as it is designed now
          */
-		if( this.regMark.getUrl().contains("cadc") ) {
-			logger.info("Force CADC to work in sync mode to avoid https issues");
-			qmc = new QueryModeChecker(this.regMark.getFullUrl(), query, uploadQuery, this.baseDirectory, true);
-			this.supportAsyncMode = false;
-		} else	if( this.regMark.getUrl().contains("vao.stsci.edu/CAOMTAP") ) {
-			logger.info("Force STSCI to work in sync mode to avoid https issues");
+		if( this.regMark.getUrl().contains("cadc") || this.regMark.getUrl().contains("vao.stsci.edu/CAOMTAP") 
+				|| this.regMark.getUrl().contains("esac") || this.regMark.getUrl().contains("cxctap")){
+			logger.info("Force " + this.regMark.getUrl() + "  to work in sync mode to avoid redirection issues");
 			qmc = new QueryModeChecker(this.regMark.getFullUrl(), query, uploadQuery, this.baseDirectory, true);
 			this.supportAsyncMode = false;
 		} else {
@@ -430,7 +441,7 @@ public class TapNode  extends RootClass {
 	private String getServiceReponse(String service, NameSpaceDefinition nsDefinition) throws Exception {
 		Pattern nsPattern  = Pattern.compile(".*xmlns(?::\\w+)?=(\"[^\"]*(?i)(?:" + service + ")[^\"]*\").*");
 		logger.debug("Connect " + this.regMark.getAbsoluteURL(null) + service);
-		URLConnection conn = TapAccess.getSimpleUrlConnection(new URL(this.regMark.getAbsoluteURL(null) + service));
+		URLConnection conn = TapAccess.getGetUrlConnection(new URL(this.regMark.getAbsoluteURL(null) + service));
 		InputStream is = conn.getInputStream();
 		BufferedReader in = new BufferedReader(new InputStreamReader(is));
 
@@ -584,7 +595,6 @@ public class TapNode  extends RootClass {
 		/*
 		 * If there is no attribute in the JSON table description, the service delivers it likley table by table
 		 */
-		System.out.println(dataTreePath);
 		if( !isThereJsonTableDesc(dataTreePath) ) {
 			logger.debug("No column found in " + tableFileName + ": make a per table query");
 			File fn = new File(productName + ".xml");

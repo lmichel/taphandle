@@ -25,7 +25,7 @@ public class SyncTimeOutTest  extends RootClass {
 	public static void main(String[] args) throws Exception {
 		String url = "http://dc.zah.uni-heidelberg.de/tap/";
 		String nodeKey = "nodekey";
-		String query = "SELECT  TOP 100 * FROM ivoa.obscore WHERE CONTAINS(POINT('ICRS', s_ra, s_dec), CIRCLE('ICRS', 23.462083, +30.659917, 0.016666666666666666)) = 1 ";
+		String query = "SELECT TOP 100 * FROM ivoa.obscore WHERE 1=CONTAINS(POINT('ICRS', s_ra, s_dec), CIRCLE('ICRS', 23.462083, +30.659917, 0.0016666666666666666)) ";
 		String jobID = "123";
 		String baseDirectory = System.getProperty("user.home") + "/Desktop/gavo/";
 		String treepath = "A>B>C";

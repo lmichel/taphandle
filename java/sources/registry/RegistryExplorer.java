@@ -6,6 +6,9 @@ import java.net.MalformedURLException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.Arrays;
+import java.util.HashSet;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -27,6 +30,15 @@ public class RegistryExplorer extends RootClass {
 		//		+ "  NATURAL JOIN rr.table_column\n"
 		//		+ "  NATURAL JOIN rr.res_table\n"
 		+ "WHERE standard_id='ivo://ivoa.net/std/tap' AND intf_type = 'vs:paramhttp' ";
+	public static final Set<String> iniAtStart = new HashSet<>(Arrays.asList(
+			"ivo://cds.vizier/obstap",
+			"ivo://org.gavo.dc/tap",
+			"ivo://nasa.heasarc/services/xamin",
+			"ivo://cxc.harvard.edu/cda",
+			"ivo://archive.stsci.edu/caomtap",
+			"ivo://esavo/psa/epntap"
+			)
+	);
 	public static final Map<String, RegistryMark> registryMarks = new LinkedHashMap<String, RegistryMark>();
 	public static final Map<String, RegistryMark> offRegistryMarks = new LinkedHashMap<String, RegistryMark>();
 	/*
@@ -34,33 +46,21 @@ public class RegistryExplorer extends RootClass {
 	 */
 	static {
 		try {
-//			offRegistryMarks.put("xcatdb 3XMMMdr6", new RegistryMark("xcatdb 3XMMMdr6", ""
-//					, "http://xcatdb.unistra.fr/3xmmdr6/tap"
-//					, "SSC interface of the 3XMM-Newton catalogue DR5", true, true));
-			offRegistryMarks.put("vizier"       , new RegistryMark("vizier", ""
-					, "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/"
-					, "CDS Vizier TAP query engine", true, true));
-			offRegistryMarks.put("simbad"       , new RegistryMark("simbad", "ivo://cds.simbad/tap"
+			offRegistryMarks.put("cdssimbad"       , new RegistryMark("simbad", "ivo://cds.simbad/tap"
 					, "http://simbad.u-strasbg.fr/simbad/sim-tap"
 					, "CDS Simbad TAP query engine", true, true));
-//			offRegistryMarks.put("cadc"         , new RegistryMark("cadc"  , "ivo://cadc.nrc.ca/tap"
-//					, "http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap"
-//					, "CADC Table Query (TAP) Service", true, true));
-//			offRegistryMarks.put("gavo"         , new RegistryMark("gavo"  , "ivo://org.gavo.dc/__system__/tap/run"
-//					, "http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap"
-//					, "GAVO data center TAP service", true, true));
-//			offRegistryMarks.put("heasarc-xamin", new RegistryMark("heasarc-xamin", ""
-//					, "http://heasarc.gsfc.nasa.gov/xamin/vo/tap"
-//					, "HEASARCH Table Query (TAP) Service", true, true));
+			offRegistryMarks.put("cdsvizier"       , new RegistryMark("vizier", "ivo://cds.vizier/tap"
+					, "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/"
+					, "CDS Vizier TAP query engine", true, true));
 			/*
 			 * For te datalink demo
 			 */
 			offRegistryMarks.put("betacadc"       , new RegistryMark("betacadc", ""
 					, "http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap"
 					, "Datalink Service Demonstrator", true, true));
-			offRegistryMarks.put("3xmmdr8"       , new RegistryMark("3xmm", ""
-					, "http://xcatdb.u-strasbg.fr/3xmmdr8/tap"
-					, "3rd XMM catalogue", true, true));
+//			offRegistryMarks.put("3xmmdr8"       , new RegistryMark("3xmm", ""
+//					, "http://xcatdb.unistra.fr/3xmmdr8/tap"
+//					, "3rd XMM catalogue (DR8)", true, true));
 		} catch (MalformedURLException e) {
 			logger.equals(e);
 		}
@@ -140,7 +140,8 @@ public class RegistryExplorer extends RootClass {
 				if( (rm = offRegistryMarks.get(key)) != null ) {
 					registryMarks.put(key, rm);
 				} else {
-					registryMarks.put(key, new RegistryMark(key, ivoid, url, description, false, true));
+					boolean mustInit = iniAtStart.contains(ivoid) ;
+					registryMarks.put(key, new RegistryMark(key, ivoid, url, description, mustInit, true));
 				}
 			}
 		}

@@ -113,10 +113,10 @@ public class QueryModeChecker extends RootClass {
 								, this.cookie);
 				}
 				if( !resultFound ){
-					throw new Exception("NO result URL in async job response");
+					logger.warn("NO result URL in async job response");
+					return false;
 				}
 			} catch(Exception e) {
-				e.printStackTrace();System.exit(1);
 				logger.warn(this.endpoint + " does not support queries in asynchronous mode: " + e.getMessage());
 				return false;
 			}

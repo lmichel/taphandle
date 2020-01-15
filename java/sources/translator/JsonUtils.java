@@ -77,9 +77,10 @@ public abstract class JsonUtils {
 	 */
 	public static void teePrint(ServletOutputStream out, String msg) throws Exception {
 		if( STDOUT ) System.out.println(msg);
-		// Message can contain french  accents
+		// Message can contain French accents
 		out.write(msg.getBytes("UTF-8")); 
 	}
+	
 	/**
 	 * Force the MIME type to JSON: avoid FF "badly formed" errors
 	 * @param response

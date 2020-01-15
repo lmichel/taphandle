@@ -20,7 +20,7 @@ class NodeMap  extends RootClass {
 	/**
 	 * {@link TapNode} map. Created at loading time
 	 */
-	private LinkedHashMap<String , TapNode> nodeMap = new LinkedHashMap<String , TapNode>();
+	private LinkedHashMap<String , TapNode> nodeMap = new LinkedHashMap<>();
 
 	
 	/**
@@ -39,13 +39,24 @@ class NodeMap  extends RootClass {
 		} if( (rm = RegistryExplorer.getregistryMarkByUrl(url)) != null){
 			key = rm.getNodeKey();
 			logger.info("URL " + url + " exist in the registry, key = " + key);
-			nodeMap.put(key, new TapNode(rm, metaBaseDir + key));	
+			try {
+				TapNode tapNode = new TapNode(rm, metaBaseDir + key);
+				nodeMap.put(key,tapNode);	
+			} catch (Exception e) {
+				logger.error("Node " + key + " not working:  "+ e.getMessage());
+			}
+			
 		} else  {
 			key = ShortNameBuilder.getShortName(null, url);
 			logger.info("URL " + url + " does not exist in the registry, create a mark with key = " + key);
-			nodeMap.put(key, new TapNode(new RegistryMark(key, ""
-					, url, "TAP NOde added by a user", false, supportJoins)
-					, metaBaseDir + key));
+			try {
+				TapNode tapNode = new TapNode(new RegistryMark(key, ""
+						, url, "TAP Node added by a user", false, supportJoins)
+						, metaBaseDir + key);
+				nodeMap.put(key,tapNode);	
+			} catch (Exception e) {
+				logger.error("Node " + key + " not working:  "+ e.getMessage());
+			}
 		}
 		return key;
 	}

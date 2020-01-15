@@ -2,6 +2,8 @@ package metabase;
 
 import java.io.File;
 import java.net.MalformedURLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import registry.RegistryExplorer;
@@ -31,6 +33,7 @@ public class NodeBase extends RootClass{
 		private String url;
 		private String key;
 		private boolean supportJoin;
+		private boolean done = false;
 
 		ThreadInit(RegistryMark node) {
 			url = node.getFullUrl();
@@ -43,6 +46,11 @@ public class NodeBase extends RootClass{
 			} catch (Exception ex) {
 				logger.error("Cannot init node " + key + " served by " + url, ex);
 			}	
+			logger.info(this.url + " ready");
+			this.done = true;
+		}
+		public boolean isDone(){
+			return this.done;
 		}
 	}
 	/**
@@ -50,6 +58,7 @@ public class NodeBase extends RootClass{
 	 */
 	private NodeBase() {
 		synchronized (this) {
+			List<ThreadInit> regMarkToInit = new ArrayList<>();
 
 			try {
 				validWorkingDirectory(metaBaseDir);
@@ -60,13 +69,33 @@ public class NodeBase extends RootClass{
 					for( RegistryMark r: RegistryExplorer.registryMarks.values()) {
 						if(r.mustBeInitAtStart() ){
 							logger.info("load node " + r.getNodeKey());
-							(new ThreadInit(r)).start();
+							ThreadInit ti = new ThreadInit(r);
+							regMarkToInit.add(ti);
+							ti.start();
 						}
 					}
 				}
 			} catch (Exception e) {
 				logger.error("Cannot init node base", e);
 			}
+			boolean notDone = true;
+			logger.info("Waiting on init done");
+			while( notDone ) {
+				boolean ok = true;
+				for( ThreadInit ti: regMarkToInit){
+					if( ! ti.isDone()) {
+						ok = false;
+						break;
+					}
+				}
+				try {
+					logger.debug("Waiting on init done");
+					Thread.sleep(3000);
+				} catch (InterruptedException e) {}
+				notDone = !ok;
+			}
+			logger.info("Init done");
+
 		}
 	}
 

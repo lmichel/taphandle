@@ -109,7 +109,8 @@ public class TapAccess  extends RootClass {
 
 		if (status != HttpURLConnection.HTTP_OK && (status == HttpURLConnection.HTTP_MOVED_TEMP
 		        || status == HttpURLConnection.HTTP_MOVED_PERM
-		            || status == HttpURLConnection.HTTP_SEE_OTHER) ) {
+		            || status == HttpURLConnection.HTTP_SEE_OTHER) 
+				) {
 		    HttpURLConnection conn2 ;
 		    String newUrl = conn.getHeaderField("Location");		    
 		    logger.debug("Redirect to " + newUrl + " as a GET");
@@ -457,7 +458,7 @@ logger.info("@@@ " + f.exists() + " " + f.length() );
 		sendGetRequest(endpoint + "async/" + jobId
 				, statusFilename
 				, cookie);
-		System.out.println(statusFilename.replaceAll("xml", "json") + " " + JsonUtils.getValue (statusFilename.replaceAll("xml", "json"), "job.phase"));
+		// System.out.println(statusFilename.replaceAll("xml", "json") + " " + JsonUtils.getValue (statusFilename.replaceAll("xml", "json"), "job.phase"));
 		return  JsonUtils.getValue (statusFilename.replaceAll("xml", "json"), "job.phase");
 	}
 

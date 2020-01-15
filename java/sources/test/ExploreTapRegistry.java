@@ -25,10 +25,6 @@ import translator.XmlToJson;
 public class ExploreTapRegistry  extends RootClass {
 
 
-	private static void usage() {
-		logger.error("USAGE: AsyncJobTest [url] [query]");
-		System.exit(1);
-	}
 	/**
 	 * @param args
 	 * @throws Exception 
@@ -45,7 +41,7 @@ public class ExploreTapRegistry  extends RootClass {
 				//		+ "  NATURAL JOIN rr.res_table\n"
 				+ "WHERE standard_id='ivo://ivoa.net/std/tap' AND intf_type = 'vs:paramhttp' ";
 		NodeCookie cookie=new NodeCookie();
-		String outFile = TapAccess.runSyncJob(node, query, xml, cookie, null);
+		TapAccess.runSyncJob(node, query, xml, cookie, null);
 		XmlToJson.translateResultTable(xml, json);
 
 		BufferedReader br = new BufferedReader(new FileReader(json));

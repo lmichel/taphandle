@@ -81,7 +81,7 @@ public class RegistryMark extends RootClass {
 		return appPath;
 	}
 	public String toString() {
-		return this.fullUrl + ": server=" + this.serverUrl + " appl=" + this.appPath;
+		return this.fullUrl + ": server=" + this.serverUrl + " appl=" + this.appPath + " ivoid=" + this.ivoid + " initAtStart=" + this.mustBeInitAtStart ;
 	}
 	public boolean supportJoin() {
 		return supportJoin;
