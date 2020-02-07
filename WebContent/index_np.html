@@ -8,24 +8,17 @@
 <link href='https://fonts.googleapis.com/css?family=Oswald' rel='stylesheet' type='text/css' />
 
 <script type="text/javascript" src="jsimport/jquery-1.7.2.js"></script>
-<script>var useDebugResources = true; var productionMode=true;</script>
+<script>var useDebugResources = true; var productionMode=false;</script>
 <script type="text/javascript" src="javascript/loader.js"></script>
 <script type="text/javascript" src="javascript/packedLoader.js"></script>
 
 <script>
 	if (productionMode) {
 		useDebugResources = false;
-		packedResourceLoader.setCss([ "min/packed/packedCSS.css"
-									,"min/packed/bootstrap.css.map" 
-									,"http://localhost/alixscreen/styles/packedCSS/style_bundle.css"
-							         ,"http://localhost/alixscreen/aladinLite/aladin.css"
-							   		 ,"http://localhost/alixscreen/styles/aladinliteX.css"
-							   		 ,"http://obas-stg-c11:8080/jsresources/saadajsbasics/styles/basics.css"
-							 		 ,"http://obas-stg-c11:8080/jsresources/saadajsbasics/styles/domain.css"]);
-		packedResourceLoader.setScripts(["http://localhost/alixscreen/packager/lmpack/alix_packed/packedJSimport_alix.js"
+		packedResourceLoader.setCss([ "min/packed/packedCSS.css","min/packed/bootstrap.css.map" ]);
+		packedResourceLoader.setScripts([ "http://localhost/alixscreen/packager/lmpack/alix_packed/packedJSimport_alix.js"
 										 ,"http://localhost/alixscreen/packager/lmpack/alix_packed/packedJS_alix.js"
-			                             ,"min/packed/packedJS.js"
-			                   				]);
+			                             ,"min/packed/packedJS.js" ]);
 		packedResourceLoader.loadAll();
 	} else {
 
@@ -371,11 +364,6 @@
 					<input type='text' id='qlimit' class='numinputvalue'  title='Set the max number of returned rows'
 		        	style="font-size: small;font-family: Arial, Helvetica, sans-serif;" value='100'/><hr/>  
 				</div>
-				<div style="text-align: right ;padding: 5px; border-style: hidden;">
-					<input type="button" id="connectalix" class='accept' title='show the query result in Alix' style="background:none;background-color:#a3fca3;" value="ConnectAlix" /><hr/> 
-					
-					<hr/>
-				</div> 
 			</div>
 			<!--  
 				Query form

@@ -27,11 +27,18 @@ jQuery.extend({
 			tapColumnSelector.fireSetTreepath(dataTreePath, ((andsubmit)? this.fireSubmitQueryEvent: null));
 
 		};
+		this.alixSubmitQueryEvent = function(){
+			$.each(listeners, function(i){
+				listeners[i].alixSubmitQueryEvent();
+			});
+		};
+		
 		this.fireSubmitQueryEvent = function(){
 			$.each(listeners, function(i){
 				listeners[i].controlSubmitQueryEvent();
 			});
 		};
+		
 		this.fireGoodyRemoved = function(goodyName){
 			tapPosSelector.fireGoodyRemoved(goodyName);
 		};

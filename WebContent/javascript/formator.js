@@ -87,7 +87,11 @@ ValueFormator = function() {
 			addSTCRegionControl(tdNode, value);
 		} else if ( raValue != undefined && decValue != undefined && 
 				(columnMap.s_ra == columnMap.currentColumn || columnMap.s_dec == columnMap.currentColumn) ) {
-			var alLink = "<a onclick='ModalAladin.aladinExplorer({ target: &quot;" + raValue + " " + decValue + "&quot;, fov: 0.016, title:&quot;...&quot;}, []);'class='dl_aladin' href='javascript:void(0);' title='Send source coord. to Aladin Lite'></a>";
+			var strlon = Numbers.toSexagesimal(raValue/15, 8, false);
+			var strlat = Numbers.toSexagesimal(decValue, 7, false);
+			var position = strlon+" "+strlat;
+			//var alLink = "<a onclick='ModalAladin.aladinExplorer({ target: &quot;" + raValue + " " + decValue + "&quot;, fov: 0.016, title:&quot;...&quot;}, []);'class='dl_aladin' href='javascript:void(0);' title='Send source coord. to Aladin Lite'></a>";
+			var alLink = "<a onclick='Alix_Modalinfo.showPopup( &quot;"+position+ "&quot;);'class='dl_aladin' href='javascript:void(0);' title='Send source coord. to Alix'></a>";
 			tdNode.html(alLink + " " + (new Number(value)).toPrecision(8));
 			/*
 			 * Array annotation removed from server because of CSIRO for which all data are typed as arra
@@ -142,7 +146,20 @@ ValueFormator = function() {
 		tdNode.append("<a title='" + stcRegion + " (click to plot)' class='dl_stc' href='#'></a>");
 		tdNode.append("<a class='dl_samp' title='Broadcast to SAMP'   href='#' onclick='WebSamp_mVc.fireSendAladinScript(&quot;" + region.getAladinScript() + "&quot;); return false;'/></a>");
 		tdNode.first().click(function() {
-			ModalAladin.aladinExplorer({ region: region, fov: 0.016, title:"STC Region", surveyKeyword: targetName}, []);
+			/*ModalAladin.aladinExplorer({ region: region, fov: 0.016, title:"STC Region", surveyKeyword: targetName}, []);
+			var strlon = Numbers.toSexagesimal(region.raCenter/15, 8, false);
+			var strlat = Numbers.toSexagesimal(region.decCenter, 7, false);
+			if(strlat.indexOf("-")==-1){
+				strlat="+"+strlat;
+			}
+			var position = strlon+" "+strlat;*/
+			var points=[];
+			for(var i =0;i<region.points.length;i++){
+				for(var j=0;j<2;j++){
+					points.push(region.points[i][j]);
+				}
+			}
+			Alix_Modalinfo.changeRefBlue(points);
 			return false;
 		})
 	}

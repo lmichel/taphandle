@@ -1,0 +1,1 @@
+configureALIX (AlixConfig.masTest);

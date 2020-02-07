@@ -14,6 +14,8 @@ resourceLoader = function() {
 	var jsimportsDir  = baseScriptDir + "/jsimports/";
 	var javascriptDir = baseScriptDir + "/javascript/";
 	var local_js = ["basics.js"
+					, "ModalAladin.js"
+					, "Modalcommand.js"
 	                , "WebSamp"
 	                , "KWConstraint"
 	                , "AttachedData_v.js"
@@ -73,23 +75,23 @@ resourceLoader = function() {
 		/*
 		 * Check if saadajsbasics resources are installed locally
 		 */
-		baseUrl = "http://obas-dev-lm:8888/jsresources/";
+		baseUrl = "http://obas-stg-c11:8080/jsresources/";
 		$.ajax({
-			url: baseUrl + 'saadajsbasics/loader.js',
+			url: baseUrl + 'saadajsbasics/loaders/loader.js',
 			async: false, 
 			dataType: "text",
 			error: function(data) {
-				baseUrl = "http://obsas-stg-c11:8888/jsresources/";
+				baseUrl = "http://obas-stg-c11:8080/jsresources/";
 				console.log("Try " + baseUrl + " as jsresource base URL");
 				$.ajax({
-					url: baseUrl + 'saadajsbasics/loader.js',
+					url: baseUrl + 'saadajsbasics/loaders/loader.js',
 					async: false, 
 					dataType: "text",
 					error: function(data) {
 						baseUrl = "./";
 						console.log("Try " + baseUrl + " as jsresource base URL");					
 						$.ajax({
-							url: 'saadajsbasics/loader.js',
+							url: 'saadajsbasics/loaders/loader.js',
 							async: false, 
 							dataType: "text",
 							error: function(data) {					

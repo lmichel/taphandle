@@ -1,0 +1,66 @@
+<html>
+	<head>
+		<title>AladinLiteX</title>
+		<meta charset="utf-8" />
+	<script type="text/javascript" src="http://localhost/alixscreen/jsimports/jquery-1.9.1.js" charset="utf-8"></script>
+	<!--script type="text/javascript" src="jsimports/jquery-ui-1.12.1/jquery-ui.js" charset="utf-8"></script-->
+		<script>var useDebugResources = false; var productionMode=true;</script>
+		<script type="text/javascript" src="javascript/loader.js"></script>	
+		<script type="text/javascript" src="javascript/packedLoader.js"></script>	
+		<script>
+		  $.browser={ msie: ( navigator.appName == 'Microsoft Internet Explorer') ? true : false } 
+		
+		  if( productionMode ) {
+		    	useDebugResources = false;
+		        packedResourceLoader.setCss([         
+		          "http://localhost/alixscreen/styles/packedCSS/style_bundle.css"
+		         ,"http://localhost/alixscreen/aladinLite/aladin.css"
+		   		 ,"http://localhost/alixscreen/styles/aladinliteX.css"
+		   		 ,"http://localhost/alixscreen/styleimport/basics.css"
+		 		 ,"http://localhost/alixscreen/styleimport/domain.css"
+		        ]);
+		        packedResourceLoader.setScripts([
+		        	"http://localhost/alixscreen/packager/lmpack/alix_packed/packedJSimport_alix.js"
+		        	,"http://localhost/alixscreen/packager/lmpack/alix_packed/packedJS_alix.js"
+		        	,"javascript/demarre.js"
+		          ]);
+		        packedResourceLoader.loadAll();
+		    } else {
+
+		     var useDebugResources = true;
+		     resourceLoader.setCss([  
+		      
+		     ]);
+		     resourceLoader.setScripts([  
+		    	 "demo/js/alixindexReady.js"
+		       ]);
+		     resourceLoader.loadAll();
+		     }
+		  
+		  //console.log(opener.AlixConfig.masTest);
+		  
+		
+		
+	/*	
+     resourceLoader.setCss([ 
+    	// 'styles/spectrum.css' 
+     ]);
+     resourceLoader.setScripts([ 
+     "demo/js/alixindexReady.js"
+       ]);
+     resourceLoader.loadAll(); 
+      */
+     </script>
+	</head>
+	<body style="height: 100%">
+		<!-- include Aladin Lite CSS file in the head section of your page -->
+		
+		<!-- you can skip the following line if your page already integrates the 
+			jQuery library -->
+
+		<!-- insert this snippet where you want Aladin Lite viewer to appear and 
+			after the loading of jQuery -->
+		<div id="aladin-lite-div" style="width:100%;height:100%;padding:5px;"></div>
+
+	</body>
+</html>

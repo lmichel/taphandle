@@ -76,9 +76,104 @@ jQuery.extend({
 					jv.fireInitForm('tapjobs', attributesHandlers);
 					ViewState.fireSubmitted(dataTreeView.dataTreePath,jsondata.status.job.jobId  );
 					jv.fireCheckJobCompleted();
+					
 				}
 			}
 			});
+		};
+		
+		this.alixsubmitQuery = function(){
+			if( dataTreeView.dataTreePath == null) {
+				Modalinfo.error("No data node selected: cannot process any query\nSelect the data table table you want to query in the 'Tap Nodes' panel\nand ClickClick on it");
+				return;
+			}
+			var s_ra = $("#tapwhereposition_rafield_name").html();
+			 var s_dec = $("#tapwhereposition_decfield_name").html();
+			if(adqlQueryView.getQuery().indexOf("POINT('ICRS', ra, dec)")!=-1){
+				var url_base=dataTreeView.info.url;
+				var url_query=adqlQueryView.getQuery();
+				url_query=url_query.replace(/[\r\n]/g," ");
+				url_query=url_query.replace(/\s+/g,' ');
+				var format = "votable/td";
+				var RUNID = 'TapHandle-archivestsciedu-caomtap;ivoa;obscore';
+				var label = "Tap";
+				var position = $("#tapPosName_CScoofield").val();
+				Alix_Modalinfo.showPopup(position);
+				TapCatalog.setTapTableAsMaster({url_base: url_base,
+					url_query: url_query,
+					format: format,
+					RUNID : RUNID,
+					label : label});
+			}
+			else if(s_ra!=undefined && s_dec!=undefined){
+				var url_base=dataTreeView.info.url;
+				var url_query=adqlQueryView.getQuery();
+				url_query=url_query+"WHERE CONTAINS(POINT('ICRS', "+ s_ra + ", "+s_dec+"), CIRCLE('ICRS', {$ra}, {$dec}, {$fov})) = 1";
+				//url_query=url_query+"WHERE CONTAINS(POINT('ICRS', s_ra, s_dec), CIRCLE('ICRS', {$ra}, {$dec}, {$fov})) = 1";
+				url_query=url_query.replace(/[\r\n]/g," ");
+				url_query=url_query.replace(/\s+/g,' ');
+				var format = "votable/td";
+				var RUNID = 'TapHandle-archivestsciedu-caomtap;ivoa;obscore';
+				var label = "Tap";
+				Alix_Modalinfo.showPopup();
+				TapCatalog.setTapTableAsMaster({url_base: url_base,
+					url_query: url_query,
+					format: format,
+					RUNID : RUNID,
+					label : label});
+			}
+			else{
+				Modalinfo.error("Lack of information");
+			}
+			
+			
+			/*var limit = getQLimit();
+			var upload = tapPosSelector.getUploadedFile();
+			var post_data = {jsessionid: sessionID
+					, NODE: dataTreeView.dataTreePath.nodekey
+					, TREEPATH: dataTreeView.dataTreePath.nodekey + ";" + dataTreeView.dataTreePath.schema + ";" + dataTreeView.dataTreePath.table
+					, REQUEST: "doQuery"
+					, LANG: 'ADQL'
+					, FORMAT: 'json'
+					, PHASE: 'RUN'
+					, MAXREC: limit
+					, QUERY: adqlQueryView.getQuery() };
+			if( upload ){
+				 post_data.UPLOAD = upload;
+			} 
+			$.ajax({type: 'POST'
+				, url:"runasyncjob"
+				, dataType: 'json'
+				, data: post_data
+			, beforeSend: function(  jqXHR, settins) {
+			}
+			, error: function(  jqXHR,  textStatus,  errorThrown) {
+				Processing.hide();
+				Modalinfo.error(errorThrown);
+			}
+			, success: function(jsondata) {
+				Processing.hide();
+				if( Processing.jsonError(jsondata, "tap/async Cannot get job status") ) {
+					return;
+				} else {
+					if(post_data.QUERY.indexOf("POINT('ICRS', ra, dec)")!=-1){
+						var url_base=dataTreeView.info.url;
+						var url_query=post_data.QUERY;
+						var format = "votable/td";
+						var RUNID = 'TapHandle-archivestsciedu-caomtap;ivoa;obscore';
+						var label = jsondata.treepath.nodekey;
+						var position = $("#tapPosName_CScoofield").val();
+						Alix_Modalinfo.showPopup(position);
+						TapCatalog.setTapTableAsMaster({url_base: url_base,
+							url_query: url_query,
+							format: format,
+							RUNID : RUNID,
+							label : label});
+					}
+					
+				}
+			}
+			});*/
 		};
 
 		this.selectJob = function( id) {

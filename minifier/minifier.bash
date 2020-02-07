@@ -13,17 +13,17 @@
 ##########################
 # Script Resources
 #########################      
-#workspaceDir="/home/michel/workspace"
-workspaceDir="/home/michel/gitRepositories"
+#workspaceDir="/home/xshan/workspace"
+workspaceDir="/home/xshan/eclipse-workspace/jsStuff"
 
 outputDir="../WebContent/min/packed" # directory where both packed JS and CSS are stored 
 packedCSS=$outputDir/packedCSS.css    # name of the file containing the packed CSS
 packedJS=$outputDir/packedJS.js       # name of the file containing the packed JS
 imageDir="../WebContent/images"      # Directory from where the 3XMM images must be copied 
 imageOutput="../WebContent/min/images" # Directory where the 3XMM images must be copied 
-iconsDir="$workspaceDir/jsresources/WebContent/saadajsbasics/icons"      # Directory from where the icons must be copied 
+iconsDir="$workspaceDir/WebContent/saadajsbasics/icons"      # Directory from where the icons must be copied 
 iconsOutput="../WebContent/min/icons" # Directory where the 3XMM icons must be copied 
-fontsDir="$workspaceDir/jsresources/WebContent/saadajsbasics/styleimports/fonts"      # Directory from where the icons must be copied 
+fontsDir="$workspaceDir/WebContent/saadajsbasics/styleimports/fonts"      # Directory from where the icons must be copied 
 fontsOutput="../WebContent/min/fonts" # Directory where the 3XMM icons must be copied 
 
 echo "========== remove packed files ======================="
@@ -137,7 +137,7 @@ function  packCSS() {
 rm -f  $outputDir/$packedCSS	
 echo "=========== Pack CSS files"
 pwd
-packCSS "$workspaceDir/jsresources/WebContent/saadajsbasics/styleimports/themes/base/"\
+packCSS "$workspaceDir/WebContent/saadajsbasics/styleimports/themes/base"\
      "jquery-ui.css"\
     "jquery.ui.accordion.css"\
     "jquery.ui.autocomplete.css"\
@@ -152,14 +152,14 @@ packCSS "$workspaceDir/jsresources/WebContent/saadajsbasics/styleimports/themes/
     "jquery.ui.theme.css" 
 
     
-packCSS "$workspaceDir/jsresources/WebContent/saadajsbasics/styleimports" \
+packCSS "$workspaceDir/WebContent/saadajsbasics/styleimports" \
     "layout-default-latest.css" \
 	"datatable.css" \
 	"simplemodal.css"\
 	"aladin.min.css"
 
 	
-packCSS "$workspaceDir/jsresources/WebContent/saadajsbasics/styles"\
+packCSS "$workspaceDir/WebContent/saadajsbasics/styles"\
     "basics.css" \
     "domain.css" 
 
@@ -172,19 +172,19 @@ packCSS "../WebContent/styles/" \
 packCSS "../WebContent/styleimport/" \
     "jsonSuggest.css" 
     
-packCSS "$workspaceDir/jsresources/WebContent/saadajsbasics/styleimports/bootstrap" \
+packCSS "$workspaceDir/WebContent/saadajsbasics/styleimports/bootstrap" \
     "bootstrap.css" \
 	"bootstrap.css.map"
     
 
 echo "=========== Minify JS files"
 rm -f $packedJS
-minifySet "$workspaceDir/jsresources/WebContent/saadajsbasics/javascript"   \
+minifySet "$workspaceDir/WebContent/saadajsbasics/javascript"   \
     ${js_basic_array[@]} 
 
-minifySet "$workspaceDir/jsresources/WebContent/saadajsbasics/jsimports/ui"    \
+minifySet "$workspaceDir/WebContent/saadajsbasics/jsimports/ui"    \
      "jquery-ui.js"
-minifySet "$workspaceDir/jsresources/WebContent/saadajsbasics/jsimports"       \
+minifySet "$workspaceDir/WebContent/saadajsbasics/jsimports"       \
     "jquery.simplemodal.js"\
     "jquery.alerts.js"\
     "jquery.dataTables.js"\
@@ -227,7 +227,8 @@ minifySet "../WebContent/javascript"   \
                                 "viewState.js"\
                                 "upload.js"\
                                 "resize.js" \
-                                "ready.js"  
+                                "ready.js"  \
+                                "AlixConfig.js"
 
 
 echo "=========== Pack JS files"
@@ -237,10 +238,10 @@ echo "=========== Copy images"
 cp $imageDir/*    $imageOutput"/" || exit 1
 
 echo "=========== Copy JS resource images"
-cp $workspaceDir/jsresources/WebContent/saadajsbasics/images/*    ../WebContent/min/images"/" || exit 1
+cp $workspaceDir/WebContent/saadajsbasics/images/*    ../WebContent/min/images"/" || exit 1
 
 echo "=========== Copy bootstrap.css.map"
-cp "$workspaceDir/jsresources/WebContent/saadajsbasics/styleimports/bootstrap/bootstrap.css.map" ../WebContent/min/packed|| exit 1
+cp "$workspaceDir/WebContent/saadajsbasics/styleimports/bootstrap/bootstrap.css.map" ../WebContent/min/packed|| exit 1
 
 echo "=========== Copy icons"
 rsync -av --exclude=".*" $iconsDir/* $iconsOutput"/" || exit 1

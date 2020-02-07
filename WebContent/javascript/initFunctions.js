@@ -245,6 +245,9 @@ function initFunctions () {
 			ViewState.fireSubmit();
 			//resultPaneView.fireSubmitQueryEvent();
 		});
+		$('#connectalix').click(function(){
+			ViewState.alixSubmit();
+		})
 		$("#qlimit").keyup(function(event) {
 			if( $("#qlimit").val() == '' || $("#qlimit").val().match(/^[0-9]+$/) ) {
 				adqlQueryView.fireAddConstraint("tap", "limit", [getQLimit()]);

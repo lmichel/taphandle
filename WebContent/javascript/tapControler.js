@@ -19,6 +19,9 @@ jQuery.extend({
 				},
 				controlDisplayResult: function(dataTreePath){
 					model.displayResult(dataTreePath);
+				},
+				alixSubmitQueryEvent: function(){
+					model.alixsubmitQuery();
 				}
 		};
 		view.addListener(vlist);

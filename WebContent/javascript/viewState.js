@@ -119,6 +119,11 @@ ViewState = function() {
 		cleanData(dataTreePath);
 		tapView.fireSubmitQueryEvent();
 	};
+	
+	var alixSubmit = function(dataTreePath){
+		cleanData(dataTreePath);
+		tapView.alixSubmitQueryEvent();
+	}
 	/**
 	 * A new jobs has ben submitted
 	 */
@@ -182,6 +187,7 @@ ViewState = function() {
 	pblc.fireDoubleClickKO   = fireDoubleClickKO;
 	pblc.fireDragOnQueryForm = fireDragOnQueryForm;
 	pblc.fireSubmit          = fireSubmit;
+	pblc.alixSubmit          = alixSubmit;
 	pblc.fireGoodyRemoved    = fireGoodyRemoved;
 	pblc.fireSubmitted       = fireSubmitted;
 	pblc.fireSubmitOK        = fireSubmitOK;
