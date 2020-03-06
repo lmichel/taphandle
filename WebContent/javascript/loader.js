@@ -29,7 +29,9 @@ resourceLoader = function() {
 	                , "QueryTextEditor"
 	                , "AstroCoo.js"
 	                , "RegionEditor"
-	                , "domain.js"];
+	                , "domain.js"
+	                , "ModalAladin.js"
+	                ];
 	var local_min_js = ["basics.js"
 	                    , "WebSamp"
 	                    , "DataLink"
@@ -69,17 +71,16 @@ resourceLoader = function() {
 	var CssOver = false; // true when all CSS are loaded (can start JS loading)
 	
 	var checkBaseUrl = function() {
-
 		/*
 		 * Check if saadajsbasics resources are installed locally
 		 */
 		baseUrl = "http://obas-dev-lm:8888/jsresources/";
 		$.ajax({
-			url: baseUrl + 'saadajsbasics/loader.js',
+			url: baseUrl + '/saadajsbasics/javascript/basics.js',
 			async: false, 
 			dataType: "text",
 			error: function(data) {
-				baseUrl = "http://obsas-stg-c11:8888/jsresources/";
+				baseUrl = "http://obsas-dev-lm:8888/jsresources/saadajsbasics";
 				console.log("Try " + baseUrl + " as jsresource base URL");
 				$.ajax({
 					url: baseUrl + 'saadajsbasics/loader.js',
