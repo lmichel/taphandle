@@ -44,7 +44,10 @@ public class QueryModeChecker extends RootClass {
 		this.supportSyncMode = checkSyncMode();
 		if( ! syncOnly )
 			this.supportAsyncMode = checkAsyncMode();
-		this.supportUpload = checkUploadMode();
+		
+		if( this.supportSyncMode || this.supportAsyncMode ) {
+			this.supportUpload = checkUploadMode();
+		}
 	}
 
 	/**

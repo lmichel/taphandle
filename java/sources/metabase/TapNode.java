@@ -352,7 +352,7 @@ public class TapNode  extends RootClass {
 	 * @throws TapException If no query succeed
 	 */
 	private void testCapabilities() throws Exception {
-		DataTreePath dtp = getFirstDataTreePath();
+		DataTreePath dtp = this.getFirstDataTreePath();
 		String qualifiedTableName = quoteTableName(dtp.geTableOrg()).replace("public.", "\"public\".");
 		String query = "SELECT TOP 1 * FROM " + qualifiedTableName;
 		String uploadQuery = "SELECT TOP 1 * FROM " + qualifiedTableName + " NATURAL JOIN TAP_UPLOAD.taphandlesample ";
@@ -367,6 +367,13 @@ public class TapNode  extends RootClass {
 				|| this.regMark.getUrl().contains("esac") || this.regMark.getUrl().contains("cxctap")){
 			logger.info("Force " + this.regMark.getUrl() + "  to work in sync mode to avoid redirection issues");
 			qmc = new QueryModeChecker(this.regMark.getFullUrl(), query, uploadQuery, this.baseDirectory, true);
+			if( ! qmc.supportSyncMode() ){
+				logger.info("Cannot run " + query + " this might be a permission issue, let's try with the TAP schema");
+				qmc = new QueryModeChecker(this.regMark.getFullUrl()
+						, "SELECT TOP 1 * from TAP_SCHEMA.tables"
+						, "SELECT TOP 1 * FROM TAP_SCHEMA.tables NATURAL JOIN TAP_UPLOAD.taphandlesample "
+						, this.baseDirectory, true);
+			}
 			this.supportAsyncMode = false;
 		} else {
 			qmc = new QueryModeChecker(this.regMark.getFullUrl(), query, uploadQuery, this.baseDirectory, false);
@@ -426,7 +433,8 @@ public class TapNode  extends RootClass {
 			//			}
 			if( tbls.size() != 0 ){
 				for( int t=0 ; t<tbls.size() ; t++) {	
-					return new DataTreePath((String)(jsonSchema.get("name")), (String) ((JSONObject)(tbls.get(t))).get("name"), "");
+					String schemaName = (String)(jsonSchema.get("name"));
+					return new DataTreePath(schemaName, (String) ((JSONObject)(tbls.get(t))).get("name"), "");
 				}
 			}
 		}
