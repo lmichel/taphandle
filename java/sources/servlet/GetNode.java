@@ -78,7 +78,14 @@ public class GetNode extends RootServlet implements Servlet {
 				}
 				// IN 2 steps in order not to call twice response.getWriter() in case of error
 				JSONObject jso = tn.filterTableList(filter, ra);
-				response.getWriter().print(jso.toJSONString());		
+				response.getWriter().print(jso.toJSONString());	
+			/*
+			 * There are plenty of possible reason for which we cannot get the node
+			 * Just trap it
+			 */
+			} else if( tn == null ) {
+				reportJsonError(request, response, "Cannot connect the node");
+							
 			/*
 			 * otherwise, we take the full list
 			 */
