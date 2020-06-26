@@ -64,7 +64,8 @@ public class TapAccess  extends RootClass {
 		if (status != HttpURLConnection.HTTP_OK) {
 		    if (status == HttpURLConnection.HTTP_MOVED_TEMP
 		        || status == HttpURLConnection.HTTP_MOVED_PERM
-		            || status == HttpURLConnection.HTTP_SEE_OTHER) {
+		            || status == HttpURLConnection.HTTP_SEE_OTHER
+		                 || status == 307) {
 		    HttpURLConnection conn2 ;
 		    String newUrl = conn.getHeaderField("Location");
 		    logger.debug("Redirect to " + newUrl);
@@ -109,7 +110,8 @@ public class TapAccess  extends RootClass {
 
 		if (status != HttpURLConnection.HTTP_OK && (status == HttpURLConnection.HTTP_MOVED_TEMP
 		        || status == HttpURLConnection.HTTP_MOVED_PERM
-		            || status == HttpURLConnection.HTTP_SEE_OTHER) 
+		            || status == HttpURLConnection.HTTP_SEE_OTHER
+		            || status == 307) 
 				) {
 		    HttpURLConnection conn2 ;
 		    String newUrl = conn.getHeaderField("Location");		    
