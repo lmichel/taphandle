@@ -33,13 +33,28 @@ import translator.XmlToJson;
  * 10/2012: Add client address to createAsyncJob in order to transmit the real client address to TAP services
  */
 public class TapAccess  extends RootClass {
-
+	public static final int HTTP_TEMPORARY_REDIRECT = 307;
+	public static final int HTTP_PERMANENT_REDIRECT = 301;
 	public static final HttpURLConnection getSimpleUrlConnection(URL url) throws IOException{
 		logger.info("Get connection on " + url);
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 		conn.setConnectTimeout(SOCKET_CONNECT_TIMEOUT);		
 		conn.setReadTimeout(SOCKET_READ_TIMEOUT);
 		return conn;
+	}
+
+/**
+ * True if the connection code matches any redirection mode 
+ * @param code
+ * @return
+ */
+private static boolean isRedirect(int code) {
+	    return code == HttpURLConnection.HTTP_MOVED_PERM
+	            || code == HttpURLConnection.HTTP_MOVED_TEMP
+	            || code == HttpURLConnection.HTTP_SEE_OTHER
+	            || code == HttpURLConnection.HTTP_MULT_CHOICE
+	            || code == HTTP_TEMPORARY_REDIRECT 
+	            || code == HTTP_PERMANENT_REDIRECT;
 	}
 
 	/**
@@ -53,30 +68,24 @@ public class TapAccess  extends RootClass {
 	 * @throws IOException 
 	 */
 	public static final HttpURLConnection getGetUrlConnection(URL url) throws IOException{
-		logger.info("Get connection on " + url);
-		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-		conn.setConnectTimeout(SOCKET_CONNECT_TIMEOUT);		
-		conn.setReadTimeout(SOCKET_READ_TIMEOUT);
-		conn.setRequestMethod("GET");
+		URL newUrl = url;
+		int cpt = 0;
+		while (true) {
+			logger.info("Get GET connection on " + newUrl);
+			HttpURLConnection conn = (HttpURLConnection) newUrl.openConnection();
+			conn.setConnectTimeout(SOCKET_CONNECT_TIMEOUT);		
+			conn.setReadTimeout(SOCKET_READ_TIMEOUT);
+			conn.setRequestMethod("GET");
 
-		int status = conn.getResponseCode();
-
-		if (status != HttpURLConnection.HTTP_OK) {
-		    if (status == HttpURLConnection.HTTP_MOVED_TEMP
-		        || status == HttpURLConnection.HTTP_MOVED_PERM
-		            || status == HttpURLConnection.HTTP_SEE_OTHER
-		                 || status == 307) {
-		    HttpURLConnection conn2 ;
-		    String newUrl = conn.getHeaderField("Location");
-		    logger.debug("Redirect to " + newUrl);
-		    conn2 = (HttpURLConnection) (new URL(newUrl)).openConnection();
-		    conn2.setConnectTimeout(SOCKET_CONNECT_TIMEOUT);		
-		    conn2.setReadTimeout(SOCKET_READ_TIMEOUT);
-			return conn2;
-		    }
-
+			int status = conn.getResponseCode();
+			if( TapAccess.isRedirect(status) ) {
+				newUrl = new URL(conn.getHeaderField("Location"));
+			    logger.debug("Redirect to " + newUrl);
+			    cpt ++;
+			} else {
+				return conn;
+			}
 		}
-		return conn;
 	}
 	
 	/**
@@ -92,6 +101,7 @@ public class TapAccess  extends RootClass {
 	 * @throws IOException 
 	 */
 	public static final HttpURLConnection getPostUrlConnection(URL url, String data) throws IOException{
+		logger.info("Get POST connection on " + url);
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 		conn.setConnectTimeout(SOCKET_CONNECT_TIMEOUT);		
 		conn.setReadTimeout(SOCKET_READ_TIMEOUT);
@@ -99,30 +109,18 @@ public class TapAccess  extends RootClass {
 		conn.setDoOutput(true);
 		if( data != null ) {
 			OutputStreamWriter writer = new OutputStreamWriter(conn.getOutputStream());
-			//write parameters
 			writer.write(data);
 			writer.flush();
 			writer.close();
 		}
 		
-		// process redirection by hand
-		int status = conn.getResponseCode();
-
-		if (status != HttpURLConnection.HTTP_OK && (status == HttpURLConnection.HTTP_MOVED_TEMP
-		        || status == HttpURLConnection.HTTP_MOVED_PERM
-		            || status == HttpURLConnection.HTTP_SEE_OTHER
-		            || status == 307) 
-				) {
-		    HttpURLConnection conn2 ;
-		    String newUrl = conn.getHeaderField("Location");		    
-		    logger.debug("Redirect to " + newUrl + " as a GET");
-		    conn2 = (HttpURLConnection) (new URL(newUrl)).openConnection();
-		    conn2.setConnectTimeout(SOCKET_CONNECT_TIMEOUT);		
-		    conn2.setReadTimeout(SOCKET_READ_TIMEOUT);
-			conn2.setRequestMethod("GET");
-			return conn2;
+		if( TapAccess.isRedirect(conn.getResponseCode())) {
+		    String newLocation = conn.getHeaderField("Location");		    
+		    logger.debug("Redirect " + url + " + to " + newLocation + " as a GET");
+			return getGetUrlConnection(new URL(newLocation));
+		} else {
+			return conn;
 		}
-		return conn;
 	}
 
 	/**
@@ -145,8 +143,8 @@ public class TapAccess  extends RootClass {
 		 * looking like this <...><...>...<...>MESSAGE</>...</></>
 		 * The MESSAGE is extracted and sent to the client as an Exception  message
 		 */
-		if( conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
-			logger.error(endpoint + " returns error " +  ((HttpURLConnection)conn).getResponseCode());
+		if( conn.getResponseCode() != HttpURLConnection.HTTP_OK  ) {
+			logger.error(conn.getURL() + " returns error " +  ((HttpURLConnection)conn).getResponseCode());
 			
 			InputStream is = conn.getErrorStream();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(is));
@@ -262,7 +260,7 @@ public class TapAccess  extends RootClass {
 		// as if  bw was not flushed !!!
 logger.info("@@@ " + outputfile );
 File f = new File(outputfile);
-logger.info("@@@ " + f.exists() + " " + f.length() );
+logger.info("Recieved  " + f.length() + "b stored in " +  outputfile);
 
 		XmlToJson.applyStyle(outputfile, outputfile.replaceAll("xml", "json")
 				, styleDir + "asyncjob.xsl");
@@ -366,7 +364,7 @@ logger.info("@@@ " + f.exists() + " " + f.length() );
 		String format = (endpoint.indexOf("__system__") > 0 || endpoint.indexOf("heidelberg") > 0 )
 				? "&FORMAT=" + URLEncoder.encode("application/x-votable+xml;serialization=tabledata" , "ISO-8859-1"): "";
 		sendPostRequest(endpoint + "sync"
-				, "RUNID=" + runId + "&REQUEST=doQuery" + format + "&LANG=ADQL&QUERY=" + URLEncoder.encode(query, "ISO-8859-1")
+				, "RUNID=" + runId + "&PHASE=RUN&REQUEST=doQuery" + format + "&LANG=ADQL&QUERY=" + URLEncoder.encode(query, "ISO-8859-1")
 				, outputfile
 				, cookie
 				, false);

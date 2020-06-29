@@ -16,9 +16,9 @@ import resources.RootClass;
  * @author michel
  *
  */
-public class TapCXCTAP  extends RootClass {
+public class TapILAESAC  extends RootClass {
 	private static final String baseDir = System.getProperty("java.io.tmpdir") ;
-	private static final String baseUrlN = "https://cda.cfa.harvard.edu/cxctap/";
+	private static final String baseUrlN = "https://ila.esac.esa.int/tap/tap/";
 
 	public static void main(String[] args) throws Exception {
 		validWorkingDirectory(baseDir + "/nodebase");
