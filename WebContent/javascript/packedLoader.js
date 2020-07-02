@@ -7,7 +7,7 @@
  */
 packedResourceLoader = function() {
 	var version = "?nocache=" + Math.floor((Math.random() * 1000) + 1); 
-	if( !productionMode ) return;
+	if( productionMode != 1 ) return;
 	/*
 	 * JS directories and files
 	 */
