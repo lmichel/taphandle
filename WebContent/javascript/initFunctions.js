@@ -168,7 +168,7 @@ function initFunctions () {
 							while(parent.length != 0  ) {
 								if(parent.is('#resultpane') ) {
 									ViewState.fireDoubleClickOK(dataTreePath);
-						            _paq.push(['trackPageView', 'saada TapHandle/dropresult/' + dataTreePath.nodekey]);
+									trackAction('saada TapHandle/dropresult/' + dataTreePath.nodekey);
 									return;
 								/*} else if(parent.attr('id') == "showquerymeta" ) {
 									resultPaneView.fireShowMetaNode(treePath);	
@@ -176,7 +176,7 @@ function initFunctions () {
 								return;*/
 								} else if(  parent.attr('id') == "taptab") {
 									ViewState.fireDragOnQueryForm(dataTreePath);
-						            _paq.push(['trackPageView', 'saada TapHandle/dropquery/' + dataTreePath.nodekey]);
+									trackAction('saada TapHandle/dropquery/' + dataTreePath.nodekey);
 									return;
 								}
 								parent = parent.parent();
@@ -203,7 +203,7 @@ function initFunctions () {
 				dataTreePath.nodekey = streePath[0];
 				dtr = new DataTreePath(dataTreePath);
 				ViewState.fireDoubleClickOK(dtr);
-	            _paq.push(['trackPageView', 'saada TapHandle/2clicks/' + dtr.key]);
+				trackAction('saada TapHandle/2clicks/' + dtr.key);
 	        /*
 	         * On a root node: open the resource filter tool
 	         */
@@ -230,7 +230,7 @@ function initFunctions () {
 		if( defaultUrl != null ) {
 			Processing.show("Connecting " + defaultUrl);
 			dataTreeView.fireNewNodeEvent(unescape(defaultUrl));
-            _paq.push(['trackPageView', 'saada TapHandle/paramURL/' + defaultUrl]);
+			trackAction('saada TapHandle/paramURL/' + defaultUrl);
 		}
 		Out.setdebugModeFromUrl();
 
@@ -241,7 +241,7 @@ function initFunctions () {
 		 * Activate submit buttons
 		 */
 		$('#submitquery').click(function() {
-            _paq.push(['trackPageView', 'saada TapHandle/submit']);
+			trackAction('saada TapHandle/submit');
 			ViewState.fireSubmit();
 			//resultPaneView.fireSubmitQueryEvent();
 		});
