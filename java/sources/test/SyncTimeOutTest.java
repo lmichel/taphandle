@@ -30,6 +30,7 @@ public class SyncTimeOutTest  extends RootClass {
 		String baseDirectory = System.getProperty("user.home") + "/Desktop/gavo/";
 		String treepath = "A>B>C";
 		String statusFileName = baseDirectory + nodeKey + File.separator + "status.xml";
+		//System.out.println(statusFileName);
 		Date startTime = new Date();
 		
 		validWorkingDirectory(baseDirectory + nodeKey);

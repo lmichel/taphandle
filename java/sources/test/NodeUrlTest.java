@@ -19,7 +19,7 @@ public class NodeUrlTest extends RootClass {
 		System.out.println(nu.getAbsoluteURL("/xamin/vo/tap/qsqqs"));
 		System.out.println(nu.getAbsoluteURL("/qqxamin/vo/tap/qsqqs"));
 		System.out.println(nu);
-		nu = new NodeUrl("heasarc.gsfc.nasa.gov/xamin/vo/tap/", true);
+		nu = new NodeUrl("http://heasarc.gsfc.nasa.gov/xamin/vo/tap/", true);
 		System.out.println(nu);
 	}
 

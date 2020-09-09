@@ -18,7 +18,7 @@ public class KeyTest extends RootClass{
 		if( args.length != 1 ) {
 			usage();
 		}
-		JoinKeysJob.getJoinKeys(args[0], "/home/michel/Desktop/tapbase");
+		JoinKeysJob.getJoinKeys(args[0], PERSONAL_DIRECTORY+"/Desktop/tapbase"); ///home/michel/Desktop/tapbase
 	}
 
 

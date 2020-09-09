@@ -34,7 +34,11 @@ public class RootClass {
 	/**
 	 * Logger used everywhere in the project
 	 */
-	public static final Logger logger = Logger.getLogger("TapBrowser"); 
+	public static final Logger logger = Logger.getLogger("TapBrowser");
+	/*path of the directotry*/
+	
+	public static final String PERSONAL_DIRECTORY = "/home/sergeszome";
+	
 	/**
 	 * Rexp used to detect name space definition in XML files
 	 */
@@ -221,6 +225,7 @@ public class RootClass {
 			if( !f.mkdir() ) {
 				throw new TapException("Cannot create  directory " + baseDirectory );				
 			} else if( !f.canWrite() ) {
+				
 				throw new TapException("Cannot write in directory " + baseDirectory );
 			}
 			return;

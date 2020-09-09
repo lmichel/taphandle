@@ -37,6 +37,7 @@ public class SyncJobTest  extends RootClass {
 		String baseDirectory = System.getProperty("user.home") + "/Desktop/";
 		String treepath = "tapvizieru-strasbgfrTAPVizieR>vizls>vizls.II/306/sdss8";
 		String statusFileName = baseDirectory + nodeKey + File.separator + "status.xml";
+		
 		Date startTime = new Date();
 		
 		validWorkingDirectory(baseDirectory + nodeKey);
@@ -48,7 +49,7 @@ public class SyncJobTest  extends RootClass {
 		nodeCookie.saveCookie(outputDir);
 		try {
 			System.out.println(TapAccess.runSyncJob(url, query, outputDir + VOTABLE_JOB_RESULT, nodeCookie, treepath));
-			JobUtils.writeSyncJobStatus(nodeKey, outputDir, jobID, startTime, query);		
+			//JobUtils.writeSyncJobStatus(nodeKey, outputDir, jobID, startTime, query);		
 
 			logger.info("complete");		
 		} catch(SocketTimeoutException e){

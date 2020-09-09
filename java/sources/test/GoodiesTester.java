@@ -32,7 +32,7 @@ public class GoodiesTester extends RootClass {
 		String tableName= "\"J/AJ/144/129/refs\"";//"vcds1.\"B/cfht/obscore\"";
 		String query = "SELECT TOP 1 * FROM " + tableName + " NATURAL JOIN TAP_UPLOAD.taphandlesample";
 		String nodeKey = "testAsync/";		
-		String localdir = "/home/michel/Desktop/";		
+		String localdir = "/tmp/"; //  PREVIOUS ERROR WAS THE PATH "/home/michel/Desktop/";		
 		//upload(urlServ, inpFileName, urlList, tableName, query);
 		uploadAsync(urlServ, nodeKey, query, urlList + inpFileName, localdir, tableName);
 	}
@@ -55,7 +55,7 @@ public class GoodiesTester extends RootClass {
 		String query = "SELECT  TOP 100  * FROM public.basic, TAP_UPLOAD.taphandlesample " 
 				+ " WHERE      CONTAINS(POINT('ICRS', ra, dec), CIRCLE('ICRS', TAP_UPLOAD.taphandlesample.s_ra, TAP_UPLOAD.taphandlesample.s_dec, 0.016666666666666666)) = 1 ";
 		String nodeKey = "testAsync/";		
-		String localdir = "/home/michel/Desktop/";		
+		String localdir = "/tmp/"; //PREVIOUS ERROR WAS THE PATH "/home/michel/Desktop/";;		
 		//upload(urlServ, inpFileName, urlList, tableName, query);
 		uploadAsync(urlServ, nodeKey, query, urlList + inpFileName, localdir, tableName);
 	}

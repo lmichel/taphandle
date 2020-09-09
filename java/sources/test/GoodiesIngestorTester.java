@@ -13,7 +13,7 @@ public class GoodiesIngestorTester extends RootClass {
 	 * @throws IOException 
 	 */
 	public static void main(String[] args) throws IOException {
-		GoodiesIngestor gi = new GoodiesIngestor("/home/stagiare/test/goodies", "list.pos", 3);
+		GoodiesIngestor gi = new GoodiesIngestor(PERSONAL_DIRECTORY+"/test/goodies", "list.pos", 3);
 		gi.ingestUserList();
 	}
 

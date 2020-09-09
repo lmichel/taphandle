@@ -36,7 +36,7 @@ public class XmlToJsonTest extends RootClass {
 			if( !found ) {
 				Matcher m = NS_PATTERN.matcher(inputLine);
 				if (m.matches()) {				
-					nsDefinition.init("xmlns:vosi=" + m.group(1)) ;
+					nsDefinition.init("xmlns:vosi=" + m.group(1));
 					found = true;
 				}
 			}
@@ -51,8 +51,9 @@ public class XmlToJsonTest extends RootClass {
 //				, outputfile
 //				, "/tmp/meta/tables.xsl");
 		BufferedReader br = new BufferedReader(new FileReader(outputfile));
-		String b;
+		String b;int i=0;
 		while( (b = br.readLine()) != null ) {
+			
 			System.out.println(b);
 		}
 

@@ -14,7 +14,11 @@ public class TableAttTest {
 	 * @throws Exception 
 	 */
 	public static void main(String[] args) throws Exception {
-		String baseDir = "/home/michel/workspace/.metadata/.plugins/org.eclipse.wst.server.core/tmp0/wtpwebapps/TapHandles/nodebase/heasarc-xamin/"	;
+		// modify by 
+		//String baseDir = "/home/michel/workspace/.metadata/.plugins/org.eclipse.wst.server.core/tmp0/wtpwebapps/TapHandles/nodebase/heasarc-xamin/"	;
+		
+		String baseDir = "/tmp/meta/";
+		
 		String table = "ngc4649cxo";
 		XmlToJson.translateTableAttributes(baseDir, "tables", new DataTreePath(table), new NameSpaceDefinition());
 		BufferedReader br = new BufferedReader(new FileReader(baseDir + table + "_att.json"));
