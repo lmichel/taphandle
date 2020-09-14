@@ -34,11 +34,11 @@ public class XmlToJsonTestVosi11 extends RootClass {
 //		}
 //		br.close();
 		System.out.println("Processing CADC");
-		inputfile = "/home/michel/Desktop/cadc/tables.xml";
-		outputfile =  "/home/michel/Desktop/cadc/output.json";
+		inputfile = PERSONAL_DIRECTORY+"/Desktop/cadc/tables.xml";
+		outputfile =  PERSONAL_DIRECTORY+"/Desktop/cadc/output.json";
 		XmlToJson.applyStyle(inputfile
 				, outputfile
-				, "/home/michel/Desktop/cadc/caom2.Artifact_att.xsl");
+				, PERSONAL_DIRECTORY+"/Desktop/cadc/caom2.Artifact_att.xsl");
 		BufferedReader br = new BufferedReader(new FileReader(outputfile));
 		System.out.println("  output: ");
 		while( (b = br.readLine()) != null ) {

@@ -30,7 +30,7 @@ resourceLoader = function() {
 	                , "AstroCoo.js"
 	                , "RegionEditor"
 	                , "domain.js"
-	                , "ModalAladin.js"
+	                , "ModalAladin.js"				
 	                ];
 	var local_min_js = ["basics.js"
 	                    , "WebSamp"
@@ -74,7 +74,7 @@ resourceLoader = function() {
 		/*
 		 * Check if saadajsbasics resources are installed locally
 		 */
-		baseUrl = "http://obas-dev-lm:8888/jsresources/";
+		baseUrl = "http://obas-stg-c11:8080/jsresources/";
 		$.ajax({
 			url: baseUrl + '/saadajsbasics/javascript/basics.js',
 			async: false, 

@@ -87,8 +87,13 @@ ValueFormator = function() {
 			addSTCRegionControl(tdNode, value);
 		} else if ( raValue != undefined && decValue != undefined && 
 				(columnMap.s_ra == columnMap.currentColumn || columnMap.s_dec == columnMap.currentColumn) ) {
-			var alLink = "<a onclick='ModalAladin.aladinExplorer({ target: &quot;" + raValue + " " + decValue + "&quot;, fov: 0.016, title:&quot;...&quot;}, []);'class='dl_aladin' href='javascript:void(0);' title='Send source coord. to Aladin Lite'></a>";
+					// modify link to display it on alix;
+			// var alLink = "<a onclick='ModalAladin.aladinExplorer({ target: &quot;" + raValue + " " + decValue + "&quot;, fov: 0.016, title:&quot;...&quot;}, []);'class='dl_aladin' href='javascript:void(0);' title='Send source coord. to Aladin Lite'></a>";
+			//tdNode.html(alLink + " " + (new Number(value)).toPrecision(8));
+			
+			var alLink = "<a onclick='Alix_Modalinfo.showPopup( &quot;"+ raValue + " " + decValue + "&quot;);'class='dl_aladin' href='javascript:void(0);' title='Send source coord. to Alix'></a>";
 			tdNode.html(alLink + " " + (new Number(value)).toPrecision(8));
+			
 			/*
 			 * Array annotation removed from server because of CSIRO for which all data are typed as arra
 			 */
