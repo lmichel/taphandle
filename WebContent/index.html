@@ -3,43 +3,47 @@
 <html>
 <head>
 <title>Taphandle</title>
-<meta name="date" content="2020-01-13" scheme="YYYY-MM-DD"/>
+<meta name="date" content="2020-01-13" scheme="YYYY-MM-DD" />
 
 <link rel="icon" href="images/tap16.png" type="images/png" />
 <link rel="SHORTCUT ICON" href="images/tap16.png" />
-<link href='https://fonts.googleapis.com/css?family=Oswald' rel='stylesheet' type='text/css' />
+<link rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+	integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+	crossorigin="anonymous">
+<link href='https://fonts.googleapis.com/css?family=Oswald'
+	rel='stylesheet' type='text/css' />
 
 <script type="text/javascript" src="jsimport/jquery-1.7.2.js"></script>
-<script>var useDebugResources = true; var productionMode=2; /* 1 2 3*/</script>
+<script>
+	var useDebugResources = true;
+	var productionMode = 2; /* 1 2 3*/
+</script>
 
 <script type="text/javascript" src="javascript/loader.js"></script>
 <script type="text/javascript" src="javascript/loader_alix.js"></script>
 <script type="text/javascript" src="javascript/packedLoader.js"></script>
 
 <script>
-
 	if (productionMode == 1) {
 		AlixResourceLoader = false;
 		packedResourceLoader.setCss([ "min/packed/packedCSS.css" ]);
-		packedResourceLoader.setScripts(
-				[ "min/packed/packedJS.js"
-				  ,"packager/lmpack/alix_packed/packedJSimport_alix.js"
-			     ,"packager/lmpack/alix_packed/packedJS_alix.js"]);
+		packedResourceLoader.setScripts([ "min/packed/packedJS.js",
+				"packager/lmpack/alix_packed/packedJSimport_alix.js",
+				"packager/lmpack/alix_packed/packedJS_alix.js" ]);
 		packedResourceLoader.loadAll();
 	} else if (productionMode == 2) {
 
 		var useDebugResources = true;
 		AlixResourceLoader.checkBaseUrl();
-		
-		AlixResourceLoader.setCss([ "styles/global.css", 
-			"styles/form.css", "styles/home.css", "styleimport/jsonSuggest.css" ]);
+
+		AlixResourceLoader.setCss([ "styles/global.css", "styles/form.css",
+				"styles/home.css", "styleimport/jsonSuggest.css" ]);
 		AlixResourceLoader.setScripts([ "jsimport/jquery.jstree.js",
 				"jsimport/jquery.jsonSuggest-2.js",
 				"jsimport/jquery.jeditable.js",
-				"jsimport/jquery.layout-latest.js", 
-				"jsimport/json2.js",
-				"javascript/formator.js", 
-				"javascript/resultPaneModel.js",
+				"jsimport/jquery.layout-latest.js", "jsimport/json2.js",
+				"javascript/formator.js", "javascript/resultPaneModel.js",
 				"javascript/resultPaneView.js",
 				"javascript/resultPaneControler.js",
 				"javascript/nodeFilterModel.js",
@@ -49,34 +53,32 @@
 				 ,"javascript/kwconstraintView.js"  
 				 ,"javascript/kwconstraintControler.js"  
 				 */
-				 
+
 				, "javascript/tapModel.js", "javascript/tapView.js",
 				"javascript/tapControler.js", "javascript/jobModel.js",
 				"javascript/jobView.js", "javascript/jobControler.js",
 				"javascript/jobDictionnary.js", "javascript/cartView.js",
 				"javascript/cartControler.js", "javascript/cartModel.js",
-				"javascript/zipjobModel.js", "javascript/datatreeView.js", 
-				"javascript/upload.js",
-				"javascript/initFunctions.js", "javascript/utils.js",
-				"javascript/ready.js", "javascript/viewState.js",
-				"javascript/resize.js"]);
-		
+				"javascript/zipjobModel.js", "javascript/datatreeView.js",
+				"javascript/upload.js", "javascript/initFunctions.js",
+				"javascript/utils.js", "javascript/ready.js",
+				"javascript/viewState.js", "javascript/resize.js" ]);
+
 		AlixResourceLoader.loadAll();
 	} else {
 
 		var useDebugResources = true;
 		AlixResourceLoader.checkBaseUrl();
-		AlixResourceLoader.setCss([ "styles/global.css", "styles/form.css", "styles/home.css"
-		/*                           , "styleimport/jquery.alerts.css"
-		 *//*                           , "styleimport/jquery.tooltip.css"
-		 */, "styleimport/jsonSuggest.css" ]);
+		AlixResourceLoader.setCss([ "styles/global.css", "styles/form.css",
+				"styles/home.css"
+				/*                           , "styleimport/jquery.alerts.css"
+				 *//*                           , "styleimport/jquery.tooltip.css"
+				 */, "styleimport/jsonSuggest.css" ]);
 		AlixResourceLoader.setScripts([ "jsimport/jquery.jstree.js",
 				"jsimport/jquery.jsonSuggest-2.js",
 				"jsimport/jquery.jeditable.js",
-				"jsimport/jquery.layout-latest.js", 
-				"jsimport/json2.js",
-				"javascript/formator.js", 
-				"javascript/resultPaneModel.js",
+				"jsimport/jquery.layout-latest.js", "jsimport/json2.js",
+				"javascript/formator.js", "javascript/resultPaneModel.js",
 				"javascript/resultPaneView.js",
 				"javascript/resultPaneControler.js",
 				"javascript/nodeFilterModel.js",
@@ -91,387 +93,512 @@
 				"javascript/jobView.js", "javascript/jobControler.js",
 				"javascript/jobDictionnary.js", "javascript/cartView.js",
 				"javascript/cartControler.js", "javascript/cartModel.js",
-				"javascript/zipjobModel.js", "javascript/datatreeView.js", 
-				"javascript/upload.js",
-				"javascript/initFunctions.js", "javascript/utils.js",
-				"javascript/ready.js", "javascript/viewState.js",
-				"javascript/resize.js"]);
+				"javascript/zipjobModel.js", "javascript/datatreeView.js",
+				"javascript/upload.js", "javascript/initFunctions.js",
+				"javascript/utils.js", "javascript/ready.js",
+				"javascript/viewState.js", "javascript/resize.js" ]);
 		AlixResourceLoader.loadAll();
-		
+
 	}
 </script>
 
 
 </head>
 <body>
-<!--  button style="margin-right:10px" onclick="Alix_Modalinfo.showPopup(&quot;01 05 57.316 +30 14 42.99&quot;);"><i class=" glyphicon glyphicon-hand-right" style="font-size:16px;padding:3px;">
+	<!--  button style="margin-right:10px" onclick="Alix_Modalinfo.showPopup(&quot;01 05 57.316 +30 14 42.99&quot;);"><i class=" glyphicon glyphicon-hand-right" style="font-size:16px;padding:3px;">
 </i><a href="javascript:void(0)" '="">tester alix ici</a>
 </button>-->
 
 	<div id="banner">
-	    <a class="logo-tap" title="Taphandle project page" href="." target="_TAPHandleHome"></a>
-	    <div class="banner-search">
-	        <div class="inner-addon right-addon">
-	            <i class="glyphicon glyphicon-search"></i>
-	            <input id='node_selector' type="text" title="Enter a URL or a nickname of a TAP service. A suggestion list appears once one character has been typed" 
-	            class="form-control search-input" placeholder="Enter a TAP service URL or a keyword"/>
-	        </div>
-	    </div>
-	    <a class='contact bouton' href="javascript:void(0);" title="Contact the developper" 
-		onclick='Modalinfo.info("Send an Email to \n laurent.michel@astro.unistra.fr", "Contact");'></a>
-	    <a class='bookmark bouton' href="javascript:void(0);" title="Bookmark the TAP node you are connected to" 
-		onclick='Modalinfo.info("Bookmark the following URL <b>\n" + dataTreeView.getBookmark() + " </b>\nto connect TapHandle on the current node at starting time.", "Bookmark");'></a>
-		<a href="javascript:void(0);" title='Open the shopping cart' class='zip bouton' onclick='cartView.fireOpenCart();' id='zipbutton'></a>
-		<a id="sampIndicator" onclick="WebSamp_mVc.fireJustConnect();" class="sampOff bouton" href="#" title="SampStatus"></a>
+		<a class="logo-tap" title="Taphandle project page" href="."
+			target="_TAPHandleHome"></a>
+		<div class="banner-search">
+			<div class="inner-addon right-addon">
+				<i class="glyphicon glyphicon-search"></i> <input id='node_selector'
+					type="text"
+					title="Enter a URL or a nickname of a TAP service. A suggestion list appears once one character has been typed"
+					class="form-control search-input"
+					placeholder="Enter a TAP service URL or a keyword" />
+			</div>
+		</div>
+		<a class='contact bouton' href="javascript:void(0);"
+			title="Contact the developper"
+			onclick='Modalinfo.info("Send an Email to \n laurent.michel@astro.unistra.fr", "Contact");'></a>
+		<a class='bookmark bouton' href="javascript:void(0);"
+			title="Bookmark the TAP node you are connected to"
+			onclick='Modalinfo.info("Bookmark the following URL <b>\n" + dataTreeView.getBookmark() + " </b>\nto connect TapHandle on the current node at starting time.", "Bookmark");'></a>
+		<a href="javascript:void(0);" title='Open the shopping cart'
+			class='zip bouton' onclick='cartView.fireOpenCart();' id='zipbutton'></a>
+		<a id="sampIndicator" onclick="WebSamp_mVc.fireJustConnect();"
+			class="sampOff bouton" href="#" title="SampStatus"></a>
 	</div>
 
 
-<div class="container presentation home-panel">
-    <div class="row" >
-        <div class="col-md-4">
-            <div class="thumbnail">
-	            <div style="text-align:center;">
-	                <img class="magnifying-glass" />
-	            </div>
-                <div class="caption">
-                    <h3>Search your TAP service</h3>
-                    <p>Type free text and follow the GAVO TAP registry suggestions or type a full URL in the search field above.<br/><br/></p>
-                	
-                </div>
-            </div>
-        </div>
-         <div class="col-md-4">
-            <div class="thumbnail">
-            	<div style="text-align:center;">
-                	<img class="rocket" />
-                </div>
-                <div class="caption">
-                    <h3>Explore the database content</h3>
-                    <p>Double click on a table icon on the resource tree to see its content. Look below: there is a query form! You can filter your results whith what you need. </p>
-                </div>
-            </div>
-        </div>
-         <div class="col-md-4" >
-            <div class="thumbnail">
-            	<div style="text-align:center;">
-                	<img class="beaker" />
-                </div>
-                <div class="caption">
-                    <h3>Enjoy!</h3>
-                    <p>We hope you have found what you want.<br/><br/><br/></p>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="row">
-    <!--  activated in initFunctions.initLayout --> 
-        <div class="col-md-12">
-            <div class="famous-div">
-                <p class="try-famous">Most popular databases</p>
-                <div class="row">
-                    <div class="col-md-4">
-                        <a class="3xmm-link"><p class="famous">3XMMdr8</p></a>
-                    </div>
-                    <div class="col-md-4">
-                        <a class="cadc-link"><p class="famous">CADC</p></a>
-                    </div>
-                    <div class="col-md-4">
-                        <a class="gavo-link"><p class="famous">GAVO</p></a>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-4">
-                        <a class="vizier-link"><p class="famous">Vizier - CDS</p></a>
-                    </div>
-                    <div class="col-md-4">
-                        <a class="simbad-link"><p class="famous">Simbad - CDS</p></a>
-                    </div>
-                    <div class="col-md-4">
-                        <a class="planet-link"><p class="famous">VO Planet - Paris</p></a>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-4">
-                        <a class="heasarch-link"><p class="famous">HEASARCH</p></a>
-                    </div>
-                    <div class="col-md-4">
-                        <a class="chandra-link"><p class="famous">Chandra Archive</p></a>
-                    </div>
-                    <div class="col-md-4">
-                        <a class="sdss-link"><p class="famous">SDSS9</p></a>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-4">
-                        <a class="ned-link"><p class="famous">NED</p></a>
-                    </div>
-                    <div class="col-md-4">
-                        <a class="stsci-link"><p class="famous">STSCI</p></a>
-                    </div>
-                    <div class="col-md-4">
-                        <p class="famous">ESA 
-                        <a class="gaiaesa-link">Gaia</a> - 
-                        <a class="epnesa-link">Epn</a>
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-12">
-            <div class="news">
-                <h3>News</h3>
-                    <ul class="timeline">
-         <li><!---Time Line Element--->
-        
-          <div class="timeline-badge up"><i class="fa fa-thumbs-down"></i></div>
-          <div class="timeline-panel">
-            <div class="timeline-heading">
-              <p class="timeline-title">Sync mode<br>Redirection support and erro message processing</p>
-            </div>
-            <div class="timeline-body"><!---Time Line Body&Content--->
-              <p>01/2020 </p>
-            </div>
-          </div>
-          </li>
+	<div class="container presentation home-panel">
+		<div class="row">
+			<div class="col-md-4">
+				<div class="thumbnail">
+					<div style="text-align: center;">
+						<img class="magnifying-glass" />
+					</div>
+					<div class="caption">
+						<h3>Search your TAP service</h3>
+						<p>
+							Type free text and follow the GAVO TAP registry suggestions or
+							type a full URL in the search field above.<br /> <br />
+						</p>
 
-         <li><!---Time Line Element--->
-          <div class="timeline-badge down"><i class="fa fa-thumbs-down"></i></div>
-          <div class="timeline-panel">
-            <div class="timeline-heading">
-              <p class="timeline-title">NED Support<br>Upload source lists</p>
-            </div>
-            <div class="timeline-body"><!---Time Line Body&Content--->
-              <p>07/2018 </p>
-            </div>
-          </div>
-          </li>
-                    
-           <li>
-          <div class="timeline-badge up"><i class="fa fa-thumbs-down"></i></div>
-          <div class="timeline-panel">
-            <div class="timeline-heading">
-              <p class="timeline-title">Support of quoted Vizier table names<br>
-              		                    Job results can be displayed in Aladin Lite<br>
-                                        Connection to the 3XMMdr6 tap service</p>
-            </div>
-            <div class="timeline-body"><!---Time Line Body&Content--->
-              <p>09/2016 </p>
-            </div>
-          </div>
-          </li>
-                    
-        <li><!---Time Line Element--->
-        
-          <div class="timeline-badge down"><i class="fa fa-thumbs-down"></i></div>
-          <div class="timeline-panel">
-            <div class="timeline-heading">
-              <p class="timeline-title">Support of metadata access compliant with VOSI 1.1</p>
-            </div>
-            <div class="timeline-body"><!---Time Line Body&Content--->
-              <p>02/2016 </p>
-            </div>
-          </div>
-          </li>
-          
-          <li>
-          <div class="timeline-badge up"><i class="fa fa-thumbs-down"></i></div>
-          <div class="timeline-panel">
-            <div class="timeline-heading">
-              <p class="timeline-title">Connection to the 3XMMdr5 tap service</p>
-            </div>
-            <div class="timeline-body"><!---Time Line Body&Content--->
-              <p>12/2015 </p>
-            </div>
-          </div>
-          </li>
-         <li><!---Time Line Element--->
-          <div class="timeline-badge down"><i class="fa fa-thumbs-down"></i></div>
-          <div class="timeline-panel">
-            <div class="timeline-heading">
-              <p class="timeline-title">Graphical re-design</p>
-            </div>
-            <div class="timeline-body"><!---Time Line Body&Content--->
-              <p>08/2015 </p>
-            </div>
-          </div>
-          </li>
-        <li><!---Time Line Element--->
-          <div class="timeline-badge up"><i class="fa fa-thumbs-up"></i></div>
-          <div class="timeline-panel">
-            <div class="timeline-heading">
-              <p class="timeline-title">Support of Datalink 1.0, display of STC regions with Aladin(s)</p>
-            </div>
-            <div class="timeline-body"><!---Time Line Body&Content--->
-              <p>06/2015 </p>
-            </div>
-          </div>
-        </li>
-        <li><!---Time Line Element--->
-          <div class="timeline-badge down"><i class="fa fa-thumbs-down"></i></div>
-          <div class="timeline-panel">
-            <div class="timeline-heading">
-              <p class="timeline-title">Job results bigger than 1Mb and older than one hour are removed every night</p>
-            </div>
-            <div class="timeline-body"><!---Time Line Body&Content--->
-              <p>03/2015</p>
-            </div>
-          </div>
-        </li>
-        <li><!---Time Line Element--->
-          <div class="timeline-badge up"><i class="fa fa-navicon"></i></div>
-          <div class="timeline-panel">
-            <div class="timeline-heading">
-              <p class="timeline-title">Support of reverse joins: If the join A to B is declared in the TAP schema, then TapHandle add the B to A join.</p>
-            </div>
-            <div class="timeline-body"><!---Time Line Body&Content--->
-              <p>03/2015</p>
-            </div>
-          </div>
-        </li>
-        <li><!---Time Line Element--->
-          <div class="timeline-badge down"><i class="fa fa-thumbs-down"></i></div>
-          <div class="timeline-panel">
-            <div class="timeline-heading">
-              <p class="timeline-title">General Improvement of the interface.</p>
-            </div>
-            <div class="timeline-body"><!---Time Line Body&Content--->
-              <p>09/2014</p>
-            </div>
-          </div>
-        </li>
-        
-        <li><!---Time Line Element--->
-          <div class="timeline-badge up"><i class="fa fa-thumbs-up"></i></div>
-          <div class="timeline-panel">
-            <div class="timeline-heading">
-              <p class="timeline-title">Browse the registry with the node selector</p>
-            </div>
-            <div class="timeline-body"><!---Time Line Body&Content--->
-              <p>02/2013</p>
-            </div>
-          </div>
-        </li>
-        <li><!---Time Line Element--->
-          <div class="timeline-badge down"><i class="fa fa-thumbs-up"></i></div>
-          <div class="timeline-panel">
-            <div class="timeline-heading">
-              <p class="timeline-title">Connect Samp with the Web Samp Profile
-              <br>Query Vizier with the real names for both tables and columns Recent fixes:Download facility, Metadata window, Cookie manager</p>
-            </div>
-            <div class="timeline-body"><!---Time Line Body&Content--->
-              <p>2012</p>
-            </div>
-          </div>
-        </li>
-      </ul>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-12">
-            <div class="credits">
-                <p class="try-famous">More</p>
-                <div class="logos">
-                    <img border="0px" height="64px" src="http://saada.unistra.fr/taphandle/images/ovfrance.jpg"/>
-                    <img border="0px" height="64px" src="http://saada.unistra.fr/taphandle/images/insu.jpg"/>
-                    <img border="0px" height="64px" src="http://saada.unistra.fr/taphandle/images/uds.jpg"/>
-                    <img border="0px" height="64px" src="http://saada.unistra.fr/taphandle/images/obs.jpg"/>
-                    <img border="0px" height="64px" src="http://saada.unistra.fr/taphandle/images/ssc.png" title="XMM-Newton SSC"/>
-                </div>
-                <img class="credit-icon" 
-                onClick="Modalinfo.info('Laurent MICHEL (Project Manager - SSC XMM-Newton)\nMireille LOUYS (CDS)\nFrancois BONNAREL (CDS)\nPauline KOBERSI (ENSIIE, Strasbourg 2015)','Contributors')"/>
-                <img class="contact-icon"
-                onClick="Modalinfo.info('You can contact me at:\nlaurent.michel [at] astro.unistra.fr','Contact')"/>
-                <img class="about-icon" 
-                onClick="Modalinfo.iframePanel('help/taphandle.html', 'More about TapHandle')"/>
-            </div>
-        </div>
-    </div>
-</div>
-<div class="content-panel">
-	<div id="treepane" class="col-xs-2">
-		<div style="border-style: hidden; vertical-align: middle;">
-			<span class='help' title='Select TAP nodes with the node selector on the top of the page'>Tap Nodes  
-			</span>
-		</div>
-		<div id="treedisp" style="background-color: white">
-		</div>
-	</div>
-	<div class="col-xs-10" id="result">
-		<div id="toggle-tree">Hide tree</div>
-		<div id="toggle-query">Hide query</div>
-		<div id="resultpane">
-			<p class="pres">Choose a database in the left panel then select the table you want!</p>
-
-		</div>
-		<div id="queryformpane" >
-			<!--  
-				SUBMIT panel 
-			-->
-			<div id='formpanemenu' style="float: left; text-align: center ; border-style: hidden;">
-				<div style="text-align: center ;padding: 5px; border-style: hidden;">
-					<a href="javascript:void(0);" class='accept' id='submitquery' title='Execute the query as shown in the "plain text query" tab'></a>
-					<hr/>
-				</div> 
-				<div style="text-align: left ;padding: 5px; text-align: center; border-style: hidden; ">
-					<span class='help'>Result Limit</span><br/>
-					<input type='text' id='qlimit' class='numinputvalue'  title='Set the max number of returned rows'
-		        	style="font-size: small;font-family: Arial, Helvetica, sans-serif;" value='100'/><hr/>  
+					</div>
 				</div>
 			</div>
-			<!--  
-				Query form
-			-->		
-			<div style="background-color: white; width:900px; margin-left:105px">
-				<div id="taptab" class='querytab' style="border-width:0">
-					<ul style="height: 32px;">
-		        		<li><a href="#tapselect" title="Set up the SELECT clause of the query"><span>Select What</span></a></li>
-		        		<li><a href="#tapwhere"  title="Set up the WHERE clause of the query"><span>Where</span></a></li>
-		        		<li><a href="#tapwhereposition"  title="Set up the WHERE position clause of the query"><span>Position</span></a></li>
-		        		<li><a href="#taptext"   title="Current query on ADQL text"><span>Plain Text Query</span></a></li>
-		        		<li><a href="#tapjob"    title="Acces to the jobs attached to the current session"><span>Job Control</span></a></li>
-		    		</ul>
-		    		<!-- Columns selection -->
-		    		<div id="tapselect" class='queryformtab'>
-		    		</div>  
-		    		<!-- keywords selection -->
-		    		<div id="tapwhere" class='queryformtab' > 					
+			<div class="col-md-4">
+				<div class="thumbnail">
+					<div style="text-align: center;">
+						<img class="rocket" />
 					</div>
-					<div id="tapwhereposition" class='queryformtab' > 					
+					<div class="caption">
+						<h3>Explore the database content</h3>
+						<p>Double click on a table icon on the resource tree to see
+							its content. Look below: there is a query form! You can filter
+							your results whith what you need.</p>
 					</div>
-		    		<!--  Query text -->
-		    		<div id="taptext" class='queryformtab' >	
-	<!-- 					<textarea id=adqltext class="querytext"></textarea>
-	 -->				</div>	
-					<!--  job panel -->		
-					<div id="tapjob">        
-						 <div style="background: white;">
-		 					<span class='help'>List of UWS jobs</span>
-		 					<a title="Remove all jobs" href="javascript:void(0);" class='closekw' onclick="resultPaneView.fireRemoveAllJobs();"></a>
-		 				</div>
-		        		<div id="tapjobs" ></div>      							    	
-					</div>	
-		    	</div>
+				</div>
+			</div>
+			<div class="col-md-4">
+				<div class="thumbnail">
+					<div style="text-align: center;">
+						<img class="beaker" />
+					</div>
+					<div class="caption">
+						<h3>Enjoy!</h3>
+						<p>
+							We hope you have found what you want.<br /> <br /> <br />
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="row">
+			<!--  activated in initFunctions.initLayout -->
+			<div class="col-md-12">
+				<div class="famous-div">
+					<p class="try-famous">Most popular databases</p>
+					<div class="row">
+						<div class="col-md-4">
+							<a class="3xmm-link"><p class="famous">3XMMdr8</p></a>
+						</div>
+						<div class="col-md-4">
+							<a class="cadc-link"><p class="famous">CADC</p></a>
+						</div>
+						<div class="col-md-4">
+							<a class="gavo-link"><p class="famous">GAVO</p></a>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-md-4">
+							<a class="vizier-link"><p class="famous">Vizier - CDS</p></a>
+						</div>
+						<div class="col-md-4">
+							<a class="simbad-link"><p class="famous">Simbad - CDS</p></a>
+						</div>
+						<div class="col-md-4">
+							<a class="planet-link"><p class="famous">VO Planet -
+									Paris</p></a>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-md-4">
+							<a class="heasarch-link"><p class="famous">HEASARCH</p></a>
+						</div>
+						<div class="col-md-4">
+							<a class="chandra-link"><p class="famous">Chandra Archive</p></a>
+						</div>
+						<div class="col-md-4">
+							<a class="sdss-link"><p class="famous">SDSS9</p></a>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-md-4">
+							<a class="ned-link"><p class="famous">NED</p></a>
+						</div>
+						<div class="col-md-4">
+							<a class="stsci-link"><p class="famous">STSCI</p></a>
+						</div>
+						<div class="col-md-4">
+							<p class="famous">
+								ESA <a class="gaiaesa-link">Gaia</a> - <a class="epnesa-link">Epn</a>
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-12">
+				<div class="news">
+					<h3>News</h3>
+					<ul class="timeline">
+						<li>
+							<!---Time Line Element--->
+
+							<div class="timeline-badge up">
+								<i class="fa fa-thumbs-down"></i>
+							</div>
+							<div class="timeline-panel">
+								<div class="timeline-heading">
+									<p class="timeline-title">
+										Sync mode<br>Redirection support and erro message
+											processing 
+									</p>
+								</div>
+								<div class="timeline-body">
+									<!---Time Line Body&Content--->
+									<p>01/2020</p>
+								</div>
+							</div>
+						</li>
+
+						<li>
+							<!---Time Line Element--->
+							<div class="timeline-badge down">
+								<i class="fa fa-thumbs-down"></i>
+							</div>
+							<div class="timeline-panel">
+								<div class="timeline-heading">
+									<p class="timeline-title">
+										NED Support<br>Upload source lists 
+									</p>
+								</div>
+								<div class="timeline-body">
+									<!---Time Line Body&Content--->
+									<p>07/2018</p>
+								</div>
+							</div>
+						</li>
+
+						<li>
+							<div class="timeline-badge up">
+								<i class="fa fa-thumbs-down"></i>
+							</div>
+							<div class="timeline-panel">
+								<div class="timeline-heading">
+									<p class="timeline-title">
+										Support of quoted Vizier table names<br> Job results can
+											be displayed in Aladin Lite<br> Connection to the
+												3XMMdr6 tap service 
+									</p>
+								</div>
+								<div class="timeline-body">
+									<!---Time Line Body&Content--->
+									<p>09/2016</p>
+								</div>
+							</div>
+						</li>
+
+						<li>
+							<!---Time Line Element--->
+
+							<div class="timeline-badge down">
+								<i class="fa fa-thumbs-down"></i>
+							</div>
+							<div class="timeline-panel">
+								<div class="timeline-heading">
+									<p class="timeline-title">Support of metadata access
+										compliant with VOSI 1.1</p>
+								</div>
+								<div class="timeline-body">
+									<!---Time Line Body&Content--->
+									<p>02/2016</p>
+								</div>
+							</div>
+						</li>
+
+						<li>
+							<div class="timeline-badge up">
+								<i class="fa fa-thumbs-down"></i>
+							</div>
+							<div class="timeline-panel">
+								<div class="timeline-heading">
+									<p class="timeline-title">Connection to the 3XMMdr5 tap
+										service</p>
+								</div>
+								<div class="timeline-body">
+									<!---Time Line Body&Content--->
+									<p>12/2015</p>
+								</div>
+							</div>
+						</li>
+						<li>
+							<!---Time Line Element--->
+							<div class="timeline-badge down">
+								<i class="fa fa-thumbs-down"></i>
+							</div>
+							<div class="timeline-panel">
+								<div class="timeline-heading">
+									<p class="timeline-title">Graphical re-design</p>
+								</div>
+								<div class="timeline-body">
+									<!---Time Line Body&Content--->
+									<p>08/2015</p>
+								</div>
+							</div>
+						</li>
+						<li>
+							<!---Time Line Element--->
+							<div class="timeline-badge up">
+								<i class="fa fa-thumbs-up"></i>
+							</div>
+							<div class="timeline-panel">
+								<div class="timeline-heading">
+									<p class="timeline-title">Support of Datalink 1.0, display
+										of STC regions with Aladin(s)</p>
+								</div>
+								<div class="timeline-body">
+									<!---Time Line Body&Content--->
+									<p>06/2015</p>
+								</div>
+							</div>
+						</li>
+						<li>
+							<!---Time Line Element--->
+							<div class="timeline-badge down">
+								<i class="fa fa-thumbs-down"></i>
+							</div>
+							<div class="timeline-panel">
+								<div class="timeline-heading">
+									<p class="timeline-title">Job results bigger than 1Mb and
+										older than one hour are removed every night</p>
+								</div>
+								<div class="timeline-body">
+									<!---Time Line Body&Content--->
+									<p>03/2015</p>
+								</div>
+							</div>
+						</li>
+						<li>
+							<!---Time Line Element--->
+							<div class="timeline-badge up">
+								<i class="fa fa-navicon"></i>
+							</div>
+							<div class="timeline-panel">
+								<div class="timeline-heading">
+									<p class="timeline-title">Support of reverse joins: If the
+										join A to B is declared in the TAP schema, then TapHandle add
+										the B to A join.</p>
+								</div>
+								<div class="timeline-body">
+									<!---Time Line Body&Content--->
+									<p>03/2015</p>
+								</div>
+							</div>
+						</li>
+						<li>
+							<!---Time Line Element--->
+							<div class="timeline-badge down">
+								<i class="fa fa-thumbs-down"></i>
+							</div>
+							<div class="timeline-panel">
+								<div class="timeline-heading">
+									<p class="timeline-title">General Improvement of the
+										interface.</p>
+								</div>
+								<div class="timeline-body">
+									<!---Time Line Body&Content--->
+									<p>09/2014</p>
+								</div>
+							</div>
+						</li>
+
+						<li>
+							<!---Time Line Element--->
+							<div class="timeline-badge up">
+								<i class="fa fa-thumbs-up"></i>
+							</div>
+							<div class="timeline-panel">
+								<div class="timeline-heading">
+									<p class="timeline-title">Browse the registry with the node
+										selector</p>
+								</div>
+								<div class="timeline-body">
+									<!---Time Line Body&Content--->
+									<p>02/2013</p>
+								</div>
+							</div>
+						</li>
+						<li>
+							<!---Time Line Element--->
+							<div class="timeline-badge down">
+								<i class="fa fa-thumbs-up"></i>
+							</div>
+							<div class="timeline-panel">
+								<div class="timeline-heading">
+									<p class="timeline-title">
+										Connect Samp with the Web Samp Profile <br>Query Vizier
+											with the real names for both tables and columns Recent
+											fixes:Download facility, Metadata window, Cookie manager 
+									</p>
+								</div>
+								<div class="timeline-body">
+									<!---Time Line Body&Content--->
+									<p>2012</p>
+								</div>
+							</div>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-12">
+				<div class="credits">
+					<p class="try-famous">More</p>
+					<div class="logos">
+						<img border="0px" height="64px"
+							src="http://saada.unistra.fr/taphandle/images/ovfrance.jpg" /> <img
+							border="0px" height="64px"
+							src="http://saada.unistra.fr/taphandle/images/insu.jpg" /> <img
+							border="0px" height="64px"
+							src="http://saada.unistra.fr/taphandle/images/uds.jpg" /> <img
+							border="0px" height="64px"
+							src="http://saada.unistra.fr/taphandle/images/obs.jpg" /> <img
+							border="0px" height="64px"
+							src="http://saada.unistra.fr/taphandle/images/ssc.png"
+							title="XMM-Newton SSC" />
+					</div>
+					<img class="credit-icon"
+						onClick="Modalinfo.info('Laurent MICHEL (Project Manager - SSC XMM-Newton)\nMireille LOUYS (CDS)\nFrancois BONNAREL (CDS)\nPauline KOBERSI (ENSIIE, Strasbourg 2015)','Contributors')" />
+					<img class="contact-icon"
+						onClick="Modalinfo.info('You can contact me at:\nlaurent.michel [at] astro.unistra.fr','Contact')" />
+					<img class="about-icon"
+						onClick="Modalinfo.iframePanel('help/taphandle.html', 'More about TapHandle')" />
+				</div>
 			</div>
 		</div>
 	</div>
-</div>
+	<div class="content-panel">
+		<div id="treepane" class="col-xs-2">
+			<div style="border-style: hidden; vertical-align: middle;">
+				<span class='help'
+					title='Select TAP nodes with the node selector on the top of the page'>Tap
+					Nodes </span>
+			</div>
+			<div id="treedisp" style="background-color: white"></div>
+		</div>
+		<div class="col-xs-10" id="result">
+			<div id="toggle-tree">Hide tree</div>
+			<div id="toggle-query">Hide query</div>
 
-   
-<script type="text/javascript">var piwikSiteId="saada";</script>
-<script type="text/javascript" src="http://cdsannotations.u-strasbg.fr/piwikinit"></script>
-<script type="text/javascript" src="http://cdsannotations.u-strasbg.fr/piwiktracker"></script>
 
-<script  type="text/javascript">
-trackAction = function(message){
-	if(productionMode < 2){
-		 _paq.push(['trackPageView', message]);
-	}
-}
-</script>
+			<!-- modified -->
+			<div class="container-fluid">
+				<div class="row">
+					<div class="col-sm-5">
+						<div id="">
+							<p class=""></p>
+						</div>
+					</div>
+					<div class="col-sm-2">
+						<p class="" id="alix-id"></p>
+					</div>
+					<div class="col-sm-5"></div>
+				</div>
+				
+			</div>
+
+			<!-- end modified -->
+
+			<div id="resultpane">
+
+
+
+				<p class="pres">Choose a database in the left panel then select
+					the table you want!</p>
+
+			</div>
+			<div id="queryformpane">
+				<!--  
+				SUBMIT panel 
+			-->
+				<div id='formpanemenu'
+					style="float: left; text-align: center; border-style: hidden;">
+					<div
+						style="text-align: center; padding: 5px; border-style: hidden;">
+						<a href="javascript:void(0);" class='accept' id='submitquery'
+							title='Execute the query as shown in the "plain text query" tab'></a>
+						<hr />
+					</div>
+					<div
+						style="text-align: left; padding: 5px; text-align: center; border-style: hidden;">
+						<span class='help'>Result Limit</span><br /> <input type='text'
+							id='qlimit' class='numinputvalue'
+							title='Set the max number of returned rows'
+							style="font-size: small; font-family: Arial, Helvetica, sans-serif;"
+							value='100' />
+						<hr />
+					</div>
+				</div>
+				<!--  
+				Query form
+			-->
+				<div
+					style="background-color: white; width: 900px; margin-left: 105px">
+					<div id="taptab" class='querytab' style="border-width: 0">
+						<ul style="height: 32px;">
+							<li><a href="#tapselect"
+								title="Set up the SELECT clause of the query"><span>Select
+										What</span></a></li>
+							<li><a href="#tapwhere"
+								title="Set up the WHERE clause of the query"><span>Where</span></a></li>
+							<li><a href="#tapwhereposition"
+								title="Set up the WHERE position clause of the query"><span>Position</span></a></li>
+							<li><a href="#taptext" title="Current query on ADQL text"><span>Plain
+										Text Query</span></a></li>
+							<li><a href="#tapjob"
+								title="Acces to the jobs attached to the current session"><span>Job
+										Control</span></a></li>
+						</ul>
+						<!-- Columns selection -->
+						<div id="tapselect" class='queryformtab'></div>
+						<!-- keywords selection -->
+						<div id="tapwhere" class='queryformtab'></div>
+						<div id="tapwhereposition" class='queryformtab'></div>
+						<!--  Query text -->
+						<div id="taptext" class='queryformtab'>
+							<!-- 					<textarea id=adqltext class="querytext"></textarea>
+	 -->
+						</div>
+						<!--  job panel -->
+						<div id="tapjob">
+							<div style="background: white;">
+								<span class='help'>List of UWS jobs</span> <a
+									title="Remove all jobs" href="javascript:void(0);"
+									class='closekw' onclick="resultPaneView.fireRemoveAllJobs();"></a>
+							</div>
+							<div id="tapjobs"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+	<script type="text/javascript">
+		var piwikSiteId = "saada";
+	</script>
+	<script type="text/javascript"
+		src="http://cdsannotations.u-strasbg.fr/piwikinit"></script>
+	<script type="text/javascript"
+		src="http://cdsannotations.u-strasbg.fr/piwiktracker"></script>
+
+	<script type="text/javascript">
+		trackAction = function(message) {
+			if (productionMode < 2) {
+				_paq.push([ 'trackPageView', message ]);
+			}
+		}
+	</script>
 
 </body>
 </html>

@@ -325,7 +325,7 @@ jQuery.extend({
 //			var nb_cols = jsdata.aoColumns.length;
 //			for( var r=0 ; r<jsdata.aaData.length ; r++) {
 //			var line = jsdata.aaData[r];
-//			for( var l=0 ; l<nb_cols ; l++) {
+//			for( var l=0 ; l<nb_cols ; l++) {27.491281
 //			var num = line[l];
 //			//line[l] = formatValue(jsdata.aoColumns[l].sTitle, num);
 //			}
@@ -334,6 +334,7 @@ jQuery.extend({
 			attributeHandlers = tapConstraintEditor.getAttributeHandlers();
 			var aoColumns = new Array();
 			var columnMap = {access_format: -1, s_ra: -1, s_dec: -1, s_fov: -1, currentColumn: -1};
+			var isloadAlix=false
 			for(var i=0 ; i<jsdata.aoColumns.length ; i++) {
 				var title ;
 				if( attributeHandlers == undefined ) {
@@ -362,21 +363,32 @@ jQuery.extend({
 						+ " - UCD: " + ah.ucd
 						+ " - UType: " + ah.utype
 						+ " - DataType: " + ah.dataType;
+						//alert(ah.ucd);
 						if( ah.nameorg == "access_format" || ah.ucd == "meta.code.mime" ) {
 							columnMap.access_format = i;
-						} else if( ah.nameorg == "s_ra" || ah.ucd == "pos.eq.ra;meta.main" || ah.ucd == "pos.eq.ra") {
-							columnMap.s_ra = i;
-						} else if( ah.nameorg == "s_dec" || ah.ucd == "pos.eq.dec;meta.main" || ah.ucd == "pos.eq.dec") {
+						} else if( ah.nameorg == "s_ra" || ah.ucd == "pos.eq.ra;meta.main" || ah.ucd == "pos.eq.ra" || ah.ucd == "POS_EQ_RA_MAIN") {
+							columnMap.s_ra = i ; 
+						} else if( ah.nameorg == "s_dec" || ah.ucd == "pos.eq.dec;meta.main" || ah.ucd == "pos.eq.dec" ||ah.ucd == "POS_EQ_DEC_MAIN") {
 							columnMap.s_dec = i;
-						} else if( ah.nameorg == "s_fov" || ah.nameorg.match(/.*instr\.fov/) ) {
+							//var h = document.getElementById("alix-id");
+							//h.insertAdjacentHTML("afterend", "<p> <button class='btn btn-success mt-5 ' onclick='Alix_Modalinfo.showPopup("+01557316 +301442.99+");'> &nbsp &nbsp Load &nbsp  Alix s</button></p>");
+							
+						
+						}else if( ah.nameorg == "s_fov" || ah.nameorg.match(/.*instr\.fov/) ) {
 							columnMap.s_fov = i;
 						} else if( ah.nameorg == "target_name"  ) {
 							columnMap.target_name = i;
+							
 						}
 					}
+					
 				}
+			
 				aoColumns[i] = {sTitle: '<span title="' + title + '">' + jsdata.aoColumns[i].sTitle + '</span>'};
 			}
+			
+			var dec=0;
+			var ra =0;
 			var schema = dataTreePath.schema;
 			var options = {
 				"aLengthMenu": [5, 10, 25, 50, 100],
@@ -388,6 +400,7 @@ jQuery.extend({
 				"bFilter" : true,
 				"fnRowCallback": function( nRow, aData, iDisplayIndex ) {
 					ValueFormator.reset();
+					//alert(+aData[columnMap.s_dec]+" =>"+columnMap.s_ra+"  "+columnMap.s_dec);
 					for( var c=0 ; c<aData.length ; c++ ) {
 						var copiedcolumnMap = jQuery.extend(true, {}, columnMap);
 						var colName = $(this.fnSettings().aoColumns[c].sTitle).text();;
@@ -402,11 +415,35 @@ jQuery.extend({
 						 * Not formatting for the relational registry
 						 */
 						if( schema != "rr")
+						
 							ValueFormator.formatValue(colName, aData, $('td:eq(' + c + ')', nRow), copiedcolumnMap);
+							/*if(columnMap.s_ra != -1 && columnMap.s_dec !=-1 ){;
+								//alert(colName+" => "+c+"  =>"+aData[columnMap.s_dec]+" =>"+columnMap.s_ra+"  "+columnMap.s_dec);
+								ra=aData[columnMap.s_ra];
+								dec=aData[columnMap.s_dec];
+								//olumnMap.isloadAlix==true;
+								
+							}else{}*/
+							
 					}
+					
+					//------------------ load alix in the firt position coordonnate -------------------------
+					if(isloadAlix==false){
+						if(columnMap.s_ra != -1 && columnMap.s_dec !=-1){
+						ra=aData[columnMap.s_ra];
+						dec=aData[columnMap.s_dec];
+						isloadAlix=true;	//alert("this table has position coordonnate "+aData[columnMap.s_dec]);
+						addAlixButton(ra,dec);
+							alert("this table has position coordonnate "+isloadAlix)
+						}
+					}	
 					return nRow;
 				}
+				
+				
 			};
+			
+					
 			
 			var positions = [
      			{ "name": "pagination",
@@ -517,4 +554,32 @@ jQuery.extend({
 			}
 		};
 	}
+		
+	
 });
+
+function addAlixButton(ra,dec){
+	var h = document.getElementById("title-table");
+	h.insertAdjacentHTML("beforeend", "<span class='pagetitlepath'> >  <button class='btn btn-success ' onclick='Alix_Modalinfo.showPopup( &quot;"+ ra + " " + dec + "&quot;);'class='dl_aladin' href='javascript:void(0););'> &nbsp &nbsp Load &nbsp  Alixc </button></span>");
+	isloadAlix=true;
+	//h.style.display="none";
+   //alert(ra);
+}
+
+function addElement(parentId, elementTag, elementId, html) {
+    // Adds an element to the document
+    var p = document.getElementById(parentId);
+    var newElement = document.createElement(elementTag);
+    newElement.setAttribute('id', elementId);
+    newElement.innerHTML = html;
+    p.appendChild(newElement);
+}
+
+function removeElement(elementId) {
+    // Removes an element from the document
+    var element = document.getElementById(elementId);
+    element.parentNode.removeChild(element);
+}
+
+
+
