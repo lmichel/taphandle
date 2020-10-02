@@ -394,11 +394,15 @@ DataTreeView.prototype = {
 
 			}
 		},
+		getNodeInfos : function(nodekey){
+			return this.reports[nodekey];
+		},
 		showNodeInfos: function (nodekey) {
 //			var report = {"info": this.info, "capabilities": this.capabilities};
 //			Modalinfo.infoObject(report, "Node " + this.dataTreePath.nodekey);
 //			
 			Modalinfo.infoObject(this.reports[nodekey], "Node " + nodekey);
+		//alert(nodekey);
 		},
 		getBookmark: function() {
 			var info = this.reports[this.dataTreePath.nodekey].info;

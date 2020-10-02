@@ -372,7 +372,6 @@ jQuery.extend({
 							columnMap.s_dec = i;
 							//var h = document.getElementById("alix-id");
 							//h.insertAdjacentHTML("afterend", "<p> <button class='btn btn-success mt-5 ' onclick='Alix_Modalinfo.showPopup("+01557316 +301442.99+");'> &nbsp &nbsp Load &nbsp  Alix s</button></p>");
-							
 						
 						}else if( ah.nameorg == "s_fov" || ah.nameorg.match(/.*instr\.fov/) ) {
 							columnMap.s_fov = i;
@@ -390,6 +389,10 @@ jQuery.extend({
 			var dec=0;
 			var ra =0;
 			var schema = dataTreePath.schema;
+			var getCurrentName = function (){
+						var tableBase=  dataTreePath.schema+"."+dataTreePath.table;
+						return tableBase;
+						}
 			var options = {
 				"aLengthMenu": [5, 10, 25, 50, 100],
 				"aoColumns" : aoColumns,
@@ -417,13 +420,7 @@ jQuery.extend({
 						if( schema != "rr")
 						
 							ValueFormator.formatValue(colName, aData, $('td:eq(' + c + ')', nRow), copiedcolumnMap);
-							/*if(columnMap.s_ra != -1 && columnMap.s_dec !=-1 ){;
-								//alert(colName+" => "+c+"  =>"+aData[columnMap.s_dec]+" =>"+columnMap.s_ra+"  "+columnMap.s_dec);
-								ra=aData[columnMap.s_ra];
-								dec=aData[columnMap.s_dec];
-								//olumnMap.isloadAlix==true;
-								
-							}else{}*/
+							console.log(colName+"=> "+ aData +"<br>/n")
 							
 					}
 					
@@ -432,16 +429,31 @@ jQuery.extend({
 						if(columnMap.s_ra != -1 && columnMap.s_dec !=-1){
 						ra=aData[columnMap.s_ra];
 						dec=aData[columnMap.s_dec];
-						isloadAlix=true;	//alert("this table has position coordonnate "+aData[columnMap.s_dec]);
-						addAlixButton(ra,dec);
-							alert("this table has position coordonnate "+isloadAlix)
+						var dec_name = $(this.fnSettings().aoColumns[columnMap.s_dec].sTitle).text();
+						var ra_name = $(this.fnSettings().aoColumns[columnMap.s_ra].sTitle).text();
+						//alert(ra_name+" , "+dec_name);
+						//alert (getCurrentName().quotedTableName().qualifiedName); 
+						var tab=  getCurrentName().quotedTableName().qualifiedName;
+						isloadAlix=true;
+						//dataTreeView.showNodeInfos( dataTreePath.nodekey );
+						var urlPath = myNodeInfo(dataTreePath.nodekey).info.url;
+						ValueFormator.addAlixButton(ra,dec,urlPath,tab,ra_name,dec_name);
+							
 						}
 					}	
 					return nRow;
 				}
-				
-				
+					
 			};
+			
+			
+	
+			
+			// function to return node information 
+			var myNodeInfo = function(f){
+				var dataInfos = dataTreeView.getNodeInfos( f );
+				return dataInfos;
+			}
 			
 					
 			
@@ -528,6 +540,7 @@ jQuery.extend({
 					+ "<thead>" + "<tr>";
 				for (i = 0; i < ahs.length; i++) {
 					table += "<th>" + ahs[i].name + "</th>";
+					console.log(ahs[i].name);
 				}
 				/*
 				 * Build empty table
@@ -558,9 +571,22 @@ jQuery.extend({
 	
 });
 
-function addAlixButton(ra,dec){
+
+
+// function to create an lunch alix button 
+function addAlixButton(ra,dec,url,ta,ra_name,dec_name){
 	var h = document.getElementById("title-table");
-	h.insertAdjacentHTML("beforeend", "<span class='pagetitlepath'> >  <button class='btn btn-success ' onclick='Alix_Modalinfo.showPopup( &quot;"+ ra + " " + dec + "&quot;);'class='dl_aladin' href='javascript:void(0););'> &nbsp &nbsp Load &nbsp  Alixc </button></span>");
+	var positions=ra+" "+dec;
+	var tab=ta;
+	var r_name=ra_name;
+	var d_name = dec_name;
+	h.insertAdjacentHTML("beforeend", "<span class='pagetitlepath'> >  <button id= 'btn_load_alix' class='btn btn-success' class='dl_aladin' href='javascript:void(0););'> &nbsp &nbsp Load &nbsp  Alixc </button></span>");
+	//h.insertAdjacentHTML("beforeend", "<span class='pagetitlepath'> >  <button class='btn btn-success ' onclick='alixapi.changeRefBlue(&quot;"+ra+"&quot;,&quot;"+dec+"&quot;);'class='dl_aladin' href='javascript:void(0););'> &nbsp &nbsp ChangeRef </button><br>");
+	$().ready(function(){
+		$("#btn_load_alix").click(function(){
+			alixapi.showPopupData(positions,url,tab,r_name,d_name);
+		})
+	});
 	isloadAlix=true;
 	//h.style.display="none";
    //alert(ra);

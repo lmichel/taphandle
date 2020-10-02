@@ -47,7 +47,7 @@ AlixResourceLoader = function() {
 				"javascript/upload.js",
 				"javascript/initFunctions.js", "javascript/utils.js",
 				"javascript/ready.js", "javascript/viewState.js",
-				"javascript/resize.js"];
+				"javascript/resize.js","javascript/Region.js"];
 		
 		var local_min_js = ["basics.js"
 	                    , "WebSamp"
@@ -112,6 +112,7 @@ AlixResourceLoader = function() {
                  ,"javascript/Alix_Processing.js"
                  ,"javascript/Alix_SkyGeometry.js"
                  ,"javascript/SimbadCatalog.js"
+				 ,"javascript/alixAPI.js"
                    ];
 
         var jsresourcesScriptDir = "saadajsbasics/javascript/";

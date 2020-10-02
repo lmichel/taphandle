@@ -29,6 +29,7 @@ function Region(STCRegion) {
      * Parsing is achieved at object creation time
      */
 	this.parse();
+	
 }
 Region.prototype = {
 		/**
@@ -90,6 +91,7 @@ Region.prototype = {
 			}
 			this.center.ra = ((Height.ramax +  Height.ramin)/2);
 			this.center.dec =  ((Width.decmax + Width.decmin)/2);
+			return this.center.ra+" "+this.center.dec;
 		},
 		/*
 		 * The code below is taken from JSResource RegionEditor
@@ -157,7 +159,10 @@ Region.prototype = {
 		    return this.STCRegion + ";" 
 		    + this.center.ra + " " + this.center.dec + ";" 
 		    + "zoom " + ((this.size.ra> this.size.dec)? this.size.ra: this.size.dec) + " deg ;";
-		}
+		},
+		
+		
+		
 
 }
 /**
