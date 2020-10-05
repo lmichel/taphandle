@@ -155,9 +155,9 @@ ValueFormator = function() {
 			    console.log(tdNode.html())
 			    console.log($("#" + id).length)
 				tdNode.first().click(function(){
-					AladinLiteX_mVc.regionEditor()
+				alixapi.removePolygone();	
 				alixapi.showPopupData(positions,urlPath,tableBase,ra_name,dec_name);
-				console.log(" @@@@@@@@@@@@@@@@@@@@@@@@@ "+positions);
+				//console.log(" @@@@@@@@@@@@@@@@@@@@@@@@@ "+positions);
 				});
 			
 						}
@@ -224,21 +224,7 @@ ValueFormator = function() {
 		tdNode.append("<a class='dl_samp' title='Broadcast to SAMP'   href='#' onclick='WebSamp_mVc.fireSendAladinScript(&quot;" + region.getAladinScript() + "&quot;); return false;'/></a>");
 		tdNode.first().click(function() {
 			
-			//var tab = alixapi.getPoints(region);
-
-			//var view = BasicGeometry.getEnclosingView(tab);
-			//var position = alixapi.getCenter(region);
-			//console.log(tab);
-			console.log("ffff "+stcRegion)
-			console.log(alixapi.getCoords(stcRegion))
-			
-			//AladinLiteX_mVc.setRegion(stcRegion,1);
-			//
-					//aladinLite_V.gotoPosition(view.center.ra, view.center.dec);
-					//aladinLite_V.setZoom( 1.2*view.size );
 			alixapi.showPopup(alixapi.getCenter(region));
-			//console.log(view);
-			//console.log(tab);
 			alixapi.drawPolygone(stcRegion);
 			
 			//ModalAladin.aladinExplorer({ region: region, fov: 0.016, title:"STC Region", surveyKeyword: targetName}, []);
