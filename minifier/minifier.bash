@@ -37,6 +37,7 @@ rm $outputDir/packedJS.css
 #
 js_array_org=("basics.js"
            "ModalAladin.js"
+           "Modalcommand.js"
            "WebSamp"
            "KWConstraint"
            "AttachedData_v.js"
