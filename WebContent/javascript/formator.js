@@ -9,13 +9,15 @@ ValueFormator = function() {
 	var decValue = undefined;
 	var targetName = undefined;
 	var isloadAlix =false;
+	var isGoodTitle = false;
+	var isGoodMessage = false;
 	var reset = function(){
 		raValue = undefined;
 		decValue = undefined;		
 	}
 	
-	// BOTTUM ALIX TO LOAD DATA
-	var addAlixButton=function (ra,dec,url,ta,ra_name,dec_name){
+	/*/ BOTTUM ALIX TO LOAD DATA
+	var addAlixButton=function (title,ra,dec,url,ta,ra_name,dec_name,label){
 	var h = document.getElementById("title-table");
 	var positions=ra+" "+dec;
 	var tab=ta;
@@ -25,15 +27,27 @@ ValueFormator = function() {
 	//h.insertAdjacentHTML("beforeend", "<span class='pagetitlepath'> >  <button class='btn btn-success ' onclick='alixapi.changeRefBlue(&quot;"+ra+"&quot;,&quot;"+dec+"&quot;);'class='dl_aladin' href='javascript:void(0););'> &nbsp &nbsp ChangeRef </button><br>");
 	$().ready(function(){
 		$("#btn_load_alix").click(function(){
-			alixapi.showPopupData(positions,url,tab,r_name,d_name);
+			//alixapi.showPopupData(title,positions,url,tab,r_name,d_name);
+				alixapi.showPopupData({
+				     master: {
+						 raCenter: ra, 
+					     decCenter: dec, 
+	                     raColumn: r_name,
+	                     decColumn: d_name,
+	                     urlPath: url, 
+	                     tablePath: tab, 
+						 label: label	
+						},
+						label: label
+					 }
+				);
 		});
 		
 	});
 	
 	isloadAlix=true;
-	//h.style.display="none";
-   //alert(ra);
-};
+	
+};*/
 	
 	/**
 	 * 
@@ -112,71 +126,78 @@ ValueFormator = function() {
 		/*
 		 * TODO :add SAMP message to Aladin : script.aladin.send
 		 */
-	
-			//alert(columnMap+" , "+columnName);
-			
-			;
 			if(raValue != undefined){
 				columnNames[i] =columnName;
 				i++;
 			} 
-		if( value.match(/^((position)|(region)|(polygon))/i) ) {
-			addSTCRegionControl(tdNode, value);
+		if( value.match(/^((position)|(region)|(polygon)|(circle))/i) ) {
+			//addSTCRegionControl(tdNode, value);
+			if(columnMap.s_ra != -1 && columnMap.s_dec !=-1){
+						var ra=raValue;
+						var dec=decValue;
+						var dec_name = columnNames[1];
+						var ra_name = columnNames[0];
+						//alert(ra_name+"  "+columnMap.s_ra);
+						addSTCRegionControl(tdNode, value,ra,dec,ra_name,dec_name);	
+				}
+			
 			
 		} else if ( raValue != undefined && decValue != undefined && 
 				(columnMap.s_ra == columnMap.currentColumn || columnMap.s_dec == columnMap.currentColumn) ) {
-					// modify link to display it on alix;
-			// var alLink = "<a onclick='ModalAladin.aladinExplorer({ target: &quot;" + raValue + " " + decValue + "&quot;, fov: 0.016, title:&quot;...&quot;}, []);'class='dl_aladin' href='javascript:void(0);' title='Send source coord. to Aladin Lite'></a>";
-			//tdNode.html(alLink + " " + (new Number(value)).toPrecision(8));
-			
-		/*	var alLink = "<a onclick='alixapi.showPopup( &quot;"+ raValue + " " + decValue + "&quot;);'class='dl_aladin' href='javascript:void(0);' title='Send source coordo to Alix'></a>";
-			tdNode.html(alLink + " " + (new Number(value)).toPrecision(8));*/
+				// modify link to display it on alix;
+				// var alLink = "<a onclick='ModalAladin.aladinExplorer({ target: &quot;" + raValue + " " + decValue + "&quot;, fov: 0.016, title:&quot;...&quot;}, []);'class='dl_aladin' href='javascript:void(0);' title='Send source coord. to Aladin Lite'></a>";
+				//tdNode.html(alLink + " " + (new Number(value)).toPrecision(8));
+				
+			    /*var alLink = "<a onclick='alixapi.showPopup( &quot;"+ raValue + " " + decValue + "&quot;);'class='dl_aladin' href='javascript:void(0);' title='Send source coordo to Alix'></a>";
+				tdNode.html(alLink + " " + (new Number(value)).toPrecision(8));*/
 		
 			if(columnMap.s_ra != -1 && columnMap.s_dec !=-1){
 						var ra=raValue;
 						var dec=decValue;
-						var positions=ra+" "+dec;
 						var dec_name = columnNames[1];
-						var ra_name = columnNames[0];
+						var ra_name = columnNames[0];	
 						//alert(ra_name+"  "+dec_name)
 						//alert (getCurrentName().quotedTableName().qualifiedName); 
 						var tableBase=  dataTreeView.dataTreePath.schema+"."+dataTreeView.dataTreePath.table;
 						var tab=  tableBase.quotedTableName().qualifiedName;
 						var urlPath = myNodeInfo(dataTreeView.dataTreePath.nodekey).info.url;
 						isloadAlix=true;
+						var title = dataTreeView.dataTreePath.nodekey+">"+tab;
 						//dataTreeView.showNodeInfos( dataTreePath.nodekey );
-						var launch=function(){
-							//addAlixButton(ra,dec,urlPath,tab,ra_name,dec_name);
-						}
 						var id = "dec_"+ dec.toString().replace(".", "").replace("-", "")
 						//console.log(positions+" @@@@@@@@@@@@@@@@@@@@@@@@@  "+urlPath)
 						var alLink = "<a id='" + id + "'  class='dl_aladin'  title='Send source coordo to Alix'></a>";
 						tdNode.html(alLink + " " + (new Number(value)).toPrecision(8));
-			    console.log(tdNode.html())
-			    console.log($("#" + id).length)
-				tdNode.first().click(function(){
-				alixapi.removePolygone();	
-				alixapi.showPopupData(positions,urlPath,tableBase,ra_name,dec_name);
-				//console.log(" @@@@@@@@@@@@@@@@@@@@@@@@@ "+positions);
-				});
-			
-						}
-				//
-			for(var j=0;j<columnNames.length;j++){
-				//console.log("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ "+ columnNames[j]+" "+columnNames.length)
-			}
-			
+			   			 console.log(tdNode.html())
+			    	     console.log($("#" + id).length)
+						 tdNode.first().click(function(){
+						 var dec_name = columnNames[1];
+						 var ra_name = columnNames[0];
+						 var label = "TAP "+ dataTreeView.dataTreePath.nodekey + " " + tableBase;
+					     alixapi.showPopupData({
+						     master: {
+								 raCenter: ra, 
+							     decCenter: dec, 
+			                     raColumn: ra_name,
+			                     decColumn: dec_name,
+			                     urlPath: urlPath, 
+			                     tablePath: tab, 
+								 label: label	
+								},
+								label: label
+							 }
+						);
 						
-					
-			
-			
+						});
+					}	
 			/*
 			 * Array annotation removed from server because of CSIRO for which all data are typed as arra
 			 */
 		} else if(/* value.startsWith("Array")*/ value.length > 24 ) {
-			//console.log(value);
 			//tdNode.html("<a title='Data array(click to expand)' class='dl_dataarray' href='#'  onclick='Modalinfo.info(\"" + value + "\", \"Data Array\");'></a>");
 			tdNode.html("<span title='" + value + "' style =' cursor: pointer;' onclick='Modalinfo.info(\"" + value + "\", \"Full Value\");'>" + value.substring(0, 23) + " ... </span>");
+		    
+			//tdNode.html("<span title='" + value + "' style =' cursor: pointer;' onclick='alixapi.drawCircle(\"" + value + "\");'>" + value.substring(0, 23) + " ... </span>");	
 		} else if( decimaleRegexp.test(value)){
 			tdNode.html((new Number(value)).toPrecision(8));
 		} else if( bibcodeRegexp.test(value)){
@@ -217,20 +238,74 @@ ValueFormator = function() {
 			DataLinkBrowser.startCompliantBrowser(url, "forwardxmlresource", fovObject);
 		});
 	};
-	var addSTCRegionControl = function(tdNode, stcRegion) {
-		var region = new STCRegion(stcRegion);
+	/*var addSTCRegionControl = function(tdNode, stcRegion) {
+		var region =  new SRegion(stcRegion);
 		tdNode.html("");
 		tdNode.append("<a title='" + stcRegion + " (click to plot)' class='dl_stc' href='#'></a>");
 		tdNode.append("<a class='dl_samp' title='Broadcast to SAMP'   href='#' onclick='WebSamp_mVc.fireSendAladinScript(&quot;" + region.getAladinScript() + "&quot;); return false;'/></a>");
 		tdNode.first().click(function() {
-			
-			alixapi.showPopup(alixapi.getCenter(region));
-			alixapi.drawPolygone(stcRegion);
-			
+			var tableBase=  dataTreeView.dataTreePath.schema+"."+dataTreeView.dataTreePath.table;
+			var tab=  tableBase.quotedTableName().qualifiedName;
+			var title = dataTreeView.dataTreePath.nodekey+">"+tab;
+			var label = "TAP "+ dataTreeView.dataTreePath.nodekey + " " + tableBase;
+			alixapi.showPopupData({
+				     /*master: {
+						 raCenter: ra, 
+					     decCenter: dec, 
+	                     raColumn: ra_name,
+	                     decColumn: dec_name,
+	                     urlPath: urlPath, 
+	                     tablePath: tableBase,     
+					 },*//*
+					 stcRegion: stcRegion,
+					 region:region,
+					 label: label
+				});
+			/*alixapi.showPopup(alixapi.getCenter(region));
+			console.log("COORDS => "+alixapi.getCoords(stcRegion));
+			alixapi.drawPolygone(region,stcRegion);*/
 			//ModalAladin.aladinExplorer({ region: region, fov: 0.016, title:"STC Region", surveyKeyword: targetName}, []);
-			return false;
-		})
-	}
+			//return false;
+		//})
+	//}*/
+	
+	
+	
+	/**************  another test of region control for this one we added ra,dec,rac_name,dec_name in our function. note that we can also use the first one that is commented  *********** */
+	
+		var addSTCRegionControl = function(tdNode, stcRegion,ra,dec,ra_name,dec_name) {
+			var region =  new SRegion(stcRegion);
+			tdNode.html("");
+			tdNode.append("<a title='" + stcRegion + " (click to plot)' class='dl_stc' href='#'></a>");
+			tdNode.append("<a class='dl_samp' title='Broadcast to SAMP'   href='#' onclick='WebSamp_mVc.fireSendAladinScript(&quot;" + region.getAladinScript() + "&quot;); return false;'/></a>");
+			tdNode.first().click(function() {
+				var tableBase=  dataTreeView.dataTreePath.schema+"."+dataTreeView.dataTreePath.table;
+				var tab=  tableBase.quotedTableName().qualifiedName;
+				var title = dataTreeView.dataTreePath.nodekey+">"+tab;
+		    	var label = "TAP "+ dataTreeView.dataTreePath.nodekey + " " + tableBase;
+				var urlPath = myNodeInfo(dataTreeView.dataTreePath.nodekey).info.url;
+				alixapi.showPopupData({
+					     master: {
+							 raCenter: ra, 
+						     decCenter: dec, 
+		                     raColumn: ra_name,
+		                     decColumn: dec_name,
+		                     urlPath: urlPath, 
+		                     tablePath: tab,  
+							 label: label   
+						 },
+						 stcRegion: stcRegion,
+						 region:region,
+						 label: label
+					});
+				/*alixapi.showPopup(alixapi.getCenter(region));
+				console.log("COORDS => "+alixapi.getCoords(stcRegion));
+				alixapi.drawPolygone(region,stcRegion);*/
+				//ModalAladin.aladinExplorer({ region: region, fov: 0.016, title:"STC Region", surveyKeyword: targetName}, []);
+				return false;
+			});
+	 }
+
 	/**
 	 * Get the URL infos asynchronously: formating must be achieved inside the callback
 	 */
@@ -306,6 +381,6 @@ ValueFormator = function() {
 	var pblc = {};
 	pblc.reset = reset;
 	pblc.formatValue = formatValue;
-	pblc.addAlixButton=addAlixButton
+	//pblc.addAlixButton=addAlixButton
 	return pblc;
 }();

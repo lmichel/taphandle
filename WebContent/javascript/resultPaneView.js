@@ -420,7 +420,7 @@ jQuery.extend({
 						if( schema != "rr")
 						
 							ValueFormator.formatValue(colName, aData, $('td:eq(' + c + ')', nRow), copiedcolumnMap);
-							console.log(colName+"=> "+ aData +"<br>/n")
+							//console.log(colName+"=> "+ aData +"<br>/n")
 							
 					}
 					
@@ -431,24 +431,19 @@ jQuery.extend({
 						dec=aData[columnMap.s_dec];
 						var dec_name = $(this.fnSettings().aoColumns[columnMap.s_dec].sTitle).text();
 						var ra_name = $(this.fnSettings().aoColumns[columnMap.s_ra].sTitle).text();
-						//alert(ra_name+" , "+dec_name);
-						//alert (getCurrentName().quotedTableName().qualifiedName); 
 						var tab=  getCurrentName().quotedTableName().qualifiedName;
 						isloadAlix=true;
 						//dataTreeView.showNodeInfos( dataTreePath.nodekey );
+						var nameTitle =dataTreeView.dataTreePath.nodekey+">"+tab
 						var urlPath = myNodeInfo(dataTreePath.nodekey).info.url;
-						ValueFormator.addAlixButton(ra,dec,urlPath,tab,ra_name,dec_name);
-							
+						//ValueFormator.addAlixButton(nameTitle,ra,dec,urlPath,tab,ra_name,dec_name);
 						}
 					}	
 					return nRow;
 				}
 					
 			};
-			
-			
-	
-			
+				
 			// function to return node information 
 			var myNodeInfo = function(f){
 				var dataInfos = dataTreeView.getNodeInfos( f );
@@ -540,7 +535,7 @@ jQuery.extend({
 					+ "<thead>" + "<tr>";
 				for (i = 0; i < ahs.length; i++) {
 					table += "<th>" + ahs[i].name + "</th>";
-					console.log(ahs[i].name);
+				//	console.log(ahs[i].name);
 				}
 				/*
 				 * Build empty table
@@ -573,8 +568,8 @@ jQuery.extend({
 
 
 
-// function to create an lunch alix button 
-function addAlixButton(ra,dec,url,ta,ra_name,dec_name){
+/* function to create an lunch alix button 
+function addAlixButton(title,ra,dec,url,ta,ra_name,dec_name){
 	var h = document.getElementById("title-table");
 	var positions=ra+" "+dec;
 	var tab=ta;
@@ -585,12 +580,20 @@ function addAlixButton(ra,dec,url,ta,ra_name,dec_name){
 	$().ready(function(){
 		$("#btn_load_alix").click(function(){
 			alixapi.showPopupData(positions,url,tab,r_name,d_name);
+			if(isGoodTitle==false){
+			var nameTItle =  alixapi.getXmmId(title);
+			isGoodTitle =true;
+		}
 		})
 	});
 	isloadAlix=true;
 	//h.style.display="none";
    //alert(ra);
-}
+}*/
+
+/*function addTitleNode(){
+	var title = document.getElementById("XMM")
+} */
 
 function addElement(parentId, elementTag, elementId, html) {
     // Adds an element to the document

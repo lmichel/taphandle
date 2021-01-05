@@ -83,6 +83,7 @@ AlixResourceLoader = function() {
                  "aladinLite/aladin.js"
                  //,"javascript/Segment.js"
                  ,"javascript/AladinUpdate.js"
+                 ,"javascript/SRegion.js"
                  ,"javascript/Segment.js"
                  ,"javascript/AstroCoo.js"
                  ,"javascript/LibraryMap.js"
@@ -121,11 +122,11 @@ AlixResourceLoader = function() {
                  ,"domain.js"
           ,"WebSamp"
          , "KWConstraint"
-         , "AttachedData_v.js", "VizierKeywords_v.js","OrderBy_v.js", "ConeSearch_v.js", "ConstList_v.js", "FieldList_v.js",
-"Sorter_v.js"
+         , "AttachedData_v.js", "VizierKeywords_v.js","OrderBy_v.js", "ConeSearch_v.js", "ConstList_v.js", "FieldList_v.js"
+	     , "Sorter_v.js"
          , "DataLink"
-         , "ConstQEditor"
          , "QueryTextEditor"
+         , "ConstQEditor"
          , "Segment.js"
        //  , "RegionEditor" //avoid the collision with the regioneditor_mvc in alix
          , "flotmosaic.js"
