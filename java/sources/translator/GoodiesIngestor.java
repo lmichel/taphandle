@@ -161,7 +161,7 @@ public class GoodiesIngestor extends RootClass {
 		bw.write("<?xml version='1.0' encoding='utf-8'?>\n");
 		bw.write("<VOTABLE version=\"1.2\" xmlns=\"http://www.ivoa.net/xml/VOTable/v1.2\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.ivoa.net/xml/VOTable/v1.2 http://vo.ari.uni-heidelberg.de/docs/schemata/VOTable-1.2.xsd\"> \n");
 		bw.write("  <RESOURCE type=\"results\"> \n");
-		bw.write("		<INFO name=\"server\" value=\"http://saada.unistra.fr/taphandle\"></INFO> \n");
+		bw.write("		<INFO name=\"server\" value=\"https://saada.unistra.fr/taphandle\"></INFO> \n");
 		bw.write("		<INFO name=\"query\" value=\"Upload a list of sources\"></INFO> \n");
 		bw.write("		<DESCRIPTION> \n");
 		bw.write("		Initial file name: " + this.fileName + " \n");

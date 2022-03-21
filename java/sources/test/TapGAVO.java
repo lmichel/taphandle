@@ -18,7 +18,7 @@ import resources.RootClass;
  */
 public class TapGAVO  extends RootClass {
 	private static final String baseDir = System.getProperty("java.io.tmpdir") ;
-	private static final String baseUrlN = "http://dc.zah.uni-heidelberg.de/__system__/tap/run/tap/";
+	private static final String baseUrlN = "https://dc.zah.uni-heidelberg.de/__system__/tap/run/tap/";
 
 	public static void main(String[] args) throws Exception {
 		validWorkingDirectory(baseDir + "/nodebase");

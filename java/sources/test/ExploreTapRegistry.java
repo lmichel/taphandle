@@ -49,7 +49,10 @@ public class ExploreTapRegistry  extends RootClass {
 		JSONObject jsonObject = (JSONObject) p.parse(br);
 		JSONArray array = (JSONArray) jsonObject.get("aaData");
 		ArrayList<String> results = new ArrayList<String>();
+		System.out.println(query);
 		for( int i=0 ; i<array.size() ; i++) {
+			System.out.println(array.get(i));
+			if( i >= 0 ) continue;
 			JSONArray sa = (JSONArray) array.get(i);
 			System.out.println("");
 			String ivoid = (String)sa.get(0);

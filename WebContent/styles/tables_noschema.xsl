@@ -7,7 +7,7 @@
 	xmlns:vod="http://www.ivoa.net/xml/VODataService/v1.1"	
     xmlns:tab='urn:astrogrid:schema:TableMetadata'
 	xmlns:uws="http://www.ivoa.net/xml/UWS/v1.0">
-	<xsl:import href="http://saada.unistra.fr/resources/xml-to-json.xsl" />
+	<xsl:import href="https://saada.unistra.fr/resources/xml-to-json.xsl" />
 	<xsl:output method="text" media-type="text/html" encoding="UTF-8" version="4.0" />
 	<xsl:strip-space elements="name" />
 	<xsl:template match="/">

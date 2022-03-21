@@ -136,7 +136,7 @@ public class QueryModeChecker extends RootClass {
 		try {
 			TapAccess.runSyncJob(this.endpoint
 					, this.uploadQuery
-					, "taphandlesample," +  "http://saada.unistra.fr/saada/datasample/uploadsample.xml"
+					, "taphandlesample," +  "https://saada.unistra.fr/saada/datasample/uploadsample.xml"
 					, this.workingDirectory + "uploadtest.xml"
 					, new NodeCookie()
 			        , null);

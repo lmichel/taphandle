@@ -17,7 +17,7 @@ import translator.JsonUtils;
 public class TablesReconstructor extends RootClass {
 	private Map<String, Map<String, Set<Column>>> metaMap = new LinkedHashMap<String, Map<String, Set<Column>>>();
 	private String nodeUrl, outputDir;
-	private final String query = "Select TABLE_NAME, COLUMN_NAME, DESCRIPTION, UNIT, UCD, DATATYPE, SIZE, PRINCIPAL, INDEXED, STD from tap_schema.columns";
+	private final String query = "Select TABLE_NAME, COLUMN_NAME, DESCRIPTION, UNIT, UCD, DATATYPE, 'SIZE', PRINCIPAL, INDEXED, STD from tap_schema.columns";
 	private final String resultFileName = "TablesReconstructorResult";
 
 	public TablesReconstructor(String nodeUrl, String outputDir) throws Exception{

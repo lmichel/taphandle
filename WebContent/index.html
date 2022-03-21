@@ -15,6 +15,9 @@
 <script type="text/javascript" src="javascript/packedLoader.js"></script>
 
 <script>
+    if (typeof _paq === 'undefined' || _paq === null) {
+	      _paq = []
+    }
 
 	if (productionMode == 1) {
 		useDebugResources = false;
@@ -157,7 +160,10 @@
     <!--  activated in initFunctions.initLayout --> 
         <div class="col-md-12">
             <div class="famous-div">
-                <p class="try-famous">Most popular databases</p>
+                <p class="try-famous">Most popular databases 
+                     <a href="https://taphandle.astro.unistra.fr/tapcomplex/app/Tap_Handle_MK2/taphandev.html" 
+                     target="blank" class="badge badge-pill badge-warning" style="color: black; background-color: yellow;">
+                     Explore joined data - Explore the registry with TapHandle MK2</a></p>
                 <div class="row">
                     <div class="col-md-4">
                         <a class="3xmm-link"><p class="famous">3XMMdr8</p></a>
@@ -451,10 +457,11 @@
 
    
 <script type="text/javascript">var piwikSiteId="saada";</script>
-<script type="text/javascript" src="http://cdsannotations.u-strasbg.fr/piwikinit"></script>
-<script type="text/javascript" src="http://cdsannotations.u-strasbg.fr/piwiktracker"></script>
+<script type="text/javascript" src="https://cdsannotations.u-strasbg.fr/piwikinit"></script>
+<script type="text/javascript" src="https://cdsannotations.u-strasbg.fr/piwiktracker"></script>
 
 <script  type="text/javascript">
+
 trackAction = function(message){
 	if(productionMode < 2){
 		 _paq.push(['trackPageView', message]);
