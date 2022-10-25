@@ -361,8 +361,16 @@ logger.info("Recieved  " + f.length() + "b stored in " +  outputfile);
 		 * Services based on DACHs 	are forced to return VOTable with data in a table (not BINARY)
 		 * In order to be consumable by Aladin Lite
 		 */
-		String format = (endpoint.indexOf("__system__") > 0 || endpoint.indexOf("heidelberg") > 0 )
-				? "&FORMAT=" + URLEncoder.encode("application/x-votable+xml;serialization=tabledata" , "ISO-8859-1"): "";
+		String format = "";
+		if(endpoint.indexOf("__system__") > -1 || endpoint.indexOf("heidelberg") > -1 ) {
+			format = "&FORMAT=" + URLEncoder.encode("application/x-votable+xml;serialization=tabledata" , "ISO-8859-1");
+		}
+		/*
+		 * Ask the server to annotate the data
+		 */
+		else if(endpoint.indexOf("xtapdb") > -1) {
+			format = "&FORMAT=" + URLEncoder.encode("application/mango" , "ISO-8859-1");
+		}
 		sendPostRequest(endpoint + "sync"
 				, "RUNID=" + runId + "&PHASE=RUN&REQUEST=doQuery" + format + "&LANG=ADQL&QUERY=" + URLEncoder.encode(query, "ISO-8859-1")
 				, outputfile
