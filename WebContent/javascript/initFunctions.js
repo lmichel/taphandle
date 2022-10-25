@@ -33,7 +33,7 @@ function initFunctions () {
 	this.initLayout = function() {
 		Out.info("Activate popular sites access");
 		var np = window.location.href.split('?')[0].replace(/\/#?$/, "");
-		$(".3xmm-link").attr("href", np+"?url=http%3A//xcatdb.unistra.fr/3xmmdr8/tap/");
+		$(".4xmm-link").attr("href", np+"?url=https%3A//xcatdb.unistra.fr/xtapdb/");
 		$(".cadc-link").attr("href", np+"?url=http%3A//www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap/");
 		$(".gavo-link").attr("href", np+"?url=http%3A//dc.zah.uni-heidelberg.de/__system__/tap/run/tap/");
 		$(".vizier-link").attr("href", np+"?url=http%3A//tapvizier.u-strasbg.fr/TAPVizieR/tap/");
