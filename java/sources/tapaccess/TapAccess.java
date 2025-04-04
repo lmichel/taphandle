@@ -369,7 +369,7 @@ logger.info("Recieved  " + f.length() + "b stored in " +  outputfile);
 		 * Ask the server to annotate the data
 		 */
 		else if(endpoint.indexOf("xtapdb") > -1) {
-			format = "&FORMAT=" + URLEncoder.encode("application/mango" , "ISO-8859-1");
+			format = "&FORMAT=" + URLEncoder.encode("application/x-votable+xml;content=mivot" , "ISO-8859-1");
 		}
 		sendPostRequest(endpoint + "sync"
 				, "RUNID=" + runId + "&PHASE=RUN&REQUEST=doQuery" + format + "&LANG=ADQL&QUERY=" + URLEncoder.encode(query, "ISO-8859-1")
