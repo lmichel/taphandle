@@ -35,17 +35,17 @@ function initFunctions () {
 		var np = window.location.href.split('?')[0].replace(/\/#?$/, "");
 		$(".4xmm-link").attr("href", np+"?url=https%3A//xcatdb.unistra.fr/xtapdb/");
 		$(".cadc-link").attr("href", np+"?url=http%3A//www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap/");
-		$(".gavo-link").attr("href", np+"?url=http%3A//dc.zah.uni-heidelberg.de/__system__/tap/run/tap/");
-		$(".vizier-link").attr("href", np+"?url=http%3A//tapvizier.u-strasbg.fr/TAPVizieR/tap/");
-		$(".simbad-link").attr("href", np+"?url=http%3A//simbad.u-strasbg.fr/simbad/sim-tap/");
-		$(".planet-link").attr("href", np+"?url=http%3A//voparis-tap.obspm.fr/__system__/tap/run/tap/");
+		$(".gavo-link").attr("href", np+"?url=https:%3A//dc.zah.uni-heidelberg.de/tap");
+		$(".vizier-link").attr("href", np+"?url=https%3A//tapvizier.u-strasbg.fr/TAPVizieR/tap/");
+		$(".simbad-link").attr("href", np+"?url=https%3A//simbad.u-strasbg.fr/simbad/sim-tap/");
+		$(".planet-link").attr("href", np+"?url=htps%3a//voparis-tap-astro-m.obspm.fr/tap");
 		$(".heasarch-link").attr("href", np+"?url=https%3A//heasarc.gsfc.nasa.gov/xamin/vo/tap/")
-		$(".chandra-link").attr("href", np+"?url=http%3A//cda.harvard.edu/cxctap/");
-		$(".sdss-link").attr("href", np+"?url=http://wfaudata.roe.ac.uk/sdssdr9-dsa/TAP/");
+		$(".chandra-link").attr("href", np+"?url=https%3A//cda.harvard.edu/cxctap/");
+		$(".sdss-link").attr("href", np+"?url=http://mast.stsci.edu/vo-tap/api/v0.1/classy/");
 		$(".ned-link").attr("href", np+"?url=https%3A//ned.ipac.caltech.edu/tap/");
-		$(".stsci-link").attr("href", np+"?url=http%3A//vao.stsci.edu/CAOMTAP/TapService.aspx/");
+		$(".stsci-link").attr("href", np+"?url=https%3A//mast.stsci.edu/vo-tap/api/v0.1/goods/");
 		$(".gaiaesa-link").attr("href", np+"?url=http%3A//gea.esac.esa.int/tap-server/tap/");
-		$(".epnesa-link").attr("href", np+"?url=https%3A//archives.esac.esa.int/psa/epn-tap/tap/");
+		$(".epnesa-link").attr("href", np+"?url=https%3A//psa.esa.int/psa-tap/tap");
 		
 
 		// Define the height of the div knowing the banner take 70px and the query editor 330px
