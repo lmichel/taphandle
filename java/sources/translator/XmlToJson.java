@@ -74,7 +74,7 @@ public class XmlToJson  extends RootClass {
 			if( !found && nsDefinition != null && nsDeclaration != null) {
 				Matcher m = NSDefPattern.matcher(str);
 				if (m.matches()) {
-					str = str.replace( m.group(1), nsDeclaration) ;
+					//str = str.replace( m.group(1), nsDeclaration) ;
 					found = true;
 				}
 			}
@@ -293,7 +293,6 @@ public class XmlToJson  extends RootClass {
 	public static void translateResultTable(String inputFile, String outputFile  ) throws Exception {
 		StarTableFactory stf = new StarTableFactory();
 		logger.info("Translate " +inputFile);
-
 		try {
 			StarTable table = stf.makeStarTable(inputFile); 
 			JSONObject retour = new JSONObject();
@@ -372,7 +371,6 @@ public class XmlToJson  extends RootClass {
 				aaData.add(rowData);
 			}
 			retour.put("aaData", aaData);
-
 			FileWriter fw = new FileWriter(outputFile);
 			fw.write(retour.toJSONString());
 			fw.close();
@@ -412,6 +410,7 @@ public class XmlToJson  extends RootClass {
 	@SuppressWarnings("unchecked")
 	public static void translateJoinKeysTable(String inputFile, String outputDir  ) throws Exception {
 		//Map<String, Collection<JSONObject>> map = new LinkedHashMap<String, Collection<JSONObject>>();
+		
 		JoinKeyMap map = new JoinKeyMap();
 		StarTableFactory stf = new StarTableFactory();
 		logger.info("Translate " +inputFile);
@@ -508,9 +507,24 @@ public class XmlToJson  extends RootClass {
 
 		StreamSource ss = new StreamSource(new File(styleSheet));
 		// Create a transformer for the stylesheet.
-		Transformer transformer = tfactory.newTransformer(ss);
-		transformer.transform(new StreamSource(new File(inputFile)),
-				new StreamResult(new File(outputFile)));	
+		File myObj = new File(inputFile);
+		Scanner myReader = new Scanner(myObj);
+		if (myReader.hasNextLine()) {
+			String data = myReader.nextLine();
+			// Specific catch to avoid a known error on a certain website
+			if (data.equals("COMPLETED") && myReader.hasNextLine() == false) {
+				throw new TapException("Error : website does not return a parsable xml file");
+			}
+	    }
+		try {
+			Transformer transformer = tfactory.newTransformer(ss);
+			transformer.transform(new StreamSource(new File(inputFile)),
+					new StreamResult(new File(outputFile)));
+		}catch (Exception e) {
+			// If the conversion to json failed, we can conclude that the website didn't return a parsable xml file
+			throw new TapException("Error : website does not return a parsable xml file");
+		}
+		
 	}
 
 

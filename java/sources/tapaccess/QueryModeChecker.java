@@ -2,6 +2,7 @@ package tapaccess;
 
 import resources.RootClass;
 import session.NodeCookie;
+import translator.JsonUtils;
 
 
 /**
@@ -99,7 +100,7 @@ public class QueryModeChecker extends RootClass {
 						logger.warn("No result after " + (ASYNC_CHECK_POLLPERIOD*ASYNC_CHECK_ATTEMPTS) +"\": async mode considered as not working");
 						TapAccess.deleteAsyncJob(this.endpoint, jobID, this.cookie);
 						return false;
-					}			
+					}
 					phase = TapAccess.getAsyncJobPhase(this.endpoint, jobID,  this.workingDirectory + "asyncmodetest_phase.xml", this.cookie);
 					Thread.sleep((ASYNC_CHECK_POLLPERIOD*1000));
 				} while( phase.equals("EXECUTING") || phase.equals("PENDING")|| phase.equals("QUEUED"));
@@ -107,19 +108,27 @@ public class QueryModeChecker extends RootClass {
 						, jobID
 						, this.statusFile
 						, this.cookie);
-				boolean resultFound =false;
-				for( String r: resultURLs) {
-					resultFound = true;
-					TapAccess.getAsyncJobResultFile(r
-								,  this.workingDirectory
-								, "asyncmodetest.xml"
-								, this.cookie);
+				boolean resultFound = false;
+				String[] resultIds = JsonUtils.getValues (this.statusFile.replaceAll("xml", "json"), "id");
+				// We iterate through the file, and when we find the index where the field id contains "result", we can deduce the index of the corresponding href field
+				// and retrieve its content to use it
+				boolean startResults = false;
+				int difference = resultIds.length - resultURLs.length;
+				for(int i = 0; i < resultURLs.length; i++) {
+					if (resultIds[i+difference].equals("result")) {
+						resultFound = true;
+						TapAccess.getAsyncJobResultFile(resultURLs[i]
+									,  this.workingDirectory
+									, "asyncmodetest.xml"
+									, this.cookie);
+					}
 				}
 				if( !resultFound ){
 					logger.warn("NO result URL in async job response");
 					return false;
 				}
 			} catch(Exception e) {
+				e.printStackTrace();
 				logger.warn(this.endpoint + " does not support queries in asynchronous mode: " + e.getMessage());
 				return false;
 			}

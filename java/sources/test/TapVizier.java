@@ -18,7 +18,7 @@ import resources.RootClass;
  */
 public class TapVizier  extends RootClass {
 	private static final String baseDir = System.getProperty("java.io.tmpdir") ;
-	private static final String baseUrlN = "http://tapvizier.u-strasbg.fr/beta/TAPVizieR/tap";
+	private static final String baseUrlN = "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/";
 
 	public static void main(String[] args) throws Exception {
 		validWorkingDirectory(baseDir + "/nodebase");

@@ -46,7 +46,7 @@ public class TapAccess  extends RootClass {
 /**
  * True if the connection code matches any redirection mode 
  * @param code
- * @return
+ * @returnAME%2C+COLUMN_NAME%2C+DESCRIPTION%2C+UNIT%2C+UCD%2C+DATATYPE%2C+'SIZE'%2C+PRINCIPAL%2C+INDEXED%2C+STD+from+tap_schema.columns
  */
 private static boolean isRedirect(int code) {
 	    return code == HttpURLConnection.HTTP_MOVED_PERM
@@ -102,6 +102,7 @@ private static boolean isRedirect(int code) {
 	 */
 	public static final HttpURLConnection getPostUrlConnection(URL url, String data) throws IOException{
 		logger.info("Get POST connection on " + url);
+
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 		conn.setConnectTimeout(SOCKET_CONNECT_TIMEOUT);		
 		conn.setReadTimeout(SOCKET_READ_TIMEOUT);
@@ -117,7 +118,7 @@ private static boolean isRedirect(int code) {
 		if( TapAccess.isRedirect(conn.getResponseCode())) {
 		    String newLocation = conn.getHeaderField("Location");		    
 		    logger.debug("Redirect " + url + " + to " + newLocation + " as a GET");
-			return getGetUrlConnection(new URL(newLocation));
+			return getGetUrlConnection(new URL(newLocation+"?"+data));
 		} else {
 			return conn;
 		}
@@ -132,7 +133,6 @@ private static boolean isRedirect(int code) {
 	 * @throws Exception
 	 */
 	public static void sendPostRequest(String endpoint, String data, String statusFileName, NodeCookie cookie, boolean translate) throws Exception {
-
 		logger.debug("send POST request " + endpoint + "(" + data + ") " + cookie);
 		// Send the request
 		URL url = new URL(endpoint);  
@@ -144,6 +144,9 @@ private static boolean isRedirect(int code) {
 		 * The MESSAGE is extracted and sent to the client as an Exception  message
 		 */
 		if( conn.getResponseCode() != HttpURLConnection.HTTP_OK  ) {
+			if (conn.getResponseCode() != 200) {
+				throw new ArithmeticException("Invalid html code : " + conn.getResponseCode());
+			}
 			logger.error(conn.getURL() + " returns error " +  ((HttpURLConnection)conn).getResponseCode());
 			
 			InputStream is = conn.getErrorStream();
@@ -164,8 +167,7 @@ private static boolean isRedirect(int code) {
 				 logger.error("Error Uncaught error");
 		         throw new TapException("Uncaught error");
 		    }
-		
-        }
+		}
 		// Get the response
 		try {
 			String ce;

@@ -18,7 +18,6 @@ public class TestNodeBase extends RootClass {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		System.out.println("==========================");
 		
 		for( String key : NodeBase.keySet()){
 			System.out.println(NodeBase.getNode(key));
