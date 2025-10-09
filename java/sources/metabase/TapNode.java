@@ -9,10 +9,14 @@ import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.Set;
@@ -30,6 +34,7 @@ import tapaccess.QueryModeChecker;
 import tapaccess.TablesReconstructor;
 import tapaccess.TapAccess;
 import tapaccess.TapException;
+
 import test.ExploreTapRegistry;
 import translator.NameSpaceDefinition;
 import translator.XmlToJson;
@@ -66,6 +71,7 @@ public class TapNode  extends RootClass {
 	private boolean supportAsyncMode = true;
 	private boolean supportSyncMode = true;
 	private boolean supportUpload = false;
+	private boolean validCode = false;
 
 	/**
 	 * Creator
@@ -125,6 +131,7 @@ public class TapNode  extends RootClass {
 		result +=  (this.supportSyncMode())?      "SYNC,"     : "NOSYNC,";
 		result +=  (this.supportAsyncMode())?     "ASYNC,"     : "NOASYNC,";
 		result +=  (this.supportUpload())?        "UPLOAD ,"   : "NOUPLOAD,";
+		result +=  (this.validCode())?        "VALIDCODE ,"   : "NOVALIDCODE,";
 		return result;
 	}
 
@@ -136,7 +143,6 @@ public class TapNode  extends RootClass {
 	 */
 	public void check() throws Exception {
 		this.checkServices();
-
 	}
 	/**
 	 * @return
@@ -161,8 +167,12 @@ public class TapNode  extends RootClass {
 	public boolean supportTables(){
 		return this.supportTables;
 	}
+	
+	public boolean validCode(){
+		return this.validCode;
+	}
 	/**
-	 * @return Returns he node directory (ended with a file separator)
+	 * @return Returns the node directory (ended with a file separator)
 	 */
 	public String getBaseDirectory() {
 		return baseDirectory;
@@ -209,28 +219,58 @@ public class TapNode  extends RootClass {
 	 */
 	private void checkServices() throws Exception {
 
-		logger.debug("NS for availability " + availabilityNS);
-		this.checkCapability() ;
-		logger.debug("NS for capability " + capabilityNS.getNsName());
+		/*
+		try {
+			logger.debug("NS for availability " + availabilityNS);
+			this.checkCapability() ;
+		} catch (Exception e) {
+			System.out.println("Error -------------------------------------------------------------------------------------------------------------------");
+		}
+		try {
+		logger.debug("NS for SELECT TOP 100 *
+FROM "public".swirecapability " + capabilityNS.getNsName());
 		this.checkTables() ;
-		logger.debug("NS for tables " + tablesNS.getNsName());
-
+		} catch (Exception e) {
+			System.out.println("Error -------------------------------------------------------------------------------------------------------------------");
+		}
+		try {
+			logger.debug("NS for tables " + tablesNS.getNsName());
+			this.testCapabilities() ;
+		} catch (Exception e) {
+			System.out.println("Error -------------------------------------------------------------------------------------------------------------------");
+		}
+		*/
+		
+		logger.debug("NS for availability " + availabilityNS);
+		try {
+			this.checkCapability() ;
+			logger.debug("NS for capability " + capabilityNS.getNsName());
+			if (true) {
+				this.checkTables() ;
+			} else {
+				this.checkTables();
+			}
+			logger.debug("NS for tables " + tablesNS.getNsName());
+		} catch (Exception e){
+			this.checkTablesWithTapSchema();
+		}
 		this.testCapabilities() ;
 		/*
 		 * add capability flags (UPLOAD ASYNC) and in tables.JSON
 		 */
 		this.setCapabilityFlagsInJsonResponse();			
 
-		logger.info("Service " + this.regMark + " seems to be working");		
+		logger.info("Service " + this.regMark + " seems to be working");
 		if( INCLUDE_JOIN && this.regMark.supportJoin() ) {
 			this.setJoinKeys();
 		}
 	}
 
 	/**
+	 * @throws Exception 
 	 * 
 	 */
-	public void setJoinKeys() {
+	public void setJoinKeys() throws Exception {
 		try {
 			logger.info("Attempt to get join keys from  " + TapNode.this.regMark.getNodeKey() );
 			JoinKeysJob.getJoinKeys(this.regMark.getAbsoluteURL(null), this.baseDirectory);
@@ -239,6 +279,7 @@ public class TapNode  extends RootClass {
 		} catch (Exception e) {
 			if( JOINKEY_MAX_ATTEMPTS <= 1)  {
 				logger.warn("Can't get join keys for node: " + this.regMark.getNodeKey() + " no more attemps JOINKEY_MAX_ATTEMPTS="+ JOINKEY_MAX_ATTEMPTS);
+				throw new Exception(e);
 			} else {
 				logger.warn("Can't get join keys for node: " + this.regMark.getNodeKey() + " continue in background " + this.regMark + " " + e.getMessage());
 				Runnable r = new Runnable() {
@@ -290,6 +331,7 @@ public class TapNode  extends RootClass {
 		logger.debug(this.regMark + " Capabilities is available");
 		this.supportCapability = true;
 	}
+	
 
 	/**
 	 * Get the table description of the service. 
@@ -317,8 +359,6 @@ public class TapNode  extends RootClass {
 			
 			this.getFirstTableName();
 		} catch(Exception e){
-			//e.printStackTrace();
-			//System.exit(1);
 			logger.warn("No tables in tables.xml, try to ignore the schema");		
 			/*
 			 * Try first to translate with the standard format tab:tables.table (services from *.roe.ac.uk)
@@ -345,6 +385,40 @@ public class TapNode  extends RootClass {
 		this.setNodekeyInJsonResponse("tables");	
 		this.setDataTreePathInTables();
 		this.supportTables = true;
+		this.validCode = true;
+	}
+	
+	
+	/**
+	 * Get the table description of the service. 
+	 * It is a variation of checkTables which only tries to build the database with the tap_schema
+	 */
+	private void checkTablesWithTapSchema() throws Exception {
+		String tables = "tables";
+		File f = new File(this.baseDirectory + tables + ".xml");
+		if( f.exists() && f.isFile() &&f.canRead()) {
+			logger.debug("tables already checked");
+			if( tablesNS.getNsDeclaration()  == null  )
+				this.getNamspaceDefinition(tables, tablesNS);
+			return;
+		}
+		try {
+			logger.warn("No tables in tables.xml, Try to scan the TAP_SCHEMA");	
+			new TablesReconstructor(this.regMark.getAbsoluteURL(null), this.baseDirectory);
+			this.translateServiceReponse(tables, tablesNS);
+			if( this.getFirstTableName() == null ) {
+				throw new Exception("No tables in tables.xml, is that file compliant with the schema?");
+			} else {
+				logger.info("succeed");
+			}	
+		} catch (Exception e2) {
+			e2.printStackTrace();
+			throw new Exception("No valid tables capability: failed to rebuild it from the TAP schema: " + e2);
+		}
+		this.setNodekeyInJsonResponse("tables");	
+		this.setDataTreePathInTables();
+		this.supportTables = true;
+		this.validCode = true;
 	}
 
 	/**
@@ -352,8 +426,20 @@ public class TapNode  extends RootClass {
 	 * @throws TapException If no query succeed
 	 */
 	private void testCapabilities() throws Exception {
+		if( this.validCode == false ){
+			throw new TapException("No valid html code");
+		}
+		// Check if the request sent a valid code
 		DataTreePath dtp = this.getFirstDataTreePath();
 		String qualifiedTableName = quoteTableName(dtp.geTableOrg()).replace("public.", "\"public\".");
+		
+		// If the name of the table starts with a number, we put double quotes at the beginning and at the end of the name of the table
+		if (Character.isDigit(qualifiedTableName.charAt(0))) {
+			String[] pe = qualifiedTableName.split("\\.");
+			pe[0] = "\"" + pe[0] + "\"";
+			qualifiedTableName = pe[0] + "." + pe[1];
+		}
+		
 		String query = "SELECT TOP 1 * FROM " + qualifiedTableName;
 		String uploadQuery = "SELECT TOP 1 * FROM " + qualifiedTableName + " NATURAL JOIN TAP_UPLOAD.taphandlesample ";
 
@@ -440,6 +526,14 @@ public class TapNode  extends RootClass {
 		}
 		throw new TapException("No table published in node " + this.regMark.getNodeKey());
 	}
+	
+	private Integer getHttpCode(String service, NameSpaceDefinition nsDefinition) throws Exception {
+		Pattern nsPattern  = Pattern.compile(".*xmlns(?::\\w+)?=(\"[^\"]*(?i)(?:" + service + ")[^\"]*\").*");
+		logger.debug("Connect " + this.regMark.getAbsoluteURL(null) + service);
+		URLConnection conn = TapAccess.getGetUrlConnection(new URL(this.regMark.getAbsoluteURL(null) + service));
+		return ((HttpURLConnection)conn).getResponseCode();
+	}
+	
 	/**
 	 * Invokes a service of the node, extract its name space which will be used by XLST 
 	 * @param service either availability, capabilities or tables
@@ -786,21 +880,22 @@ public class TapNode  extends RootClass {
 				String re = "(?i)(.*" + filter + ".*)";
 				if(takeAnyway ) {
 					continue;
-				} else if( kept >= MAXTABLES ) {
+				}
+				// We only want to limit the number of table to MAXTABLES if there is a filter, otherwise we want the max number of table per schemas
+				if( kept >= MAXTABLES && !filter.equals("")) {
 					//@@@@@@@@@@@
 					//					truncated = false;
-					//					toRemove.add(t);	
-					//					continue;
-				} else if (!desc.matches(re) 
+					toRemove.add(t);
+				} else if ((!desc.matches(re) 
 						&& !table.matches(re)
-						&& !schema.matches(re)
+						&& !schema.matches(re))
 						){
 					toRemove.add(t);	
-					continue;
 				} else {
 					kept++;					
 				}
 			}
+			
 			for( JSONObject tr: toRemove) {
 				tables.remove(tr);
 			}
@@ -820,7 +915,7 @@ public class TapNode  extends RootClass {
 			schemas.remove(tr);
 		}
 		/*
-		 * Advice the client that the lsit is truncated
+		 * Advice the client that the list is truncated
 		 */
 		if( truncated ) {
 			jsonObject.put("truncated", "true");
@@ -830,7 +925,7 @@ public class TapNode  extends RootClass {
 
 	/**
 	 * Returns a JSON table list with only tables matching the filer (filtered by name or by description)
-	 * and  contained in seleced list in addition with tap schema tables which cannot be discarded
+	 * and  contained in selected list in addition with tap schema tables which cannot be discarded
 	 * Any element are taken if selected = ["any"]
 	 * @param filter
 	 * @param selected: list a table to select
@@ -839,9 +934,9 @@ public class TapNode  extends RootClass {
 	 */
 	synchronized public JSONObject filterTableList(String filter, Set<String> selected) throws Exception {
 		JSONObject jsonObject = this.filterTableList(filter) ;
-		int nbSelected = 0;
 		boolean any = ( selected != null && selected.size() == 1 && selected.contains("any"))? true: false;
 		JSONArray schemas = (JSONArray) jsonObject.get("schemas");
+		int nbSelected = 0;
 		for(Object sn: schemas) {
 			boolean takeAnyway = false;
 			ArrayList<JSONObject> toRemove = new ArrayList<JSONObject>();

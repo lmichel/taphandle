@@ -23,17 +23,28 @@ jQuery.extend({
 		};
 
 		this.fireGetFilteredNodes  = function(node){
+			var allTablesNotSelected = true;
+			$("#nodeFilterList span").each(function() {
+				if( $(this).parent().attr('class') == 'tableSelected') {
+					allTablesNotSelected = false;
+				}
+			});
+			// If there is zero selected tables, we ask the user to select at least one table
+			if( allTablesNotSelected ) {
+				Modalinfo.info("Check at least one table before validating");
+				return;
+			}
 			$.each(listeners, function(i) {
 				listeners[i].controlGetFilteredNodes(node);
 			});
-			
-			if (this.getFilter(node) != null) {
-				filter = this.changeFilter(node, $("#nodeFilter").val());
-			} else {
-				filter.push({node: node, filter: $("#nodeFilter").val()});
+			if (allTablesNotSelected == false){
+				if (this.getFilter(node) != null) {
+					filter = this.changeFilter(node, $("#nodeFilter").val());
+				} else {
+					filter.push({node: node, filter: $("#nodeFilter").val()});
+				}
+				Modalinfo.closeDataPanel();
 			}
-			
-			Modalinfo.closeDataPanel();
 		};
 		
 		
@@ -188,11 +199,10 @@ jQuery.extend({
 						var list = "<ul class='attlist' id='myList'>";
 						
 						for(var i = 0;  i < jsdata.myLists.length ; i++){
-							
-							list += "<li class=tableSelected >" 
+							list += "<li class=tableNotSelected >" 
 								+ "<input  type='checkbox' checked onclick='nodeFilterView.fireSelectFilteredNode($(this));'>"
 								+ "<span style='font-color: black;'>" + jsdata.myLists[i].filename + "</span>"
-							    + " <i>" + jsdata.myLists[i].decription + "</i>"
+							    + " <i>" + jsdata.myLists[i].description + "</i>"
 							    + "</li>";
 							
 						}
@@ -207,7 +217,7 @@ jQuery.extend({
 								
 								for(var i = 0;  i < jsdata.myJobs[key].length ; i++){
 									
-									list += "<li class=tableSelected >" 
+									list += "<li class=tableNotSelected >" 
 										+ "<input  type='checkbox' checked onclick='nodeFilterView.fireSelectFilteredNode($(this));'>"
 										+ "<span style='font-color: black;'>" + jsdata.myJobs[key][i].jobnumber + "</span>"
 									    + " <i>" + jsdata.myJobs[key][i].description + "</i>"
@@ -224,19 +234,21 @@ jQuery.extend({
 				jsData = [];
 				that.fireShowGoodiesSelection($("#nodeFilterList"), jsData);	
 			}else{
-				$.getJSON("getnode", {jsessionid: sessionID, node: node, filter: $("#nodeFilter").val(), selected: ''}, function(jsdata) {
-					//Processing.hide();
+				// We send a "Fetching result" popup each time the user presses a key, this way we slow down the writing of the filter and we avoid having a difference between what the user wrote and
+				// what the filter value is equal to
+				Processing.show("Fetching Result");
+				$.getJSON("getnode", {jsessionid: sessionID, node: node, filter: $("#nodeFilter").val(), selected: ""}, function(jsdata) {
 					if( Processing.jsonError(jsdata, "Cannot get the node selection") ) {
+						Processing.hide();
 						return;
 					}else {
 						that.fireShowNodeSelection($("#nodeFilterList"), jsdata);
+						Processing.hide();
 					}
 				});
 			}
 		};
-		/**
-		 * Display in the div the list of selected tables returned by the server 
-		 */
+		
 		this.fireShowNodeSelection = function(listDiv, jsSelection)  {
 			listDiv.html('');		
 			for( var i=0 ; i<jsSelection.schemas.length ; i++ ) {
@@ -259,6 +271,8 @@ jQuery.extend({
 				listDiv.append(list);		
 			}
 		};
+		
+		
 		
 		
 		this.fireShowGoodiesSelection = function(listDiv,jsSelection){

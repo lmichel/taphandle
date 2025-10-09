@@ -5,7 +5,7 @@ package metabase;
 
 
 /**
- * Store an unquoted table name with a flag specifying whether quotes must be used to avoid syntax issues with query langages for instance
+ * Store an unquoted table name with a flag specifying whether quotes must be used to avoid syntax issues with query languages for instance
  * @author michel
  *
  */

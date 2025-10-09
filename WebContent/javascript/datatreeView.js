@@ -57,7 +57,6 @@ DataTreeView.prototype = {
 		fireNewNodeEvent: function(nodekey) {
 			var that = this;
 			Processing.show("Waiting on " + nodekey + " node description");
-
 			$.getJSON("getnode", {jsessionid: sessionID, node: nodekey }, function(jsdata) {
 				Processing.hide();
 				if( Processing.jsonError(jsdata, "Cannot make data tree") ) {
@@ -89,14 +88,18 @@ DataTreeView.prototype = {
 			/*
 			 * Prevent to close the page with data
 			 */
+
+			
 			PageLocation.confirmBeforeUnlaod();		
 			$("div#treedisp").jstree("close_all", -1);
 
-			Processing.show("Waiting for the constrution of the tree");
+			Processing.show("Waiting for the construction of the tree");
 			this.capabilities = {supportSyncQueries: true
 					        , supportAsyncQueries: (jsdata.asyncsupport == "true")?true: false
 							, supportJoin: true
-							, supportUpload:(jsdata.uploadsupport == "true")?true: false};
+							, supportUpload:(jsdata.uploadsupport == "true")?true: false
+							// The truncated flag is specific to the website, that is why we can't retrieve its value directly from jsdata, we have to build it
+							, truncated:(jsdata.schemas.length > 20)?true: false};
 			this.info = {url: jsdata.nodeurl , ivoid: null, description: "Not available"};
 			this.reports[jsdata.nodekey] = {"info": this.info, "capabilities": this.capabilities};
 
@@ -128,30 +131,63 @@ DataTreeView.prototype = {
 			 * Create first the first level tree (schemas)
 			 */
 			var nb_schemas = 0;
-			var MAX_SCHEMA=20;
+			var MAX_SCHEMA=19;
 			var MAX_TABLE_PER_SCHEMA=40;
 			var trunc = new Array();
-
-			for( var i=0 ; i<jsdata.schemas.length ; i++ ) {					
-
+			var tap_schema_index;
+			var ivoa_index;
+			const folders = [];
+			// We start at the end of the list of schemas, we iterate through them and trunc them until we get to i < MAX_SCHEMA,
+			//  then the rest of the schemas are added to the stack. tap_schema and ivoa schemas won't get truncated thanks to a filter below
+			for( var i=jsdata.schemas.length-1 ; i>=0 ; i-- ) {
 				var id_schema = jsdata.nodekey + "X" + jsdata.schemas[i].name;
 				var description = jsdata.schemas[i].description;
-
-				var schemaName = jsdata.schemas[i].name;		
-				if( i > MAX_SCHEMA && jsdata.schemas[i].name != "ivoa"   && jsdata.schemas[i].name != "tap_schema") {
+				if(jsdata.schemas[i].name.toLowerCase() == "ivoa"){
+					ivoa_index = i;
+				}
+				if(jsdata.schemas[i].name.toLowerCase() == "tap_schema"){
+					tap_schema_index = i;			
+				}
+				// We do this verification to avoid having empty folders that have the same name as a filled folder
+				if(folders.includes(jsdata.schemas[i].name && jsdata.schemas[i].name.toLowerCase() != "ivoa" && jsdata.schemas[i].name.toLowerCase() != "tap_schema")){
+					break;
+				}
+				folders.push(jsdata.schemas[i].name);
+				var schemaName = jsdata.schemas[i].name;
+				// Here is the filter to avoid truncating tap_schema and ivoa
+				if( i > MAX_SCHEMA && jsdata.schemas[i].name.toLowerCase() != "ivoa"   && jsdata.schemas[i].name.toLowerCase() != "tap_schema") {
 					trunc[trunc.length] = schemaName;
-				} else {
+				} else if (jsdata.schemas[i].name.toLowerCase() != "ivoa"   && jsdata.schemas[i].name.toLowerCase() != "tap_schema") {
+					icon =  "images/Bluecube2.png";
+					if( description == "") {
+						description = "No Description Available";
+					}
+					description += "\n\n[CLICK] on the branch node to display the tables";
+					description += "\n[DOUBLE CLICK] to filter the table list";
+					$("div#treedisp").jstree("create_node"
+							, $("#" + jsdata.nodekey)
+							, false
+							, {"data" : {"icon": icon, "attr":{"id": id_schema, "titleSchemaName": description}, "title" : jsdata.schemas[i].name},
+								"state": "closed",
+								"attr" :{"id": id_schema}}
+							,false
+							,true); 
+				}  
+			}
+			// This second loop is used to search for ivoa and tap_schema after every other schemas in order to have them at the top of the stack,
+			// this way they are displayed at the top of the datatree
+			for( var i=jsdata.schemas.length-1 ; i>=0 ; i-- ) {
+				var id_schema = jsdata.nodekey + "X" + jsdata.schemas[i].name;
+				var description = jsdata.schemas[i].description;
+				var schemaName = jsdata.schemas[i].name;
+				if(schemaName.match(/TAP_SCHEMA/i) || schemaName.match(/ivoa/i)) {
 					if(schemaName.match(/TAP_SCHEMA/i) ) {
 						icon = "images/Redcube2.png";
+						
 						description = "Schema containing the description of the published tables";
 					} else if(schemaName.match(/ivoa/i) ) {
 						icon =  "images/Greencube2.png";
 						description = "Tables matching IVOA data models (e.g. ObsCore)";
-					} else {
-						icon =  "images/Bluecube2.png";
-						if( description == "") {
-							description = "No Description Available";
-						}
 					}
 					description += "\n\n[CLICK] on the branch node to display the tables";
 					description += "\n[DOUBLE CLICK] to filter the table list";
@@ -162,7 +198,7 @@ DataTreeView.prototype = {
 								"state": "closed",
 								"attr" :{"id": id_schema}}
 							,false
-							,true);   
+							,true); 
 				}
 			}
 			/*
@@ -171,10 +207,9 @@ DataTreeView.prototype = {
 			var nb_tables = 0;
 
 			for( var i=0 ; i<jsdata.schemas.length ; i++ ) {
-
 				var schema = jsdata.schemas[i];
 				var id_schema = jsdata.nodekey + "X" + schema.name;
-				if( i > MAX_SCHEMA && schema.name != "ivoa"   && schema.name != "tap_schema") {
+				if( i > MAX_SCHEMA && schema.name.toLowerCase() != "ivoa" && schema.name.toLowerCase() != "tap_schema") {
 					//trunc[trunc.length] = schema.name;
 				} else {
 					var root = $("#" + id_schema);
@@ -202,7 +237,7 @@ DataTreeView.prototype = {
 								}
 								,false
 								,true);   
-						if( (nb_tables++) > MAX_TABLE_PER_SCHEMA ) {
+						if( (nb_tables++) > MAX_TABLE_PER_SCHEMA-2 ) {
 							break;
 						}
 
@@ -212,13 +247,17 @@ DataTreeView.prototype = {
 			$( "div#treedisp").jstree('close_all', -1);	
 			var msg = "";
 			if(jsdata.truncated != null  ) {
-				msg = "TRUNCATED TABLE LIST: The table list has been truncated by the server (< 20 tables/schema)";
+				msg = "\nTRUNCATED TABLE LIST: The table list has been truncated by the server (< 20 tables/schema)";
 			} 
 			if( trunc.length > 0 ) {
-				msg += "\nTRUNCATED SCHEMA: The list of schemas has been truncated. \nThe following schemas are not displayed [" + trunc.join("\n") + "]";
+				// The scroll string is used to put the truncated tables inside a scrollable div
+				var scroll = '<div id="nodeFilterList" class="detaildata" style="border: 1px black solid; background-color: whitesmoke; width: 100%; height: 380px; overflow: auto; position:relative">'
+				msg += "\nTRUNCATED SCHEMA: The list of schemas has been truncated. \nThe following schemas are not displayed " + scroll + trunc.join("\n") + "</div>";
 			}
 			if( msg != "" ) {
-				Modalinfo.info(msg + "\n\nDouble click on the '" + jsdata.nodekey + "' node to make you own selection");
+				// The link variable is a div inserted into the truncated popup allowing the user to directly click on the text to open the selection popup
+				link = "<a style='color: #fc0303;' href='#' onclick='Modalinfo.close(Modalinfo.findLastModal());nodeFilterView.fireOpenSelectorWindow("+ '"'+jsdata.nodekey+'"'+");'>"
+				Modalinfo.info(link+ "REDUCED DATATREE : Schemas and/or Tables have been truncated.\nClick here or double click on the '" + jsdata.nodekey + "' node to make you own selection. </a>\n" + msg);
 			}
 			/*
 			 * Activate leaves
@@ -391,6 +430,10 @@ DataTreeView.prototype = {
 				span_info.append(span
 						+ ((this.capabilities.supportUpload == true)?'lightgreen': 'salmon') 
 						+ ';" title="' + ((this.capabilities.supportUpload == true)?'S': 'Does not s')+ 'upport table upload">U</span>');
+				// The truncated flag has inverted colors, green when it's not truncated (false) and red when it is truncated (true)
+				span_info.append(span
+						+ ((this.capabilities.truncated == true)?'salmon': 'lightgreen') 
+						+ ';" title="' + ((this.capabilities.truncated == true)?'T': 't')+ 'runcated list of schemas">T</span>');
 
 			}
 		},

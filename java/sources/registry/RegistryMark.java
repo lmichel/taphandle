@@ -44,7 +44,7 @@ public class RegistryMark extends RootClass {
 		super();
 		this.nodeKey = nodeKey;
 		this.ivoid = ivoid;
-		this.url = url;
+		this.url = url; // Rajouter filtre url
 		this.decsription = decsription;
 		this.mustBeInitAtStart = mustBeInitAtStart;
 		

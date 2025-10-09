@@ -14,16 +14,22 @@ import translator.XmlToJson;
  *
  */
 public class JoinKeysJob extends RootClass {
-	// standard ADQL query returning joined table with key colmuns
+	// standard ADQL query returning joined table with key columns
 	public static final String noschema_query="SELECT keys.from_table, keys.target_table, from_column, target_column"
 		+ " FROM keys" 
 		+ " JOIN key_columns"
 		+ " ON keys.key_id = key_columns.key_id";
-	// ADQL query returning joined table with key colmuns for systems not supportiong schemas (SAADA)
-	public static final String schema_query="SELECT keys.from_table, keys.target_table, from_column, target_column"
-		+ " FROM TAP_SCHEMA.keys as keys" 
-		+ " JOIN TAP_SCHEMA.key_columns AS key_columns"
-		+ " ON keys.key_id = key_columns.key_id";
+	
+	// ADQL query returning joined table with key columns for systems not supporting schemas (SAADA)
+	// public static final String schema_query="SELECT keys.from_table, keys.target_table, from_column, target_column"
+	//	+ " FROM TAP_SCHEMA.keys as keys" 
+	//	+ " JOIN TAP_SCHEMA.key_columns AS key_columns"
+	//	+ " ON keys.key_id = key_columns.key_id";
+	public static final String schema_query="SELECT TAP_SCHEMA.keys.from_table, TAP_SCHEMA.keys.target_table, from_column, target_column"
+			+ " FROM TAP_SCHEMA.keys" 
+			+ " JOIN TAP_SCHEMA.key_columns"
+			+ " ON TAP_SCHEMA.keys.key_id = TAP_SCHEMA.key_columns.key_id";
+	
 	public static final String xcatdb_schema_query="SELECT keys.from_table, keys.target_table, from_column, target_column"
 		+ " FROM tap_schema_keys as keys" 
 		+ " JOIN tap_schema_key_columns AS key_columns"
@@ -61,6 +67,7 @@ public class JoinKeysJob extends RootClass {
 				logger.warn("Error when getting Join keys (" + schema_query + "), try a query without schema" );
 				tryJoinKeys(url, noschema_query, baseDirectory);
 			} catch (Exception e2) {
+				e2.printStackTrace();
 				logger.warn("Error when getting Join keys(" + noschema_query + "), try a query without schema but table prefixed" );
 				tryJoinKeys(url, xcatdb_schema_query, baseDirectory);
 			}

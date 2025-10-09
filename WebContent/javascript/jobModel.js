@@ -119,6 +119,7 @@ jQuery.extend({
 
 		this.updateStatus = function() {
 			$.getJSON("jobsummary", {jsessionid: sessionID, NODE: dataTreePath.nodekey, JOBID: id}, function(jsondata) {
+				console.log("updateStatus ================================")
 				if( Processing.jsonError(jsondata, "Cannot get summary of job " + id) ) {
 					return;
 				}
@@ -131,19 +132,22 @@ jQuery.extend({
 			Processing.show("Waiting for the query result " + countDown  + " (" + phase + ")");
 			this.updateStatus();
 			if( phase == 'COMPLETED' ) {
-				Processing.hide();
+				console.log("Salut")
 				countDown = 0;
 				ViewState.fireSubmitOK(dataTreeView.dataTreePath);
 			} else  if( phase == 'EXECUTING' || phase == 'QUEUED' || phase == 'PENDED'){
+				console.log("Coucou")
 				if( countDown > 0 ) {
 					countDown --;
 					setTimeout(function(){ that.checkJobCompleted(); }, 1000);
 				} else {
+					console.log("Ici")
 					Processing.hide();					
 					progressTimer = true;
 					setTimeout(function(){ that.checkJobProgress(); }, 5000);
 				}
 			} else  if( phase == 'ERROR'){
+				console.log("La")
 				countDown = 0;
 				Processing.hide();				
 				Modalinfo.error(jobDescription.status, + 'Job ' + dataTreePath.jobid + " on node " + dataTreePath.nodekey  + " failed");

@@ -56,6 +56,7 @@ class NodeMap  extends RootClass {
 				nodeMap.put(key,tapNode);	
 			} catch (Exception e) {
 				logger.error("Node " + key + " not working:  "+ e.getMessage());
+				throw new Exception(e.getMessage());
 			}
 		}
 		return key;

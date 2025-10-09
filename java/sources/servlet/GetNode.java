@@ -2,6 +2,7 @@
 package servlet;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -12,6 +13,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import metabase.NodeBase;
@@ -65,11 +67,11 @@ public class GetNode extends RootServlet implements Servlet {
 					key = treePathElements[0];
 				}
 			}
-			
 			TapNode tn = NodeBase.getNode(key);
 			/*
 			 * If there is either a filter or a discriminative selection list, we apply the filter
 			 */
+			
 			if( (filter != null && filter.length() > 0) || (selected != null && selected.length() > 0 && !selected.equalsIgnoreCase("any"))) {
 				logger.debug("Node " + key + " Apply the filter: " + filter);
 				Set<String> ra = null;
@@ -79,6 +81,7 @@ public class GetNode extends RootServlet implements Servlet {
 				// IN 2 steps in order not to call twice response.getWriter() in case of error
 				JSONObject jso = tn.filterTableList(filter, ra);
 				response.getWriter().print(jso.toJSONString());	
+
 			/*
 			 * There are plenty of possible reason for which we cannot get the node
 			 * Just trap it
@@ -90,7 +93,7 @@ public class GetNode extends RootServlet implements Servlet {
 			 * otherwise, we take the full list
 			 */
 			} else if( tn.largeResource ){
-				JSONObject jso = tn.filterTableList(100);		
+				JSONObject jso = tn.filterTableList(100);
 				byte[] bytes  = (jso.toJSONString() + "\n              \n").getBytes();
 				logger.debug("Node " + key + " Seems to be too large to return all tables: apply a selection " + bytes.length + " bytes returned");
 				response.setContentLength(bytes.length);

@@ -123,11 +123,11 @@ public class RootClass {
 	/*
 	 * Max number of rows in a result table
 	 */
-	public static final int MAX_ROWS = 10000;	
+	public static final int MAX_ROWS = 100000;	
 	/*
 	 * Max number of table sent to a client
 	 */
-	public static final int MAXTABLES = 100; // Max number of tables sent back to the client
+	public static final int MAXTABLES = 200; // Max number of tables sent back to the client
 	/*
 	 * Socket timeout used by URLConnection instance in ms
 	 * a shorter SOCKET_READ_TIMEOUT do not act anymore!

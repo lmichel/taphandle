@@ -52,6 +52,24 @@ public class DataTreePath {
 	private static final String STANDARD_NAME = "[a-zA-Z][a-zA-Z0-9_]*";
 	
 	/**
+	 * Patch for the J_other.J/other tables from Vizier
+	 * tableOrg is split in 2 parts in most cases, because there is only one dot in the string
+	 * but vizier has some tableOrg (J_other.J/other) which contains multiple dots in their name,
+	 * this function detects the cases where this happens and merge the parts that shouldn't be split
+	 */
+	public String[] vizierPatch() {
+		String[] pe = this.tableOrg.split("\\.");
+		String[] result = new String[2];
+		if (pe.length == 3 && pe[1].startsWith("J/other")) {
+			result[0] = pe[0];
+			result[1] = pe[1] + "." + pe[2];
+		}else {
+			result = pe;
+		}
+		return result;
+	}
+	
+	/**
 	 * The parsing is done by he constructor
 	 * @param nameOrg
 	 * @param description
@@ -68,7 +86,8 @@ public class DataTreePath {
 		 * schema + table without quotes
 		 */
 		} else if( nameOrg.indexOf("\"") == -1){
-			String[] pe = this.tableOrg.split("\\.");
+			// String[] pe = this.tableOrg.split("\\.");
+			String[] pe = vizierPatch();
 			this.table = new DataTreePathElement(pe[pe.length -1]);
 			this.schema = "";
 

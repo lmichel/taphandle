@@ -263,7 +263,7 @@ public class UserSession  extends RootClass {
 			}
 			return "SYNCMODE";
 		} catch (Exception e) {
-			logger.error(e.getMessage());
+			logger.error("job " + jobID + " " + e.getMessage());
 			this.deleteJobDir(nodeKey,  jobID);
 			jobStack.removeJob(nodeKey, jobID);
 			return "REMOVED";

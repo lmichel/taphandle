@@ -121,6 +121,7 @@ public class RegistryExplorer extends RootClass {
 		String wdir       = metaBaseDir + "regexplorer";
 		String jsonResult = wdir +  "/regresult.json";
 		String xmlResult  = wdir +  "/regresult.xml";
+		validWorkingDirectory(metaBaseDir);
 		validWorkingDirectory(wdir);
 		TapAccess.runSyncJob(regUrl, query, xmlResult, cookie, null);
 		XmlToJson.translateResultTable(xmlResult, jsonResult);
@@ -134,6 +135,7 @@ public class RegistryExplorer extends RootClass {
 			String ivoid = (String)sa.get(0);
 			String url = (String)sa.get(1);
 			String key = ShortNameBuilder.getShortName(ivoid, url);
+			System.out.println(ivoid + " "+ url+ " " + key);
 			String description = (String)sa.get(2);
 			RegistryMark rm;
 			if( registryMarks.get(key) == null ) {
@@ -141,7 +143,12 @@ public class RegistryExplorer extends RootClass {
 					registryMarks.put(key, rm);
 				} else {
 					boolean mustInit = iniAtStart.contains(ivoid) ;
-					registryMarks.put(key, new RegistryMark(key, ivoid, url, description, mustInit, true));
+					try {
+						RegistryMark rm2 = new RegistryMark(key, ivoid, url, description, mustInit, true);
+						registryMarks.put(key, rm2);
+					} catch (Exception e) {
+						System.out.println(e);
+					}
 				}
 			}
 		}

@@ -35,8 +35,9 @@ jQuery.extend({
 			/*
 			 * Ask for the new table list
 			 */
+			
 			Processing.show("Waiting on " + node + " filtered node description");
-			$.getJSON("getnode", {jsessionid: sessionID, node: node , filter: $("#nodeFilter").val(), selected:tr.join(',') }, function(jsdata) {
+			$.post("getnode", {jsessionid: sessionID, node: node , filter: $("#nodeFilter").val(), selected:tr.join(',') }, function(jsdata) {
 				Processing.hide();
 				if( Processing.jsonError(jsdata, "Cannot make data tree") ) {
 					return;
@@ -44,7 +45,7 @@ jQuery.extend({
 					dataTreeView.fireBuildTree(jsdata);
 					$.modal.close();
 				}
-			});
+			}, "json");
 		};
 	}
 });

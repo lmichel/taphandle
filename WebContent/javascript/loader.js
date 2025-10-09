@@ -74,20 +74,20 @@ resourceLoader = function() {
 		/*
 		 * Check if saadajsbasics resources are installed locally
 		 */
-		baseUrl = "http://obas-dev-lm:8888/jsresources/";
+		baseUrl = "http://localhost:8080/jsresources/";
 		$.ajax({
 			url: baseUrl + '/saadajsbasics/javascript/basics.js',
 			async: false, 
 			dataType: "text",
 			error: function(data) {
-				baseUrl = "http://obsas-dev-lm:8888/jsresources/saadajsbasics";
+				baseUrl = "http://localhost:8080/jsresources/saadajsbasics";
 				console.log("Try " + baseUrl + " as jsresource base URL");
 				$.ajax({
 					url: baseUrl + 'saadajsbasics/loader.js',
 					async: false, 
 					dataType: "text",
 					error: function(data) {
-						baseUrl = "./";
+						baseUrl = "../jsresources";
 						console.log("Try " + baseUrl + " as jsresource base URL");					
 						$.ajax({
 							url: 'saadajsbasics/loader.js',
