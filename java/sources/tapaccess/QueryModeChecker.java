@@ -141,6 +141,7 @@ public class QueryModeChecker extends RootClass {
 					, new NodeCookie()
 			        , null);
 		} catch(Exception e) {
+			e.printStackTrace();
 			logger.warn(this.endpoint + " does not support upload (" + e.toString() + ")");
 			return false;
 		}
