@@ -112,7 +112,7 @@ public class TapAccess  extends RootClass {
 	 */
 	public static final HttpURLConnection getGetUrlConnection(URL url) throws IOException{
 		URL newUrl = url;
-
+		int cpt = 0;
 		while (true) {
 			logger.info("Get GET connection on " + newUrl);
 			HttpsURLConnection conn = (HttpsURLConnection) newUrl.openConnection();
