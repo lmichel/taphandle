@@ -16,9 +16,25 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLEncoder;
+import java.io.Reader;
 import resources.RootClass;
 import session.NodeCookie;
 import translator.JsonUtils;
@@ -43,18 +59,45 @@ public class TapAccess  extends RootClass {
 		return conn;
 	}
 
-/**
- * True if the connection code matches any redirection mode 
- * @param code
- * @return
- */
-private static boolean isRedirect(int code) {
-	    return code == HttpURLConnection.HTTP_MOVED_PERM
-	            || code == HttpURLConnection.HTTP_MOVED_TEMP
-	            || code == HttpURLConnection.HTTP_SEE_OTHER
-	            || code == HttpURLConnection.HTTP_MULT_CHOICE
-	            || code == HTTP_TEMPORARY_REDIRECT 
-	            || code == HTTP_PERMANENT_REDIRECT;
+	/**
+	 * True if the connection code matches any redirection mode 
+	 * @param code
+	 * @return
+	 */
+	private static boolean isRedirect(int code) {
+		    return code == HttpURLConnection.HTTP_MOVED_PERM
+		            || code == HttpURLConnection.HTTP_MOVED_TEMP
+		            || code == HttpURLConnection.HTTP_SEE_OTHER
+		            || code == HttpURLConnection.HTTP_MULT_CHOICE
+		            || code == HTTP_TEMPORARY_REDIRECT 
+		            || code == HTTP_PERMANENT_REDIRECT;
+		}
+	/**
+	 * Locally fix of "unable to find valid certification path to requested target"
+	 * @throws NoSuchAlgorithmException
+	 * @throws KeyManagementException
+	 */
+	public static void disableCertifs() throws NoSuchAlgorithmException, KeyManagementException {
+		/* Start of Fix */
+		TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
+			public java.security.cert.X509Certificate[] getAcceptedIssuers() { return null; }
+			public void checkClientTrusted(X509Certificate[] certs, String authType) { }
+			public void checkServerTrusted(X509Certificate[] certs, String authType) { }
+	
+		} };
+	
+		SSLContext sc = SSLContext.getInstance("SSL");
+		sc.init(null, trustAllCerts, new java.security.SecureRandom());
+		HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+	
+		// Create all-trusting host name verifier
+		HostnameVerifier allHostsValid = new HostnameVerifier() {
+			public boolean verify(String hostname, SSLSession session) { return true; }
+		};
+		// Install the all-trusting host verifier
+		HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+		/* End of the fix*/
+	
 	}
 
 	/**
@@ -69,10 +112,10 @@ private static boolean isRedirect(int code) {
 	 */
 	public static final HttpURLConnection getGetUrlConnection(URL url) throws IOException{
 		URL newUrl = url;
-		int cpt = 0;
+
 		while (true) {
 			logger.info("Get GET connection on " + newUrl);
-			HttpURLConnection conn = (HttpURLConnection) newUrl.openConnection();
+			HttpsURLConnection conn = (HttpsURLConnection) newUrl.openConnection();
 			conn.setConnectTimeout(SOCKET_CONNECT_TIMEOUT);		
 			conn.setReadTimeout(SOCKET_READ_TIMEOUT);
 			conn.setRequestMethod("GET");
@@ -102,6 +145,7 @@ private static boolean isRedirect(int code) {
 	 */
 	public static final HttpURLConnection getPostUrlConnection(URL url, String data) throws IOException{
 		logger.info("Get POST connection on " + url);
+
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 		conn.setConnectTimeout(SOCKET_CONNECT_TIMEOUT);		
 		conn.setReadTimeout(SOCKET_READ_TIMEOUT);
@@ -151,6 +195,7 @@ private static boolean isRedirect(int code) {
 			StringBuilder stringBuffer = new StringBuilder();
 			String line;
 			while ((line = reader.readLine()) != null) {
+				System.out.println(line);
 				stringBuffer.append(line);
 			}
 			reader.close();
