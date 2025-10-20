@@ -34,10 +34,13 @@ DataTreeView.prototype = {
 					for( var i=0 ; i<data.nodes.length ; i++) {
 						that.nodeList[that.nodeList.length] = {
 								id   :  data.nodes[i].key
-								, text : data.nodes[i].key+ ' [' + data.nodes[i].description + ']'
+								, text : data.nodes[i].key+ ' [' + data.nodes[i].title + ']'
 								, ivoid: data.nodes[i].ivoid 
 								, url: data.nodes[i].url
 								, description: data.nodes[i].description
+								, title: data.nodes[i].title
+								, name: data.nodes[i].name
+								, contact: data.nodes[i].contact
 								, extra: "<br>" +data.nodes[i].url + "<br>" +data.nodes[i].ivoid + "<br>"};
 					}
 					$('input#node_selector').jsonSuggest(
@@ -89,10 +92,9 @@ DataTreeView.prototype = {
 			 * Prevent to close the page with data
 			 */
 
-			
 			PageLocation.confirmBeforeUnlaod();		
 			$("div#treedisp").jstree("close_all", -1);
-
+			
 			Processing.show("Waiting for the construction of the tree");
 			this.capabilities = {supportSyncQueries: true
 					        , supportAsyncQueries: (jsdata.asyncsupport == "true")?true: false
@@ -100,19 +102,40 @@ DataTreeView.prototype = {
 							, supportUpload:(jsdata.uploadsupport == "true")?true: false
 							// The truncated flag is specific to the website, that is why we can't retrieve its value directly from jsdata, we have to build it
 							, truncated:(jsdata.schemas.length > 20)?true: false};
-			this.info = {url: jsdata.nodeurl , ivoid: null, description: "Not available"};
-			this.reports[jsdata.nodekey] = {"info": this.info, "capabilities": this.capabilities};
-
+			this.info = {url: jsdata.nodeurl , ivoid: null, contact: "Not available"};
+			this.reports[jsdata.nodekey] = {"info": this.info, "capabilities": this.capabilities, description: "No description available"};
 			$("div#treedisp").jstree("remove","#" + jsdata.nodekey);
 			/*
 			 * Create the root of the subtree of this node
 			 */
 			var description="No description available";
+			var descriptionResult="";
 			for( var i=0 ; i<this.nodeList.length ; i++ ) {
 				var n = this.nodeList[i];
 				if( n.id ==  jsdata.nodekey) {
 					this.info.ivoid = n.ivoid;
-					this.info.description = n.description;
+					
+					// This part is here to make the description easier to read by putting \n every 100 characters approximatively
+					tmpDescription = n.description.split("\n");
+					var tmpDescription2="";
+					for (var j=0; j<tmpDescription.length; j++){
+						tmpDescription2 += tmpDescription[j] + " ";
+					}
+					var tmpDescription3 = tmpDescription2.split(" ");
+					tmpDescription3 = tmpDescription3.filter(e => e !== '');
+					var lineLength=0;
+					for (var k = 0; k < tmpDescription3.length; k++){
+						if (tmpDescription3[k].length + lineLength < 100){
+							descriptionResult += tmpDescription3[k] + " ";
+							lineLength += tmpDescription3[k].length;
+						} else {
+							descriptionResult += "\n" + tmpDescription3[k] + " ";
+							lineLength = tmpDescription3[k].length;
+						}
+					}
+					this.reports[jsdata.nodekey].description = descriptionResult;
+					
+					this.info.contact = n.contact;
 					description = jsdata.nodeurl + "\n" + n.ivoid + "\n" + n.description + "\n" ;
 					break;
 				}
@@ -440,8 +463,12 @@ DataTreeView.prototype = {
 		showNodeInfos: function (nodekey) {
 //			var report = {"info": this.info, "capabilities": this.capabilities};
 //			Modalinfo.infoObject(report, "Node " + this.dataTreePath.nodekey);
-//			
-			Modalinfo.infoObject(this.reports[nodekey], "Node " + nodekey);
+			
+			// We display all infos in the modal and we open a subdiv to display the description with a scroll bar in case it is too long
+			var infos = "<b>info:</b>" + "\n  <b>url:</b> " + this.reports[nodekey].info.url + "\n  <b>ivoid:</b> " + this.reports[nodekey].info.ivoid + "\n  <b>contact:</b> " + this.reports[nodekey].info.contact;
+			var capabilities = "\n\n<b>capabilities:</b>" + "\n  <b>supportSyncQueries:</b> " + this.reports[nodekey].capabilities.supportSyncQueries + "\n  <b>supportAsyncQueries:</b> " + this.reports[nodekey].capabilities.supportAsyncQueries + "\n  <b>supportJoin:</b> " + this.reports[nodekey].capabilities.supportJoin + "\n  <b>supportUpload:</b> " + this.reports[nodekey].capabilities.supportUpload + "\n  <b>truncated:</b> " + this.reports[nodekey].capabilities.truncated;
+			var scroll = '<div style="border: 1px black solid; background-color: whitesmoke; width: 100%; height: 200px; overflow: auto; position:relative">';
+			Modalinfo.info(infos + capabilities + scroll + this.reports[nodekey].description + "</div>");
 		},
 		getBookmark: function() {
 			var info = this.reports[this.dataTreePath.nodekey].info;

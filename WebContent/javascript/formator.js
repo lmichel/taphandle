@@ -15,7 +15,7 @@ ValueFormator = function() {
 	/**
 	 * 
 	 */
-	var formatValue = function(columnName, values, tdNode, columnMap) {
+	var formatValue = function(columnName, values, tdNode, columnMap, isRR) {
 		var value = values[columnName.currentColumn];
 		if( columnMap.currentColumn == undefined )  {
 			Modalinfo.error("formatValue: Missing column number in " + JSON.stringify(columnMap));
@@ -37,9 +37,9 @@ ValueFormator = function() {
 				        s_dec: (columnMap.s_dec != -1)? parseFloat(values[columnMap.s_dec]): 9999 ,
 						s_fov: (columnMap.s_fov != -1)?parseFloat( values[columnMap.s_fov]): 9999 };
 		/*
-		 * First case the value is an URL
+		 * First case the value is an URL (not from the rr table)
 		 */
-		if( value.startsWith("http://") ||  value.startsWith("https://") ) {
+		if( (value.startsWith("http://") ||  value.startsWith("https://")) && (isRR == false)) {
 			/*
 			 * The mime type is specified: we can take into account the type of response without requesting the HTTP header
 			 */
@@ -92,14 +92,38 @@ ValueFormator = function() {
 			/*
 			 * Array annotation removed from server because of CSIRO for which all data are typed as arra
 			 */
-		} else if(/* value.startsWith("Array")*/ value.length > 24 ) {
-			//console.log(value);
-			//tdNode.html("<a title='Data array(click to expand)' class='dl_dataarray' href='#'  onclick='Modalinfo.info(\"" + value + "\", \"Data Array\");'></a>");
-			tdNode.html("<span title='" + value + "' style =' cursor: pointer;' onclick='Modalinfo.info(\"" + value + "\", \"Full Value\");'>" + value.substring(0, 23) + " ... </span>");
+			
+		// This else if is used for lines where multiple bibcodes are displayed
+		} else if (value.includes("|")) {
+			const table = value.split("|");
+			var bibcodes = "";
+			var moreLinks = "";
+			for (var i = 0; i<table.length; i++){
+				if( bibcodeRegexp.test(table[i])){
+					var link = "<a href=https://ui.adsabs.harvard.edu/abs/" + table[i] +" target=blank>" + table[i] + "\\n</a>";
+					moreLinks += link;
+					// We display up to 3 bibcodes separated by |, each of them is clickable and redirects to their article
+					if (i < 3){
+						bibcodes += "<a title=\"bibcode\" HREF=\https://ui.adsabs.harvard.edu/abs/" + table[i] + " target=blank>" + table[i] + "</A>";
+						if (i != 2){
+							bibcodes += " | ";
+						}
+					}
+				}
+			}
+			// If there is more than 3 bibcodes, we display the "See more" button to view them all
+			if (table.length > 3){
+				bibcodes += "<span style =' cursor: pointer;' onclick='Modalinfo.info(\"" + moreLinks + "\");'> <em>[See more]</em></span>";
+			}
+			tdNode.html(bibcodes);
+		} else if(/* value.startsWith("Array")*/ value.length > 160 ) {
+			value = value.replace(/'/g, "");
+			value = value.replace(/"/g, "");
+			tdNode.html("<span title='" + value + "' style =' cursor: pointer;' onclick='Modalinfo.info(\"" + value + "\", \"Full Value\");'>" + value.substring(0, 47) + " ... </span>");
 		} else if( decimaleRegexp.test(value)){
 			tdNode.html((new Number(value)).toPrecision(8));
 		} else if( bibcodeRegexp.test(value)){
-			tdNode.html("<a title=\"bibcode\" HREF=\http://cdsads.u-strasbg.fr/cgi-bin/nph-bib_query?" + value + "\" target=blank>" + value + "</A>");
+			tdNode.html("<a title=\"bibcode\" HREF=\https://ui.adsabs.harvard.edu/abs/" + value + " target=blank>" + value + "</A>");
 		} else {
 			tdNode.html(value);
 		}

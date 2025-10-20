@@ -132,11 +132,9 @@ jQuery.extend({
 			Processing.show("Waiting for the query result " + countDown  + " (" + phase + ")");
 			this.updateStatus();
 			if( phase == 'COMPLETED' ) {
-				console.log("Salut")
 				countDown = 0;
 				ViewState.fireSubmitOK(dataTreeView.dataTreePath);
 			} else  if( phase == 'EXECUTING' || phase == 'QUEUED' || phase == 'PENDED'){
-				console.log("Coucou")
 				if( countDown > 0 ) {
 					countDown --;
 					setTimeout(function(){ that.checkJobCompleted(); }, 1000);

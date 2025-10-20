@@ -66,7 +66,6 @@ jQuery.extend({
 
 		this.fireGetDataLink = function(url) {
 			Processing.show("Waiting on product info");
-
 			$.getJSON("getdatalink", {jsessionid: sessionID, url: url}, function(jsdata) {
 				Processing.hide();
 				if( Processing.jsonError(jsdata, "Cannot get datalink") ) {
@@ -102,7 +101,7 @@ jQuery.extend({
 								"bAutoWidth" : true,
 								"fnRowCallback": function( nRow, aData, iDisplayIndex ) {
 									for( var c=0 ; c<aData.length ; c++ ) {
-										formatValue(this.fnSettings().aoColumns[c].sTitle, aData[c], $('td:eq(' + c + ')', nRow));
+										formatValue(this.fnSettings().aoColumns[c].sTitle, aData[c], $('td:eq(' + c + ')', nRow), false);
 									}
 									return nRow;
 								}
@@ -337,7 +336,7 @@ jQuery.extend({
 			for(var i=0 ; i<jsdata.aoColumns.length ; i++) {
 				var title ;
 				if( attributeHandlers == undefined ) {
-					title = "No descritption available"
+					title = "No description available"
 						+ " - This job has likely been initiated in a previous session" ;
 				} else {
 					var ah = attributeHandlers[jsdata.aoColumns[i].sTitle];/*
@@ -401,8 +400,12 @@ jQuery.extend({
 						/*
 						 * Not formatting for the relational registry
 						 */
-						if( schema != "rr")
-							ValueFormator.formatValue(colName, aData, $('td:eq(' + c + ')', nRow), copiedcolumnMap);
+						// rr is a special case so we use the flag "isRR" inside formatValue to adapt to this case
+						if( schema != "rr"){
+							ValueFormator.formatValue(colName, aData, $('td:eq(' + c + ')', nRow), copiedcolumnMap, false);
+						}else {
+							ValueFormator.formatValue(colName, aData, $('td:eq(' + c + ')', nRow), copiedcolumnMap, true);
+						}
 					}
 					return nRow;
 				}
