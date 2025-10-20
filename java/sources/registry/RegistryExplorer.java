@@ -23,13 +23,21 @@ public class RegistryExplorer extends RootClass {
 	public static final String[] registryServers = {
 		"http://reg.g-vo.org/tap/"
 	};
-	public static final String query = "SELECT ivoid, access_url, res_title\n"
-		+ "FROM rr.capability \n"
-		+ "  NATURAL JOIN rr.interface\n"
-		+ "  NATURAL JOIN rr.resource\n"
-		//		+ "  NATURAL JOIN rr.table_column\n"
-		//		+ "  NATURAL JOIN rr.res_table\n"
-		+ "WHERE standard_id='ivo://ivoa.net/std/tap' AND intf_type = 'vs:paramhttp' ";
+	public static final String query = "SELECT\n"
+			+ "rr.resource.ivoid AS ivoid,\n"
+			+ "rr.interface.access_url AS url,\n"
+			+ "rr.resource.res_description AS description,\n"
+			+ "rr.resource.res_title AS title,\n"
+			+ "rr.resource.short_name AS name,\n"
+			+ "rr.res_role.email AS contact\n"
+			+ "FROM rr.resource\n"
+			+ "JOIN rr.capability ON ( rr.resource.ivoid=rr.capability.ivoid ) \n"
+			+ "JOIN rr.interface ON ( rr.capability.ivoid=rr.interface.ivoid AND rr.capability.cap_index=rr.interface.cap_index ) \n"
+			+ "JOIN rr.res_role ON (rr.resource.ivoid=rr.res_role.ivoid )\n"
+			+ "WHERE \n"
+			+ "( ( rr.capability.standard_id='ivo://ivoa.net/std/tap' ) ) AND \n"
+			+ "( ( (rr.interface.intf_type = 'vs:paramhttp') ) ) AND\n"
+			+ "( rr.res_role.base_role='contact' )";
 	public static final Set<String> iniAtStart = new HashSet<>(Arrays.asList(
 			"ivo://cds.vizier/obstap",
 			"ivo://org.gavo.dc/tap",
@@ -48,16 +56,16 @@ public class RegistryExplorer extends RootClass {
 		try {
 			offRegistryMarks.put("cdssimbad"       , new RegistryMark("simbad", "ivo://cds.simbad/tap"
 					, "http://simbad.u-strasbg.fr/simbad/sim-tap"
-					, "CDS Simbad TAP query engine", true, true));
+					, "CDS Simbad TAP query engine", "Simbad", 	"SIMBAD TAP", "cds-question@unistra.fr", true, true));
 			offRegistryMarks.put("cdsvizier"       , new RegistryMark("vizier", "ivo://cds.vizier/tap"
 					, "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/"
-					, "CDS Vizier TAP query engine", true, true));
+					, "CDS Vizier TAP query engine", "VizieR", "VizieR ObsTAP", "cds-question@unistra.fr", true, true));
 			/*
-			 * For te datalink demo
+			 * For the datalink demo
 			 */
 			offRegistryMarks.put("betacadc"       , new RegistryMark("betacadc", ""
 					, "http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap"
-					, "Datalink Service Demonstrator", true, true));
+					, "Datalink Service Demonstrator", "DSD", "DSD", "DSD@false.fr", true, true));
 //			offRegistryMarks.put("3xmmdr8"       , new RegistryMark("3xmm", ""
 //					, "http://xcatdb.unistra.fr/3xmmdr8/tap"
 //					, "3rd XMM catalogue (DR8)", true, true));
@@ -134,9 +142,12 @@ public class RegistryExplorer extends RootClass {
 			JSONArray sa = (JSONArray) array.get(i);
 			String ivoid = (String)sa.get(0);
 			String url = (String)sa.get(1);
-			String key = ShortNameBuilder.getShortName(ivoid, url);
-			System.out.println(ivoid + " "+ url+ " " + key);
 			String description = (String)sa.get(2);
+			String title = (String)sa.get(3);
+			String name = (String)sa.get(4);
+			String contact = (String)sa.get(5);
+			String key = name.replaceAll(" ", "_");
+			System.out.println(ivoid + " "+ url+ " " + key + " " + description);
 			RegistryMark rm;
 			if( registryMarks.get(key) == null ) {
 				if( (rm = offRegistryMarks.get(key)) != null ) {
@@ -144,7 +155,7 @@ public class RegistryExplorer extends RootClass {
 				} else {
 					boolean mustInit = iniAtStart.contains(ivoid) ;
 					try {
-						RegistryMark rm2 = new RegistryMark(key, ivoid, url, description, mustInit, true);
+						RegistryMark rm2 = new RegistryMark(key, ivoid, url, description, title, name, contact, mustInit, true);
 						registryMarks.put(key, rm2);
 					} catch (Exception e) {
 						System.out.println(e);
