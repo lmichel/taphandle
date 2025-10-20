@@ -19,7 +19,7 @@ import session.UserTrap;
 import translator.JsonUtils;
 
 /**
- * Returns a list of the nodes stored in the node base in addition with the sessiosn id.
+ * Returns a list of the nodes stored in the node base in addition with the session id.
  * The session id is set here because this servlet is supposed to be called at page loading.
  * The session id is stired by the client and add to parameters of all further ajax callback
  */
@@ -55,9 +55,12 @@ public class AvailableNodes extends RootServlet implements Servlet {
 				//TapNode tn = NodeBase.getNode(n);
 				JSONObject jsonNode = new JSONObject();
 				jsonNode.put("key", rm.getNodeKey());
-				jsonNode.put("description", rm.getDescription());
-				jsonNode.put("url",  rm.getUrl());
 				jsonNode.put("ivoid",  rm.getIvoid());
+				jsonNode.put("url",  rm.getUrl());
+				jsonNode.put("description", rm.getDescription());
+				jsonNode.put("title", rm.getTitle());
+				jsonNode.put("name",  rm.getName());
+				jsonNode.put("contact",  rm.getContact());
 				nodes.add(jsonNode);
 			}
 			retour.put("nodes", nodes);

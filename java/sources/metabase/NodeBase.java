@@ -114,7 +114,7 @@ public class NodeBase extends RootClass{
 	public static TapNode getNode(String key) throws Exception {
 		if( NodeBase.instance == null ) {
 			NodeBase.instance = new NodeBase();
-		}		
+		}
 		return NodeBase.instance.nodeMap.getNode(key);
 	}
 
@@ -142,7 +142,7 @@ public class NodeBase extends RootClass{
 		return NodeBase.instance.nodeMap.addNode(nodeURL, supportJoin);		
 
 	}
-
+;
 
 	/**
 	 * Returns true if a node with key as key exists

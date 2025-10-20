@@ -51,7 +51,7 @@ class NodeMap  extends RootClass {
 			logger.info("URL " + url + " does not exist in the registry, create a mark with key = " + key);
 			try {
 				TapNode tapNode = new TapNode(new RegistryMark(key, ""
-						, url, "TAP Node added by a user", false, supportJoins)
+						, url, "TAP Node added by a user", "Node added by user", "name added by user", "email added by user",false, supportJoins)
 						, metaBaseDir + key);
 				nodeMap.put(key,tapNode);	
 			} catch (Exception e) {

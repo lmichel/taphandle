@@ -20,7 +20,10 @@ public class RegistryMark extends RootClass {
 	private final String nodeKey;
 	private final String ivoid;
 	private final String url;
-	private final String decsription;
+	private final String description;
+	private final String title;
+	private final String name;
+	private final String contact;
 	/*
 	 * Computed parameters
 	 */
@@ -34,18 +37,21 @@ public class RegistryMark extends RootClass {
 	 * @param nodeKey
 	 * @param ivoid
 	 * @param url
-	 * @param decsription
+	 * @param description
 	 * @param mustBeInitAtStart
 	 * @param supportJoin
 	 * @throws MalformedURLException
 	 */
-	public RegistryMark(String nodeKey, String ivoid, String url, String decsription,
+	public RegistryMark(String nodeKey, String ivoid, String url, String description, String title, String name, String contact,
 			boolean mustBeInitAtStart, boolean supportJoin) throws MalformedURLException {
 		super();
 		this.nodeKey = nodeKey;
 		this.ivoid = ivoid;
 		this.url = url; // Rajouter filtre url
-		this.decsription = decsription;
+		this.description = description;
+		this.title = title;
+		this.name = name;
+		this.contact = contact;
 		this.mustBeInitAtStart = mustBeInitAtStart;
 		
 		this.fullUrl = this.url + ((!this.url.endsWith("?") && !this.url.endsWith("/"))? "/": "");
@@ -65,7 +71,16 @@ public class RegistryMark extends RootClass {
 		return url;
 	}
 	public String getDescription() {
-		return decsription;
+		return description;
+	}
+	public String getTitle() {
+		return title;
+	}
+	public String getName() {
+		return name;
+	}
+	public String getContact() {
+		return contact;
 	}
 	public boolean mustBeInitAtStart() {
 		return mustBeInitAtStart;

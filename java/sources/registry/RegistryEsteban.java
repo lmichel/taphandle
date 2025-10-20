@@ -101,15 +101,17 @@ public class RegistryEsteban extends RootClass {
 			JSONArray sa = (JSONArray) array.get(i);
 			String ivoid = (String)sa.get(0);
 			String url = (String)sa.get(1);
-			String key = ShortNameBuilder.getShortName(ivoid, url);
-			System.out.println(ivoid + " "+ url+ " " + key);
 			String description = (String)sa.get(2);
+			String title = (String)sa.get(3);
+			String name = (String)sa.get(4);
+			String contact = (String)sa.get(5);
+			String key = name.replaceAll(" ", "_");
 			RegistryMark rm;
 			if( registryMarks.get(key) == null ) {
 				boolean mustInit = iniAtStart.contains(ivoid) ;
 				try {
 					url = url.replaceAll("[^a-zA-Z\\d_-]*$", "");
-					RegistryMark rm2 = new RegistryMark(key, ivoid, url, description, mustInit, true);
+					RegistryMark rm2 = new RegistryMark(key, ivoid, url, description, title, name, contact, mustInit, true);
 					registryMarks.put(key, rm2);
 				} catch (Exception e) {
 					System.out.println(e);
@@ -133,11 +135,11 @@ public class RegistryEsteban extends RootClass {
 			}
 		} else {
 			// Isolation d'un lien pour le tester
-			// String url = "https://ws.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/argus";
+			String url = "https://ws.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/argus";
 			// String url = "https://pollux.oreme.org/vo/datalink/speconvol?";
 			// + String url = "http://ia2-tap.oats.inaf.it:8080/wgetap/";
 			// + String url = "https://psa.esa.int/psa-tap/tap/";
-			String url = "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/";
+			// String url = "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/";
 			// String url = "http://simbad.cds.unistra.fr/simbad/sim-tap";
 			// String url = "http://vespa-ae.oma.be/tap/";
 			// + String url = "https://data.csiro.au/psrdavo/tap/";
@@ -146,7 +148,7 @@ public class RegistryEsteban extends RootClass {
 			// String url = "https://koa.ipac.caltech.edu/TAP/";
 			// String url = "http://dc.g-vo.org/tap/";
 			url = url.replaceAll("[^a-zA-Z\\d_-]*$", "");
-			RegistryMark test_rm = new RegistryMark("key_test", "ivoid_test",url , "description_test", true, true);
+			RegistryMark test_rm = new RegistryMark("key_test", "ivoid_test", url, "description_test", "title_test", "name_test", "contact_test", true, true);
 			TapNode test_tn = new TapNode(test_rm, "/tmp/meta");
 		}
 		

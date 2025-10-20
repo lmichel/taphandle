@@ -52,7 +52,7 @@ public class GetNode extends RootServlet implements Servlet {
 
 			} else if( node.startsWith("http://") || node.startsWith("https://") ){
 				logger.info("Node " + node + " is an URL: add it to the base if it is not referenced");
-				key = NodeBase.addNode(node, true);			
+				key = NodeBase.addNode(node, true);		
 			} else {
 				/*
 				 * If the filter is applied to a schema, the node is nodeXschema.
