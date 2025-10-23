@@ -465,8 +465,8 @@ DataTreeView.prototype = {
 //			Modalinfo.infoObject(report, "Node " + this.dataTreePath.nodekey);
 			
 			// We display all infos in the modal and we open a subdiv to display the description with a scroll bar in case it is too long
-			var infos = "<b>info:</b>" + "\n  <b>url:</b> " + this.reports[nodekey].info.url + "\n  <b>ivoid:</b> " + this.reports[nodekey].info.ivoid + "\n  <b>contact:</b> " + this.reports[nodekey].info.contact;
-			var capabilities = "\n\n<b>capabilities:</b>" + "\n  <b>supportSyncQueries:</b> " + this.reports[nodekey].capabilities.supportSyncQueries + "\n  <b>supportAsyncQueries:</b> " + this.reports[nodekey].capabilities.supportAsyncQueries + "\n  <b>supportJoin:</b> " + this.reports[nodekey].capabilities.supportJoin + "\n  <b>supportUpload:</b> " + this.reports[nodekey].capabilities.supportUpload + "\n  <b>truncated:</b> " + this.reports[nodekey].capabilities.truncated;
+			var infos = "<b>info:</b>" + "\n  <b>- url:</b> " + this.reports[nodekey].info.url + "\n  <b>- ivoid:</b> " + this.reports[nodekey].info.ivoid + "\n  <b>- contact:</b> " + this.reports[nodekey].info.contact;
+			var capabilities = "\n\n<b>capabilities:</b>" + "\n  <b>- supportSyncQueries:</b> " + this.reports[nodekey].capabilities.supportSyncQueries + "\n  <b>- supportAsyncQueries:</b> " + this.reports[nodekey].capabilities.supportAsyncQueries + "\n  <b>- supportJoin:</b> " + this.reports[nodekey].capabilities.supportJoin + "\n  <b>- supportUpload:</b> " + this.reports[nodekey].capabilities.supportUpload + "\n  <b>- truncated:</b> " + this.reports[nodekey].capabilities.truncated;
 			var scroll = '<div style="border: 1px black solid; background-color: whitesmoke; width: 100%; height: 200px; overflow: auto; position:relative">';
 			Modalinfo.info(infos + capabilities + scroll + this.reports[nodekey].description + "</div>");
 		},

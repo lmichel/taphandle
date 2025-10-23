@@ -21,9 +21,15 @@ jQuery.extend({
 		this.fireTreeNodeEvent = function(dataTreePath, andsubmit, supportUpload){
 			adqlQueryView.fireSetTreePath(dataTreePath);
 			adqlQueryView.fireAddConstraint("tap", "limit", [getQLimit()]);
+			// Where constraint editor
+			console.log("WHERE");
 			tapConstraintEditor.fireSetTreepath(dataTreePath);
+			// Position constraint editor
+			console.log("POS");
 			tapPosSelector.fireSetTreepath(dataTreePath);
 			tapPosSelector.fireSupportUpload(supportUpload);
+			// Select What constraint editor
+			console.log("WHAT");
 			tapColumnSelector.fireSetTreepath(dataTreePath, ((andsubmit)? this.fireSubmitQueryEvent: null));
 
 		};
