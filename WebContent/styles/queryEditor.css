@@ -1,0 +1,225 @@
+/********************
+    GLOBAL
+*********************/
+body, html {
+  margin: 0;
+  height: 100%;
+  font-family: Arial, sans-serif;
+  background-color: white;
+  overflow: hidden;
+}
+
+.main-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  height: 100%;
+  gap: 20px;
+  box-sizing: border-box;
+  padding: 20px;
+  overflow: hidden;
+}
+
+.editor-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  padding-left: 20px;
+}
+
+.columns-panel {
+  width: 375px;
+  flex: 0 0 375px;
+  border-left: 1px solid #ddd;
+  padding: 12px;
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  box-sizing: border-box;
+  border-radius: 6px;
+  box-shadow: 0 0 6px rgba(0,0,0,0.04);
+}
+
+.columns-panel h3 {
+  text-align: center;
+  margin: 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.table-name {
+  text-align: center;
+  font-weight: 600;
+  padding: 6px 8px;
+  border-radius: 4px;
+  background: transparent;
+  color: #222;
+  border: 1px dashed transparent;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.table-name.active {
+  background: #e6f0ff;
+  border: 1px solid #bcd;
+  color: #034;
+}
+
+#selected-text {
+  width: 100%;
+  height: 32px;
+  padding: 6px 8px;
+  font-size: 13px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+  color: #333;
+  box-sizing: border-box;
+}
+
+.btn-group {
+  margin-bottom: 10px;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropbtn {
+  background-color: #f5f5f5;
+  color: black;
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  border-radius: 3px;
+  user-select: none;
+}
+
+.dropbtn:hover {
+  background-color: #ddd;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: white;
+  min-width: 150px;
+  box-shadow: 0px 2px 8px rgba(0,0,0,0.12);
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  z-index: 1000;
+  max-height: 300px;
+  overflow: auto;
+}
+
+.dropdown-content a {
+  color: black;
+  padding: 8px 10px;
+  text-decoration: none;
+  display: block;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.dropdown-content a:hover {
+  background-color: #f2f2f2;
+}
+
+/********************
+    CODEMIRROR
+*********************/
+#sql-editor {
+  display: none; /* masqué puisque remplacé par CodeMirror */
+}
+
+/* Base */
+.CodeMirror {
+  width: 100%;
+  height: 100%;
+  font-family: Consolas, "Courier New", monospace !important;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background-color: #f5f5f5 !important;
+  box-sizing: border-box;
+  cursor: text !important;
+}
+
+/* Tous les éléments internes doivent garder la même police */
+.CodeMirror * {
+  font-family: Consolas, "Courier New", monospace !important;
+  cursor: text !important;
+  text-decoration: none !important;
+}
+
+/* Supprimer pseudo-éléments sauf pour le curseur */
+.CodeMirror *::before,
+.CodeMirror *::after,
+.CodeMirror pre::before,
+.CodeMirror pre::after {
+  content: none !important;
+  display: none !important;
+}
+
+.CodeMirror-cursor::before,
+.CodeMirror-cursor::after {
+  content: '' !important; /* garder le curseur fonctionnel */
+  display: block !important;
+}
+
+/***************
+  FIX CURSEUR
+***************/
+.CodeMirror-cursor {
+  border-left: 2px solid black !important;
+  width: 0 !important;
+  height: 1em !important; /* hauteur correcte */
+  background: transparent !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+}
+
+/* Force la couleur du caret */
+.CodeMirror pre,
+.CodeMirror textarea {
+  caret-color: #000 !important;
+}
+
+/* Pas d'effets hover brillants */
+.CodeMirror .cm-line:hover,
+.CodeMirror .cm-line *:hover {
+  background: transparent !important;
+  color: inherit !important;
+}
+
+/***************
+   RESPONSIVE
+***************/
+@media (max-width: 1200px) {
+  .CodeMirror {
+    width: 820px;
+  }
+}
+
+@media (max-width: 900px) {
+  .main-container {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+    padding: 12px;
+  }
+
+  .CodeMirror {
+    width: 100%;
+  }
+}

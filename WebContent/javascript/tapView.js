@@ -9,6 +9,27 @@ jQuery.extend({
 		 * who is listening to us?
 		 */
 		var listeners = new Array();
+		
+		this.firePushJobs = function(job){
+			$.each(listeners, function(i){
+				listeners[i].controlPushJobs(job);
+			});
+		};
+		
+		this.fireGetJobs = function() {
+		    var results = [];
+		    $.each(listeners, function(i){
+		        results.push(listeners[i].controlGetJobs());
+		    });
+		    return results[0];
+		};
+		
+		this.fireReplaceJobs = function(newJobs) {
+			$.each(listeners, function(i){
+				listeners[i].controlReplaceJobs(newJobs);
+			});
+		};
+		
 		/**
 		 * add a listener to this view
 		 */
@@ -22,14 +43,11 @@ jQuery.extend({
 			adqlQueryView.fireSetTreePath(dataTreePath);
 			adqlQueryView.fireAddConstraint("tap", "limit", [getQLimit()]);
 			// Where constraint editor
-			console.log("WHERE");
 			tapConstraintEditor.fireSetTreepath(dataTreePath);
 			// Position constraint editor
-			console.log("POS");
 			tapPosSelector.fireSetTreepath(dataTreePath);
 			tapPosSelector.fireSupportUpload(supportUpload);
-			// Select What constraint editor
-			console.log("WHAT");
+			// Select What constraint editora
 			tapColumnSelector.fireSetTreepath(dataTreePath, ((andsubmit)? this.fireSubmitQueryEvent: null));
 
 		};

@@ -257,7 +257,6 @@ jQuery.extend({
 		this.showFailure = function(textStatus) {
 			Modalinfo.info("view: " + textStatus, 'Failutr');
 		};
-
 		this.showMeta = function(jsdata) {
 			if (jsdata.errormsg != null) {
 				Modalinfo.info("FATAL ERROR: Cannot show object detail: "
@@ -299,7 +298,16 @@ jQuery.extend({
 					"bFilter" : true,
 					"bAutoWidth" : true
 				};
-				
+		
+			let attributs = {};
+			console.log(jsdata.attributes.aaData);
+			for (var k=0; k<jsdata.attributes.aaData.length; k++) {
+				for (var i=0; i<10; i++){
+					attributs[jsdata.attributes.aaData[k][0]] = i;
+				}
+			}
+			console.log(attributs);
+
 			var positions = [
      			{ "name": 'filter',
      	 		  "pos" : "top-left"
@@ -339,15 +347,24 @@ jQuery.extend({
 					title = "No description available"
 						+ " - This job has likely been initiated in a previous session" ;
 				} else {
-					var ah = attributeHandlers[jsdata.aoColumns[i].sTitle];/*
+					// This condition is here to avoid errors mixing the real content of the attributeHandlers array and its prototype functions
+					if (attributeHandlers.length != 0) {
+						var ah = attributeHandlers[jsdata.aoColumns[i].sTitle];
+					}
 					/*
 					 * Column name could be published in upper case but returned by the DBMS in lower case.
 					 */
 					if(ah == undefined  ) {
-						ah = attributeHandlers[jsdata.aoColumns[i].sTitle.toLowerCase()];
+						// This condition is here to avoid errors mixing the real content of the attributeHandlers array and its prototype functions
+						if (attributeHandlers.length != 0) {
+							ah = attributeHandlers[jsdata.aoColumns[i].sTitle.toLowerCase()];
+						}
 					}
 					if(ah == undefined  ) {
-						ah = attributeHandlers[jsdata.aoColumns[i].sTitle.toUpperCase()];
+						// This condition is here to avoid errors mixing the real content of the attributeHandlers array and its prototype functions
+						if (attributeHandlers.length != 0) {
+							ah = attributeHandlers[jsdata.aoColumns[i].sTitle.toUpperCase()];
+						}
 					}
 					if( ah == undefined ) {
 						title = "No description available (joined query?)";

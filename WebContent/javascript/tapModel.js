@@ -21,6 +21,19 @@ jQuery.extend({
 		var attributesHandlers = new Array();
 
 		var jobs = new Array();
+		
+		
+		this.getJobs = function(){
+			return jobs;
+		},
+		
+		this.pushJobs = function(newJob){
+			jobs.push(newJob);
+		},
+		
+		this.replaceJobs = function(newJobs){
+			jobs = newJobs;
+		}
 
 		/**
 		 * add a listener to this view

@@ -3,7 +3,8 @@
 <html>
 <head>
 <title>Taphandle</title>
-<meta name="date" content="2020-01-13" scheme="YYYY-MM-DD" />
+
+<meta name="date" content="2020-01-13" scheme="YYYY-MM-DD" charset="utf-8" />
 
 <link rel="icon" href="images/tap16.png" type="images/png" />
 <link rel="SHORTCUT ICON" href="images/tap16.png" />
@@ -29,8 +30,12 @@
 
 		var useDebugResources = true;
 		resourceLoader.checkBaseUrl();
-		resourceLoader.setCss([ "styles/global.css", 
-			"styles/form.css", "styles/home.css", "styleimport/jsonSuggest.css" ]);
+		resourceLoader.setCss([
+			"styles/global.css", 
+			"styles/form.css",
+			"styles/home.css",
+			"styleimport/jsonSuggest.css"
+			]);
 		resourceLoader.setScripts([ "jsimport/jquery.jstree.js",
 				"jsimport/jquery.jsonSuggest-2.js",
 				"jsimport/jquery.jeditable.js",
@@ -62,7 +67,15 @@
 
 		var useDebugResources = true;
 		resourceLoader.checkBaseUrl();
-		resourceLoader.setCss([ "styles/global.css", "styles/form.css", "styles/home.css"
+		resourceLoader.setCss([
+			"styles/global.css",
+			"styles/form.css",
+			"styles/home.css",
+			"styleimport/codemirror.min.css",
+			"styleimport/eclipse.css",
+			"styles/queryEditor.css"
+			
+			
 		/*                           , "styleimport/jquery.alerts.css"
 		 *//*                           , "styleimport/jquery.tooltip.css"
 		 */, "styleimport/jsonSuggest.css" ]);
@@ -71,13 +84,18 @@
 				"jsimport/jquery.jeditable.js",
 				"jsimport/jquery.layout-latest.js", 
 				"jsimport/json2.js",
+				"jsimport/codemirror.min.js",
+				"jsimport/sql.min.js",
+				"javascript/vocabularyFieldList.js",
+				"javascript/queryEditor.js",
 				"javascript/formator.js", 
 				"javascript/resultPaneModel.js",
 				"javascript/resultPaneView.js",
 				"javascript/resultPaneControler.js",
 				"javascript/nodeFilterModel.js",
 				"javascript/nodeFilterView.js",
-				"javascript/nodeFilterControler.js"
+				"javascript/nodeFilterControler.js",
+				"javascript/queryEditor.js"
 				/*                                 ,"javascript/kwconstraintModel.js"  
 				 ,"javascript/kwconstraintView.js"  
 				 ,"javascript/kwconstraintControler.js"  
@@ -571,6 +589,9 @@
 							<li><a href="#tapjob"
 								title="Acces to the jobs attached to the current session"><span>Job
 										Control</span></a></li>
+										
+							
+							
 						</ul>
 						<!-- Columns selection -->
 						<div id="tapselect" class='queryformtab'></div>

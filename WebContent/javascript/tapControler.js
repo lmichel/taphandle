@@ -5,6 +5,19 @@ jQuery.extend({
 		 * listen to the view
 		 */
 		var vlist = {
+				
+				controlGetJobs: function(){
+					return model.getJobs();
+				},
+				
+				controlPushJobs: function(job){
+					model.pushJobs(job);
+				},
+				
+				controlReplaceJobs: function(newJobs){
+					model.replaceJobs(newJobs);
+				},
+			
 				controlSubmitQueryEvent: function(){
 					model.submitQuery();
 				},

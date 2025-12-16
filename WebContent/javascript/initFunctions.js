@@ -6,6 +6,11 @@ function initFunctions () {
 
 		var tapModel       = new $.TapModel();
 		tapView            = new $.TapView();
+		
+		// Version qui marche à moitié
+		// $.tapModel = tapModel;
+		// $.tapView  = tapView;
+		
 		new $.TapController(tapModel, tapView);
 
 		var cartModel       = new $.CartModel();
@@ -34,10 +39,10 @@ function initFunctions () {
 		Out.info("Activate popular sites access");
 		var np = window.location.href.split('?')[0].replace(/\/#?$/, "");
 		$(".4xmm-link").attr("href", np+"?url=https%3A//xcatdb.unistra.fr/xtapdb/");
-		$(".cadc-link").attr("href", np+"?url=http%3A//www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap/");
-		$(".gavo-link").attr("href", np+"?url=https%3A//dc.zah.uni-heidelberg.de/tap");
-		$(".vizier-link").attr("href", np+"?url=https%3A//tapvizier.u-strasbg.fr/TAPVizieR/tap/");
-		$(".simbad-link").attr("href", np+"?url=https%3A//simbad.u-strasbg.fr/simbad/sim-tap/");
+		$(".cadc-link").attr("href", np+"?url=https%3A//ws.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/argus/ ");
+		$(".gavo-link").attr("href", np+"?url=http%3A//dc.g-vo.org/tap/ ");
+		$(".vizier-link").attr("href", np+"?url=https%3A//tapvizier.cds.unistra.fr/TAPVizieR/tap/ ");
+		$(".simbad-link").attr("href", np+"?url=http%3A//simbad.cds.unistra.fr/simbad/sim-tap/ ");
 		$(".planet-link").attr("href", np+"?url=htps%3a//voparis-tap-astro-m.obspm.fr/tap");
 		$(".heasarch-link").attr("href", np+"?url=https%3A//heasarc.gsfc.nasa.gov/xamin/vo/tap/")
 		$(".chandra-link").attr("href", np+"?url=https%3A//cda.harvard.edu/cxctap/");
@@ -245,6 +250,7 @@ function initFunctions () {
 			ViewState.fireSubmit();
 			//resultPaneView.fireSubmitQueryEvent();
 		});
+		
 		$("#qlimit").keyup(function(event) {
 			if( $("#qlimit").val() == '' || $("#qlimit").val().match(/^[0-9]+$/) ) {
 				adqlQueryView.fireAddConstraint("tap", "limit", [getQLimit()]);

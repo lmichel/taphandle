@@ -12,6 +12,7 @@ function DataTreeView() {
 	this.dataTreePath = null;
 	this.capabilities = null;
 	this.info = null;
+	this.data = {};
 }
 DataTreeView.prototype = {
 		initNodeBase : function(){
@@ -91,7 +92,7 @@ DataTreeView.prototype = {
 			/*
 			 * Prevent to close the page with data
 			 */
-
+			this.data[jsdata.nodekey] = jsdata;
 			PageLocation.confirmBeforeUnlaod();		
 			$("div#treedisp").jstree("close_all", -1);
 			
@@ -160,6 +161,7 @@ DataTreeView.prototype = {
 			var tap_schema_index;
 			var ivoa_index;
 			const folders = [];
+			this.activeSchemas = [];
 			// We start at the end of the list of schemas, we iterate through them and trunc them until we get to i < MAX_SCHEMA,
 			//  then the rest of the schemas are added to the stack. tap_schema and ivoa schemas won't get truncated thanks to a filter below
 			for( var i=jsdata.schemas.length-1 ; i>=0 ; i-- ) {
@@ -181,6 +183,7 @@ DataTreeView.prototype = {
 				if( i > MAX_SCHEMA && jsdata.schemas[i].name.toLowerCase() != "ivoa"   && jsdata.schemas[i].name.toLowerCase() != "tap_schema") {
 					trunc[trunc.length] = schemaName;
 				} else if (jsdata.schemas[i].name.toLowerCase() != "ivoa"   && jsdata.schemas[i].name.toLowerCase() != "tap_schema") {
+					this.activeSchemas.push(jsdata.schemas[i]);
 					icon =  "images/Bluecube2.png";
 					if( description == "") {
 						description = "No Description Available";
@@ -204,6 +207,7 @@ DataTreeView.prototype = {
 				var description = jsdata.schemas[i].description;
 				var schemaName = jsdata.schemas[i].name;
 				if(schemaName.match(/TAP_SCHEMA/i) || schemaName.match(/ivoa/i)) {
+					this.activeSchemas.push(jsdata.schemas[i]);
 					if(schemaName.match(/TAP_SCHEMA/i) ) {
 						icon = "images/Redcube2.png";
 						
@@ -224,6 +228,7 @@ DataTreeView.prototype = {
 							,true); 
 				}
 			}
+			$("#"+jsdata.nodekey).append("<a class='metadata' title='Click to open query editor' onclick='dataTreeView.openQueryEditor(&quot;" + jsdata.nodekey + "&quot;)'>| Query editor</a>");
 			/*
 			 * add leaves (tables) the the schemas
 			 */
@@ -308,7 +313,7 @@ DataTreeView.prototype = {
 			});
 			$("div#treedisp").jstree("open_node", $('li.jstree-closed').first() );
 
-			$("#"+jsdata.nodekey).before("<img class='metadata' src='images/metadata.png' title='Click to get more info' onclick='dataTreeView.showNodeInfos(&quot;" + jsdata.nodekey + "&quot;);'/>");
+			$("#"+jsdata.nodekey).before("<img class='metadata' src='images/metadata.png' title='Click to get more info' onclick='dataTreeView.showNodeInfos(&quot;" + jsdata.nodekey + "&quot;)'/>");
 			this.setTitlePath({nodekey: jsdata.nodekey});
 			Processing.hide();
 		},
@@ -456,7 +461,7 @@ DataTreeView.prototype = {
 				// The truncated flag has inverted colors, green when it's not truncated (false) and red when it is truncated (true)
 				span_info.append(span
 						+ ((this.capabilities.truncated == true)?'salmon': 'lightgreen') 
-						+ ';" title="' + ((this.capabilities.truncated == true)?'T': 't')+ 'runcated list of schemas">T</span>');
+						+ ';" title="' + ((this.capabilities.truncated == true)?'T': 'T')+ 'runcated list of schemas">T</span>');
 
 			}
 		},
@@ -480,6 +485,27 @@ DataTreeView.prototype = {
 			}
 //			var np = window.location.href.split('?')[0].replace(/\/$/, "");
 //			return (this.info != null)?np + "?url=" + escape(this.info.url): np;
+		},
+		
+		openQueryEditor: function(nodekey) {
+			// window.testEditor.modelJobs = tapView.getJobs
+			data = this.data[nodekey];
+			data.schemas = this.activeSchemas;
+			
+			if (!window.testEditor) {
+			       window.testEditor = new queryEditor(nodekey);
+			       window.testEditor.show();
+			       return;
+			}
+		    if (window.testEditor.nodekey === nodekey) {
+				console.log(window.testEditor.editor.getValue());
+		       NativeModal.show("queryEditorModal");
+		       return;
+		    }
+		    NativeModal.destroy("queryEditorModal");
+		    window.testEditor = null;
+		    window.testEditor = new queryEditor(nodekey);
+		    window.testEditor.show();
 		}
 };
 
