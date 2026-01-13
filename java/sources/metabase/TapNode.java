@@ -245,8 +245,9 @@ FROM "public".swirecapability " + capabilityNS.getNsName());
 		try {
 			this.checkCapability() ;
 			logger.debug("NS for capability " + capabilityNS.getNsName());
-			if (true) {
-				this.checkTables() ;
+			// Fix to the the STSCI link, without this, the site can't display the columns in the query editor popup and in the query editor below the results
+			if (regMark.getNodeKey().equals("HLSP_GOODS_TAP")) {
+				this.checkTablesWithTapSchema();
 			} else {
 				this.checkTables();
 			}

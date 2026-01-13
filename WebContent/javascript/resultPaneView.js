@@ -267,7 +267,7 @@ jQuery.extend({
 			var table = '';
 			var histo = '<img src="images/question.png">';
 
-
+			console.log(jsdata);
 			var title = "Columns of table <i>"
 				+ jsdata.dataTreePath.schema
 				+ "."

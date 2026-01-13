@@ -3,9 +3,6 @@ class NativeModal {
         let modal = document.getElementById(id);
         let overlay = document.getElementById(id + "_overlay");
 
-        // =========================
-        // MODALE DÉJÀ EXISTANTE
-        // =========================
         if (modal && !options.force) {
             overlay.style.visibility = "visible";
             overlay.style.pointerEvents = "auto";
@@ -13,22 +10,15 @@ class NativeModal {
             modal.style.visibility = "visible";
             modal.style.pointerEvents = "auto";
 
-            // 🔑 Forcer recalcul layout
             modal.getBoundingClientRect();
             window.dispatchEvent(new Event("resize"));
 
             return modal;
         }
 
-        // =========================
-        // SUPPRESSION SI FORCE
-        // =========================
         if (modal) modal.remove();
         if (overlay) overlay.remove();
 
-        // =========================
-        // OVERLAY
-        // =========================
         overlay = document.createElement("div");
         overlay.id = id + "_overlay";
         overlay.style.cssText = `
@@ -38,9 +28,6 @@ class NativeModal {
             z-index: ${options.zIndex ? options.zIndex - 1 : 20000};
         `;
 
-        // =========================
-        // MODALE (TAILLE ORIGINALE)
-        // =========================
         modal = document.createElement("div");
         modal.id = id;
         modal.style.cssText = `
@@ -61,9 +48,6 @@ class NativeModal {
             overflow: hidden;
         `;
 
-        // =========================
-        // HEADER
-        // =========================
         const header = document.createElement("div");
         header.style.cssText = `
             flex: 0 0 auto;
@@ -80,9 +64,6 @@ class NativeModal {
             <span class="native-modal-close" style="cursor:pointer;font-size:20px;">&times;</span>
         `;
 
-        // =========================
-        // BODY
-        // =========================
         const body = document.createElement("div");
         body.style.cssText = `
             flex: 1 1 auto;
@@ -99,9 +80,6 @@ class NativeModal {
         document.body.appendChild(overlay);
         document.body.appendChild(modal);
 
-        // =========================
-        // FERMETURE = CACHER
-        // =========================
         const hide = () => {
             overlay.style.visibility = "hidden";
             overlay.style.pointerEvents = "none";
@@ -175,7 +153,6 @@ queryEditor.prototype = {
 
 	insertKeywordTemplate(keywordText) {
 
-	    // ✅ PRIORITÉ ABSOLUE : remplacer la sélection si elle existe
 	    const sel = this.editor.getSelection();
 	    if (sel && sel.length > 0) {
 	        const text = keywordText.endsWith(" ") ? keywordText : keywordText + " ";
@@ -184,17 +161,14 @@ queryEditor.prototype = {
 	        return this.editor.getCursor().line;
 	    }
 
-	    // --- Mots-clés à forcer sur une ligne avec curseur juste après ---
 	    const forceMultilineKeywords = ["WHERE", "GROUP BY", "ORDER BY", "SELECT DISTINCT"];
 
-	    // --- Mots-clés inline normaux ---
 	    const inlineKeywords = ["AND", "OR"];
 
 	    const cursor = this.editor.getCursor();
 	    const lineIndex = cursor.line;
 	    const lineContent = this.editor.getLine(lineIndex) || "";
 
-	    // --- Cas WHERE / GROUP BY / ORDER BY / SELECT DISTINCT ---
 	    if (forceMultilineKeywords.some(kw => keywordText.trim().startsWith(kw))) {
 	        const finalKeyword = keywordText.trim() + " ";
 
@@ -210,7 +184,7 @@ queryEditor.prototype = {
 	        return insertAtLine;
 	    }
 
-	    // --- Cas AND / OR avec indentation ---
+	    // AND / OR
 	    if (inlineKeywords.includes(keywordText.trim())) {
 	        const finalKeyword = "     " + keywordText.trim() + " ";
 	        let targetLine = lineIndex;
@@ -225,8 +199,7 @@ queryEditor.prototype = {
 	        this.editor.focus();
 	        return targetLine;
 	    }
-
-	    // --- Cas standard ---
+		// Standard
 	    return this.insertTextAtSelection(keywordText);
 	},
 
@@ -370,10 +343,8 @@ queryEditor.prototype = {
 		
 		this.jobs = new Array();
 
-		        // --- Initialisation CodeMirror seulement si pas déjà fait ---
 		        if (!this.editor) this.initTextArea();
 
-		        // Initialisations restantes (drop-downs, boutons, etc.)
 		        this.initSQLOperators();
 		        this.initSQLFunctions();
 		        this.initSQLKeywords();
@@ -459,7 +430,6 @@ queryEditor.prototype = {
 	initVocabularyPanel: function () {
 	    const that = this;
 	
-	    // --- Créer la zone fieldlist si ce n’est pas encore fait ---
 	    if (!this.vocabularyFieldList) {
 	        this.vocabularyFieldList = new VocabularyFieldList(
 	            "vocabulary-fieldlist-container",
@@ -474,11 +444,10 @@ queryEditor.prototype = {
 					    let textToInsert;
 
 					    if (that.rightValueIsTable) {
-					        // si c'est une table → ajouter schema.table
+
 					        const schemaForTable = that.selectedTable ? that.tables[that.selectedTable]?.schema || "" : "";
 					        textToInsert = schemaForTable ? `${schemaForTable}.${that.selectedTable}` : that.selectedTable;
 					    } else {
-					        // si c'est une colonne ou lien → juste le nom
 					        textToInsert = "'" + that.selectedRightValue + "' ";
 					    }
 
@@ -491,7 +460,6 @@ queryEditor.prototype = {
 
 					    that.editor.focus();
 
-					    // Reset flags
 					    that.selectedRightValue = "";
 					    that.rightValueIsTable = false;
 					},
@@ -504,25 +472,20 @@ queryEditor.prototype = {
 	    }
 	
 	
-	    // --- Préparer le dropdown ---
 	    const vocabSelect = $("#vocabulary-select");
 	
-	    // Ajouter le placeholder uniquement au démarrage
 	    vocabSelect.empty().append(
 	        `<option value="" selected disabled>Choose a vocabulary…</option>`
 	    );
 	
-	    // Remplir le dropdown avec les vocabulaires
 	    Object.keys(vocabulary).forEach(v => {
 	        vocabSelect.append(`<option value="${v}">${v}</option>`);
 	    });
 	
-	    // --- Réagir au choix d’un vocabulary ---
 	    vocabSelect.off("change").on("change", function () {
 	        const selected = $(this).val();
 	        if (!selected) return;
 	
-	        // Construire le dataTreePath attendu par VocabularyFieldList
 	        const dtp = {
 	            schema: "",
 	            quoted: false,
@@ -531,7 +494,6 @@ queryEditor.prototype = {
 	            nodekey: ""
 	        };
 	
-	        // Charger dans VocabularyFieldList
 	        that.vocabularyFieldList.setDataTreePath(dtp);
 	    });
 	},
@@ -587,18 +549,9 @@ queryEditor.prototype = {
         }, 10);
     },
 	
-	formatQualifiedName: function(fullName) {
-	    // fullName = schema.table OR schema.table.column
-	    if (!fullName) return fullName;
-
-	    const parts = fullName.split(".");
-	    if (parts.length < 2) return fullName;
-
-	    if (parts[0] === "public") {
-	        parts[0] = `"public"`;
-	    }
-
-	    return parts.join(".");
+	formatQualifiedName: function(name) {
+	    if (!name) return name;
+	    return name.quotedTableName().qualifiedName;
 	},
 
 
@@ -653,6 +606,13 @@ queryEditor.prototype = {
 	    let selectedText = selectedTextBox.value.trim();
 	    if (!selectedText && editorSelection) selectedText = editorSelection;
 
+	    const cursor = this.editor.getCursor();
+	    const currentLine = this.editor.getLine(cursor.line) || "";
+
+	    // GROUP BY / ORDER BY
+	    const isGroupOrOrderBy =
+	        /^\s*(GROUP\s+BY|ORDER\s+BY)\b/i.test(currentLine);
+
 	    const schemaForTable = this.selectedTable
 	        ? this.tables[this.selectedTable]?.schema || ""
 	        : "";
@@ -667,24 +627,43 @@ queryEditor.prototype = {
 	    let fullReplacement = parts.join(".");
 	    fullReplacement = this.formatQualifiedName(fullReplacement);
 
-	    /* ======================================================
-	       ✅ CAS PRIORITAIRE : une vraie sélection dans l’éditeur
-	       ====================================================== */
-	    if (editorSelection && !this.rightValueIsTable) {
-	        this.editor.replaceSelection(fullReplacement);
-	        this.editor.focus();
+	    // GROUP BY / ORDER BY Column
+	    if (columnName && isGroupOrOrderBy) {
+	        fullReplacement = columnName;
+	    }
 
+	    // Replace the complete name
+	    if (editorSelection && !this.rightValueIsTable) {
+	        const from = this.editor.getCursor("from");
+	        const to   = this.editor.getCursor("to");
+	        const line = from.line;
+	        const lineText = this.editor.getLine(line);
+
+	        let startCh = from.ch;
+	        while (startCh > 0 && /[\w".]/.test(lineText[startCh - 1])) {
+	            startCh--;
+	        }
+
+	        let endCh = to.ch;
+	        while (endCh < lineText.length && /[\w".]/.test(lineText[endCh])) {
+	            endCh++;
+	        }
+
+	        this.editor.replaceRange(
+	            fullReplacement,
+	            { line, ch: startCh },
+	            { line, ch: endCh }
+	        );
+
+	        this.editor.focus();
 	        selectedTextBox.value = "";
 	        this.selectedRightValue = "";
 	        this.rightValueIsTable = false;
 	        return;
 	    }
 
-	    /* ======================================================
-	       CAS 1 : insertion simple (pas de sélection)
-	       ====================================================== */
+	    // Basic insertion
 	    if (!selectedText) {
-	        const cursor = this.editor.getCursor();
 	        this.editor.replaceRange(fullReplacement + " ", cursor);
 	        this.editor.setCursor({
 	            line: cursor.line,
@@ -701,9 +680,7 @@ queryEditor.prototype = {
 	        selectedText === "__selectTable__" ||
 	        selectedText === "__joinTable__";
 
-	    /* ======================================================
-	       CAS PLACEHOLDER (__selectTable__ / __joinTable__)
-	       ====================================================== */
+	    // PLACEHOLDERs : __selectTable__ / __joinTable__
 	    if (isPlaceholderTable) {
 	        this.editor.replaceSelection(fullReplacement);
 
@@ -722,9 +699,7 @@ queryEditor.prototype = {
 	        return;
 	    }
 
-	    /* ======================================================
-	       CAS 2 : remplacement global (ancien comportement)
-	       ====================================================== */
+	   // Global replace
 	    const content = this.editor.getValue();
 	    let newContent = content;
 
@@ -772,7 +747,6 @@ queryEditor.prototype = {
 	            : tableName;
 
 	        tableReplacement = this.formatQualifiedName(tableReplacement);
-
 	        newContent = newContent.replace(reTableOnly, tableReplacement);
 	    }
 
@@ -783,6 +757,8 @@ queryEditor.prototype = {
 	    this.selectedRightValue = "";
 	    this.rightValueIsTable = false;
 	},
+
+
 
 
 
@@ -845,9 +821,7 @@ queryEditor.prototype = {
 	            e.preventDefault();
 	            const funcName = e.target.getAttribute("data-func");
 
-	            /* =====================================================
-	               CAS SPÉCIAL : POSITION
-	            ===================================================== */
+	            // POSITION
 	            if (funcName === "POSITION") {
 
 	                const raField = document.getElementById("ra-text");
@@ -888,11 +862,10 @@ queryEditor.prototype = {
 
 	                const radiusValue = parseFloat(radiusVal) / 3600;
 
-	                // 🔑 FORMATAGE CORRECT DES COLONNES
+	                // Formatting columns
 	                const raFormatted  = that.formatQualifiedName(raVal);
 	                const decFormatted = that.formatQualifiedName(decVal);
 
-	                // coord = valeurs numériques → pas de formatage SQL
 	                const coordFormatted = coordVal.replace(" ", ", ");
 
 	                const insertText =
@@ -913,9 +886,7 @@ queryEditor.prototype = {
 	                return;
 	            }
 
-	            /* =====================================================
-	               FONCTIONS SQL CLASSIQUES
-	            ===================================================== */
+	            // Classic SQL functions
 	            const sel = that.editor.getSelection();
 
 	            if (sel && sel.length > 0) {
@@ -943,7 +914,7 @@ queryEditor.prototype = {
 	initSQLKeywords: function() {
 	    const keywordBtn = document.getElementById("keyword-btn");
 	    const keywordDropdown = document.getElementById("keyword-dropdown");
-	    const that = this; // ajout
+	    const that = this;
 
 	    function hideAllDropdowns(){ document.querySelectorAll(".dropdown-content").forEach(d=>d.style.display="none"); }
 	    function toggleDropdown(dropdown){ const isOpen = dropdown.style.display==="block"; hideAllDropdowns(); dropdown.style.display=isOpen?"none":"block"; }
@@ -955,7 +926,7 @@ queryEditor.prototype = {
 	        link.addEventListener("click", e => {
 	            e.preventDefault();
 	            const keyword = e.target.getAttribute("data-keyword");
-	            const insert = text => that.insertKeywordTemplate(text); // utilise that
+	            const insert = text => that.insertKeywordTemplate(text);
 
 	            if (keyword && keyword.startsWith("FROM ")) {
 	                insert(keyword);
@@ -1019,16 +990,16 @@ queryEditor.prototype = {
 
 	            const selectedText = document.getElementById("selected-text").value.trim();
 
-				// --- CASE A: placeholder FROM / JOIN ---
+				// Placeholder FROM / JOIN
 				if (selectedText === "__selectTable__" || selectedText === "__joinTable__") {
 				    that.selectedTable = tableName;
 				    that.rightValueIsTable = true;
 
-				    // Formater le nom complet de la table avec quotes si nécessaire
+					// Formatting the name of the table with quotes if necessary
 				    const formattedFullTableName = that.formatQualifiedName(fullTableNameRaw);
 				    that.selectedRightValue = formattedFullTableName;
 
-				    // Remplacer le placeholder par le nom formaté
+					// Replace the placeholder with the formatted name
 				    const sel = that.editor.getSelection().trim();
 				    if (sel && sel.length > 0) {
 				        that.editor.replaceSelection(formattedFullTableName);
@@ -1076,7 +1047,7 @@ queryEditor.prototype = {
 				}
 
 
-	            // --- CASE B: table sélectionnée manuellement ---
+	            // Manually chosed table
 	            if (selectedText) {
 	                const parts = selectedText.split(".");
 	                const maybeTable = parts[parts.length - 1];
@@ -1136,7 +1107,7 @@ queryEditor.prototype = {
 	                }
 	            }
 
-	            // --- DEFAULT: afficher la table à droite ---
+	            // Display table on the right
 	            that.selectedTable = tableName;
 	            selectedTableNameEl.textContent = fullTableName;
 
@@ -1211,63 +1182,118 @@ queryEditor.prototype = {
 
 	    let currentMarker = null;
 
-		function detectType(selectedText, editor, cursor) {
-		    const line = editor.getLine(cursor.line);
+		function splitQualifiedNamePreserveQuotes(str) {
+		    const parts = [];
+		    let current = "";
+		    let inQuotes = false;
+
+		    for (let i = 0; i < str.length; i++) {
+		        const c = str[i];
+
+		        if (c === '"') {
+		            inQuotes = !inQuotes;
+		            current += c;
+		            continue;
+		        }
+
+		        if (c === "." && !inQuotes) {
+		            parts.push(current);
+		            current = "";
+		        } else {
+		            current += c;
+		        }
+		    }
+
+		    if (current) parts.push(current);
+		    return parts;
+		}
+
+		function normalizeIdentifier(id) {
+		    if (!id) return id;
+		    return id.replace(/^"(.*)"$/, "$1");
+		}
+
+		
+		function detectType(selectedText, editor) {
+		    const from = editor.getCursor("from");
+		    const to = editor.getCursor("to");
+		    const line = editor.getLine(from.line);
 		    if (!line) return "unknown";
 
 		    function normalizeIdentifier(id) {
-		        if (!id) return id;
-		        return id.replace(/^"(.*)"$/, "$1");
+		        return id ? id.replace(/^"(.*)"$/, "$1") : id;
 		    }
 
-		    // --- 1. Extraire le contexte autour de la sélection ---
-		    const startCh = cursor.ch - selectedText.length;
-		    const endCh = cursor.ch;
+		    let contextStart = from.ch;
+		    let contextEnd = to.ch;
 
-		    let contextStart = startCh;
-		    while (contextStart > 0 && !/\s/.test(line[contextStart - 1])) {
-		        contextStart--;
+		    while (contextStart > 0 && !/\s/.test(line[contextStart - 1])) contextStart--;
+		    while (contextEnd < line.length && !/\s/.test(line[contextEnd])) contextEnd++;
+
+		    const contextText = line.slice(contextStart, contextEnd);
+		    if (!contextText) return "unknown";
+
+		    const parts = [];
+		    let current = "";
+		    let inQuotes = false;
+		    let partStart = 0;
+
+		    for (let i = 0; i < contextText.length; i++) {
+		        const c = contextText[i];
+
+		        if (c === '"') {
+		            inQuotes = !inQuotes;
+		            current += c;
+		            continue;
+		        }
+
+		        if (c === "." && !inQuotes) {
+		            parts.push({
+		                raw: current,
+		                start: partStart,
+		                end: i
+		            });
+		            current = "";
+		            partStart = i + 1;
+		        } else {
+		            current += c;
+		        }
 		    }
 
-		    let contextEnd = endCh;
-		    while (contextEnd < line.length && !/\s/.test(line[contextEnd])) {
-		        contextEnd++;
-		    }
+		    parts.push({
+		        raw: current,
+		        start: partStart,
+		        end: contextText.length
+		    });
 
-		    const contextText = line.slice(contextStart, contextEnd).trim();
-		    const rawElements = contextText.split(".").filter(e => e.length > 0);
+		    const cursorOffset = from.ch - contextStart;
 
-		    if (rawElements.length === 0) return "unknown";
+		    const selectedPartIndex = parts.findIndex(
+		        p => cursorOffset >= p.start && cursorOffset <= p.end
+		    );
 
-		    // --- 2. Normalisation (suppression des quotes pour la logique) ---
-		    const elements = rawElements.map(normalizeIdentifier);
-		    const normalizedSelected = normalizeIdentifier(selectedText);
+		    if (selectedPartIndex === -1) return "unknown";
 
-		    const selectedIndex = elements.findIndex(el => el === normalizedSelected);
-		    if (selectedIndex === -1) return "unknown";
+		    const elements = parts.map(p => normalizeIdentifier(p.raw));
 
-		    // --- 3. Déduction du type ---
 		    if (elements.length === 3) {
-		        // schema.table.column
-		        if (selectedIndex === 0) return "schema";
-		        if (selectedIndex === 1) return "table";
-		        if (selectedIndex === 2) return "column";
+		        if (selectedPartIndex === 0) return "schema";
+		        if (selectedPartIndex === 1) return "table";
+		        if (selectedPartIndex === 2) return "column";
+		        return "unknown";
 		    }
 
 		    if (elements.length === 2) {
 		        const left = elements[0];
-		        const right = elements[1];
 
-		        if (selectedIndex === 0) {
+		        if (selectedPartIndex === 0) {
 		            if (Object.values(that.tables).some(t => t.schema === left)) return "schema";
 		            if (that.tables[left]) return "table";
-		            return "unknown";
 		        }
 
-		        if (selectedIndex === 1) {
+		        if (selectedPartIndex === 1) {
 		            if (Object.values(that.tables).some(t => t.schema === left)) return "table";
 		            if (that.tables[left]) return "column";
-		            return "unknown";
 		        }
 		    }
 
@@ -1282,12 +1308,13 @@ queryEditor.prototype = {
 		                return "column";
 		            }
 		        }
-
-		        return "unknown";
 		    }
 
 		    return "unknown";
 		}
+
+
+
 
 
 	    this.editor.on("cursorActivity", () => {

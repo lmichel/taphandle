@@ -135,7 +135,7 @@ public class RegistryEsteban extends RootClass {
 			}
 		} else {
 			// Isolation d'un lien pour le tester
-			String url = "https://ws.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/argus";
+			//String url = "https://ws.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/argus";
 			// String url = "https://pollux.oreme.org/vo/datalink/speconvol?";
 			// + String url = "http://ia2-tap.oats.inaf.it:8080/wgetap/";
 			// + String url = "https://psa.esa.int/psa-tap/tap/";
@@ -147,6 +147,7 @@ public class RegistryEsteban extends RootClass {
 			// String url = "http://jvo.nao.ac.jp/skynode/do/tap/spcam/";
 			// String url = "https://koa.ipac.caltech.edu/TAP/";
 			// String url = "http://dc.g-vo.org/tap/";
+			String url = "https://mast.stsci.edu/vo-tap/api/v0.1/goods/";
 			url = url.replaceAll("[^a-zA-Z\\d_-]*$", "");
 			RegistryMark test_rm = new RegistryMark("key_test", "ivoid_test", url, "description_test", "title_test", "name_test", "contact_test", true, true);
 			TapNode test_tn = new TapNode(test_rm, "/tmp/meta");

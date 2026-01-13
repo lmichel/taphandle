@@ -486,12 +486,12 @@ DataTreeView.prototype = {
 //			var np = window.location.href.split('?')[0].replace(/\/$/, "");
 //			return (this.info != null)?np + "?url=" + escape(this.info.url): np;
 		},
-		
+		// This function opens the query editor popup
 		openQueryEditor: function(nodekey) {
 			// window.testEditor.modelJobs = tapView.getJobs
 			data = this.data[nodekey];
 			data.schemas = this.activeSchemas;
-			
+
 			if (!window.testEditor) {
 			       window.testEditor = new queryEditor(nodekey);
 			       window.testEditor.show();
