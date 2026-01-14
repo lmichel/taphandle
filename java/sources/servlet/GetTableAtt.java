@@ -52,7 +52,7 @@ public class GetTableAtt extends RootServlet implements Servlet {
 				reportJsonError(request, response, "Node " + nodeKey + " does not exist");
 				return;
 			}
-			DataTreePath dataTreePath = new DataTreePath(schema, table, "");
+			DataTreePath dataTreePath = new DataTreePath(nodeKey, schema, table, "");
 			tn.buildJsonTableAttributes(dataTreePath);
 			dumpJsonFile("/" + RootClass.WEB_NODEBASE_DIR + "/" + nodeKey + "/" + dataTreePath.getEncodedFileName() + "_att.json", response);
 		} catch (Exception e) {

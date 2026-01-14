@@ -43,12 +43,14 @@ public class JoinKeysJob extends RootClass {
 	 * @param baseDirectory : Output directory
 	 * @throws Exception
 	 */
-	private static void tryJoinKeys(String url, String query, String baseDirectory) throws Exception{
+	private static void tryJoinKeys(String nodeKey, String url, String query, String baseDirectory) throws Exception{
 		NodeCookie nc=new NodeCookie();
 		String baseFN = baseDirectory + File.separator + prefix;		
 		
 		logger.debug(TapAccess.runSyncJob(url, query, baseFN + VOTABLE_JOB_RESULT , nc, "JoinKeys>tables"));
-		XmlToJson.translateJoinKeysTable(baseFN  + VOTABLE_JOB_RESULT, baseDirectory);
+		XmlToJson.translateJoinKeysTable(nodeKey,
+				baseFN  + VOTABLE_JOB_RESULT,
+				baseDirectory);
 
 	}
 
@@ -58,18 +60,18 @@ public class JoinKeysJob extends RootClass {
 	 * @param baseDirectory : Output directory
 	 * @throws Exception
 	 */
-	public static void getJoinKeys(String url, String baseDirectory) throws Exception{
+	public static void getJoinKeys(String nodeKey, String url, String baseDirectory) throws Exception{
 		try {
-			logger.info("Get join keys for node " + url );
-			tryJoinKeys(url, schema_query, baseDirectory);
+			logger.info("Get join keys for node " + nodeKey );
+			tryJoinKeys(nodeKey, url, schema_query, baseDirectory);
 		} catch (Exception e) {
 			try {
 				logger.warn("Error when getting Join keys (" + schema_query + "), try a query without schema" );
-				tryJoinKeys(url, noschema_query, baseDirectory);
+				tryJoinKeys(nodeKey, url, noschema_query, baseDirectory);
 			} catch (Exception e2) {
 				e2.printStackTrace();
 				logger.warn("Error when getting Join keys(" + noschema_query + "), try a query without schema but table prefixed" );
-				tryJoinKeys(url, xcatdb_schema_query, baseDirectory);
+				tryJoinKeys(nodeKey, url, xcatdb_schema_query, baseDirectory);
 			}
 		}
 	}
