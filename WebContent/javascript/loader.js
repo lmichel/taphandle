@@ -80,7 +80,7 @@ resourceLoader = function() {
 			async: false, 
 			dataType: "text",
 			error: function(data) {
-				baseUrl = "http://localhost:8080/jsresources/saadajsbasics";
+				baseUrl = "http://localhost:8888/jsresources/";
 				console.log("Try " + baseUrl + " as jsresource base URL");
 				$.ajax({
 					url: baseUrl + 'saadajsbasics/loader.js',
