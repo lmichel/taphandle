@@ -25,7 +25,7 @@ class NativeModal {
             position: fixed;
             inset: 0;
             background: rgba(0,0,0,0.45);
-            z-index: ${options.zIndex ? options.zIndex - 1 : 20000};
+            z-index: ${options.zIndex ? options.zIndex - 1 : 2000};
         `;
 
         modal = document.createElement("div");
@@ -42,7 +42,7 @@ class NativeModal {
             padding: 0;
             display: flex;
             flex-direction: column;
-            z-index: ${options.zIndex || 20001};
+            z-index: ${options.zIndex || 2001};
             box-shadow: 0 4px 30px rgba(0,0,0,0.25);
             box-sizing: border-box;
             overflow: hidden;
@@ -133,9 +133,6 @@ function queryEditor(nodekey) {
     this.editorFieldList = null;
     this.editor = null;
 	
-	var chaine = "public.tableTest";
-	console.log(chaine.quotedTableName().qualifiedName);
-	
 
     for (let i = 0; i < this.data.schemas.length; i++) {
         const schemaName = this.data.schemas[i].name;
@@ -145,6 +142,7 @@ function queryEditor(nodekey) {
                 schema: schemaName,
                 dataTreePath: this.data.schemas[i].tables[j].dataTreePath
             };
+			// console.log(this.data.schemas[i].tables[j].dataTreePath);
         }
     }
 }
@@ -1012,6 +1010,8 @@ queryEditor.prototype = {
 
 				    that.editorDataTreePath = that.tables[tableName].dataTreePath;
 				    that.editorDataTreePath["nodekey"] = that.nodekey;
+					console.log("====================");
+					console.log(that.editorDataTreePath);
 
 				    that.editorFieldList = new BasicFieldList_mVc(
 				        "fill", "fill",
