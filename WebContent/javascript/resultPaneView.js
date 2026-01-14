@@ -267,7 +267,6 @@ jQuery.extend({
 			var table = '';
 			var histo = '<img src="images/question.png">';
 
-			console.log(jsdata);
 			var title = "Columns of table <i>"
 				+ jsdata.dataTreePath.schema
 				+ "."
@@ -300,13 +299,11 @@ jQuery.extend({
 				};
 		
 			let attributs = {};
-			console.log(jsdata.attributes.aaData);
 			for (var k=0; k<jsdata.attributes.aaData.length; k++) {
 				for (var i=0; i<10; i++){
 					attributs[jsdata.attributes.aaData[k][0]] = i;
 				}
 			}
-			console.log(attributs);
 
 			var positions = [
      			{ "name": 'filter',

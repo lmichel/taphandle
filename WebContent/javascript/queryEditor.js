@@ -365,7 +365,6 @@ queryEditor.prototype = {
 	    const submitbtn = document.getElementById("submitqueryfromeditor");
 	    if (submitbtn) {
 			submitbtn.onclick = () => {
-				console.log(this.editor.getValue());
 				this.submitQueryFromEditor();
 			}
 	    }
