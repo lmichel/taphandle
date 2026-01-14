@@ -23,6 +23,10 @@ import org.json.simple.JSONObject;
  */
 public class DataTreePath {
 	/**
+	 * Node identifier
+	 */
+	private String nodeKey;
+	/**
 	 * Initial value of the data tree path 
 	 */
 	private String tableOrg;
@@ -74,7 +78,8 @@ public class DataTreePath {
 	 * @param nameOrg
 	 * @param description
 	 */
-	public DataTreePath(String nameOrg){
+	public DataTreePath(String nodeKey, String nameOrg){
+		this.nodeKey = nodeKey;
 		this.tableOrg = nameOrg;
 		/*
 		 * Simplest case: just a table name
@@ -143,8 +148,8 @@ public class DataTreePath {
 		}
 	}	
 	
-	public DataTreePath(String nameOrg, String description){
-		this(nameOrg);
+	public DataTreePath(String nodeKey, String nameOrg, String description){
+		this(nodeKey, nameOrg);
 		this.description = (description == null)?"": description;
 
 	}
@@ -155,8 +160,8 @@ public class DataTreePath {
 	 * @param description
 	 * @throws Exception 
 	 */
-	public DataTreePath(String schema, String nameOrg, String description) throws Exception{
-		this(nameOrg, description);
+	public DataTreePath(String nodeKey, String schema, String nameOrg, String description) throws Exception{
+		this(nodeKey, nameOrg, description);
 		/*
 		 * If nameOrg does not start with schema, we can consider that nameorg is a table name
 		 */
@@ -245,17 +250,24 @@ public class DataTreePath {
 	}
 	
 	/**
+	 * Must be similar to the JS structure (DataTreeView.data)
 	 * @return a JSON object of the instance
 	 */
 	@SuppressWarnings("unchecked")
 	public JSONObject getJSONObject(){
 		JSONObject retour = new JSONObject();
+		retour.put("nodekey", this.nodeKey);
 		retour.put("tableorg", this.tableOrg);
 		retour.put("table", this.getTable());
 		retour.put("schema", this.schema);
 		retour.put("quoted", this.mustBeQuoted());
+		retour.put("key", this.getKey());
 		
 		return retour;
+	}
+
+	private String getKey() {
+		return this.nodeKey + "." + this.schema + "." + this.tableOrg;
 	}
 
 	/* (non-Javadoc)
