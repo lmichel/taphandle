@@ -53,25 +53,30 @@ public class RegistryExplorer extends RootClass {
 	 * init hard coded database
 	 */
 	static {
+		/**********
 		try {
+			/**
 			offRegistryMarks.put("cdssimbad"       , new RegistryMark("simbad", "ivo://cds.simbad/tap"
-					, "http://simbad.u-strasbg.fr/simbad/sim-tap"
+					, "http://simbad.cds.unistra.fr/simbad/sim-tap"
 					, "CDS Simbad TAP query engine", "Simbad", 	"SIMBAD TAP", "cds-question@unistra.fr", true, true));
 			offRegistryMarks.put("cdsvizier"       , new RegistryMark("vizier", "ivo://cds.vizier/tap"
-					, "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/"
+					, "http://tapvizier.cds.unistra.fr/TAPVizieR/tap/"
 					, "CDS Vizier TAP query engine", "VizieR", "VizieR ObsTAP", "cds-question@unistra.fr", true, true));
 			/*
 			 * For the datalink demo
-			 */
+			 *
 			offRegistryMarks.put("betacadc"       , new RegistryMark("betacadc", ""
 					, "http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap"
 					, "Datalink Service Demonstrator", "DSD", "DSD", "DSD@false.fr", true, true));
 //			offRegistryMarks.put("3xmmdr8"       , new RegistryMark("3xmm", ""
 //					, "http://xcatdb.unistra.fr/3xmmdr8/tap"
 //					, "3rd XMM catalogue (DR8)", true, true));
+/// 
+ *
 		} catch (MalformedURLException e) {
 			logger.equals(e);
 		}
+		*******/
 	}
 
 	/**
@@ -147,7 +152,6 @@ public class RegistryExplorer extends RootClass {
 			String name = (String)sa.get(4);
 			String contact = (String)sa.get(5);
 			String key = name.replaceAll(" ", "_");
-			System.out.println(ivoid + " "+ url+ " " + key + " " + description);
 			RegistryMark rm;
 			if( registryMarks.get(key) == null ) {
 				if( (rm = offRegistryMarks.get(key)) != null ) {
@@ -158,7 +162,7 @@ public class RegistryExplorer extends RootClass {
 						RegistryMark rm2 = new RegistryMark(key, ivoid, url, description, title, name, contact, mustInit, true);
 						registryMarks.put(key, rm2);
 					} catch (Exception e) {
-						System.out.println(e);
+						e.printStackTrace();
 					}
 				}
 			}
