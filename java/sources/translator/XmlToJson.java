@@ -290,9 +290,9 @@ public class XmlToJson  extends RootClass {
 	 * @throws Exception  If something goes wrong
 	 */
 	@SuppressWarnings("unchecked")
-	public static void translateResultTable(String inputFile, String outputFile  ) throws Exception {
+	public static void translateResultTable( String inputFile, String outputFile  ) throws Exception {
 		StarTableFactory stf = new StarTableFactory();
-		logger.info("Translate " +inputFile);
+		logger.info("Translate " + inputFile);
 		try {
 			StarTable table = stf.makeStarTable(inputFile); 
 			JSONObject retour = new JSONObject();
@@ -408,12 +408,12 @@ public class XmlToJson  extends RootClass {
 	 * @throws Exception  If something goes wrong
 	 */
 	@SuppressWarnings("unchecked")
-	public static void translateJoinKeysTable(String inputFile, String outputDir  ) throws Exception {
+	public static void translateJoinKeysTable(String nodeKey, String inputFile, String outputDir  ) throws Exception {
 		//Map<String, Collection<JSONObject>> map = new LinkedHashMap<String, Collection<JSONObject>>();
 		
 		JoinKeyMap map = new JoinKeyMap();
 		StarTableFactory stf = new StarTableFactory();
-		logger.info("Translate " +inputFile);
+		logger.info("Translate " +inputFile + " for " + nodeKey);
 		try {
 			StarTable table = stf.makeStarTable(inputFile); 
 			int nSrc = (int) table.getRowCount();
@@ -457,7 +457,7 @@ public class XmlToJson  extends RootClass {
 				for( JSONObject target:targets) {
 					jsa.add(target);
 				}
-				DataTreePath dataTreePath = new DataTreePath(source_table);
+				DataTreePath dataTreePath = new DataTreePath(nodeKey, source_table);
 				String file = 	outputDir + File.separator + dataTreePath.getEncodedFileName() + "_joinkeys"	;
 				//	logger.info("Write joinkey file " + file);
 				FileWriter fw = new FileWriter(file+ ".json");

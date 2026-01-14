@@ -274,7 +274,7 @@ FROM "public".swirecapability " + capabilityNS.getNsName());
 	public void setJoinKeys() throws Exception {
 		try {
 			logger.info("Attempt to get join keys from  " + TapNode.this.regMark.getNodeKey() );
-			JoinKeysJob.getJoinKeys(this.regMark.getAbsoluteURL(null), this.baseDirectory);
+                                                                                                                                                                     			JoinKeysJob.getJoinKeys(this.regMark.getNodeKey(), this.regMark.getAbsoluteURL(null), this.baseDirectory);
 			this.supportTapSchemaJoin = true;
 			logger.info("Sucessed");
 		} catch (Exception e) {
@@ -291,7 +291,9 @@ FROM "public".swirecapability " + capabilityNS.getNsName());
 							try {
 								Thread.sleep(JOINKEY_PERIOD);
 								logger.info("Attempt # " + attempts + " to get join keys from  " + TapNode.this.regMark.getNodeKey());
-								JoinKeysJob.getJoinKeys(TapNode.this.regMark.getAbsoluteURL(null), TapNode.this.baseDirectory);
+								JoinKeysJob.getJoinKeys(TapNode.this.regMark.getNodeKey(),
+										TapNode.this.regMark.getAbsoluteURL(null),
+										TapNode.this.baseDirectory);
 								TapNode.this.supportTapSchemaJoin = true;
 								logger.info("Sucessed");
 								return;
@@ -653,7 +655,7 @@ FROM "public".swirecapability " + capabilityNS.getNsName());
 			JSONArray tables = (JSONArray) schema.get("tables");
 			for( int t=0 ; t<tables.size() ; t++){
 				JSONObject table = (JSONObject) tables.get(t);
-				DataTreePath dtp = new DataTreePath((String)(schema.get("name")), (String)(table.get("name")),(String)(table.get("description")));
+				DataTreePath dtp = new DataTreePath(this.regMark.getNodeKey(), (String)(schema.get("name")), (String)(table.get("name")),(String)(table.get("description")));
 				table.put("dataTreePath", dtp.getJSONObject());
 			}
 		}
