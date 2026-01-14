@@ -491,9 +491,7 @@ DataTreeView.prototype = {
 		openQueryEditor: function(nodekey) {
 			// window.testEditor.modelJobs = tapView.getJobs
 			data = this.data[nodekey];
-			console.log(data);
 			data.schemas = this.activeSchemas[nodekey];
-			console.log(data);
 
 			if (!window.testEditor) {
 			       window.testEditor = new queryEditor(nodekey);
