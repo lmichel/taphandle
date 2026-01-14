@@ -13,6 +13,7 @@ function DataTreeView() {
 	this.capabilities = null;
 	this.info = null;
 	this.data = {};
+	this.activeSchemas = {};
 }
 DataTreeView.prototype = {
 		initNodeBase : function(){
@@ -161,7 +162,7 @@ DataTreeView.prototype = {
 			var tap_schema_index;
 			var ivoa_index;
 			const folders = [];
-			this.activeSchemas = [];
+			this.activeSchemas[jsdata.nodekey] = [];
 			// We start at the end of the list of schemas, we iterate through them and trunc them until we get to i < MAX_SCHEMA,
 			//  then the rest of the schemas are added to the stack. tap_schema and ivoa schemas won't get truncated thanks to a filter below
 			for( var i=jsdata.schemas.length-1 ; i>=0 ; i-- ) {
@@ -183,7 +184,7 @@ DataTreeView.prototype = {
 				if( i > MAX_SCHEMA && jsdata.schemas[i].name.toLowerCase() != "ivoa"   && jsdata.schemas[i].name.toLowerCase() != "tap_schema") {
 					trunc[trunc.length] = schemaName;
 				} else if (jsdata.schemas[i].name.toLowerCase() != "ivoa"   && jsdata.schemas[i].name.toLowerCase() != "tap_schema") {
-					this.activeSchemas.push(jsdata.schemas[i]);
+					this.activeSchemas[jsdata.nodekey].push(jsdata.schemas[i]);
 					icon =  "images/Bluecube2.png";
 					if( description == "") {
 						description = "No Description Available";
@@ -207,7 +208,7 @@ DataTreeView.prototype = {
 				var description = jsdata.schemas[i].description;
 				var schemaName = jsdata.schemas[i].name;
 				if(schemaName.match(/TAP_SCHEMA/i) || schemaName.match(/ivoa/i)) {
-					this.activeSchemas.push(jsdata.schemas[i]);
+					this.activeSchemas[jsdata.nodekey].push(jsdata.schemas[i]);
 					if(schemaName.match(/TAP_SCHEMA/i) ) {
 						icon = "images/Redcube2.png";
 						
@@ -490,7 +491,9 @@ DataTreeView.prototype = {
 		openQueryEditor: function(nodekey) {
 			// window.testEditor.modelJobs = tapView.getJobs
 			data = this.data[nodekey];
-			data.schemas = this.activeSchemas;
+			console.log(data);
+			data.schemas = this.activeSchemas[nodekey];
+			console.log(data);
 
 			if (!window.testEditor) {
 			       window.testEditor = new queryEditor(nodekey);
