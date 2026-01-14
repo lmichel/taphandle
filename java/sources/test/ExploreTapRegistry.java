@@ -62,7 +62,7 @@ public class ExploreTapRegistry  extends RootClass {
 			String description = (String)sa.get(2);
 			TapNode tn=null;
 			String result = url + "," + ivoid + "," + key + ",";
-			RegistryMark rm = new RegistryMark(key, ivoid, url, description, false, true);
+			RegistryMark rm = new RegistryMark(key, ivoid, url, description, "title", "name", "contact", false, true);
 			try {
 				tn = new TapNode(rm, "/tmp/meta", false);
 				tn.check();
