@@ -42,7 +42,9 @@ public class RegistryMark extends RootClass {
 	 * @param supportJoin
 	 * @throws MalformedURLException
 	 */
-	public RegistryMark(String nodeKey, String ivoid, String url, String description, String title, String name, String contact,
+	public RegistryMark(String nodeKey, String ivoid, String url,
+			String description, String title,
+			String name, String contact,
 			boolean mustBeInitAtStart, boolean supportJoin) throws MalformedURLException {
 		super();
 		this.nodeKey = nodeKey;
