@@ -134,7 +134,6 @@ function queryEditor(nodekey) {
     this.editor = null;
 	
 	var chaine = "public.tableTest";
-	console.log(chaine.quotedTableName().qualifiedName);
 	
 
     for (let i = 0; i < this.data.schemas.length; i++) {
