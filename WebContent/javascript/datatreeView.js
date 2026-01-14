@@ -498,7 +498,9 @@ DataTreeView.prototype = {
 			       window.testEditor.show();
 			       return;
 			}
-		    if (window.testEditor.nodekey === nodekey) {
+			// We reuse the existing editor if the nodekey is the same between the existing one and the one we want to create
+			// and if the loaded schemas in the existing one are the same than the one we want to create
+		    if ((window.testEditor.nodekey === nodekey) && (data.schemas == window.testEditor.data.schemas)) {
 				console.log(window.testEditor.editor.getValue());
 		       NativeModal.show("queryEditorModal");
 		       return;
