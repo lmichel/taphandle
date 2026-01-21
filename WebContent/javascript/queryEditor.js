@@ -223,7 +223,7 @@ queryEditor.prototype = {
 		    <div class="editor-panel">
 		        <div class="btn-group">
 		            <div class="dropdown">
-		                <button id="ope-btn" class="dropbtn">SQL Operators</button>
+		                <button id="ope-btn" class="dropbtn">Operators</button>
 		                <div id="ope-dropdown" class="dropdown-content">
 		                    <a href="#" data-ope="= ">=</a>
 		                    <a href="#" data-ope="!= ">!=</a>
@@ -240,7 +240,7 @@ queryEditor.prototype = {
 		            </div>
 
 		            <div class="dropdown">
-		                <button id="func-btn" class="dropbtn">SQL Functions</button>
+		                <button id="func-btn" class="dropbtn">Functions</button>
 		                <div id="func-dropdown" class="dropdown-content">
 		                    <a href="#" data-func="COUNT">COUNT</a>
 		                    <a href="#" data-func="SUM">SUM</a>
@@ -252,7 +252,7 @@ queryEditor.prototype = {
 		            </div>
 
 		            <div class="dropdown">
-		                <button id="keyword-btn" class="dropbtn">SQL Keywords</button>
+		                <button id="keyword-btn" class="dropbtn">Statements</button>
 		                <div id="keyword-dropdown" class="dropdown-content">
 		                    <a href="#" data-keyword="SELECT *">SELECT</a>
 		                    <a href="#" data-keyword="SELECT  TOP 100 *">SELECT TOP</a>
@@ -336,7 +336,7 @@ queryEditor.prototype = {
 
         `;
 
-		NativeModal.show("queryEditorModal", str, { title: this.nodekey });
+		NativeModal.show("queryEditorModal", str, { title: "ADQL query editor for node : " + this.nodekey });
 		
 		this.jobs = new Array();
 
