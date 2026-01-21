@@ -158,7 +158,7 @@ queryEditor.prototype = {
 	        return this.editor.getCursor().line;
 	    }
 
-	    const forceMultilineKeywords = ["WHERE", "GROUP BY", "ORDER BY", "SELECT DISTINCT"];
+	    const forceMultilineKeywords = ["WHERE", "GROUP BY", "ORDER BY"];
 
 	    const inlineKeywords = ["AND", "OR"];
 
@@ -223,7 +223,7 @@ queryEditor.prototype = {
 		    <div class="editor-panel">
 		        <div class="btn-group">
 		            <div class="dropdown">
-		                <button id="ope-btn" class="dropbtn">SQL Operators</button>
+		                <button id="ope-btn" class="dropbtn">Operators</button>
 		                <div id="ope-dropdown" class="dropdown-content">
 		                    <a href="#" data-ope="= ">=</a>
 		                    <a href="#" data-ope="!= ">!=</a>
@@ -240,7 +240,7 @@ queryEditor.prototype = {
 		            </div>
 
 		            <div class="dropdown">
-		                <button id="func-btn" class="dropbtn">SQL Functions</button>
+		                <button id="func-btn" class="dropbtn">Functions</button>
 		                <div id="func-dropdown" class="dropdown-content">
 		                    <a href="#" data-func="COUNT">COUNT</a>
 		                    <a href="#" data-func="SUM">SUM</a>
@@ -252,11 +252,11 @@ queryEditor.prototype = {
 		            </div>
 
 		            <div class="dropdown">
-		                <button id="keyword-btn" class="dropbtn">SQL Keywords</button>
+		                <button id="keyword-btn" class="dropbtn">Statements</button>
 		                <div id="keyword-dropdown" class="dropdown-content">
 		                    <a href="#" data-keyword="SELECT *">SELECT</a>
-		                    <a href="#" data-keyword="SELECT  TOP 100  *">SELECT TOP</a>
-		                    <a href="#" data-keyword="SELECT DISTINCT">SELECT DISTINCT</a>
+		                    <a href="#" data-keyword="SELECT  TOP 100 *">SELECT TOP</a>
+		                    <a href="#" data-keyword="SELECT DISTINCT *">SELECT DISTINCT</a>
 		                    <a href="#" data-keyword="FROM __selectTable__">FROM</a>
 		                    <a href="#" data-keyword="JOIN __joinTable__ ON __joinTable__.__joinColumn__ = __joiningTable__.__joiningColumn__">JOIN</a>
 		                    <a href="#" data-keyword="WHERE ">WHERE</a>
@@ -336,7 +336,7 @@ queryEditor.prototype = {
 
         `;
 
-		NativeModal.show("queryEditorModal", str, { title: this.nodekey });
+		NativeModal.show("queryEditorModal", str, { title: "ADQL query editor for node : " + this.nodekey });
 		
 		this.jobs = new Array();
 
@@ -604,6 +604,7 @@ queryEditor.prototype = {
 
 	    const cursor = this.editor.getCursor();
 	    const currentLine = this.editor.getLine(cursor.line) || "";
+	    const editorContent = this.editor.getValue().trim();
 
 	    // GROUP BY / ORDER BY
 	    const isGroupOrOrderBy =
@@ -623,12 +624,84 @@ queryEditor.prototype = {
 	    let fullReplacement = parts.join(".");
 	    fullReplacement = this.formatQualifiedName(fullReplacement);
 
-	    // GROUP BY / ORDER BY Column
+	    // GROUP BY / ORDER BY Column → colonne seule
 	    if (columnName && isGroupOrOrderBy) {
 	        fullReplacement = columnName;
 	    }
 
-	    // Replace the complete name
+	    /* ======================================================
+	       Column insertion if the query is empty
+	       ====================================================== */
+	    if (
+	        !editorContent &&
+	        columnName &&
+	        !editorSelection &&
+	        !this.rightValueIsTable
+	    ) {
+	        const qualifiedTable = this.formatQualifiedName(
+	            schemaForTable
+	                ? `${schemaForTable}.${tableName}`
+	                : tableName
+	        );
+
+			const query = [
+			    `SELECT TOP 100 ${fullReplacement}`,
+			    `FROM ${qualifiedTable}`
+			].join("\n");
+
+	        this.editor.setValue(query);
+	        this.editor.setCursor({
+	            line: 0,
+	            ch: query.indexOf(fullReplacement) + fullReplacement.length
+	        });
+	        this.editor.focus();
+
+	        selectedTextBox.value = "";
+	        this.selectedRightValue = "";
+	        this.rightValueIsTable = false;
+	        return;
+	    }
+		
+		// ======================================================
+		// Column insertion if there is only a SELECT in the query
+		// ======================================================
+		const fullContent = this.editor.getValue();
+
+		const isPureMinimalSelect =
+		    /^\s*SELECT\s+(?:DISTINCT\s+|TOP\s+\d+\s+)?\*\s*$/i
+		        .test(fullContent);
+
+		if (
+		    isPureMinimalSelect &&
+		    editorSelection === "*" &&
+		    columnName
+		) {
+		    const selectLine = fullContent.replace(/\*/g, fullReplacement);
+
+		    const tableFullName = this.formatQualifiedName(
+		        schemaForTable
+		            ? `${schemaForTable}.${tableName}`
+		            : tableName
+		    );
+
+		    const newQuery =
+		        selectLine.trim() +
+		        "\nFROM " + tableFullName;
+
+		    this.editor.setValue(newQuery);
+		    this.editor.setCursor({ line: 1, ch: 0 });
+		    this.editor.focus();
+
+		    selectedTextBox.value = "";
+		    this.selectedRightValue = "";
+		    this.rightValueIsTable = false;
+		    return;
+		}
+
+
+	    /* ======================================================
+	       Replace the complete qualified name
+	       ====================================================== */
 	    if (editorSelection && !this.rightValueIsTable) {
 	        const from = this.editor.getCursor("from");
 	        const to   = this.editor.getCursor("to");
@@ -658,7 +731,9 @@ queryEditor.prototype = {
 	        return;
 	    }
 
-	    // Basic insertion
+	    /* ======================================================
+	       Basic insertion
+	       ====================================================== */
 	    if (!selectedText) {
 	        this.editor.replaceRange(fullReplacement + " ", cursor);
 	        this.editor.setCursor({
@@ -676,7 +751,9 @@ queryEditor.prototype = {
 	        selectedText === "__selectTable__" ||
 	        selectedText === "__joinTable__";
 
-	    // PLACEHOLDERs : __selectTable__ / __joinTable__
+	    /* ======================================================
+	       PLACEHOLDERs
+	       ====================================================== */
 	    if (isPlaceholderTable) {
 	        this.editor.replaceSelection(fullReplacement);
 
@@ -695,7 +772,9 @@ queryEditor.prototype = {
 	        return;
 	    }
 
-	   // Global replace
+	    /* ======================================================
+	       Global replace
+	       ====================================================== */
 	    const content = this.editor.getValue();
 	    let newContent = content;
 
@@ -753,6 +832,7 @@ queryEditor.prototype = {
 	    this.selectedRightValue = "";
 	    this.rightValueIsTable = false;
 	},
+
 
 
 
@@ -968,7 +1048,7 @@ queryEditor.prototype = {
 	    tableDropdown.innerHTML = "";
 
 	    function hideAllDropdowns(){ document.querySelectorAll(".dropdown-content").forEach(d => d.style.display = "none"); }
-	    function toggleDropdown(dropdown){ const isOpen = dropdown.style.display === "block"; hideAllDropdowns(); dropdown.style.display=isOpen?"none":"block"; }
+	    function toggleDropdown(dropdown){ const isOpen = dropdown.style.display === "block"; hideAllDropdowns(); dropdown.style.display = isOpen ? "none" : "block"; }
 	    document.addEventListener("click", e => { if (!e.target.closest(".dropdown")) hideAllDropdowns(); });
 	    tableBtn.addEventListener("click", e => { e.preventDefault(); toggleDropdown(tableDropdown); });
 
@@ -978,134 +1058,11 @@ queryEditor.prototype = {
 	        const schemaForTable = that.tables[tableName]?.schema || "";
 	        const fullTableNameRaw = schemaForTable ? `${schemaForTable}.${tableName}` : tableName;
 	        const fullTableName = that.formatQualifiedName(fullTableNameRaw);
-
 	        link.textContent = fullTableNameRaw;
 
 	        link.addEventListener("click", e => {
 	            e.preventDefault();
 
-	            const selectedText = document.getElementById("selected-text").value.trim();
-
-				// Placeholder FROM / JOIN
-				if (selectedText === "__selectTable__" || selectedText === "__joinTable__") {
-				    that.selectedTable = tableName;
-				    that.rightValueIsTable = true;
-
-					// Formatting the name of the table with quotes if necessary
-				    const formattedFullTableName = that.formatQualifiedName(fullTableNameRaw);
-				    that.selectedRightValue = formattedFullTableName;
-
-					// Replace the placeholder with the formatted name
-				    const sel = that.editor.getSelection().trim();
-				    if (sel && sel.length > 0) {
-				        that.editor.replaceSelection(formattedFullTableName);
-				    } else {
-				        that.editor.replaceRange(formattedFullTableName, that.editor.getCursor());
-				    }
-
-				    that.memoryTableFullName = formattedFullTableName;
-				    selectedTableNameEl.textContent = formattedFullTableName;
-
-				    that.editorDataTreePath = that.tables[tableName].dataTreePath;
-				    that.editorDataTreePath["nodekey"] = that.nodekey;
-					console.log("====================");
-					console.log(that.editorDataTreePath);
-
-				    that.editorFieldList = new BasicFieldList_mVc(
-				        "fill", "fill",
-				        {
-				            stackHandler: data => {
-				                if (!data) return;
-				                that.selectedRightValue = data;
-				                that.rightValueIsTable = false;
-				                that.replaceSelectedText();
-				            },
-				            raHandler: data => {
-				                if (!data) return;
-				                const schemaForTable = that.selectedTable ? that.tables[that.selectedTable]?.schema || "" : "";
-				                const columnName = data;
-				                const fullName = [schemaForTable, tableName, columnName].filter(Boolean).join(".");
-				                document.getElementById("ra-text").value = fullName;
-				            },
-				            decHandler: data => {
-				                if (!data) return;
-				                const schemaForTable = that.selectedTable ? that.tables[that.selectedTable]?.schema || "" : "";
-				                const columnName = data;
-				                const fullName = [schemaForTable, tableName, columnName].filter(Boolean).join(".");
-				                document.getElementById("dec-text").value = fullName;
-				            }
-				        }
-				    );
-				    that.editorFieldList.draw();
-				    that.editorFieldList.setDataTreePath(that.editorDataTreePath);
-
-				    hideAllDropdowns();
-				    addInsertButton();
-				    return;
-				}
-
-
-	            // Manually chosed table
-	            if (selectedText) {
-	                const parts = selectedText.split(".");
-	                const maybeTable = parts[parts.length - 1];
-	                if (that.tables[maybeTable]) {
-	                    const selFrom = that.editor.getCursor("from");
-	                    const selTo = that.editor.getCursor("to");
-	                    const line = selFrom.line;
-	                    const lineContent = that.editor.getLine(line);
-
-	                    let replaceFrom = { line: line, ch: selFrom.ch };
-	                    let replaceTo   = { line: line, ch: selTo.ch };
-
-	                    if (!selectedText.includes(".") && selFrom.ch > 0 && lineContent[selFrom.ch - 1] === ".") {
-	                        let p = selFrom.ch - 2;
-	                        while (p >= 0 && /\w/.test(lineContent[p])) p--;
-	                        replaceFrom.ch = p + 1;
-	                    }
-
-	                    that.editor.replaceRange(fullTableName, replaceFrom, replaceTo);
-	                    that.selectedTable = tableName;
-	                    selectedTableNameEl.textContent = fullTableName;
-
-	                    that.editorDataTreePath = that.tables[tableName].dataTreePath;
-	                    that.editorDataTreePath["nodekey"] = that.nodekey;
-
-	                    that.editorFieldList = new BasicFieldList_mVc(
-	                        "fill", "fill",
-	                        {
-	                            stackHandler: data => {
-	                                if (!data) return;
-	                                that.selectedRightValue = data;
-	                                that.rightValueIsTable = false;
-	                                that.replaceSelectedText();
-	                            },
-	                            raHandler: data => {
-	                                if (!data) return;
-	                                const schemaForTable = that.selectedTable ? that.tables[that.selectedTable]?.schema || "" : "";
-	                                const columnName = data;
-	                                const fullName = [schemaForTable, tableName, columnName].filter(Boolean).join(".");
-	                                document.getElementById("ra-text").value = fullName;
-	                            },
-	                            decHandler: data => {
-	                                if (!data) return;
-	                                const schemaForTable = that.selectedTable ? that.tables[that.selectedTable]?.schema || "" : "";
-	                                const columnName = data;
-	                                const fullName = [schemaForTable, tableName, columnName].filter(Boolean).join(".");
-	                                document.getElementById("dec-text").value = fullName;
-	                            }
-	                        }
-	                    );
-	                    that.editorFieldList.draw();
-	                    that.editorFieldList.setDataTreePath(that.editorDataTreePath);
-
-	                    hideAllDropdowns();
-	                    addInsertButton();
-	                    return;
-	                }
-	            }
-
-	            // Display table on the right
 	            that.selectedTable = tableName;
 	            selectedTableNameEl.textContent = fullTableName;
 
@@ -1123,22 +1080,24 @@ queryEditor.prototype = {
 	                    },
 	                    raHandler: data => {
 	                        if (!data) return;
-	                        const schemaForTable = that.selectedTable ? that.tables[that.selectedTable]?.schema || "" : "";
-	                        const columnName = data;
-	                        const fullName = [schemaForTable, tableName, columnName].filter(Boolean).join(".");
+	                        const fullName = [schemaForTable, tableName, data].filter(Boolean).join(".");
 	                        document.getElementById("ra-text").value = fullName;
 	                    },
 	                    decHandler: data => {
 	                        if (!data) return;
-	                        const schemaForTable = that.selectedTable ? that.tables[that.selectedTable]?.schema || "" : "";
-	                        const columnName = data;
-	                        const fullName = [schemaForTable, tableName, columnName].filter(Boolean).join(".");
+	                        const fullName = [schemaForTable, tableName, data].filter(Boolean).join(".");
 	                        document.getElementById("dec-text").value = fullName;
 	                    }
 	                }
 	            );
+
 	            that.editorFieldList.draw();
 	            that.editorFieldList.setDataTreePath(that.editorDataTreePath);
+
+	            // Detecting ra and dec
+	            const coords = that.editorFieldList.autoDetectRaDec();
+	            if (coords.ra) document.getElementById("ra-text").value = [schemaForTable, tableName, coords.ra].filter(Boolean).join(".");
+	            if (coords.dec) document.getElementById("dec-text").value = [schemaForTable, tableName, coords.dec].filter(Boolean).join(".");
 
 	            hideAllDropdowns();
 	            addInsertButton();
@@ -1157,7 +1116,6 @@ queryEditor.prototype = {
 	                    const sel = that.editor.getSelection().trim();
 	                    if (sel && sel.length > 0) that.editor.replaceSelection(fullTableName);
 	                    else that.editor.replaceRange(fullTableName, that.editor.getCursor());
-
 	                    that.memoryTableFullName = fullTableName;
 	                    that.editor.focus();
 	                };
@@ -1173,6 +1131,7 @@ queryEditor.prototype = {
 
 
 
+
 	initSelectionWatcher: function() {
 	    const that = this;
 	    const box = document.getElementById("selected-text");
@@ -1180,150 +1139,27 @@ queryEditor.prototype = {
 
 	    let currentMarker = null;
 
-		function splitQualifiedNamePreserveQuotes(str) {
-		    const parts = [];
-		    let current = "";
-		    let inQuotes = false;
+	    function detectType(selectedText, editor) {
+	        const from = editor.getCursor("from");
+	        const to = editor.getCursor("to");
+	        const line = editor.getLine(from.line);
+	        if (!line) return "unknown";
 
-		    for (let i = 0; i < str.length; i++) {
-		        const c = str[i];
+	        const contextStart = from.ch;
+	        const contextEnd = to.ch;
+	        const contextText = line.slice(contextStart, contextEnd);
 
-		        if (c === '"') {
-		            inQuotes = !inQuotes;
-		            current += c;
-		            continue;
-		        }
-
-		        if (c === "." && !inQuotes) {
-		            parts.push(current);
-		            current = "";
-		        } else {
-		            current += c;
-		        }
-		    }
-
-		    if (current) parts.push(current);
-		    return parts;
-		}
-
-		function normalizeIdentifier(id) {
-		    if (!id) return id;
-		    return id.replace(/^"(.*)"$/, "$1");
-		}
-
-		
-		function detectType(selectedText, editor) {
-		    const from = editor.getCursor("from");
-		    const to = editor.getCursor("to");
-		    const line = editor.getLine(from.line);
-		    if (!line) return "unknown";
-
-		    function normalizeIdentifier(id) {
-		        return id ? id.replace(/^"(.*)"$/, "$1") : id;
-		    }
-
-		    let contextStart = from.ch;
-		    let contextEnd = to.ch;
-
-		    while (contextStart > 0 && !/\s/.test(line[contextStart - 1])) contextStart--;
-		    while (contextEnd < line.length && !/\s/.test(line[contextEnd])) contextEnd++;
-
-		    const contextText = line.slice(contextStart, contextEnd);
-		    if (!contextText) return "unknown";
-
-		    const parts = [];
-		    let current = "";
-		    let inQuotes = false;
-		    let partStart = 0;
-
-		    for (let i = 0; i < contextText.length; i++) {
-		        const c = contextText[i];
-
-		        if (c === '"') {
-		            inQuotes = !inQuotes;
-		            current += c;
-		            continue;
-		        }
-
-		        if (c === "." && !inQuotes) {
-		            parts.push({
-		                raw: current,
-		                start: partStart,
-		                end: i
-		            });
-		            current = "";
-		            partStart = i + 1;
-		        } else {
-		            current += c;
-		        }
-		    }
-
-		    parts.push({
-		        raw: current,
-		        start: partStart,
-		        end: contextText.length
-		    });
-
-		    const cursorOffset = from.ch - contextStart;
-
-		    const selectedPartIndex = parts.findIndex(
-		        p => cursorOffset >= p.start && cursorOffset <= p.end
-		    );
-
-		    if (selectedPartIndex === -1) return "unknown";
-
-		    const elements = parts.map(p => normalizeIdentifier(p.raw));
-
-		    if (elements.length === 3) {
-		        if (selectedPartIndex === 0) return "schema";
-		        if (selectedPartIndex === 1) return "table";
-		        if (selectedPartIndex === 2) return "column";
-		        return "unknown";
-		    }
-
-		    if (elements.length === 2) {
-		        const left = elements[0];
-
-		        if (selectedPartIndex === 0) {
-		            if (Object.values(that.tables).some(t => t.schema === left)) return "schema";
-		            if (that.tables[left]) return "table";
-		        }
-
-		        if (selectedPartIndex === 1) {
-		            if (Object.values(that.tables).some(t => t.schema === left)) return "table";
-		            if (that.tables[left]) return "column";
-		        }
-		    }
-
-		    if (elements.length === 1) {
-		        const single = elements[0];
-
-		        if (Object.values(that.tables).some(t => t.schema === single)) return "schema";
-		        if (that.tables[single]) return "table";
-
-		        for (const tableName in that.tables) {
-		            if (that.tables[tableName].columns?.includes(single)) {
-		                return "column";
-		            }
-		        }
-		    }
-
-		    return "unknown";
-		}
-
-
-
-
+	        const parts = contextText.split(".");
+	        if (parts.length === 3) return ["schema", "table", "column"][0]; // simplifié
+	        if (parts.length === 2) return ["table", "column"][0];
+	        return "unknown";
+	    }
 
 	    this.editor.on("cursorActivity", () => {
 	        const selectedText = that.editor.getSelection().trim();
 	        box.value = selectedText;
 
-	        if (currentMarker) {
-	            currentMarker.clear();
-	            currentMarker = null;
-	        }
-
+	        if (currentMarker) { currentMarker.clear(); currentMarker = null; }
 	        if (!selectedText) return;
 
 	        const cursor = that.editor.getCursor();
@@ -1331,22 +1167,16 @@ queryEditor.prototype = {
 
 	        const from = that.editor.getCursor("from");
 	        const to = that.editor.getCursor("to");
-	        currentMarker = that.editor.markText(from, to, {
-	            title: `Type détecté : ${type}`
-	        });
+	        currentMarker = that.editor.markText(from, to, { title: `Type détecté : ${type}` });
 
 	        if (type === "table") {
-	            let tableCandidate = null;
 	            const parts = selectedText.split(".");
 	            const maybeTable = parts[parts.length - 1];
-	            if (that.tables[maybeTable]) tableCandidate = maybeTable;
+	            if (!that.tables[maybeTable] || maybeTable === that.selectedTable) return;
 
-	            if (!tableCandidate || tableCandidate === that.selectedTable) return;
-
-	            that.selectedTable = tableCandidate;
-	            const schemaForTable = that.tables[tableCandidate].schema;
-	            const rawFullTableName = `${schemaForTable}.${tableCandidate}`;
-	            const fullTableName = that.formatQualifiedName(rawFullTableName);
+	            that.selectedTable = maybeTable;
+	            const schemaForTable = that.tables[maybeTable].schema;
+	            const fullTableName = that.formatQualifiedName(`${schemaForTable}.${maybeTable}`);
 
 	            function addInsertButton() {
 	                selectedTableNameEl.innerHTML = "";
@@ -1362,7 +1192,6 @@ queryEditor.prototype = {
 	                    const sel = that.editor.getSelection().trim();
 	                    if (sel && sel.length > 0) that.editor.replaceSelection(fullTableName);
 	                    else that.editor.replaceRange(fullTableName, that.editor.getCursor());
-
 	                    that.memoryTableFullName = fullTableName;
 	                    that.editor.focus();
 	                };
@@ -1371,7 +1200,7 @@ queryEditor.prototype = {
 
 	            addInsertButton();
 
-	            that.editorDataTreePath = that.tables[tableCandidate].dataTreePath;
+	            that.editorDataTreePath = that.tables[maybeTable].dataTreePath;
 	            that.editorDataTreePath["nodekey"] = that.nodekey;
 
 	            that.editorFieldList = new BasicFieldList_mVc(
@@ -1385,22 +1214,12 @@ queryEditor.prototype = {
 	                    },
 	                    raHandler: data => {
 	                        if (!data) return;
-	                        const schemaForTable = that.selectedTable ? that.tables[that.selectedTable]?.schema || "" : "";
-	                        const tableName = that.selectedTable;
-	                        const columnName = data;
-
-	                        const rawFullName = [schemaForTable, tableName, columnName].filter(Boolean).join(".");
-	                        const fullName = that.formatQualifiedName(rawFullName);
+	                        const fullName = [schemaForTable, maybeTable, data].filter(Boolean).join(".");
 	                        document.getElementById("ra-text").value = fullName;
 	                    },
 	                    decHandler: data => {
 	                        if (!data) return;
-	                        const schemaForTable = that.selectedTable ? that.tables[that.selectedTable]?.schema || "" : "";
-	                        const tableName = that.selectedTable;
-	                        const columnName = data;
-
-	                        const rawFullName = [schemaForTable, tableName, columnName].filter(Boolean).join(".");
-	                        const fullName = that.formatQualifiedName(rawFullName);
+	                        const fullName = [schemaForTable, maybeTable, data].filter(Boolean).join(".");
 	                        document.getElementById("dec-text").value = fullName;
 	                    }
 	                }
@@ -1408,9 +1227,15 @@ queryEditor.prototype = {
 
 	            that.editorFieldList.draw();
 	            that.editorFieldList.setDataTreePath(that.editorDataTreePath);
+
+	            // Detecting ra and dec
+	            const coords = that.editorFieldList.autoDetectRaDec();
+	            if (coords.ra) document.getElementById("ra-text").value = [schemaForTable, maybeTable, coords.ra].filter(Boolean).join(".");
+	            if (coords.dec) document.getElementById("dec-text").value = [schemaForTable, maybeTable, coords.dec].filter(Boolean).join(".");
 	        }
 	    });
 	}
+
 
 
 };

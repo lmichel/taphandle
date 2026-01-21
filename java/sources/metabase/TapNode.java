@@ -695,10 +695,14 @@ FROM "public".swirecapability " + capabilityNS.getNsName());
 		if( new File(productName + ".json").exists()) {
 			return;
 		}
+		System.out.println("-------------------------");
+		System.out.println(this.baseDirectory + dataTreePath);
+		System.out.println(dataTreePath.getSchema());
+		System.out.println("-------------------------");
 		logger.debug("buildJsonTableDescription JSON file " + dataTreePath.getTable() + ".json not found: build it");
 		XmlToJson.translateTableMetaData(this.baseDirectory, "tables", dataTreePath, tablesNS);            
 		/*
-		 * If there is no attribute in the JSON table description, the service delivers it likley table by table
+		 * If there is no attribute in the JSON table description, the service delivers it likely table by table
 		 */
 		if( !isThereJsonTableDesc(dataTreePath) ) {
 			logger.debug("No column found in " + tableFileName + ": make a per table query");
@@ -741,6 +745,9 @@ FROM "public".swirecapability " + capabilityNS.getNsName());
 	 * @throws Exception
 	 */
 	private boolean isThereJsonTableDesc(DataTreePath dataTreePath) throws Exception{
+		System.out.println("=======================");
+		System.out.println(dataTreePath);
+		System.out.println("=======================");
 		JSONParser parser = new JSONParser();
 		Object obj = parser.parse(new FileReader(this.baseDirectory + dataTreePath.getEncodedFileName() + ".json"));
 		JSONObject jsonObject = (JSONObject) ((JSONObject) obj).get("attributes");

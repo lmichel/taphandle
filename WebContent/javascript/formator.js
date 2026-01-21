@@ -94,7 +94,17 @@ ValueFormator = function() {
 			 */
 			
 		// This else if is used for lines where multiple bibcodes are displayed
-		} else if (value.includes("|")) {
+		} 
+		if (value.includes("|")) {
+			const table = value.split("|");
+			var isBibcode = true;
+			for (const elem of table){
+				if (!bibcodeRegexp.test(elem)){
+					isBibcode = false;
+				}
+			}
+		}
+		if (isBibcode == true) {
 			const table = value.split("|");
 			var bibcodes = "";
 			var moreLinks = "";
@@ -114,6 +124,7 @@ ValueFormator = function() {
 			// If there is more than 3 bibcodes, we display the "See more" button to view them all
 			if (table.length > 3){
 				bibcodes += "<span style =' cursor: pointer;' onclick='Modalinfo.info(\"" + moreLinks + "\");'> <em>[See more]</em></span>";
+				console.log(value);
 			}
 			tdNode.html(bibcodes);
 		} else if(/* value.startsWith("Array")*/ value.length > 160 ) {

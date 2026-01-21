@@ -147,7 +147,7 @@ DataTreeView.prototype = {
 			$("div#treedisp").jstree("create_node"
 					, $("div#treedisp")
 					, false
-					, {"data" : {"icon": "images/Database2.png", "attr":{"id": jsdata.nodekey, "title": /*description*/ "Double click to filter the visible tables"}, "title" : jsdata.nodekey},
+					, {"data" : {"icon": "images/Database2.png", "attr":{"id": jsdata.nodekey, "title": /*description*/ "Double click to filter the visible tables"}, "title" : jsdata.nodekey + " "},
 						"state": "closed"}
 					,false
 					,true);  
@@ -229,7 +229,8 @@ DataTreeView.prototype = {
 							,true); 
 				}
 			}
-			$("#"+jsdata.nodekey).append("<a class='metadata' title='Click to open query editor' onclick='dataTreeView.openQueryEditor(&quot;" + jsdata.nodekey + "&quot;)'>| Query editor</a>");
+			// $("#"+jsdata.nodekey).append("<a class='metadata' title='Click to open query editor' onclick='dataTreeView.openQueryEditor(&quot;" + jsdata.nodekey + "&quot;)'>| Query editor</a>");
+			$("#"+jsdata.nodekey).append("<img class='metadata' src='images/queryIcon.png' title='Click to open query editor' onclick='dataTreeView.openQueryEditor(&quot;" + jsdata.nodekey + "&quot;)'></a>");
 			/*
 			 * add leaves (tables) the the schemas
 			 */
@@ -498,7 +499,9 @@ DataTreeView.prototype = {
 			       window.testEditor.show();
 			       return;
 			}
-		    if (window.testEditor.nodekey === nodekey) {
+			// We reuse the existing editor if the nodekey is the same between the existing one and the one we want to create
+			// and if the loaded schemas in the existing one are the same than the one we want to create
+		    if ((window.testEditor.nodekey === nodekey) && (data.schemas == window.testEditor.data.schemas)) {
 				console.log(window.testEditor.editor.getValue());
 		       NativeModal.show("queryEditorModal");
 		       return;
