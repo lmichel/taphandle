@@ -159,8 +159,12 @@ public class RegistryExplorer extends RootClass {
 				} else {
 					boolean mustInit = iniAtStart.contains(ivoid) ;
 					try {
-						RegistryMark rm2 = new RegistryMark(key, ivoid, url, description, title, name, contact, mustInit, true);
-						registryMarks.put(key, rm2);
+						if (url.startsWith("http")) {
+							RegistryMark rm2 = new RegistryMark(key, ivoid, url, description, title, name, contact, mustInit, true);
+							registryMarks.put(key, rm2);
+						} else {
+							System.out.println("Invalid url format : " + key + "  " + url);
+						}
 					} catch (Exception e) {
 						e.printStackTrace();
 					}

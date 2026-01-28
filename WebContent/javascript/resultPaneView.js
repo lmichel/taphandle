@@ -336,6 +336,7 @@ jQuery.extend({
 //			}
 			
 			attributeHandlers = tapConstraintEditor.getAttributeHandlers();
+			attributeHandlersSize = Object.keys(attributeHandlers).length;
 			var aoColumns = new Array();
 			var columnMap = {access_format: -1, s_ra: -1, s_dec: -1, s_fov: -1, currentColumn: -1};
 			for(var i=0 ; i<jsdata.aoColumns.length ; i++) {
@@ -345,7 +346,7 @@ jQuery.extend({
 						+ " - This job has likely been initiated in a previous session" ;
 				} else {
 					// This condition is here to avoid errors mixing the real content of the attributeHandlers array and its prototype functions
-					if (attributeHandlers.length != 0) {
+					if (attributeHandlersSize != 0) {
 						var ah = attributeHandlers[jsdata.aoColumns[i].sTitle];
 					}
 					/*

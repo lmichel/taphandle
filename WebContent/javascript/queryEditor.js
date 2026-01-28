@@ -25,7 +25,7 @@ class NativeModal {
             position: fixed;
             inset: 0;
             background: rgba(0,0,0,0.45);
-            z-index: ${options.zIndex ? options.zIndex - 1 : 2000};
+            z-index: ${options.zIndex ? options.zIndex - 1 : 100};
         `;
 
         modal = document.createElement("div");
@@ -42,7 +42,7 @@ class NativeModal {
             padding: 0;
             display: flex;
             flex-direction: column;
-            z-index: ${options.zIndex || 2001};
+            z-index: ${options.zIndex || 101};
             box-shadow: 0 4px 30px rgba(0,0,0,0.25);
             box-sizing: border-box;
             overflow: hidden;
@@ -222,6 +222,23 @@ queryEditor.prototype = {
 
 		    <div class="editor-panel">
 		        <div class="btn-group">
+				
+					<div class="dropdown">
+		                <button id="keyword-btn" class="dropbtn">Verbs</button>
+		                <div id="keyword-dropdown" class="dropdown-content">
+		                    <a href="#" data-keyword="SELECT *">SELECT</a>
+		                    <a href="#" data-keyword="SELECT  TOP 100 *">SELECT TOP</a>
+		                    <a href="#" data-keyword="SELECT DISTINCT *">SELECT DISTINCT</a>
+		                    <a href="#" data-keyword="FROM __selectTable__">FROM</a>
+		                    <a href="#" data-keyword="JOIN __joinTable__ ON __joinTable__.__joinColumn__ = __joiningTable__.__joiningColumn__">JOIN</a>
+		                    <a href="#" data-keyword="WHERE ">WHERE</a>
+		                    <a href="#" data-keyword="GROUP BY ">GROUP BY</a>
+		                    <a href="#" data-keyword="ORDER BY ">ORDER BY</a>
+		                    <a href="#" data-keyword="AND ">AND</a>
+		                    <a href="#" data-keyword="OR ">OR</a>
+		                </div>
+		            </div>
+				
 		            <div class="dropdown">
 		                <button id="ope-btn" class="dropbtn">Operators</button>
 		                <div id="ope-dropdown" class="dropdown-content">
@@ -248,22 +265,6 @@ queryEditor.prototype = {
 		                    <a href="#" data-func="MAX">MAX</a>
 		                    <a href="#" data-func="MIN">MIN</a>
 		                    <a href="#" data-func="POSITION">POSITION</a>
-		                </div>
-		            </div>
-
-		            <div class="dropdown">
-		                <button id="keyword-btn" class="dropbtn">Statements</button>
-		                <div id="keyword-dropdown" class="dropdown-content">
-		                    <a href="#" data-keyword="SELECT *">SELECT</a>
-		                    <a href="#" data-keyword="SELECT  TOP 100 *">SELECT TOP</a>
-		                    <a href="#" data-keyword="SELECT DISTINCT *">SELECT DISTINCT</a>
-		                    <a href="#" data-keyword="FROM __selectTable__">FROM</a>
-		                    <a href="#" data-keyword="JOIN __joinTable__ ON __joinTable__.__joinColumn__ = __joiningTable__.__joiningColumn__">JOIN</a>
-		                    <a href="#" data-keyword="WHERE ">WHERE</a>
-		                    <a href="#" data-keyword="GROUP BY ">GROUP BY</a>
-		                    <a href="#" data-keyword="ORDER BY ">ORDER BY</a>
-		                    <a href="#" data-keyword="AND ">AND</a>
-		                    <a href="#" data-keyword="OR ">OR</a>
 		                </div>
 		            </div>
 
@@ -650,10 +651,10 @@ queryEditor.prototype = {
 			].join("\n");
 
 	        this.editor.setValue(query);
-	        this.editor.setCursor({
-	            line: 0,
-	            ch: query.indexOf(fullReplacement) + fullReplacement.length
-	        });
+			const lastLine = this.editor.lineCount() - 1;
+			const lastCh = this.editor.getLine(lastLine).length;
+			this.editor.setCursor({ line: lastLine, ch: lastCh });
+
 	        this.editor.focus();
 
 	        selectedTextBox.value = "";
@@ -689,7 +690,9 @@ queryEditor.prototype = {
 		        "\nFROM " + tableFullName;
 
 		    this.editor.setValue(newQuery);
-		    this.editor.setCursor({ line: 1, ch: 0 });
+			const lastLine = this.editor.lineCount() - 1;
+			const lastCh = this.editor.getLine(lastLine).length;
+			this.editor.setCursor({ line: lastLine, ch: lastCh });
 		    this.editor.focus();
 
 		    selectedTextBox.value = "";
@@ -752,7 +755,7 @@ queryEditor.prototype = {
 	        selectedText === "__joinTable__";
 
 	    /* ======================================================
-	       PLACEHOLDERs
+	       PLACEHOLDERS
 	       ====================================================== */
 	    if (isPlaceholderTable) {
 	        this.editor.replaceSelection(fullReplacement);
@@ -1112,13 +1115,40 @@ queryEditor.prototype = {
 	                insertTableBtn.title = "Insert table at cursor / replace selection";
 	                insertTableBtn.style.cursor = "pointer";
 	                insertTableBtn.style.marginLeft = "6px";
-	                insertTableBtn.onclick = () => {
-	                    const sel = that.editor.getSelection().trim();
-	                    if (sel && sel.length > 0) that.editor.replaceSelection(fullTableName);
-	                    else that.editor.replaceRange(fullTableName, that.editor.getCursor());
-	                    that.memoryTableFullName = fullTableName;
-	                    that.editor.focus();
-	                };
+					insertTableBtn.onclick = () => {
+					    const editorContent = that.editor.getValue().trim();
+					    const editorSelection = that.editor.getSelection().trim();
+
+					    // ======================================================
+					    // Table insertion if the query is empty
+					    // ======================================================
+					    if (!editorContent && !editorSelection) {
+					        const query = [
+					            `SELECT TOP 100 *`,
+					            `FROM ${fullTableName}`
+					        ].join("\n");
+
+					        that.editor.setValue(query);
+							const lastLine = that.editor.lineCount() - 1;
+					        const lastCh = that.editor.getLine(lastLine).length;
+					        that.editor.setCursor({ line: lastLine, ch: lastCh });
+					        that.editor.focus();
+					        return;
+					    }
+
+					    // ======================================================
+					    // Default behaviour
+					    // ======================================================
+					    if (editorSelection) {
+					        that.editor.replaceSelection(fullTableName);
+					    } else {
+					        that.editor.replaceRange(fullTableName, that.editor.getCursor());
+					    }
+
+					    that.memoryTableFullName = fullTableName;
+					    that.editor.focus();
+					};
+
 	                selectedTableNameEl.appendChild(insertTableBtn);
 	            }
 	        });
@@ -1139,21 +1169,105 @@ queryEditor.prototype = {
 
 	    let currentMarker = null;
 
-	    function detectType(selectedText, editor) {
-	        const from = editor.getCursor("from");
-	        const to = editor.getCursor("to");
-	        const line = editor.getLine(from.line);
-	        if (!line) return "unknown";
+		function detectType(selectedText, editor) {
+		    const from = editor.getCursor("from");
+		    const to = editor.getCursor("to");
+		    const line = editor.getLine(from.line);
+		    if (!line) return "unknown";
 
-	        const contextStart = from.ch;
-	        const contextEnd = to.ch;
-	        const contextText = line.slice(contextStart, contextEnd);
+		    function normalizeIdentifier(id) {
+		        return id ? id.replace(/^"(.*)"$/, "$1") : id;
+		    }
 
-	        const parts = contextText.split(".");
-	        if (parts.length === 3) return ["schema", "table", "column"][0]; // simplifié
-	        if (parts.length === 2) return ["table", "column"][0];
-	        return "unknown";
-	    }
+		    let contextStart = from.ch;
+		    let contextEnd = to.ch;
+
+		    while (contextStart > 0 && !/\s/.test(line[contextStart - 1])) contextStart--;
+		    while (contextEnd < line.length && !/\s/.test(line[contextEnd])) contextEnd++;
+
+		    const contextText = line.slice(contextStart, contextEnd);
+		    if (!contextText) return "unknown";
+
+		    const parts = [];
+		    let current = "";
+		    let inQuotes = false;
+		    let partStart = 0;
+
+		    for (let i = 0; i < contextText.length; i++) {
+		        const c = contextText[i];
+
+		        if (c === '"') {
+		            inQuotes = !inQuotes;
+		            current += c;
+		            continue;
+		        }
+
+		        if (c === "." && !inQuotes) {
+		            parts.push({
+		                raw: current,
+		                start: partStart,
+		                end: i
+		            });
+		            current = "";
+		            partStart = i + 1;
+		        } else {
+		            current += c;
+		        }
+		    }
+
+		    parts.push({
+		        raw: current,
+		        start: partStart,
+		        end: contextText.length
+		    });
+
+		    const cursorOffset = from.ch - contextStart;
+
+		    const selectedPartIndex = parts.findIndex(
+		        p => cursorOffset >= p.start && cursorOffset <= p.end
+		    );
+
+		    if (selectedPartIndex === -1) return "unknown";
+
+		    const elements = parts.map(p => normalizeIdentifier(p.raw));
+
+		    if (elements.length === 3) {
+		        if (selectedPartIndex === 0) return "schema";
+		        if (selectedPartIndex === 1) return "table";
+		        if (selectedPartIndex === 2) return "column";
+		        return "unknown";
+		    }
+
+		    if (elements.length === 2) {
+		        const left = elements[0];
+
+		        if (selectedPartIndex === 0) {
+		            if (Object.values(that.tables).some(t => t.schema === left)) return "schema";
+		            if (that.tables[left]) return "table";
+		        }
+
+		        if (selectedPartIndex === 1) {
+		            if (Object.values(that.tables).some(t => t.schema === left)) return "table";
+		            if (that.tables[left]) return "column";
+		        }
+		    }
+
+		    if (elements.length === 1) {
+		        const single = elements[0];
+
+		        if (Object.values(that.tables).some(t => t.schema === single)) return "schema";
+		        if (that.tables[single]) return "table";
+
+		        for (const tableName in that.tables) {
+		            if (that.tables[tableName].columns?.includes(single)) {
+		                return "column";
+		            }
+		        }
+		    }
+
+		    return "unknown";
+		}
+
 
 	    this.editor.on("cursorActivity", () => {
 	        const selectedText = that.editor.getSelection().trim();
@@ -1189,6 +1303,7 @@ queryEditor.prototype = {
 	                insertTableBtn.style.cursor = "pointer";
 	                insertTableBtn.style.marginLeft = "6px";
 	                insertTableBtn.onclick = () => {
+						console.log(fullTableName);
 	                    const sel = that.editor.getSelection().trim();
 	                    if (sel && sel.length > 0) that.editor.replaceSelection(fullTableName);
 	                    else that.editor.replaceRange(fullTableName, that.editor.getCursor());
