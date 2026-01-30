@@ -145,7 +145,7 @@ private static boolean isRedirect(int code) {
 		 */
 		if( conn.getResponseCode() != HttpURLConnection.HTTP_OK  ) {
 			if (conn.getResponseCode() != 200) {
-				throw new ArithmeticException("Invalid html code : " + conn.getResponseCode());
+				throw new ArithmeticException("Invalid html code : " + conn.getResponseCode() + " on " + url);
 			}
 			logger.error(conn.getURL() + " returns error " +  ((HttpURLConnection)conn).getResponseCode());
 			
