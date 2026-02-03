@@ -47,17 +47,17 @@ public class RegistryExplorer extends RootClass {
 	static {
 		try {
 			offRegistryMarks.put("cdssimbad"       , new RegistryMark("simbad", "ivo://cds.simbad/tap"
-					, "http://simbad.u-strasbg.fr/simbad/sim-tap"
+					, "https://simbad.cds.unistra.fr.fr/simbad/sim-tap"
 					, "CDS Simbad TAP query engine", true, true));
 			offRegistryMarks.put("cdsvizier"       , new RegistryMark("vizier", "ivo://cds.vizier/tap"
-					, "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/"
+					, "https://tapvizier.cds.unistra.fr/TAPVizieR/tap/"
 					, "CDS Vizier TAP query engine", true, true));
 			/*
 			 * For te datalink demo
 			 */
-			offRegistryMarks.put("betacadc"       , new RegistryMark("betacadc", ""
-					, "http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap"
-					, "Datalink Service Demonstrator", true, true));
+//			offRegistryMarks.put("betacadc"       , new RegistryMark("betacadc", ""
+//					, "http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap"
+//					, "Datalink Service Demonstrator", true, true));
 //			offRegistryMarks.put("3xmmdr8"       , new RegistryMark("3xmm", ""
 //					, "http://xcatdb.unistra.fr/3xmmdr8/tap"
 //					, "3rd XMM catalogue (DR8)", true, true));
@@ -141,7 +141,13 @@ public class RegistryExplorer extends RootClass {
 					registryMarks.put(key, rm);
 				} else {
 					boolean mustInit = iniAtStart.contains(ivoid) ;
-					registryMarks.put(key, new RegistryMark(key, ivoid, url, description, mustInit, true));
+					try {
+						RegistryMark registryMark = new RegistryMark(
+								key, ivoid, url, description, mustInit, true);
+						registryMarks.put(key,registryMark);
+					} catch( Exception e) {
+						logger.error("Cannot create RegistryMark for " + key, e);
+					}
 				}
 			}
 		}

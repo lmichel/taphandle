@@ -115,7 +115,9 @@ public class TapAccess  extends RootClass {
 		int cpt = 0;
 		while (true) {
 			logger.info("Get GET connection on " + newUrl);
-			HttpsURLConnection conn = (HttpsURLConnection) newUrl.openConnection();
+			HttpURLConnection conn;
+			//conn = (HttpsURLConnection) newUrl.openConnection();
+			conn = (HttpURLConnection) newUrl.openConnection();
 			conn.setConnectTimeout(SOCKET_CONNECT_TIMEOUT);		
 			conn.setReadTimeout(SOCKET_READ_TIMEOUT);
 			conn.setRequestMethod("GET");
