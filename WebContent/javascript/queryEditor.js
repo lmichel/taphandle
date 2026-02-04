@@ -608,8 +608,7 @@ queryEditor.prototype = {
 	    const editorContent = this.editor.getValue().trim();
 
 	    // GROUP BY / ORDER BY
-	    const isGroupOrOrderBy =
-	        /^\s*(GROUP\s+BY|ORDER\s+BY)\b/i.test(currentLine);
+	    const isGroupOrOrderBy = /^\s*(GROUP\s+BY|ORDER\s+BY)\b/i.test(currentLine);
 
 	    const schemaForTable = this.selectedTable
 	        ? this.tables[this.selectedTable]?.schema || ""
@@ -625,36 +624,27 @@ queryEditor.prototype = {
 	    let fullReplacement = parts.join(".");
 	    fullReplacement = this.formatQualifiedName(fullReplacement);
 
-	    // GROUP BY / ORDER BY Column → colonne seule
 	    if (columnName && isGroupOrOrderBy) {
 	        fullReplacement = columnName;
 	    }
 
 	    /* ======================================================
-	       Column insertion if the query is empty
+	       Table insertion if the query is empty
 	       ====================================================== */
-	    if (
-	        !editorContent &&
-	        columnName &&
-	        !editorSelection &&
-	        !this.rightValueIsTable
-	    ) {
+	    if (!editorContent && this.rightValueIsTable && tableName) {
 	        const qualifiedTable = this.formatQualifiedName(
-	            schemaForTable
-	                ? `${schemaForTable}.${tableName}`
-	                : tableName
+	            schemaForTable ? `${schemaForTable}.${tableName}` : tableName
 	        );
 
-			const query = [
-			    `SELECT TOP 100 ${fullReplacement}`,
-			    `FROM ${qualifiedTable}`
-			].join("\n");
+	        const query = [
+	            "SELECT TOP 100 *",
+	            `FROM ${qualifiedTable}`
+	        ].join("\n");
 
 	        this.editor.setValue(query);
-			const lastLine = this.editor.lineCount() - 1;
-			const lastCh = this.editor.getLine(lastLine).length;
-			this.editor.setCursor({ line: lastLine, ch: lastCh });
-
+	        const lastLine = this.editor.lineCount() - 1;
+	        const lastCh = this.editor.getLine(lastLine).length;
+	        this.editor.setCursor({ line: lastLine, ch: lastCh });
 	        this.editor.focus();
 
 	        selectedTextBox.value = "";
@@ -662,111 +652,120 @@ queryEditor.prototype = {
 	        this.rightValueIsTable = false;
 	        return;
 	    }
-		
-		// ======================================================
-		// Column insertion if there is only a SELECT in the query
-		// ======================================================
-		const fullContent = this.editor.getValue();
-
-		const isPureMinimalSelect =
-		    /^\s*SELECT\s+(?:DISTINCT\s+|TOP\s+\d+\s+)?\*\s*$/i
-		        .test(fullContent);
-
-		if (
-		    isPureMinimalSelect &&
-		    editorSelection === "*" &&
-		    columnName
-		) {
-		    const selectLine = fullContent.replace(/\*/g, fullReplacement);
-
-		    const tableFullName = this.formatQualifiedName(
-		        schemaForTable
-		            ? `${schemaForTable}.${tableName}`
-		            : tableName
-		    );
-
-		    const newQuery =
-		        selectLine.trim() +
-		        "\nFROM " + tableFullName;
-
-		    this.editor.setValue(newQuery);
-			const lastLine = this.editor.lineCount() - 1;
-			const lastCh = this.editor.getLine(lastLine).length;
-			this.editor.setCursor({ line: lastLine, ch: lastCh });
-		    this.editor.focus();
-
-		    selectedTextBox.value = "";
-		    this.selectedRightValue = "";
-		    this.rightValueIsTable = false;
-		    return;
-		}
-
 
 	    /* ======================================================
-	       Replace the complete qualified name
+	       Column insertion if the query is empty
 	       ====================================================== */
-	    if (editorSelection && !this.rightValueIsTable) {
+	    if (!editorContent && columnName && !editorSelection && !this.rightValueIsTable) {
+	        const qualifiedTable = this.formatQualifiedName(
+	            schemaForTable ? `${schemaForTable}.${tableName}` : tableName
+	        );
+
+	        const query = [
+	            `SELECT TOP 100 ${fullReplacement}`,
+	            `FROM ${qualifiedTable}`
+	        ].join("\n");
+
+	        this.editor.setValue(query);
+	        const lastLine = this.editor.lineCount() - 1;
+	        const lastCh = this.editor.getLine(lastLine).length;
+	        this.editor.setCursor({ line: lastLine, ch: lastCh });
+	        this.editor.focus();
+
+	        selectedTextBox.value = "";
+	        this.selectedRightValue = "";
+	        this.rightValueIsTable = false;
+	        return;
+	    }
+
+	    /* ======================================================
+	       Replace the complete qualified name (selected text)
+	       ====================================================== */
+	    if (editorSelection) {
 	        const from = this.editor.getCursor("from");
-	        const to   = this.editor.getCursor("to");
+	        const to = this.editor.getCursor("to");
 	        const line = from.line;
 	        const lineText = this.editor.getLine(line);
 
 	        let startCh = from.ch;
-	        while (startCh > 0 && /[\w".]/.test(lineText[startCh - 1])) {
-	            startCh--;
-	        }
-
 	        let endCh = to.ch;
-	        while (endCh < lineText.length && /[\w".]/.test(lineText[endCh])) {
-	            endCh++;
-	        }
+	        while (startCh > 0 && /[\w".]/.test(lineText[startCh - 1])) startCh--;
+	        while (endCh < lineText.length && /[\w".]/.test(lineText[endCh])) endCh++;
 
+	        const selectedPart = this.editor.getRange(
+	            { line, ch: startCh },
+	            { line, ch: endCh }
+	        );
+
+			/* ======================================================
+			   JOIN PLACEHOLDER LOGIC (LOCAL TO LINE) — FIX FINAL
+			   ====================================================== */
+			// On ne traite ce bloc que si la sélection est un placeholder lié au JOIN
+			if (/JOIN\s+__joinTable__\s+ON\s+__joinTable__\.__joinColumn__/i.test(lineText) &&
+			    (selectedPart.includes("__joinTable__") || selectedPart.includes("__joinColumn__"))) {
+
+			    const qualifiedTable = this.formatQualifiedName(
+			        schemaForTable ? `${schemaForTable}.${tableName}` : tableName
+			    );
+
+			    let newLine = lineText;
+
+			    if (selectedPart.includes("__joinColumn__") && columnName) {
+			        // Remplacer uniquement la colonne
+			        newLine = newLine.replace(/__joinColumn__/g, columnName);
+
+			        // Synchroniser les deux __joinTable__ avec la table courante
+			        newLine = newLine.replace(/__joinTable__/g, qualifiedTable);
+
+			    } else if (selectedPart.includes("__joinTable__")) {
+			        // Remplacer les __joinTable__ uniquement, sans toucher la colonne qui suit
+			        newLine = newLine.replace(/\b__joinTable__\b/g, qualifiedTable);
+			    }
+
+			    this.editor.replaceRange(
+			        newLine,
+			        { line, ch: 0 },
+			        { line, ch: lineText.length }
+			    );
+
+			    this.moveCursorToEnd();
+			    selectedTextBox.value = "";
+			    this.selectedRightValue = "";
+			    this.rightValueIsTable = false;
+			    return;
+			}
+
+
+	        /* ======================================================
+	           DEFAULT replacement (EXISTING WORKING LOGIC)
+	           ====================================================== */
 	        this.editor.replaceRange(
 	            fullReplacement,
 	            { line, ch: startCh },
 	            { line, ch: endCh }
 	        );
 
-	        this.editor.focus();
-	        selectedTextBox.value = "";
-	        this.selectedRightValue = "";
-	        this.rightValueIsTable = false;
-	        return;
-	    }
+	        const content = this.editor.getValue();
+	        let newContent = content;
 
-	    /* ======================================================
-	       Basic insertion
-	       ====================================================== */
-	    if (!selectedText) {
-	        this.editor.replaceRange(fullReplacement + " ", cursor);
-	        this.editor.setCursor({
-	            line: cursor.line,
-	            ch: cursor.ch + fullReplacement.length + 1
-	        });
-	        this.editor.focus();
+	        const partsSplit = selectedPart.split(".");
+	        const colName = partsSplit.pop().replace(/^"|"$/g, "");
+	        const tableNamePart = partsSplit.length ? partsSplit.pop().replace(/^"|"$/g, "") : null;
+	        const schemaNamePart = partsSplit.length ? partsSplit.pop().replace(/^"|"$/g, "") : null;
 
-	        this.selectedRightValue = "";
-	        this.rightValueIsTable = false;
-	        return;
-	    }
-
-	    const isPlaceholderTable =
-	        selectedText === "__selectTable__" ||
-	        selectedText === "__joinTable__";
-
-	    /* ======================================================
-	       PLACEHOLDERS
-	       ====================================================== */
-	    if (isPlaceholderTable) {
-	        this.editor.replaceSelection(fullReplacement);
-
-	        const lines = this.editor.getValue().split("\n");
-	        let lastNonEmpty = -1;
-	        for (let i = 0; i < lines.length; i++) {
-	            if (lines[i].trim() !== "") lastNonEmpty = i;
+	        if (!this.rightValueIsTable) {
+	            let colPattern = `(?:"${colName}"|${colName})`;
+	            if (tableNamePart) colPattern = `(?:"${tableNamePart}"|${tableNamePart})\\.${colPattern}`;
+	            if (schemaNamePart) colPattern = `(?:"${schemaNamePart}"|${schemaNamePart})\\.${colPattern}`;
+	            const colRegex = new RegExp(colPattern, "g");
+	            newContent = newContent.replace(colRegex, fullReplacement);
+	        } else {
+	            const tablePart = selectedPart.replace(/^"|"$/g, "");
+	            const tableRegex = new RegExp(`(?:"${tablePart}"|${tablePart})(?!\\.)`, "g");
+	            newContent = newContent.replace(tableRegex, fullReplacement);
 	        }
 
-	        this.editor.setCursor({ line: lastNonEmpty + 1, ch: 0 });
+	        this.editor.setValue(newContent);
 	        this.moveCursorToEnd();
 
 	        selectedTextBox.value = "";
@@ -776,69 +775,40 @@ queryEditor.prototype = {
 	    }
 
 	    /* ======================================================
-	       Global replace
+	       BASIC insertion when no selection
 	       ====================================================== */
-	    const content = this.editor.getValue();
-	    let newContent = content;
-
-	    function escapeRegex(s) {
-	        return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+	    if (!selectedText) {
+	        this.editor.replaceRange(fullReplacement + " ", cursor);
+	        this.editor.setCursor({
+	            line: cursor.line,
+	            ch: cursor.ch + fullReplacement.length + 1
+	        });
+	        this.editor.focus();
+	        this.selectedRightValue = "";
+	        this.rightValueIsTable = false;
+	        return;
 	    }
 
-	    const escapedSelection = escapeRegex(selectedText);
+	    /* ======================================================
+	       PLACEHOLDERS outside of JOIN
+	       ====================================================== */
+	    const isPlaceholderTable = selectedText === "__selectTable__" || selectedText === "__joinTable__";
 
-	    const regexQualified = new RegExp(
-	        `(?:\\b\\w+\\.)?(?:\\b\\w+\\.)${escapedSelection}\\b`,
-	        "g"
-	    );
-	    newContent = newContent.replace(regexQualified, fullReplacement);
-
-	    function replaceUnqualified(content, target, replacement) {
-	        const esc = escapeRegex(target);
-	        const re = new RegExp(`(^|[^\\.\\w])(${esc})(?=\\b)`, "g");
-	        return content.replace(re, (m, p1) => `${p1}${replacement}`);
+	    if (isPlaceholderTable) {
+	        this.editor.replaceSelection(fullReplacement);
+	        const lines = this.editor.getValue().split("\n");
+	        let lastNonEmpty = -1;
+	        for (let i = 0; i < lines.length; i++) {
+	            if (lines[i].trim() !== "") lastNonEmpty = i;
+	        }
+	        this.editor.setCursor({ line: lastNonEmpty + 1, ch: 0 });
+	        this.moveCursorToEnd();
+	        selectedTextBox.value = "";
+	        this.selectedRightValue = "";
+	        this.rightValueIsTable = false;
+	        return;
 	    }
-
-	    newContent = replaceUnqualified(
-	        newContent,
-	        selectedText,
-	        fullReplacement
-	    );
-
-	    let oldTable = null;
-	    const maybeTable = selectedText.split(".")[0];
-
-	    if (
-	        this.tables[maybeTable] ||
-	        maybeTable === "__selectTable__" ||
-	        maybeTable === "__joinTable__"
-	    ) {
-	        oldTable = maybeTable;
-	    }
-
-	    if (oldTable) {
-	        const oldTableEsc = escapeRegex(oldTable);
-	        const reTableOnly = new RegExp(`\\b${oldTableEsc}\\b`, "g");
-
-	        let tableReplacement = schemaForTable
-	            ? `${schemaForTable}.${tableName}`
-	            : tableName;
-
-	        tableReplacement = this.formatQualifiedName(tableReplacement);
-	        newContent = newContent.replace(reTableOnly, tableReplacement);
-	    }
-
-	    this.editor.setValue(newContent);
-	    this.moveCursorToEnd();
-
-	    selectedTextBox.value = "";
-	    this.selectedRightValue = "";
-	    this.rightValueIsTable = false;
 	},
-
-
-
-
 
 
     initSQLOperators: function() {
@@ -1050,27 +1020,67 @@ queryEditor.prototype = {
 
 	    tableDropdown.innerHTML = "";
 
-	    function hideAllDropdowns(){ document.querySelectorAll(".dropdown-content").forEach(d => d.style.display = "none"); }
-	    function toggleDropdown(dropdown){ const isOpen = dropdown.style.display === "block"; hideAllDropdowns(); dropdown.style.display = isOpen ? "none" : "block"; }
-	    document.addEventListener("click", e => { if (!e.target.closest(".dropdown")) hideAllDropdowns(); });
-	    tableBtn.addEventListener("click", e => { e.preventDefault(); toggleDropdown(tableDropdown); });
+	    function hideAllDropdowns() {
+	        document.querySelectorAll(".dropdown-content")
+	            .forEach(d => d.style.display = "none");
+	    }
+
+	    function toggleDropdown(dropdown) {
+	        const isOpen = dropdown.style.display === "block";
+	        hideAllDropdowns();
+	        dropdown.style.display = isOpen ? "none" : "block";
+	    }
+
+	    document.addEventListener("click", e => {
+	        if (!e.target.closest(".dropdown")) hideAllDropdowns();
+	    });
+
+	    tableBtn.addEventListener("click", e => {
+	        e.preventDefault();
+	        toggleDropdown(tableDropdown);
+	    });
 
 	    liste.forEach(tableName => {
 	        const link = document.createElement("a");
 	        link.href = "#";
+
 	        const schemaForTable = that.tables[tableName]?.schema || "";
-	        const fullTableNameRaw = schemaForTable ? `${schemaForTable}.${tableName}` : tableName;
+	        const fullTableNameRaw = schemaForTable
+	            ? `${schemaForTable}.${tableName}`
+	            : tableName;
+
 	        const fullTableName = that.formatQualifiedName(fullTableNameRaw);
 	        link.textContent = fullTableNameRaw;
 
 	        link.addEventListener("click", e => {
 	            e.preventDefault();
 
+	            // ==========================
+	            // Contexte table uniquement
+	            // ==========================
 	            that.selectedTable = tableName;
+	            that.memoryTableFullName = fullTableName;
 	            selectedTableNameEl.textContent = fullTableName;
 
+	            const editorSelection = that.editor.getSelection().trim();
+
+	            // ======================================================
+	            // PLACEHOLDER ONLY → remplacement autorisé
+	            // ======================================================
+	            if (
+	                editorSelection === "__selectTable__" ||
+	                editorSelection === "__joinTable__"
+	            ) {
+	                that.selectedRightValue = tableName;
+	                that.rightValueIsTable = true;
+	                that.replaceSelectedText();
+	            }
+
+	            // ======================================================
+	            // Field list init
+	            // ======================================================
 	            that.editorDataTreePath = that.tables[tableName].dataTreePath;
-	            that.editorDataTreePath["nodekey"] = that.nodekey;
+	            that.editorDataTreePath.nodekey = that.nodekey;
 
 	            that.editorFieldList = new BasicFieldList_mVc(
 	                "fill", "fill",
@@ -1083,12 +1093,14 @@ queryEditor.prototype = {
 	                    },
 	                    raHandler: data => {
 	                        if (!data) return;
-	                        const fullName = [schemaForTable, tableName, data].filter(Boolean).join(".");
+	                        const fullName = [schemaForTable, tableName, data]
+	                            .filter(Boolean).join(".");
 	                        document.getElementById("ra-text").value = fullName;
 	                    },
 	                    decHandler: data => {
 	                        if (!data) return;
-	                        const fullName = [schemaForTable, tableName, data].filter(Boolean).join(".");
+	                        const fullName = [schemaForTable, tableName, data]
+	                            .filter(Boolean).join(".");
 	                        document.getElementById("dec-text").value = fullName;
 	                    }
 	                }
@@ -1097,67 +1109,54 @@ queryEditor.prototype = {
 	            that.editorFieldList.draw();
 	            that.editorFieldList.setDataTreePath(that.editorDataTreePath);
 
-	            // Detecting ra and dec
+	            // ======================================================
+	            // RA / DEC auto-detection
+	            // ======================================================
 	            const coords = that.editorFieldList.autoDetectRaDec();
-	            if (coords.ra) document.getElementById("ra-text").value = [schemaForTable, tableName, coords.ra].filter(Boolean).join(".");
-	            if (coords.dec) document.getElementById("dec-text").value = [schemaForTable, tableName, coords.dec].filter(Boolean).join(".");
+	            if (coords.ra) {
+	                document.getElementById("ra-text").value =
+	                    [schemaForTable, tableName, coords.ra]
+	                        .filter(Boolean).join(".");
+	            }
+	            if (coords.dec) {
+	                document.getElementById("dec-text").value =
+	                    [schemaForTable, tableName, coords.dec]
+	                        .filter(Boolean).join(".");
+	            }
 
 	            hideAllDropdowns();
 	            addInsertButton();
-
-	            function addInsertButton() {
-	                selectedTableNameEl.innerHTML = "";
-	                selectedTableNameEl.textContent = fullTableName;
-
-	                const insertTableBtn = document.createElement("span");
-	                insertTableBtn.className = "stackconstbutton column-btn";
-	                insertTableBtn.textContent = "++";
-	                insertTableBtn.title = "Insert table at cursor / replace selection";
-	                insertTableBtn.style.cursor = "pointer";
-	                insertTableBtn.style.marginLeft = "6px";
-					insertTableBtn.onclick = () => {
-					    const editorContent = that.editor.getValue().trim();
-					    const editorSelection = that.editor.getSelection().trim();
-
-					    // ======================================================
-					    // Table insertion if the query is empty
-					    // ======================================================
-					    if (!editorContent && !editorSelection) {
-					        const query = [
-					            `SELECT TOP 100 *`,
-					            `FROM ${fullTableName}`
-					        ].join("\n");
-
-					        that.editor.setValue(query);
-							const lastLine = that.editor.lineCount() - 1;
-					        const lastCh = that.editor.getLine(lastLine).length;
-					        that.editor.setCursor({ line: lastLine, ch: lastCh });
-					        that.editor.focus();
-					        return;
-					    }
-
-					    // ======================================================
-					    // Default behaviour
-					    // ======================================================
-					    if (editorSelection) {
-					        that.editor.replaceSelection(fullTableName);
-					    } else {
-					        that.editor.replaceRange(fullTableName, that.editor.getCursor());
-					    }
-
-					    that.memoryTableFullName = fullTableName;
-					    that.editor.focus();
-					};
-
-	                selectedTableNameEl.appendChild(insertTableBtn);
-	            }
 	        });
 
 	        tableDropdown.appendChild(link);
 	    });
+
+	    // ======================================================
+	    // Insert button (++)
+	    // ======================================================
+	    function addInsertButton() {
+	        selectedTableNameEl.innerHTML = "";
+	        selectedTableNameEl.textContent = that.memoryTableFullName;
+
+	        const insertTableBtn = document.createElement("span");
+	        insertTableBtn.className = "stackconstbutton column-btn";
+	        insertTableBtn.textContent = "++";
+	        insertTableBtn.title = "Insert table";
+	        insertTableBtn.style.cursor = "pointer";
+	        insertTableBtn.style.marginLeft = "6px";
+
+	        insertTableBtn.onclick = () => {
+	            if (!that.selectedTable) return;
+
+	            that.selectedRightValue = that.selectedTable;
+	            that.rightValueIsTable = true;
+	            that.replaceSelectedText();
+	            that.editor.focus();
+	        };
+
+	        selectedTableNameEl.appendChild(insertTableBtn);
+	    }
 	},
-
-
 
 
 
