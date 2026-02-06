@@ -109,12 +109,15 @@ public class TapAccess  extends RootClass {
 	 * Set global timeout for URLConnection
 	 * @param conn : URL connection ready to be used
 	 * @throws IOException 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws KeyManagementException 
 	 */
-	public static final HttpURLConnection getGetUrlConnection(URL url) throws IOException{
+	public static final HttpURLConnection getGetUrlConnection(URL url) throws IOException, KeyManagementException, NoSuchAlgorithmException{
 		URL newUrl = url;
 		int cpt = 0;
 		while (true) {
 			logger.info("Get GET connection on " + newUrl);
+			disableCertifs();
 			HttpURLConnection conn;
 			//conn = (HttpsURLConnection) newUrl.openConnection();
 			conn = (HttpURLConnection) newUrl.openConnection();
@@ -144,10 +147,13 @@ public class TapAccess  extends RootClass {
 	 * @param conn : URL connection ready to be used
 	 * @param data : request parameters
 	 * @throws IOException 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws KeyManagementException 
 	 */
-	public static final HttpURLConnection getPostUrlConnection(URL url, String data) throws IOException{
+	public static final HttpURLConnection getPostUrlConnection(URL url, String data) throws IOException, KeyManagementException, NoSuchAlgorithmException{
 		logger.info("Get POST connection on " + url);
 
+		disableCertifs();
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 		conn.setConnectTimeout(SOCKET_CONNECT_TIMEOUT);		
 		conn.setReadTimeout(SOCKET_READ_TIMEOUT);
