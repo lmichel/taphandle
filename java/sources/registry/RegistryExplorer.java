@@ -45,16 +45,17 @@ public class RegistryExplorer extends RootClass {
 	 * init hard coded database
 	 */
 	static {
+		/****
 		try {
-			offRegistryMarks.put("cdssimbad"       , new RegistryMark("simbad", "ivo://cds.simbad/tap"
-					, "https://simbad.cds.unistra.fr.fr/simbad/sim-tap"
-					, "CDS Simbad TAP query engine", true, true));
-			offRegistryMarks.put("cdsvizier"       , new RegistryMark("vizier", "ivo://cds.vizier/tap"
-					, "https://tapvizier.cds.unistra.fr/TAPVizieR/tap/"
-					, "CDS Vizier TAP query engine", true, true));
+			//offRegistryMarks.put("cdssimbad"       , new RegistryMark("simbad", "ivo://cds.simbad/tap"
+			//		, "https://simbad.cds.unistra.fr.fr/simbad/sim-tap"
+			//		, "CDS Simbad TAP query engine", true, true));
+			// offRegistryMarks.put("cdsvizier"       , new RegistryMark("vizier", "ivo://cds.vizier/tap"
+			//		, "https://tapvizier.cds.unistra.fr/TAPVizieR/tap/"
+			//		, "CDS Vizier TAP query engine", true, true));
 			/*
 			 * For te datalink demo
-			 */
+			 *
 //			offRegistryMarks.put("betacadc"       , new RegistryMark("betacadc", ""
 //					, "http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap"
 //					, "Datalink Service Demonstrator", true, true));
@@ -64,6 +65,7 @@ public class RegistryExplorer extends RootClass {
 		} catch (MalformedURLException e) {
 			logger.equals(e);
 		}
+		*/
 	}
 
 	/**
