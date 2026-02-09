@@ -698,9 +698,8 @@ queryEditor.prototype = {
 	        );
 
 			/* ======================================================
-			   JOIN PLACEHOLDER LOGIC (LOCAL TO LINE) — FIX FINAL
+			   JOIN PLACEHOLDER LOGIC (LOCAL TO LINE)
 			   ====================================================== */
-			// On ne traite ce bloc que si la sélection est un placeholder lié au JOIN
 			if (/JOIN\s+__joinTable__\s+ON\s+__joinTable__\.__joinColumn__/i.test(lineText) &&
 			    (selectedPart.includes("__joinTable__") || selectedPart.includes("__joinColumn__"))) {
 
@@ -711,14 +710,11 @@ queryEditor.prototype = {
 			    let newLine = lineText;
 
 			    if (selectedPart.includes("__joinColumn__") && columnName) {
-			        // Remplacer uniquement la colonne
 			        newLine = newLine.replace(/__joinColumn__/g, columnName);
 
-			        // Synchroniser les deux __joinTable__ avec la table courante
 			        newLine = newLine.replace(/__joinTable__/g, qualifiedTable);
 
 			    } else if (selectedPart.includes("__joinTable__")) {
-			        // Remplacer les __joinTable__ uniquement, sans toucher la colonne qui suit
 			        newLine = newLine.replace(/\b__joinTable__\b/g, qualifiedTable);
 			    }
 
@@ -1055,9 +1051,6 @@ queryEditor.prototype = {
 	        link.addEventListener("click", e => {
 	            e.preventDefault();
 
-	            // ==========================
-	            // Contexte table uniquement
-	            // ==========================
 	            that.selectedTable = tableName;
 	            that.memoryTableFullName = fullTableName;
 	            selectedTableNameEl.textContent = fullTableName;
@@ -1065,7 +1058,7 @@ queryEditor.prototype = {
 	            const editorSelection = that.editor.getSelection().trim();
 
 	            // ======================================================
-	            // PLACEHOLDER ONLY → remplacement autorisé
+	            // PLACEHOLDER ONLY
 	            // ======================================================
 	            if (
 	                editorSelection === "__selectTable__" ||
