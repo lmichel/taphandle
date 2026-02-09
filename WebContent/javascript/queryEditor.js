@@ -1273,7 +1273,7 @@ queryEditor.prototype = {
 
 	        const from = that.editor.getCursor("from");
 	        const to = that.editor.getCursor("to");
-	        currentMarker = that.editor.markText(from, to, { title: `Type détecté : ${type}` });
+	        currentMarker = that.editor.markText(from, to, { title: `${type} detected` });
 
 	        if (type === "table") {
 	            const parts = selectedText.split(".");

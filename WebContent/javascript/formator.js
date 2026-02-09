@@ -80,21 +80,6 @@ ValueFormator = function() {
 	 * No reference to the context
 	 */
 	var formatSimpleValue = function(columnName, value, tdNode, columnMap) {
-		/*
-		 * TODO :add SAMP message to Aladin : script.aladin.send
-		 */
-		if( value.match(/^((position)|(region)|(polygon))/i) ) {
-			addSTCRegionControl(tdNode, value);
-		} else if ( raValue != undefined && decValue != undefined && 
-				(columnMap.s_ra == columnMap.currentColumn || columnMap.s_dec == columnMap.currentColumn) ) {
-			var alLink = "<a onclick='ModalAladin.aladinExplorer({ target: &quot;" + raValue + " " + decValue + "&quot;, fov: 0.016, title:&quot;...&quot;}, []);'class='dl_aladin' href='javascript:void(0);' title='Send source coord. to Aladin Lite'></a>";
-			tdNode.html(alLink + " " + (new Number(value)).toPrecision(8));
-			/*
-			 * Array annotation removed from server because of CSIRO for which all data are typed as arra
-			 */
-			
-		// This else if is used for lines where multiple bibcodes are displayed
-		} 
 		if (value.includes("|")) {
 			const table = value.split("|");
 			var isBibcode = true;
@@ -127,6 +112,19 @@ ValueFormator = function() {
 				console.log(value);
 			}
 			tdNode.html(bibcodes);
+		} 
+		/*
+		 * TODO :add SAMP message to Aladin : script.aladin.send
+		 */
+		if( value.match(/^((position)|(region)|(polygon))/i) ) {
+			addSTCRegionControl(tdNode, value);
+		} else if ( raValue != undefined && decValue != undefined && 
+				(columnMap.s_ra == columnMap.currentColumn || columnMap.s_dec == columnMap.currentColumn) ) {
+			var alLink = "<a onclick='ModalAladin.aladinExplorer({ target: &quot;" + raValue + " " + decValue + "&quot;, fov: 0.016, title:&quot;...&quot;}, []);'class='dl_aladin' href='javascript:void(0);' title='Send source coord. to Aladin Lite'></a>";
+			tdNode.html(alLink + " " + (new Number(value)).toPrecision(8));
+			/*
+			 * Array annotation removed from server because of CSIRO for which all data are typed as arra
+			 */
 		} else if(/* value.startsWith("Array")*/ value.length > 160 ) {
 			value = value.replace(/'/g, "");
 			value = value.replace(/"/g, "");
