@@ -153,6 +153,7 @@ public class RegistryExplorer extends RootClass {
 			String contact = (String)sa.get(5);
 			String key = name.replaceAll(" ", "_");
 			RegistryMark rm;
+
 			if( registryMarks.get(key) == null ) {
 				if( (rm = offRegistryMarks.get(key)) != null ) {
 					registryMarks.put(key, rm);

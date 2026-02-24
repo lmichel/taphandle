@@ -67,6 +67,7 @@ public class NodeBase extends RootClass{
 				RegistryExplorer.readRegistries();
 				if( !NOINIT){
 					for( RegistryMark r: RegistryExplorer.registryMarks.values()) {
+
 						if(r.mustBeInitAtStart() ){
 							logger.info("load node " + r.getNodeKey());
 							ThreadInit ti = new ThreadInit(r);
