@@ -3115,7 +3115,7 @@ span.kwconstraint{
 	position: relative; 
 }
 #RegionCanvasTemp {  
-	background:  rgba(255,255,255,0.6);
+	background:  rgba(255,255,255,0.2);
 }
 
 .tapPos span, .tapPos input, .tapPos a {

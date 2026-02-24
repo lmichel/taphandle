@@ -325,7 +325,7 @@ SkyGeometry = function() {
  * Some global variables
  */
 
-var rootUrl = "http://" + window.location.hostname +  (location.port?":"+location.port:"") + window.location.pathname;
+var rootUrl = window.location.protocol + "//" + window.location.hostname +  (location.port?":"+location.port:"") + window.location.pathname;
 
 /*
  * make sure that Modalinfo are on top of modals
@@ -541,7 +541,7 @@ Modalinfo =
 					resizable: false,
 					minWidth: min_size,
 					maxWidth: "100%",
-				    maxWeight: "100%",
+				    maxHeight: "100%",
 					position: { my: "center", at: "top", of: window }
 				});
 			}
@@ -550,7 +550,7 @@ Modalinfo =
 					resizable: false,
 					width: "auto",
 					maxWidth: "100%",
-				    maxWeight: "100%",
+				    maxHeight: "100%",
 					height: "auto"
 				});
 			}
@@ -635,6 +635,7 @@ Modalinfo =
 			}
 		}
 	});
+	
 
 	/**
 	 * Add the div of buttons with the class btndialog
@@ -1014,16 +1015,14 @@ Modalinfo =
 	 * @url: string, the url content we want to show
 	 * @img: boolean, tell if the content is an img
 	 */
-	var openIframePanel = function (content, img) {
+	var openIframePanel = function (content, img, alt_url) {
 		var id_modal = nextId();
-
+		var url = content;
+		var title = undefined;
 		if (content.url != undefined) {
-			var url = content.url;
-			var title = content.title;
-		} else {
-			var url = content;
-			var title = undefined;
-		}
+			url = content.url;
+			title = content.title;
+		} 
 
 		/*
 		 * Open an iframe with an adpated size if img is defined
@@ -1034,7 +1033,11 @@ Modalinfo =
 		else {
 			setIframePanel(id_modal, url, title);
 		}
-		addImgLinkTitle(id_modal, 'floppy', url);
+		if( alt_url != undefined ) {
+			addImgLinkTitle(id_modal, 'floppy', alt_url);
+		} else {
+			addImgLinkTitle(id_modal, 'floppy', url);
+		}
 		$("#"+id_modal).prev("div").find("span").find(".img-title").click(function() {
 			PageLocation.changeLocation(url);
 		});
@@ -1277,8 +1280,9 @@ Modalinfo =
 			$(divSelect).html('');
 			$(divSelect).html(htmlContent);
 
-			$(divSelect).css("background-color", bgcolor);
-
+			if( bgcolor != null ) {
+				$(divSelect).css("background-color", bgcolor);
+			}
 			var chdl = ( closeHandler == null )? function(ev, ui)  {$(divSelect).html("");}: closeHandler;
 			$(divSelect).on( "dialogclose", chdl);
 			$('div[pos="'+$(divSelect).attr("id")+'"]').on("click", chdl);
@@ -1369,25 +1373,27 @@ Modalinfo =
 			var $this = $(this);
 			var dialog = $this.find(".ui-dialog-content").data("dialog");
 			// if fluid option == true
-			if ( dialog && dialog.options.maxWidth && dialog.options.width) {
-				// fix maxWidth bug
-				$this.css("max-width", dialog.options.maxWidth);
-				//reposition dialog
-				dialog.option("position", dialog.options.position);
-			}
-
-			if (dialog && dialog.options.fluid) {
-				// namespace window resize
-				$(window).on("resize.responsive", function () {
-					var wWidth = $(window).width();
-					// check window width against dialog width
-					if (wWidth < dialog.options.maxWidth + 50) {
-						// keep dialog from filling entire screen
-						$this.css("width", "90%");
-					}
+			if(dialog) {
+				if (dialog.options.maxWidth && dialog.options.width) {
+					// fix maxWidth bug
+					$this.css("max-width", dialog.options.maxWidth);
 					//reposition dialog
 					dialog.option("position", dialog.options.position);
-				});
+				}
+
+				if (dialog && dialog.options.fluid) {
+					// namespace window resize
+					$(window).on("resize.responsive", function () {
+						var wWidth = $(window).width();
+						// check window width against dialog width
+						if (wWidth < dialog.options.maxWidth + 50) {
+							// keep dialog from filling entire screen
+							$this.css("width", "90%");
+						}
+						//reposition dialog
+						dialog.option("position", dialog.options.position);
+					});
+				}
 			}
 
 		});
@@ -4491,7 +4497,7 @@ WebSamp_mVc = function() {
 	 * used to transform local URLs in full URLs
 	 */
 	//if (typeof rootUrl != 'undefined') 
-	var rootUrl = "http://" + window.location.hostname +  (location.port?":"+location.port:"") + "/" + window.location.pathname.split( '/' )[1] + "/";
+	var rootUrl = window.location.protocol + "//" + window.location.hostname +  (location.port?":"+location.port:"") + "/" + window.location.pathname.split( '/' )[1] + "/";
 	/*
 	 * list of connected clients updated by model notifications
 	 */
@@ -4512,7 +4518,7 @@ WebSamp_mVc = function() {
 	};
 	hubs["cassis"] = {
 			webStartUrl : "http://cassis.irap.omp.eu/online/cassis.jnlp",
-			iconUrl : "http://saada.unistra.fr/taphandle/images/cassis.png",
+			iconUrl : "https://xcatdb.unistra.fr/4xmmdr13/xcatweb/images/cassis.png",
 			webUrl : "http://cassis.irap.omp.eu/",
 			description : "CASSIS is able to retrieve some useful informations for the modeling or identification from databases"
 	};
@@ -4633,7 +4639,7 @@ WebSamp_mVc = function() {
 						: callback + "(\"" +  ident + "\");";
 				// the icon send by the hub doens't works so we upload our icon
 				if(meta["samp.name"] == "Cassis"){
-					meta["samp.icon.url"] = "http://saada.unistra.fr/taphandle/images/cassis.png";
+					meta["samp.icon.url"] = "https://xcatdb.unistra.fr/4xmmdr13/xcatweb/images/cassis.png";
 					meta["home.page"] = "http://cassis.irap.omp.eu/";
 				}
 				else if(meta["samp.name"] == "splat"){
@@ -7709,9 +7715,9 @@ console.log('=============== >  ConeSearch_v.js ');
 
 /**
  * 
- * @param parentDivId: ID of the div containing thge filed list. It must exist before.
+ * @param parentDivId: ID of the div containing the filed list. It must exist before.
  * @param formName    : Name of the form. Although internal use must be 
- *                      set from outside to avoi conflict by JQuery selectors  
+ *                      set from outside to avoid conflict by JQuery selectors  
  * @param  constContainerId  : Id of the div containing all the list: must existe before             
  * @param  removeAllHandler   : Handler processing the click on the remove all button          
  */
@@ -7808,9 +7814,9 @@ console.log('=============== >  ConstList_v.js ');
 
 /**
  * 
- * @param parentDivId: ID of the div containing thge filed list. It must exist before.
+ * @param parentDivId: ID of the div containing the filed list. It must exist before.
  * @param formName    : Name of the form. Although internal use must be 
- *                      set from outside to avoi conflict by JQuery selectors  
+ *                      set from outside to avoid conflict by JQuery selectors  
  * @param  handlers       : Object with the handler to be implemented. Possible Fields are                 
  *         stackHandler   : Handler processing the click on the stack button attached to each field            
  *         orderByHandler : Handler processing the click on the Orderby button attached to each field   
@@ -7859,6 +7865,7 @@ BasicFieldList_mVc.prototype = {
 		setDataTreePath: function(dataTreePath){
 			this.dataTreePath = dataTreePath;
 			this.displayFields();
+			
 		},
 		getAttributeTitle : function(ah) {
 			return ah.nameorg 
@@ -7890,7 +7897,7 @@ BasicFieldList_mVc.prototype = {
 					+"</td>";
 			}
 			if( this.stackHandler != null ) {
-				row += "<td class='attlist attlistcmd'>"
+				row += "<td class='attlist attlistcmd' style='width:40px; text-align: left'>"
 					+"<input id=stack_" + id + " title=\"" + this.stackTooltip  + "\"  class=\"stackconstbutton\" type=\"button\"></input>"
 					+"</td>";
 			}
@@ -7911,8 +7918,7 @@ BasicFieldList_mVc.prototype = {
 				$('#' + this.fieldListId + ' input[id="order_' + id + '"]' ).click(function() {that.orderByHandler($(this).closest("tr").attr("id"));});
 			}
 			if( this.stackHandler != null ){
-				$('#' + this.fieldListId + ' input[id="stack_' + id + '"]' ).click(function() {
-					that.stackHandler($(this).closest("tr").attr("id"));});
+				$('#' + this.fieldListId + ' input[id="stack_' + id + '"]' ).click(function() {that.stackHandler($(this).closest("tr").attr("id"));});
 			}
 			if( this.raHandler != null ){
 				$('#' + this.fieldListId + ' input[id="tora_' + id + '"]' ).click(function() {that.raHandler($(this).closest("tr").attr("id"));});
@@ -7980,8 +7986,33 @@ BasicFieldList_mVc.prototype = {
 		},
 		getAttributeHandler: function(ahname){
 			return this.attributesHandlers[ahname];
+		},
+		autoDetectRaDec: function() {
+			let ra = null;
+			let dec = null;
+
+			for(let ahname in this.attributesHandlers){
+				const ah = this.attributesHandlers[ahname];
+
+				if(!ra && (
+					ah.ucd === "pos.eq.ra;meta.main" ||
+					ah.ucd === "pos.eq.ra" ||
+					["ra", "RAJ2000", "s_ra", "pos_ra_csa"].includes(ah.nameattr)
+				)) ra = ahname;
+
+				if(!dec && (
+					ah.ucd === "pos.eq.dec;meta.main" ||
+					ah.ucd === "pos.eq.dec" ||
+					["dec", "DECJ2000", "s_dec", "pos_dec_csa"].includes(ah.nameattr)
+				)) dec = ahname;
+
+				if(ra && dec) break;
+			}
+
+			return { ra, dec };
 		}
-}
+	}
+		
 /**
  * class prototype
  */
@@ -8009,14 +8040,19 @@ FieldList_mVc.prototype = Object.create(BasicFieldList_mVc.prototype, {
 			this.parentDiv.html('<div class=fielddiv><div class="fieldlist" id="' + this.fieldListId
 					+  '"></div>'
 					+ ' <div class="form-group" style="width:347px; margin-bottom:8px; margin-top:8px;"><div class="input-group"><div class="input-group-addon input-sm"><span class="glyphicon glyphicon-search"></span></div>'
-					+ ' <input id="' + this.fieldFilterId +  '" class="form-control input-sm" type="text" placeholder="Search"/></div></div>');
-
+					+ ' <input id="' + this.fieldFilterId +  '" class="form-control input-sm" type="text" placeholder="Search" style="z-index: 1001;"/></div></div>');
+			/*
+			 * WARNING
+			 * For some reason, z-index is set at 3 which prevents keyboard events to reach the widget.
+			 * The reason could be in domaine.css: form-control z-index:inital
+			 * To prevent this before a better understanding we force z-index: 1001;
+			 */
 			$("#"+this.fieldListId).closest(".fielddiv").css("padding","3px");
-
 			$('#' + this.fieldFilterId).keyup(function() {
 				that.filterPattern = new RegExp($(this).val(), 'i');
 				that.fireFilter();
 			});
+			
 			$('#' + this.fieldFilterId).one("click",function() {
 				$(this).css('color','black');
 				$(this).css('font-style','');
@@ -8379,11 +8415,12 @@ TapColList_mVc.prototype = Object.create(FieldList_mVc.prototype, {
 					, function(cache) {
 						that.resetPosKeywords();
 						var ahm = cache.hamap;
+						positionOrder = that.orderPosKeywords(ahm);
 						var table  = "<table id=" + that.fieldTableId + " style='width: 100%; border-spacing: 0px; border-collapse:collapse' class='table'></table>";
 						$('#' + that.fieldListId).html(table);
 						that.attributesHandlers = new Array();
-						for( var k=0 ; k<ahm.length ; k++) {
-							var ah = ahm[k];
+						for( var k=0 ; k<positionOrder.length ; k++) {
+							var ah = positionOrder[k];
 							that.attributesHandlers[ah.nameattr] = ah;				
 							that.displayField(ah);
 						}
@@ -8412,6 +8449,11 @@ TapColList_mVc.prototype = Object.create(FieldList_mVc.prototype, {
 	},
 	resetPosKeywords: {
 		value: function(ah) {}
+	},
+	orderPosKeywords: {
+		value: function(ahm) {
+			return ahm;
+		}
 	}
 
 });
@@ -8522,7 +8564,7 @@ TapFieldList_mVc.prototype = Object.create(TapColList_mVc.prototype, {
 			$('#' + this.decFieldId).html('');
 			this.deltakw = null;
 		}
-	},
+	},	
 
 	lookForAlphaKeyword: {
 		value: function(ah) {
@@ -8596,6 +8638,7 @@ TapFieldList_mVc.prototype = Object.create(TapColList_mVc.prototype, {
 			}
 		}
 	},
+	
 	setDeltaKeyword: {
 		value: function(ahname) {
 			$('#' + this.decFieldId).html('');
@@ -8612,6 +8655,78 @@ TapFieldList_mVc.prototype = Object.create(TapColList_mVc.prototype, {
 	getDeltaKeyword: {
 		value: function(ahname) {
 			return $('#' + this.decFieldId + " span" ).text();
+		}
+	}
+});
+
+
+/**
+ * Field list with RA/DEC field selector, sorted based on coordinates
+ * @param parentDivId
+ * @param formName
+ * @param handlers
+ * @param getTableAttUrl $.getJSON("gettableatt", {jsessionid: sessionID, node: nodekey, table:newTable }
+ * @tables {node: nodekey, table:newTable}
+ */
+function TapFieldListPos(parentDivId, formName, handlers, getTableAttUrl, sessionID){
+	TapFieldList_mVc.call(this, parentDivId, formName, handlers, getTableAttUrl, sessionID);
+};
+TapFieldListPos.prototype = Object.create(TapFieldList_mVc.prototype, {
+	/**
+	 * This function sorts the columns by putting the ones containing coordinates at the top.
+	 * An order of priority is determined and the coordinates columns are sorted according to it.
+	 * At the end we return the sorted list
+	 */
+	orderPosKeywords: {
+		value: function(ahm) {
+			const coordinatesResult = [];
+			const ra_dec = [];
+			const lon_lat = [];
+			// First we only add the columns containing coordinates to the final list (according to the determined order)
+			for( var k=0 ; k<ahm.length ; k++) {
+				var ah = ahm[k];
+				if (ah.ucd == "pos.eq.ra;meta.main" || ah.ucd == "pos.eq.ra;meta.main"){
+					ra_dec.push(ah);
+				}
+				if (ah.ucd == "pos.galactic.lon;meta.main" || ah.ucd == "pos.galactic.lat;meta.main"){
+					lon_lat.push(ah);
+				}
+				if (ah.ucd == "pos.eq.ra" || ah.ucd == "pos.eq.ra"){
+					if (!ra_dec.includes(ah)){
+						ra_dec.push(ah);
+					}
+				}
+				if (ah.ucd == "pos.galactic.lon" || ah.ucd == "pos.galactic.lat"){
+					if (!lon_lat.includes(ah)){
+						lon_lat.push(ah);
+					}
+				}
+				if (ah.nameattr == "ra" || ah.nameattr == "dec"){
+					if (!ra_dec.includes(ah)){
+						ra_dec.push(ah);
+					}
+				}
+				if (ah.nameattr == "lon" || ah.nameattr == "lat"){
+					if (!lon_lat.includes(ah)){
+						lon_lat.push(ah);
+					}
+				}
+			}
+			// Here we add the columns containing coordinates to the final list
+			for (var k=0; k<ra_dec.length; k++){
+				coordinatesResult.push(ra_dec[k]);
+			}
+			for (var k=0; k<lon_lat.length; k++){
+				coordinatesResult.push(lon_lat[k]);
+			}
+			// And finally we add all the columns not corresponding to the criterias at the end of the list
+			for( var k=0 ; k<ahm.length ; k++) {
+				var ah = ahm[k];
+				if (!coordinatesResult.includes(ah)){
+					coordinatesResult.push(ah)
+				}
+			}
+			return coordinatesResult;
 		}
 	}
 });
@@ -8939,7 +9054,7 @@ DataLink_mVc.prototype = {
 					i++;
 				});
 				html += "<fieldset>";
-				html += "  <legend style='border-bottom: 0px; border-top: 1px solid #e5e5e5;'><span style='fontweight: bold;'>Link <i>" + productType + "</i> <span></legend>";
+				html += "  <legend style='border-bottom: 0px; border-top: 1px solid #e5e5e5;'><span style='fontweight: bold;'>Get <i>" + productType + "</i> <span></legend>";
 				html += "    <a class='dlinfo' title='Get info about' href='#' onclick='LinkProcessor.fireGetProductInfo(\"" + this.linkInstance.access_url + "\"); return false;'></a>"
 				html += "    <a class=dldownload href='#' onclick='PageLocation.changeLocation(&quot;" + url + "&quot);' title='Download link target'></a>";
 				html += "    <span class=help>" +  semantic + "</span><br>";
@@ -8962,7 +9077,7 @@ DataLink_mVc.prototype = {
 				var type = $(this).attr('type');
 				var datatype = $(this).attr('datatype');
 				html += "<fieldset>";
-				html += "  <legend><span>Link <i>" + $(this).attr('name') + "</i> (" + datatype + ")<span></legend>";
+				html += "  <legend><span>Get <i>" + $(this).attr('name') + "</i> (" + datatype + ")<span></legend>";
 				if( type == "download" ) {
 					html += that.buildDownloadForm($(this), datatype);
 				} else if( type == "webservice" ) {							
@@ -9355,7 +9470,7 @@ Link_mVc.prototype = {
 			if( this.params.length == 0 ){
 				var html = "";
 				html += "<fieldset>";
-				html += "  <legend style='margin-bottom: 5px;border-top: 1px solid #e5e5e5;'><span style='font-weight: bold;'>Link <i style='font-weight: normal;'>"  + this.linkInstance.semantics + "</i> <span></legend><div class=datalinkform>";
+				html += "  <legend style='margin-bottom: 5px;border-top: 1px solid #e5e5e5;'><span style='font-weight: bold;'>Get <i style='font-weight: normal;'>"  + this.linkInstance.semantics + "</i> <span></legend><div class=datalinkform>";
 
 				//html += "  <legend><span title='Click on the link name to toggle'>Link <i>"  + this.linkInstance.semantics + "</i></legend><div class=datalinkform>";
 				html += this.getDescriptionSpan();
@@ -9366,7 +9481,7 @@ Link_mVc.prototype = {
 				var html = "";
 				html += "<fieldset name='" + this.linkInstance.semantics + "'>";
 				var that = this;
-				html += "  <legend style='margin-bottom: 5px;border-top: 1px solid #e5e5e5;'><span style='font-weight: bold;' title='Click on the link name to toggle'>Link <i style='font-weight: normal;'>"  + this.linkInstance.semantics + "</i></legend><div class=datalinkform>";
+				html += "  <legend style='margin-bottom: 5px;border-top: 1px solid #e5e5e5;'><span style='font-weight: bold;' title='Click on the link name to toggle'>Get <i style='font-weight: normal;'>"  + this.linkInstance.semantics + "</i></legend><div class=datalinkform>";
 				html += this.getDescriptionSpan();
 				for( var i=0 ; i<this.params.length ; i++) {
 					var param = this.params[i];
@@ -10375,7 +10490,7 @@ tapQEditor_Mvc.prototype = Object.create(tapColSelector_Mvc.prototype, {
 			var nameAh = '';
 			if( ra.startsWith('poslist:')) {
 				defValue = 'list params,'+ radius;
-				nameAh = 'POSLIST:' + ra.replace('poslist:','');;
+				nameAh = 'POSLIST:' + ra.replace('poslist:','');
 			} else {
 				defValue = ra + ',' + dec + ','+ radius;
 				nameAh = 'POSITION';				
@@ -11236,7 +11351,7 @@ tapQEditor_mVc.prototype = Object.create(tapColSelector_mVc.prototype, {
 function tapPosQEditor_mVc(params /*parentDivId, formName, sesameUrl, upload { url, postHandler, preloadedGetter}, queryView, currentNode }*/){
 	tapColSelector_mVc.call(this, params);
 	var that = this;
-	this.fieldListView = new TapFieldList_mVc(params.parentDivId
+	this.fieldListView = new TapFieldListPos(params.parentDivId
 			, this.formName
 			, {stackHandler: null
 	, orderByHandler: null
@@ -14246,6 +14361,7 @@ STCRegion.prototype = {
  * @returns {DataTreePath}
  */
 function DataTreePath(params){
+    
 	this.nodekey = "notset";
 	this.schema = "notset";
 	this.table = "notset";
@@ -14367,7 +14483,7 @@ MetadataSource = function() {
 		 */
 		//key = JSON.stringify(dataTreePath) ;
 		key = dataTreePath.key;
-		if(  cache[key] == undefined ) {
+		if(  cache[key] == undefined || 1==1 ) {
 			var buffer = {};
 			buffer.dataTreePath = dataTreePath;		
 			buffer.hamap        = new Array();
@@ -14562,7 +14678,9 @@ MetadataSource = function() {
 	 * exports
 	 */
 	var pblc = {};
-	pblc.ahMap        = function(dataTreePath){return(!cache)?null: cache[dataTreePath.key].hamap;};
+	pblc.ahMap        = function(dataTreePath){
+		return(!cache)?null: cache[dataTreePath.key].hamap;
+	};
 	pblc.relations        = function(dataTreePath){return(!cache)?null: cache[dataTreePath.key].relation;};
 	pblc.joinedTables = function(dataTreePath){return(!cache)?null: cache[dataTreePath.key].targets;};
 	pblc.init = init;
