@@ -5,32 +5,32 @@
 #
 # Merge all required JS file in one m
 # Merge all required in one. 
-# Using the minifierd resources speed the application startup and make it indepen,dant from jsStuff
+# Using the minifierd resources speed the application startup and make it indepen,dant from jsresources
 # Warning: All resources used by the CSS (image with relative paths or imoprted CSS) must be available in the min directory
-# A Part of the resources are local to 3XMM and the others are copied from jsStuff
+# A Part of the resources are local to 3XMM and the others are copied from jsresources
 #
 
 ##########################
 # Script Resources
 #########################      
-workspaceDir="/home/michel/workspace"
-#workspaceDir="/home/michel/gitRepositories"
+#workspaceDir="/home/michel/workspace"
+workspaceDir="/home/michel/gitRepositories"
 
 outputDir="../WebContent/min/packed" # directory where both packed JS and CSS are stored 
 packedCSS=$outputDir/packedCSS.css    # name of the file containing the packed CSS
 packedJS=$outputDir/packedJS.js       # name of the file containing the packed JS
 imageDir="../WebContent/images"      # Directory from where the 3XMM images must be copied 
 imageOutput="../WebContent/min/images" # Directory where the 3XMM images must be copied 
-iconsDir="$workspaceDir/jsStuff/WebContent/saadajsbasics/icons"      # Directory from where the icons must be copied 
+iconsDir="$workspaceDir/jsresources/WebContent/saadajsbasics/icons"      # Directory from where the icons must be copied 
 iconsOutput="../WebContent/min/icons" # Directory where the 3XMM icons must be copied 
-fontsDir="$workspaceDir/jsStuff/WebContent/saadajsbasics/styleimports/fonts"      # Directory from where the icons must be copied 
+fontsDir="$workspaceDir/jsresources/WebContent/saadajsbasics/styleimports/fonts"      # Directory from where the icons must be copied 
 fontsOutput="../WebContent/min/fonts" # Directory where the 3XMM icons must be copied 
 
 echo "========== remove packed files ======================="
 rm $outputDir/packedCSS.css
 rm $outputDir/packedJS.css
 #
-# List of jsStuff JS objects
+# List of jsresources JS objects
 # MVC template for names:
 #    Files without a js suffix are related to the MVC pattern.
 #    There are actually 3 files *_m/v/c.js 
@@ -61,7 +61,7 @@ js_array_org=("basics.js"
 # Script Functions
 #########################      
 #
-# Build the real list of jsStuff JS files by applying the MVC template for names
+# Build the real list of jsresources JS files by applying the MVC template for names
 #
 js_basic_array=() 
 for item in ${js_array_org[*]}
@@ -107,7 +107,7 @@ function  pack() {
 	rm -f $outputFile
 	for item in "${js_array[@]}"
 	do 
-		echo pack $outputDir/$item to $packedJS
+		echo pack $item to $packedJS
 		cat $outputDir/$item >> $packedJS || exit 1
 		echo "" >> $packedJS
 		echo "console.log('=============== > " $item "');" >> $packedJS
@@ -138,7 +138,7 @@ function  packCSS() {
 rm -f  $outputDir/$packedCSS	
 echo "=========== Pack CSS files"
 pwd
-packCSS "$workspaceDir/jsStuff/WebContent/saadajsbasics/styleimports/themes/base/"\
+packCSS "$workspaceDir/jsresources/WebContent/saadajsbasics/styleimports/themes/base/"\
      "jquery-ui.css"\
     "jquery.ui.accordion.css"\
     "jquery.ui.autocomplete.css"\
@@ -153,14 +153,14 @@ packCSS "$workspaceDir/jsStuff/WebContent/saadajsbasics/styleimports/themes/base
     "jquery.ui.theme.css" 
 
     
-packCSS "$workspaceDir/jsStuff/WebContent/saadajsbasics/styleimports" \
+packCSS "$workspaceDir/jsresources/WebContent/saadajsbasics/styleimports" \
     "layout-default-latest.css" \
 	"datatable.css" \
 	"simplemodal.css"\
 	"aladin.min.css"
 
 	
-packCSS "$workspaceDir/jsStuff/WebContent/saadajsbasics/styles"\
+packCSS "$workspaceDir/jsresources/WebContent/saadajsbasics/styles"\
     "basics.css" \
     "domain.css" 
 
@@ -168,24 +168,27 @@ packCSS "$workspaceDir/jsStuff/WebContent/saadajsbasics/styles"\
 packCSS "../WebContent/styles/" \
     "global.css" \
     "form.css" \
-    "home.css"
+    "home.css" \
+    "queryEditor.css"
     
 packCSS "../WebContent/styleimport/" \
-    "jsonSuggest.css" 
+    "jsonSuggest.css" \
+    "codemirror.min.css" \
+    "eclipse.css"
     
-packCSS "$workspaceDir/jsStuff/WebContent/saadajsbasics/styleimports/bootstrap" \
+packCSS "$workspaceDir/jsresources/WebContent/saadajsbasics/styleimports/bootstrap" \
     "bootstrap.css" \
 	"bootstrap.css.map"
     
 
 echo "=========== Minify JS files"
 rm -f $packedJS
-minifySet "$workspaceDir/jsStuff/WebContent/saadajsbasics/javascript"   \
+minifySet "$workspaceDir/jsresources/WebContent/saadajsbasics/javascript"   \
     ${js_basic_array[@]} 
 
-minifySet "$workspaceDir/jsStuff/WebContent/saadajsbasics/jsimports/ui"    \
+minifySet "$workspaceDir/jsresources/WebContent/saadajsbasics/jsimports/ui"    \
      "jquery-ui.js"
-minifySet "$workspaceDir/jsStuff/WebContent/saadajsbasics/jsimports"       \
+minifySet "$workspaceDir/jsresources/WebContent/saadajsbasics/jsimports"       \
     "jquery.simplemodal.js"\
     "jquery.alerts.js"\
     "jquery.dataTables.js"\
@@ -201,9 +204,12 @@ minifySet "../WebContent/jsimport"   \
      "jquery.jsonSuggest-2.js" \
      "jquery.jeditable.js" \
      "jquery.layout-latest.js" \
-     "json2.js" 
+     "json2.js" \
+     "codemirror.min.js" \
+     "sql.min.js"
 
 minifySet "../WebContent/javascript"   \
+                "vocabularyFieldList.js" \
 				"formator.js" \
 				"resultPaneModel.js"\
 				"resultPaneView.js"\
@@ -214,21 +220,22 @@ minifySet "../WebContent/javascript"   \
                 "tapModel.js"  \
                 "tapView.js"  \
                 "tapControler.js"  \
-                                "jobModel.js"  \
-                                "jobView.js"  \
-                                "jobControler.js"  \
-                                "jobDictionnary.js"  \
-                                "cartView.js"  \
-                                "cartControler.js"  \
-                                "cartModel.js"  \
-                                "zipjobModel.js"  \
-                                "datatreeView.js"  \
-                                "initFunctions.js"  \
-                                "utils.js" \
-                                "viewState.js"\
-                                "upload.js"\
-                                "resize.js" \
-                                "ready.js"  
+                "jobModel.js"  \
+                "jobView.js"  \
+                "jobControler.js"  \
+                "jobDictionnary.js"  \
+                "cartView.js"  \
+                "cartControler.js"  \
+                "cartModel.js"  \
+                "zipjobModel.js"  \
+                "datatreeView.js"  \
+                "initFunctions.js"  \
+                "utils.js" \
+                "viewState.js"\
+                "upload.js"\
+                "resize.js" \
+                "queryEditor.js" \
+                "ready.js"  
 
 
 echo "=========== Pack JS files"
@@ -238,10 +245,10 @@ echo "=========== Copy images"
 cp $imageDir/*    $imageOutput"/" || exit 1
 
 echo "=========== Copy JS resource images"
-cp $workspaceDir/jsStuff/WebContent/saadajsbasics/images/*    ../WebContent/min/images"/" || exit 1
+cp $workspaceDir/jsresources/WebContent/saadajsbasics/images/*    ../WebContent/min/images"/" || exit 1
 
 echo "=========== Copy bootstrap.css.map"
-cp "$workspaceDir/jsStuff/WebContent/saadajsbasics/styleimports/bootstrap/bootstrap.css.map" ../WebContent/min/packed|| exit 1
+cp "$workspaceDir/jsresources/WebContent/saadajsbasics/styleimports/bootstrap/bootstrap.css.map" ../WebContent/min/packed|| exit 1
 
 echo "=========== Copy icons"
 rsync -av --exclude=".*" $iconsDir/* $iconsOutput"/" || exit 1
