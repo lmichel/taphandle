@@ -24,7 +24,7 @@ public class TapXTAPDB  extends RootClass {
 		validWorkingDirectory(baseDir + "/nodebase");
 
 		
-		RegistryMark rm = new RegistryMark("STSCI", " ", baseUrlN, "test", false, true);
+		RegistryMark rm = new RegistryMark("XTAPDB", "ivoid", baseUrlN, "description", "title", "name", "contact", false, true);
 		TapNode tn = new TapNode(rm, "/tmp/meta");
 
 		JSONParser parser = new JSONParser();
