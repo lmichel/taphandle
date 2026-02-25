@@ -16,15 +16,26 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
+import java.security.cert.X509Certificate;
+import java.io.UnsupportedEncodingException;
 
 import resources.RootClass;
 import session.NodeCookie;
 import translator.JsonUtils;
 import translator.NameSpaceDefinition;
 import translator.XmlToJson;
-
 
 /**
  * @author laurent
@@ -35,26 +46,28 @@ import translator.XmlToJson;
 public class TapAccess  extends RootClass {
 	public static final int HTTP_TEMPORARY_REDIRECT = 307;
 	public static final int HTTP_PERMANENT_REDIRECT = 301;
-	public static final HttpURLConnection getSimpleUrlConnection(URL url) throws IOException{
+
+	public static final HttpURLConnection getSimpleUrlConnection(URL url) throws IOException, KeyManagementException, NoSuchAlgorithmException{
 		logger.info("Get connection on " + url);
+		disableCertifs();
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 		conn.setConnectTimeout(SOCKET_CONNECT_TIMEOUT);		
 		conn.setReadTimeout(SOCKET_READ_TIMEOUT);
 		return conn;
 	}
 
-/**
- * True if the connection code matches any redirection mode 
- * @param code
- * @returnAME%2C+COLUMN_NAME%2C+DESCRIPTION%2C+UNIT%2C+UCD%2C+DATATYPE%2C+'SIZE'%2C+PRINCIPAL%2C+INDEXED%2C+STD+from+tap_schema.columns
- */
-private static boolean isRedirect(int code) {
-	    return code == HttpURLConnection.HTTP_MOVED_PERM
-	            || code == HttpURLConnection.HTTP_MOVED_TEMP
-	            || code == HttpURLConnection.HTTP_SEE_OTHER
-	            || code == HttpURLConnection.HTTP_MULT_CHOICE
-	            || code == HTTP_TEMPORARY_REDIRECT 
-	            || code == HTTP_PERMANENT_REDIRECT;
+	/**
+	 * True if the connection code matches any redirection mode 
+	 * @param code
+	 * @returnAME%2C+COLUMN_NAME%2C+DESCRIPTION%2C+UNIT%2C+UCD%2C+DATATYPE%2C+'SIZE'%2C+PRINCIPAL%2C+INDEXED%2C+STD+from+tap_schema.columns
+	 */
+	private static boolean isRedirect(int code) {
+		return code == HttpURLConnection.HTTP_MOVED_PERM
+				|| code == HttpURLConnection.HTTP_MOVED_TEMP
+				|| code == HttpURLConnection.HTTP_SEE_OTHER
+				|| code == HttpURLConnection.HTTP_MULT_CHOICE
+				|| code == HTTP_TEMPORARY_REDIRECT 
+				|| code == HTTP_PERMANENT_REDIRECT;
 	}
 
 	/**
@@ -66,12 +79,14 @@ private static boolean isRedirect(int code) {
 	 * Set global timeout for URLConnection
 	 * @param conn : URL connection ready to be used
 	 * @throws IOException 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws KeyManagementException 
 	 */
-	public static final HttpURLConnection getGetUrlConnection(URL url) throws IOException{
+	public static final HttpURLConnection getGetUrlConnection(URL url) throws IOException, KeyManagementException, NoSuchAlgorithmException{
 		URL newUrl = url;
-		int cpt = 0;
 		while (true) {
 			logger.info("Get GET connection on " + newUrl);
+			disableCertifs();
 			HttpURLConnection conn = (HttpURLConnection) newUrl.openConnection();
 			conn.setConnectTimeout(SOCKET_CONNECT_TIMEOUT);		
 			conn.setReadTimeout(SOCKET_READ_TIMEOUT);
@@ -80,14 +95,13 @@ private static boolean isRedirect(int code) {
 			int status = conn.getResponseCode();
 			if( TapAccess.isRedirect(status) ) {
 				newUrl = new URL(conn.getHeaderField("Location"));
-			    logger.debug("Redirect to " + newUrl);
-			    cpt ++;
+				logger.debug("Redirect to " + newUrl);
 			} else {
 				return conn;
 			}
 		}
 	}
-	
+
 	/**
 	 * Returns the HTTP URL POSTconnection with the proper timeouts
 	 * Data are sent to this connection
@@ -99,10 +113,13 @@ private static boolean isRedirect(int code) {
 	 * @param conn : URL connection ready to be used
 	 * @param data : request parameters
 	 * @throws IOException 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws KeyManagementException 
 	 */
-	public static final HttpURLConnection getPostUrlConnection(URL url, String data) throws IOException{
+	public static final HttpURLConnection getPostUrlConnection(URL url, String data) throws IOException, KeyManagementException, NoSuchAlgorithmException{
 		logger.info("Get POST connection on " + url);
-
+		
+		disableCertifs();
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 		conn.setConnectTimeout(SOCKET_CONNECT_TIMEOUT);		
 		conn.setReadTimeout(SOCKET_READ_TIMEOUT);
@@ -114,15 +131,44 @@ private static boolean isRedirect(int code) {
 			writer.flush();
 			writer.close();
 		}
-		
+
 		if( TapAccess.isRedirect(conn.getResponseCode())) {
-		    String newLocation = conn.getHeaderField("Location");		    
-		    logger.debug("Redirect " + url + " + to " + newLocation + " as a GET");
+			String newLocation = conn.getHeaderField("Location");		    
+			logger.debug("Redirect " + url + " + to " + newLocation + " as a GET");
 			return getGetUrlConnection(new URL(newLocation+"?"+data));
 		} else {
 			return conn;
 		}
 	}
+
+	/**
+	 * Locally fix of "unable to find valid certification path to requested target"
+	 * @throws NoSuchAlgorithmException
+	 * @throws KeyManagementException
+	 */
+	public static void disableCertifs() throws NoSuchAlgorithmException, KeyManagementException {
+		/* Start of Fix */
+		TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
+			public java.security.cert.X509Certificate[] getAcceptedIssuers() { return null; }
+			public void checkClientTrusted(X509Certificate[] certs, String authType) { }
+			public void checkServerTrusted(X509Certificate[] certs, String authType) { }
+
+		} };
+
+		SSLContext sc = SSLContext.getInstance("SSL");
+		sc.init(null, trustAllCerts, new java.security.SecureRandom());
+		HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+
+		// Create all-trusting host name verifier
+		HostnameVerifier allHostsValid = new HostnameVerifier() {
+			public boolean verify(String hostname, SSLSession session) { return true; }
+		};
+		// Install the all-trusting host verifier
+		HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+		/* End of the fix*/
+
+	}
+
 
 	/**
 	 * @param endpoint : service URL
@@ -148,7 +194,7 @@ private static boolean isRedirect(int code) {
 				throw new ArithmeticException("Invalid html code : " + conn.getResponseCode() + " on " + url);
 			}
 			logger.error(conn.getURL() + " returns error " +  ((HttpURLConnection)conn).getResponseCode());
-			
+
 			InputStream is = conn.getErrorStream();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(is));
 			StringBuilder stringBuffer = new StringBuilder();
@@ -160,13 +206,13 @@ private static boolean isRedirect(int code) {
 			Pattern p = Pattern.compile(".*>([^<>]+)<.*", Pattern.DOTALL);
 			Matcher m = p.matcher(stringBuffer.toString());
 			if (m.find( )) {
-				 logger.error("Error " + m.group(1));
-		         throw new TapException(m.group(1));
+				logger.error("Error " + m.group(1));
+				throw new TapException(m.group(1));
 
-		    } else {
-				 logger.error("Error Uncaught error");
-		         throw new TapException("Uncaught error");
-		    }
+			} else {
+				logger.error("Error Uncaught error");
+				throw new TapException("Uncaught error");
+			}
 		}
 		// Get the response
 		try {
@@ -188,14 +234,14 @@ private static boolean isRedirect(int code) {
 						lg += bytesRead;
 					}
 					logger.debug("got " + lg + "b of encoded data ");
-			
+
 				} finally {
-				    if(fileOutputStream != null ) fileOutputStream.close();
-				    if(in != null ) in.close();
+					if(fileOutputStream != null ) fileOutputStream.close();
+					if(in != null ) in.close();
 				}
-			/*
-			 * ASCII content
-			 */
+				/*
+				 * ASCII content
+				 */
 			} else {
 				BufferedWriter bw = null;
 				InputStream inputStream = conn.getInputStream();
@@ -260,9 +306,9 @@ private static boolean isRedirect(int code) {
 		cookie.storeCookie();	 
 		// TODO: removing these debug messages make applyStyle failing on an unexistant file on Saada
 		// as if  bw was not flushed !!!
-logger.info("@@@ " + outputfile );
-File f = new File(outputfile);
-logger.info("Recieved  " + f.length() + "b stored in " +  outputfile);
+		logger.info("@@@ " + outputfile );
+		File f = new File(outputfile);
+		logger.info("Recieved  " + f.length() + "b stored in " +  outputfile);
 
 		XmlToJson.applyStyle(outputfile, outputfile.replaceAll("xml", "json")
 				, styleDir + "asyncjob.xsl");
@@ -347,7 +393,7 @@ logger.info("Recieved  " + f.length() + "b stored in " +  outputfile);
 		XmlToJson.translateResultTable(outputfile, outputfile.replaceAll("xml", "json"));
 		return outputfile.replaceAll("xml", "json");
 	}
-	
+
 	/**
 	 * @param endpoint
 	 * @param query
@@ -363,16 +409,7 @@ logger.info("Recieved  " + f.length() + "b stored in " +  outputfile);
 		 * Services based on DACHs 	are forced to return VOTable with data in a table (not BINARY)
 		 * In order to be consumable by Aladin Lite
 		 */
-		String format = "";
-		if(endpoint.indexOf("__system__") > -1 || endpoint.indexOf("heidelberg") > -1 ) {
-			format = "&FORMAT=" + URLEncoder.encode("application/x-votable+xml;serialization=tabledata" , "ISO-8859-1");
-		}
-		/*
-		 * Ask the server to annotate the data
-		 */
-		else if(endpoint.indexOf("xtapdb") > -1) {
-			format = "&FORMAT=" + URLEncoder.encode("application/x-votable+xml;content=mivot" , "ISO-8859-1");
-		}
+		String format = getSpecificFormat(endpoint);
 		sendPostRequest(endpoint + "sync"
 				, "RUNID=" + runId + "&PHASE=RUN&REQUEST=doQuery" + format + "&LANG=ADQL&QUERY=" + URLEncoder.encode(query, "ISO-8859-1")
 				, outputfile
@@ -398,14 +435,36 @@ logger.info("Recieved  " + f.length() + "b stored in " +  outputfile);
 		 * Services based on DACHs 	are forced to return VOTable with data in a table (not BINARY)
 		 * In order to be consumable by Aladin Lite
 		 */
-		String format = (endpoint.indexOf("__system__") > 0 || endpoint.indexOf("heidelberg") > 0 )
-				? "&FORMAT=" + URLEncoder.encode("application/x-votable+xml;serialization=tabledata" , "ISO-8859-1"): "";
+
+		String format = getSpecificFormat(endpoint);
 		sendPostRequest(endpoint + "async"
 				, "RUNID=" + runId + format + "&REQUEST=doQuery&LANG=ADQL&QUERY=" + URLEncoder.encode(query, "ISO-8859-1")
 				, statusFileName
 				, cookie
 				, true);
 		return  JsonUtils.getValue (statusFileName.replaceAll("xml", "json"), "job.jobId");
+	}
+
+
+	/**
+	 * Set specific format for specific sites
+	 * 
+	 * @param endpoint
+	 * @return
+	 * @throws UnsupportedEncodingException
+	 */
+	public static String getSpecificFormat(String endpoint) throws UnsupportedEncodingException {
+		if(endpoint.indexOf("__system__") > -1 || endpoint.indexOf("heidelberg") > -1 ) {
+			return "&FORMAT=" + URLEncoder.encode("application/x-votable+xml;serialization=tabledata" , "ISO-8859-1");
+		}
+		/*
+		 * Ask the server to annotate the data
+		 */
+		else if(endpoint.indexOf("xtapdb") > -1) {
+			return "&FORMAT=" + URLEncoder.encode("application/x-votable+xml;content=mivot" , "ISO-8859-1");
+		}
+		return "";
+
 	}
 
 	/**
