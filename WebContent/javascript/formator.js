@@ -109,7 +109,6 @@ ValueFormator = function() {
 			// If there is more than 3 bibcodes, we display the "See more" button to view them all
 			if (table.length > 3){
 				bibcodes += "<span style =' cursor: pointer;' onclick='Modalinfo.info(\"" + moreLinks + "\");'> <em>[See more]</em></span>";
-				console.log(value);
 			}
 			tdNode.html(bibcodes);
 		} 
@@ -118,6 +117,8 @@ ValueFormator = function() {
 		 */
 		if( value.match(/^((position)|(region)|(polygon))/i) ) {
 			addSTCRegionControl(tdNode, value);
+		} else if ( columnName == 'coverage'){ 
+			addMOCControl(tdNode, value);
 		} else if ( raValue != undefined && decValue != undefined && 
 				(columnMap.s_ra == columnMap.currentColumn || columnMap.s_dec == columnMap.currentColumn) ) {
 			var alLink = "<a onclick='ModalAladin.aladinExplorer({ target: &quot;" + raValue + " " + decValue + "&quot;, fov: 0.016, title:&quot;...&quot;}, []);'class='dl_aladin' href='javascript:void(0);' title='Send source coord. to Aladin Lite'></a>";
@@ -179,6 +180,11 @@ ValueFormator = function() {
 			return false;
 		})
 	}
+	var addMOCControl = function(tdNode, coverage) {
+		tdNode.html("");
+		tdNode.append("<a title='show MOC' class='dl_info' style ='cursor: pointer;' onclick='Modalinfo.info(\"" + coverage + "\", \"Full Value\");'></a>");
+		tdNode.append("<a class='dl_samp' title='Broadcast to SAMP'   href='#' onclick='WebSamp_mVc.fireSendMocToClient(&quot;" + coverage + "&quot;); return false;'/></a>");
+	}
 	/**
 	 * Get the URL infos asynchronously: formating must be achieved inside the callback
 	 */
@@ -213,7 +219,7 @@ ValueFormator = function() {
 						if( v.match(/fits$/) ) {
 							sampMType = "table.load.fits";
 						} else {
-							sampMType = "table.load.votable";
+							sampMType = "table.load.votablec";
 						}
 					} else if( k == 'ContentEncoding' ) {
 						contentEncoding = v;
