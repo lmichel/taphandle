@@ -75,7 +75,11 @@ public class ShortNameBuilder extends RootClass {
 				logger.warn("url " + url + " badly formed");
 				return null;
 			}
-			str = pe[2];
+			String prefix = "";
+			if( url.startsWith("https") ) {
+				prefix = "s_";
+			}
+			str = prefix + pe[2];
 			for( Entry<String, String> e: reservedIvornDomains.entrySet()) {
 				if( url.indexOf(e.getKey()) != -1 ) {
 					str = e.getValue();
