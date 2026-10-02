@@ -175,7 +175,7 @@ ValueFormator = function() {
 		tdNode.html("");
 		tdNode.append("<a title='" + stcRegion + " (click to plot)' class='dl_stc' href='#'></a>");
 		tdNode.append("<a class='dl_samp' title='Broadcast to SAMP'   href='#' onclick='WebSamp_mVc.fireSendAladinScript(&quot;" + region.getAladinScript() + "&quot;); return false;'/></a>");
-		tdNode.first().click(function() {
+		tdNode.find('.dl_stc').click(function() {
 			ModalAladin.aladinExplorer({ region: region, fov: 0.016, title:"STC Region", surveyKeyword: targetName}, []);
 			return false;
 		})
