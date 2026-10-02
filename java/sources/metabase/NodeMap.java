@@ -1,5 +1,6 @@
 package metabase;
 
+import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -50,11 +51,13 @@ class NodeMap  extends RootClass {
 			key = ShortNameBuilder.getShortName(null, url);
 			logger.info("URL " + url + " does not exist in the registry, create a mark with key = " + key);
 			try {
-				TapNode tapNode = new TapNode(new RegistryMark(key, ""
-						, url, "TAP Node added by a user", "Node added by user", "name added by user", "email added by user",false, supportJoins)
+				TapNode tapNode = new TapNode(
+						new RegistryMark(key, "", url, "TAP Node added by a user", "Node added by user",
+						                 "name added by user", "email added by user",false, supportJoins)
 						, metaBaseDir + key);
 				nodeMap.put(key,tapNode);	
 			} catch (Exception e) {
+				delete(new File(metaBaseDir + key));
 				logger.error("Node " + key + " not working:  "+ e.getMessage());
 				throw new Exception(e.getMessage());
 			}
